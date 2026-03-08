@@ -143,7 +143,7 @@ PDF metadata — the tool never dictates file names.
 ReviewMark reads review metadata from the standard PDF **Keywords** field, using a simple
 `name=value` space-separated format:
 
-```
+```text
 id=Core-Logic fingerprint=a3f9c2d1e4b5... date=2026-03-08 result=pass
 ```
 
@@ -226,7 +226,8 @@ The review report shows the status of each review against the current file-set f
 ```
 
 - **Current** — the index contains a matching entry for the current ID and fingerprint with a `pass` result.
-- **Stale** — the index contains entries for the ID, but none match the current fingerprint; the most recent entry's date and file are shown for reference.
+- **Stale** — the index contains entries for the ID, but none match the current fingerprint;
+  the most recent entry's date and file are shown for reference.
 - **Missing** — the index contains no entries for the ID at all.
 
 ## Enforcement

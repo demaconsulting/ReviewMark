@@ -33,6 +33,43 @@ DEMA Consulting tool for automated file-review evidence management in regulated 
 - **Continuous Compliance**: Compliance evidence generated automatically on every CI run, following
   the [Continuous Compliance][link-continuous-compliance] methodology
 
+## Review Definition
+
+Reviews are configured in a `.reviewmark.yaml` file at the repository root. This file defines
+which files require review, where to find the evidence store, and how to group files into
+named review-sets:
+
+```yaml
+# .reviewmark.yaml
+
+# Patterns identifying all files in the repository that require review.
+# Processed in order; prefix a pattern with '!' to exclude.
+needs-review:
+  - "**/*.cs"
+  - "**/*.yaml"
+  - "!**/obj/**"           # exclude build output
+  - "!src/Generated/**"    # exclude auto-generated files
+
+evidence-source:
+  type: url                # 'url' or 'fileshare'
+  location: https://reviews.example.com/evidence/
+
+reviews:
+  - id: Core-Logic
+    title: Review of core business logic
+    paths:
+      - "src/Core/**/*.cs"
+      - "src/Core/**/*.yaml"
+      - "!src/Core/Generated/**"
+  - id: Security-Layer
+    title: Review of authentication and authorization
+    paths:
+      - "src/Auth/**/*.cs"
+```
+
+See [ARCHITECTURE.md][link-architecture] for the full design including fingerprinting, evidence
+indexing, and compliance report formats.
+
 ## Installation
 
 Install the tool globally using the .NET CLI:
@@ -140,4 +177,5 @@ By contributing to this project, you agree that your contributions will be licen
 [link-security]: https://sonarcloud.io/dashboard?id=demaconsulting_ReviewMark
 [link-nuget]: https://www.nuget.org/packages/DemaConsulting.ReviewMark
 [link-guide]: https://github.com/demaconsulting/ReviewMark/blob/main/docs/guide/guide.md
+[link-architecture]: https://github.com/demaconsulting/ReviewMark/blob/main/ARCHITECTURE.md
 [link-continuous-compliance]: https://github.com/demaconsulting/ContinuousCompliance
