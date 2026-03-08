@@ -54,7 +54,7 @@ public class ReviewMarkConfigurationTests
     [TestInitialize]
     public void TestInitialize()
     {
-        _testDirectory = Path.Combine(Path.GetTempPath(), $"ReviewMarkConfigurationTests_{Guid.NewGuid()}");
+        _testDirectory = PathHelpers.SafePathCombine(Path.GetTempPath(), $"ReviewMarkConfigurationTests_{Guid.NewGuid()}");
         Directory.CreateDirectory(_testDirectory);
     }
 
@@ -193,8 +193,8 @@ public class ReviewMarkConfigurationTests
               - "**/*.cs"
             """;
         var config = ReviewMarkConfiguration.Parse(yaml);
-        File.WriteAllText(Path.Combine(_testDirectory, "Program.cs"), "class Program {}");
-        File.WriteAllText(Path.Combine(_testDirectory, "readme.txt"), "readme");
+        File.WriteAllText(PathHelpers.SafePathCombine(_testDirectory, "Program.cs"), "class Program {}");
+        File.WriteAllText(PathHelpers.SafePathCombine(_testDirectory, "readme.txt"), "readme");
 
         // Act
         var files = config.GetNeedsReviewFiles(_testDirectory);
@@ -211,14 +211,14 @@ public class ReviewMarkConfigurationTests
     public void ReviewSet_GetFingerprint_SameContent_ReturnsSameFingerprint()
     {
         // Arrange — two subdirectories with identical file content
-        var dir1 = Path.Combine(_testDirectory, "dir1");
-        var dir2 = Path.Combine(_testDirectory, "dir2");
+        var dir1 = PathHelpers.SafePathCombine(_testDirectory, "dir1");
+        var dir2 = PathHelpers.SafePathCombine(_testDirectory, "dir2");
         Directory.CreateDirectory(dir1);
         Directory.CreateDirectory(dir2);
-        File.WriteAllText(Path.Combine(dir1, "A.cs"), "class A {}");
-        File.WriteAllText(Path.Combine(dir1, "B.cs"), "class B {}");
-        File.WriteAllText(Path.Combine(dir2, "A.cs"), "class A {}");
-        File.WriteAllText(Path.Combine(dir2, "B.cs"), "class B {}");
+        File.WriteAllText(PathHelpers.SafePathCombine(dir1, "A.cs"), "class A {}");
+        File.WriteAllText(PathHelpers.SafePathCombine(dir1, "B.cs"), "class B {}");
+        File.WriteAllText(PathHelpers.SafePathCombine(dir2, "A.cs"), "class A {}");
+        File.WriteAllText(PathHelpers.SafePathCombine(dir2, "B.cs"), "class B {}");
 
         var reviewSet = new ReviewSet("Test", "Test Review", ["**/*.cs"]);
 
@@ -237,12 +237,12 @@ public class ReviewMarkConfigurationTests
     public void ReviewSet_GetFingerprint_DifferentContent_ReturnsDifferentFingerprint()
     {
         // Arrange — two subdirectories with different file content
-        var dir1 = Path.Combine(_testDirectory, "dir1");
-        var dir2 = Path.Combine(_testDirectory, "dir2");
+        var dir1 = PathHelpers.SafePathCombine(_testDirectory, "dir1");
+        var dir2 = PathHelpers.SafePathCombine(_testDirectory, "dir2");
         Directory.CreateDirectory(dir1);
         Directory.CreateDirectory(dir2);
-        File.WriteAllText(Path.Combine(dir1, "A.cs"), "class A { int x = 1; }");
-        File.WriteAllText(Path.Combine(dir2, "A.cs"), "class A { int x = 2; }");
+        File.WriteAllText(PathHelpers.SafePathCombine(dir1, "A.cs"), "class A { int x = 1; }");
+        File.WriteAllText(PathHelpers.SafePathCombine(dir2, "A.cs"), "class A { int x = 2; }");
 
         var reviewSet = new ReviewSet("Test", "Test Review", ["**/*.cs"]);
 
@@ -261,15 +261,15 @@ public class ReviewMarkConfigurationTests
     public void ReviewSet_GetFingerprint_RenameFile_ReturnsSameFingerprint()
     {
         // Arrange — two subdirectories where one file differs only in name but has identical content
-        var dir1 = Path.Combine(_testDirectory, "dir1");
-        var dir2 = Path.Combine(_testDirectory, "dir2");
+        var dir1 = PathHelpers.SafePathCombine(_testDirectory, "dir1");
+        var dir2 = PathHelpers.SafePathCombine(_testDirectory, "dir2");
         Directory.CreateDirectory(dir1);
         Directory.CreateDirectory(dir2);
 
         // dir1 has OriginalName.cs; dir2 has the same content under RenamedFile.cs
         const string content = "class SameContent {}";
-        File.WriteAllText(Path.Combine(dir1, "OriginalName.cs"), content);
-        File.WriteAllText(Path.Combine(dir2, "RenamedFile.cs"), content);
+        File.WriteAllText(PathHelpers.SafePathCombine(dir1, "OriginalName.cs"), content);
+        File.WriteAllText(PathHelpers.SafePathCombine(dir2, "RenamedFile.cs"), content);
 
         var reviewSet = new ReviewSet("Test", "Test Review", ["**/*.cs"]);
 
@@ -288,7 +288,7 @@ public class ReviewMarkConfigurationTests
     public void ReviewMarkConfiguration_Load_NonExistentFile_ThrowsException()
     {
         // Arrange — a path within the test directory that does not exist
-        var nonExistentPath = Path.Combine(_testDirectory, ".reviewmark.yaml");
+        var nonExistentPath = PathHelpers.SafePathCombine(_testDirectory, ".reviewmark.yaml");
 
         // Act & Assert
         Assert.Throws<InvalidOperationException>(() =>

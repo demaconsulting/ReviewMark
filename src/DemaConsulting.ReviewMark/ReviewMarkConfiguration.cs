@@ -211,8 +211,8 @@ internal sealed class ReviewSet
         var contentHashes = files
             .Select(relativePath =>
             {
-                // Combine base directory with relative path to get the full file path
-                var fullPath = Path.Combine(directory, relativePath);
+                // Safely combine base directory with relative path to get the full file path
+                var fullPath = PathHelpers.SafePathCombine(directory, relativePath);
                 var bytes = File.ReadAllBytes(fullPath);
                 var hash = SHA256.HashData(bytes);
                 return Convert.ToHexString(hash).ToLowerInvariant();

@@ -37,7 +37,7 @@ public class GlobMatcherTests
     [TestInitialize]
     public void TestInitialize()
     {
-        _testDirectory = Path.Combine(Path.GetTempPath(), $"GlobMatcherTests_{Guid.NewGuid()}");
+        _testDirectory = PathHelpers.SafePathCombine(Path.GetTempPath(), $"GlobMatcherTests_{Guid.NewGuid()}");
         Directory.CreateDirectory(_testDirectory);
     }
 
@@ -109,9 +109,9 @@ public class GlobMatcherTests
     public void GlobMatcher_GetMatchingFiles_SingleIncludePattern_ReturnsMatchingFiles()
     {
         // Arrange — create two .cs files and one .txt file in the test directory
-        File.WriteAllText(Path.Combine(_testDirectory, "Alpha.cs"), "class Alpha {}");
-        File.WriteAllText(Path.Combine(_testDirectory, "Beta.cs"), "class Beta {}");
-        File.WriteAllText(Path.Combine(_testDirectory, "readme.txt"), "readme");
+        File.WriteAllText(PathHelpers.SafePathCombine(_testDirectory, "Alpha.cs"), "class Alpha {}");
+        File.WriteAllText(PathHelpers.SafePathCombine(_testDirectory, "Beta.cs"), "class Beta {}");
+        File.WriteAllText(PathHelpers.SafePathCombine(_testDirectory, "readme.txt"), "readme");
 
         // Act — only match .cs files
         var result = GlobMatcher.GetMatchingFiles(_testDirectory, ["**/*.cs"]);
@@ -129,10 +129,10 @@ public class GlobMatcherTests
     public void GlobMatcher_GetMatchingFiles_ExcludePattern_ExcludesMatchingFiles()
     {
         // Arrange — create files in the root and a subdirectory that should be excluded
-        var genDir = Path.Combine(_testDirectory, "Generated");
+        var genDir = PathHelpers.SafePathCombine(_testDirectory, "Generated");
         Directory.CreateDirectory(genDir);
-        File.WriteAllText(Path.Combine(_testDirectory, "Real.cs"), "class Real {}");
-        File.WriteAllText(Path.Combine(genDir, "Generated.cs"), "class Generated {}");
+        File.WriteAllText(PathHelpers.SafePathCombine(_testDirectory, "Real.cs"), "class Real {}");
+        File.WriteAllText(PathHelpers.SafePathCombine(genDir, "Generated.cs"), "class Generated {}");
 
         // Act — include everything but exclude the Generated subdirectory
         var result = GlobMatcher.GetMatchingFiles(_testDirectory, ["**/*.cs", "!Generated/**"]);
@@ -149,9 +149,9 @@ public class GlobMatcherTests
     public void GlobMatcher_GetMatchingFiles_MultipleIncludePatterns_ReturnsAllMatching()
     {
         // Arrange — create .cs, .yaml, and .txt files in the test directory
-        File.WriteAllText(Path.Combine(_testDirectory, "Program.cs"), "class Program {}");
-        File.WriteAllText(Path.Combine(_testDirectory, "config.yaml"), "key: value");
-        File.WriteAllText(Path.Combine(_testDirectory, "readme.txt"), "readme");
+        File.WriteAllText(PathHelpers.SafePathCombine(_testDirectory, "Program.cs"), "class Program {}");
+        File.WriteAllText(PathHelpers.SafePathCombine(_testDirectory, "config.yaml"), "key: value");
+        File.WriteAllText(PathHelpers.SafePathCombine(_testDirectory, "readme.txt"), "readme");
 
         // Act — match both .cs and .yaml files
         var result = GlobMatcher.GetMatchingFiles(_testDirectory, ["**/*.cs", "**/*.yaml"]);
@@ -169,12 +169,12 @@ public class GlobMatcherTests
     public void GlobMatcher_GetMatchingFiles_IncludeAndExclude_ReturnsFilteredFiles()
     {
         // Arrange — create files in src and obj subdirectories
-        var srcDir = Path.Combine(_testDirectory, "src");
-        var objDir = Path.Combine(_testDirectory, "obj");
+        var srcDir = PathHelpers.SafePathCombine(_testDirectory, "src");
+        var objDir = PathHelpers.SafePathCombine(_testDirectory, "obj");
         Directory.CreateDirectory(srcDir);
         Directory.CreateDirectory(objDir);
-        File.WriteAllText(Path.Combine(srcDir, "Main.cs"), "class Main {}");
-        File.WriteAllText(Path.Combine(objDir, "Main.obj.cs"), "// generated");
+        File.WriteAllText(PathHelpers.SafePathCombine(srcDir, "Main.cs"), "class Main {}");
+        File.WriteAllText(PathHelpers.SafePathCombine(objDir, "Main.obj.cs"), "// generated");
 
         // Act — include all .cs, exclude obj directory
         var result = GlobMatcher.GetMatchingFiles(_testDirectory, ["**/*.cs", "!obj/**"]);
@@ -191,7 +191,7 @@ public class GlobMatcherTests
     public void GlobMatcher_GetMatchingFiles_NoMatchingFiles_ReturnsEmptyList()
     {
         // Arrange — create a .txt file (no .cs files)
-        File.WriteAllText(Path.Combine(_testDirectory, "notes.txt"), "notes");
+        File.WriteAllText(PathHelpers.SafePathCombine(_testDirectory, "notes.txt"), "notes");
 
         // Act — search for .cs files (none exist)
         var result = GlobMatcher.GetMatchingFiles(_testDirectory, ["**/*.cs"]);
