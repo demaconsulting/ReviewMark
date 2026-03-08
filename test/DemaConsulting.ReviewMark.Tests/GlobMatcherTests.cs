@@ -27,6 +27,33 @@ namespace DemaConsulting.ReviewMark.Tests;
 public class GlobMatcherTests
 {
     /// <summary>
+    ///     Unique temporary directory created before each test and deleted after.
+    /// </summary>
+    private string _testDirectory = string.Empty;
+
+    /// <summary>
+    ///     Creates a fresh GUID-based temporary directory before each test.
+    /// </summary>
+    [TestInitialize]
+    public void TestInitialize()
+    {
+        _testDirectory = Path.Combine(Path.GetTempPath(), $"GlobMatcherTests_{Guid.NewGuid()}");
+        Directory.CreateDirectory(_testDirectory);
+    }
+
+    /// <summary>
+    ///     Deletes the temporary directory and all its contents after each test.
+    /// </summary>
+    [TestCleanup]
+    public void TestCleanup()
+    {
+        if (Directory.Exists(_testDirectory))
+        {
+            Directory.Delete(_testDirectory, recursive: true);
+        }
+    }
+
+    /// <summary>
     ///     Test that passing a null base directory throws <see cref="ArgumentNullException" />.
     /// </summary>
     [TestMethod]
@@ -50,13 +77,12 @@ public class GlobMatcherTests
     public void GlobMatcher_GetMatchingFiles_NullPatterns_ThrowsArgumentNullException()
     {
         // Arrange
-        var baseDirectory = Path.GetTempPath();
         IReadOnlyList<string>? patterns = null;
 
         // Act & Assert
 #pragma warning disable CS8604 // Possible null reference argument — intentional for this test
         Assert.Throws<ArgumentNullException>(() =>
-            GlobMatcher.GetMatchingFiles(baseDirectory, patterns!));
+            GlobMatcher.GetMatchingFiles(_testDirectory, patterns!));
 #pragma warning restore CS8604
     }
 
@@ -67,11 +93,10 @@ public class GlobMatcherTests
     public void GlobMatcher_GetMatchingFiles_EmptyPatterns_ReturnsEmptyList()
     {
         // Arrange
-        var baseDirectory = Path.GetTempPath();
         IReadOnlyList<string> patterns = [];
 
         // Act
-        var result = GlobMatcher.GetMatchingFiles(baseDirectory, patterns);
+        var result = GlobMatcher.GetMatchingFiles(_testDirectory, patterns);
 
         // Assert
         Assert.AreEqual(0, result.Count);
@@ -83,27 +108,18 @@ public class GlobMatcherTests
     [TestMethod]
     public void GlobMatcher_GetMatchingFiles_SingleIncludePattern_ReturnsMatchingFiles()
     {
-        // Arrange — create a temporary directory with two .cs files and one .txt file
-        var tempDir = Path.Combine(Path.GetTempPath(), Path.GetRandomFileName());
-        Directory.CreateDirectory(tempDir);
-        try
-        {
-            File.WriteAllText(Path.Combine(tempDir, "Alpha.cs"), "class Alpha {}");
-            File.WriteAllText(Path.Combine(tempDir, "Beta.cs"), "class Beta {}");
-            File.WriteAllText(Path.Combine(tempDir, "readme.txt"), "readme");
+        // Arrange — create two .cs files and one .txt file in the test directory
+        File.WriteAllText(Path.Combine(_testDirectory, "Alpha.cs"), "class Alpha {}");
+        File.WriteAllText(Path.Combine(_testDirectory, "Beta.cs"), "class Beta {}");
+        File.WriteAllText(Path.Combine(_testDirectory, "readme.txt"), "readme");
 
-            // Act — only match .cs files
-            var result = GlobMatcher.GetMatchingFiles(tempDir, ["**/*.cs"]);
+        // Act — only match .cs files
+        var result = GlobMatcher.GetMatchingFiles(_testDirectory, ["**/*.cs"]);
 
-            // Assert — both .cs files are returned; the .txt file is not
-            Assert.AreEqual(2, result.Count);
-            Assert.IsTrue(result.Contains("Alpha.cs"));
-            Assert.IsTrue(result.Contains("Beta.cs"));
-        }
-        finally
-        {
-            Directory.Delete(tempDir, recursive: true);
-        }
+        // Assert — both .cs files are returned; the .txt file is not
+        Assert.AreEqual(2, result.Count);
+        Assert.IsTrue(result.Contains("Alpha.cs"));
+        Assert.IsTrue(result.Contains("Beta.cs"));
     }
 
     /// <summary>
@@ -113,26 +129,17 @@ public class GlobMatcherTests
     public void GlobMatcher_GetMatchingFiles_ExcludePattern_ExcludesMatchingFiles()
     {
         // Arrange — create files in the root and a subdirectory that should be excluded
-        var tempDir = Path.Combine(Path.GetTempPath(), Path.GetRandomFileName());
-        var genDir = Path.Combine(tempDir, "Generated");
-        Directory.CreateDirectory(tempDir);
+        var genDir = Path.Combine(_testDirectory, "Generated");
         Directory.CreateDirectory(genDir);
-        try
-        {
-            File.WriteAllText(Path.Combine(tempDir, "Real.cs"), "class Real {}");
-            File.WriteAllText(Path.Combine(genDir, "Generated.cs"), "class Generated {}");
+        File.WriteAllText(Path.Combine(_testDirectory, "Real.cs"), "class Real {}");
+        File.WriteAllText(Path.Combine(genDir, "Generated.cs"), "class Generated {}");
 
-            // Act — include everything but exclude the Generated subdirectory
-            var result = GlobMatcher.GetMatchingFiles(tempDir, ["**/*.cs", "!Generated/**"]);
+        // Act — include everything but exclude the Generated subdirectory
+        var result = GlobMatcher.GetMatchingFiles(_testDirectory, ["**/*.cs", "!Generated/**"]);
 
-            // Assert — only Real.cs is returned
-            Assert.AreEqual(1, result.Count);
-            Assert.IsTrue(result.Contains("Real.cs"));
-        }
-        finally
-        {
-            Directory.Delete(tempDir, recursive: true);
-        }
+        // Assert — only Real.cs is returned
+        Assert.AreEqual(1, result.Count);
+        Assert.IsTrue(result.Contains("Real.cs"));
     }
 
     /// <summary>
@@ -141,27 +148,18 @@ public class GlobMatcherTests
     [TestMethod]
     public void GlobMatcher_GetMatchingFiles_MultipleIncludePatterns_ReturnsAllMatching()
     {
-        // Arrange — create .cs and .yaml files
-        var tempDir = Path.Combine(Path.GetTempPath(), Path.GetRandomFileName());
-        Directory.CreateDirectory(tempDir);
-        try
-        {
-            File.WriteAllText(Path.Combine(tempDir, "Program.cs"), "class Program {}");
-            File.WriteAllText(Path.Combine(tempDir, "config.yaml"), "key: value");
-            File.WriteAllText(Path.Combine(tempDir, "readme.txt"), "readme");
+        // Arrange — create .cs, .yaml, and .txt files in the test directory
+        File.WriteAllText(Path.Combine(_testDirectory, "Program.cs"), "class Program {}");
+        File.WriteAllText(Path.Combine(_testDirectory, "config.yaml"), "key: value");
+        File.WriteAllText(Path.Combine(_testDirectory, "readme.txt"), "readme");
 
-            // Act — match both .cs and .yaml files
-            var result = GlobMatcher.GetMatchingFiles(tempDir, ["**/*.cs", "**/*.yaml"]);
+        // Act — match both .cs and .yaml files
+        var result = GlobMatcher.GetMatchingFiles(_testDirectory, ["**/*.cs", "**/*.yaml"]);
 
-            // Assert — both .cs and .yaml files are included; .txt is not
-            Assert.AreEqual(2, result.Count);
-            Assert.IsTrue(result.Contains("Program.cs"));
-            Assert.IsTrue(result.Contains("config.yaml"));
-        }
-        finally
-        {
-            Directory.Delete(tempDir, recursive: true);
-        }
+        // Assert — both .cs and .yaml files are included; .txt is not
+        Assert.AreEqual(2, result.Count);
+        Assert.IsTrue(result.Contains("Program.cs"));
+        Assert.IsTrue(result.Contains("config.yaml"));
     }
 
     /// <summary>
@@ -170,28 +168,20 @@ public class GlobMatcherTests
     [TestMethod]
     public void GlobMatcher_GetMatchingFiles_IncludeAndExclude_ReturnsFilteredFiles()
     {
-        // Arrange — create files in root, src, and obj subdirectories
-        var tempDir = Path.Combine(Path.GetTempPath(), Path.GetRandomFileName());
-        var srcDir = Path.Combine(tempDir, "src");
-        var objDir = Path.Combine(tempDir, "obj");
+        // Arrange — create files in src and obj subdirectories
+        var srcDir = Path.Combine(_testDirectory, "src");
+        var objDir = Path.Combine(_testDirectory, "obj");
         Directory.CreateDirectory(srcDir);
         Directory.CreateDirectory(objDir);
-        try
-        {
-            File.WriteAllText(Path.Combine(srcDir, "Main.cs"), "class Main {}");
-            File.WriteAllText(Path.Combine(objDir, "Main.obj.cs"), "// generated");
+        File.WriteAllText(Path.Combine(srcDir, "Main.cs"), "class Main {}");
+        File.WriteAllText(Path.Combine(objDir, "Main.obj.cs"), "// generated");
 
-            // Act — include all .cs, exclude obj directory
-            var result = GlobMatcher.GetMatchingFiles(tempDir, ["**/*.cs", "!obj/**"]);
+        // Act — include all .cs, exclude obj directory
+        var result = GlobMatcher.GetMatchingFiles(_testDirectory, ["**/*.cs", "!obj/**"]);
 
-            // Assert — only src/Main.cs is returned
-            Assert.AreEqual(1, result.Count);
-            Assert.IsTrue(result.Contains("src/Main.cs"));
-        }
-        finally
-        {
-            Directory.Delete(tempDir, recursive: true);
-        }
+        // Assert — only src/Main.cs is returned
+        Assert.AreEqual(1, result.Count);
+        Assert.IsTrue(result.Contains("src/Main.cs"));
     }
 
     /// <summary>
@@ -200,22 +190,13 @@ public class GlobMatcherTests
     [TestMethod]
     public void GlobMatcher_GetMatchingFiles_NoMatchingFiles_ReturnsEmptyList()
     {
-        // Arrange — create a directory with only .txt files
-        var tempDir = Path.Combine(Path.GetTempPath(), Path.GetRandomFileName());
-        Directory.CreateDirectory(tempDir);
-        try
-        {
-            File.WriteAllText(Path.Combine(tempDir, "notes.txt"), "notes");
+        // Arrange — create a .txt file (no .cs files)
+        File.WriteAllText(Path.Combine(_testDirectory, "notes.txt"), "notes");
 
-            // Act — search for .cs files (none exist)
-            var result = GlobMatcher.GetMatchingFiles(tempDir, ["**/*.cs"]);
+        // Act — search for .cs files (none exist)
+        var result = GlobMatcher.GetMatchingFiles(_testDirectory, ["**/*.cs"]);
 
-            // Assert — empty list because no .cs files are present
-            Assert.AreEqual(0, result.Count);
-        }
-        finally
-        {
-            Directory.Delete(tempDir, recursive: true);
-        }
+        // Assert — empty list because no .cs files are present
+        Assert.AreEqual(0, result.Count);
     }
 }

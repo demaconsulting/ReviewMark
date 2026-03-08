@@ -44,6 +44,33 @@ public class ReviewMarkConfigurationTests
         """;
 
     /// <summary>
+    ///     Unique temporary directory created before each test and deleted after.
+    /// </summary>
+    private string _testDirectory = string.Empty;
+
+    /// <summary>
+    ///     Creates a fresh GUID-based temporary directory before each test.
+    /// </summary>
+    [TestInitialize]
+    public void TestInitialize()
+    {
+        _testDirectory = Path.Combine(Path.GetTempPath(), $"ReviewMarkConfigurationTests_{Guid.NewGuid()}");
+        Directory.CreateDirectory(_testDirectory);
+    }
+
+    /// <summary>
+    ///     Deletes the temporary directory and all its contents after each test.
+    /// </summary>
+    [TestCleanup]
+    public void TestCleanup()
+    {
+        if (Directory.Exists(_testDirectory))
+        {
+            Directory.Delete(_testDirectory, recursive: true);
+        }
+    }
+
+    /// <summary>
     ///     Test that passing null yaml throws <see cref="ArgumentNullException" />.
     /// </summary>
     [TestMethod]
@@ -160,30 +187,21 @@ public class ReviewMarkConfigurationTests
     [TestMethod]
     public void ReviewMarkConfiguration_GetNeedsReviewFiles_ReturnsMatchingFiles()
     {
-        // Arrange — a configuration with a .cs pattern, a temp directory with one .cs and one .txt
+        // Arrange — a configuration with a .cs pattern; one .cs and one .txt file in the test directory
         var yaml = """
             needs-review:
               - "**/*.cs"
             """;
         var config = ReviewMarkConfiguration.Parse(yaml);
-        var tempDir = Path.Combine(Path.GetTempPath(), Path.GetRandomFileName());
-        Directory.CreateDirectory(tempDir);
-        try
-        {
-            File.WriteAllText(Path.Combine(tempDir, "Program.cs"), "class Program {}");
-            File.WriteAllText(Path.Combine(tempDir, "readme.txt"), "readme");
+        File.WriteAllText(Path.Combine(_testDirectory, "Program.cs"), "class Program {}");
+        File.WriteAllText(Path.Combine(_testDirectory, "readme.txt"), "readme");
 
-            // Act
-            var files = config.GetNeedsReviewFiles(tempDir);
+        // Act
+        var files = config.GetNeedsReviewFiles(_testDirectory);
 
-            // Assert — only the .cs file is returned
-            Assert.AreEqual(1, files.Count);
-            Assert.IsTrue(files.Contains("Program.cs"));
-        }
-        finally
-        {
-            Directory.Delete(tempDir, recursive: true);
-        }
+        // Assert — only the .cs file is returned
+        Assert.AreEqual(1, files.Count);
+        Assert.IsTrue(files.Contains("Program.cs"));
     }
 
     /// <summary>
@@ -192,32 +210,24 @@ public class ReviewMarkConfigurationTests
     [TestMethod]
     public void ReviewSet_GetFingerprint_SameContent_ReturnsSameFingerprint()
     {
-        // Arrange — two directories with identical file content
-        var dir1 = Path.Combine(Path.GetTempPath(), Path.GetRandomFileName());
-        var dir2 = Path.Combine(Path.GetTempPath(), Path.GetRandomFileName());
+        // Arrange — two subdirectories with identical file content
+        var dir1 = Path.Combine(_testDirectory, "dir1");
+        var dir2 = Path.Combine(_testDirectory, "dir2");
         Directory.CreateDirectory(dir1);
         Directory.CreateDirectory(dir2);
-        try
-        {
-            File.WriteAllText(Path.Combine(dir1, "A.cs"), "class A {}");
-            File.WriteAllText(Path.Combine(dir1, "B.cs"), "class B {}");
-            File.WriteAllText(Path.Combine(dir2, "A.cs"), "class A {}");
-            File.WriteAllText(Path.Combine(dir2, "B.cs"), "class B {}");
+        File.WriteAllText(Path.Combine(dir1, "A.cs"), "class A {}");
+        File.WriteAllText(Path.Combine(dir1, "B.cs"), "class B {}");
+        File.WriteAllText(Path.Combine(dir2, "A.cs"), "class A {}");
+        File.WriteAllText(Path.Combine(dir2, "B.cs"), "class B {}");
 
-            var reviewSet = new ReviewSet("Test", "Test Review", ["**/*.cs"]);
+        var reviewSet = new ReviewSet("Test", "Test Review", ["**/*.cs"]);
 
-            // Act
-            var fp1 = reviewSet.GetFingerprint(dir1);
-            var fp2 = reviewSet.GetFingerprint(dir2);
+        // Act
+        var fp1 = reviewSet.GetFingerprint(dir1);
+        var fp2 = reviewSet.GetFingerprint(dir2);
 
-            // Assert — identical content produces identical fingerprints
-            Assert.AreEqual(fp1, fp2);
-        }
-        finally
-        {
-            Directory.Delete(dir1, recursive: true);
-            Directory.Delete(dir2, recursive: true);
-        }
+        // Assert — identical content produces identical fingerprints
+        Assert.AreEqual(fp1, fp2);
     }
 
     /// <summary>
@@ -226,30 +236,22 @@ public class ReviewMarkConfigurationTests
     [TestMethod]
     public void ReviewSet_GetFingerprint_DifferentContent_ReturnsDifferentFingerprint()
     {
-        // Arrange — two directories with different file content
-        var dir1 = Path.Combine(Path.GetTempPath(), Path.GetRandomFileName());
-        var dir2 = Path.Combine(Path.GetTempPath(), Path.GetRandomFileName());
+        // Arrange — two subdirectories with different file content
+        var dir1 = Path.Combine(_testDirectory, "dir1");
+        var dir2 = Path.Combine(_testDirectory, "dir2");
         Directory.CreateDirectory(dir1);
         Directory.CreateDirectory(dir2);
-        try
-        {
-            File.WriteAllText(Path.Combine(dir1, "A.cs"), "class A { int x = 1; }");
-            File.WriteAllText(Path.Combine(dir2, "A.cs"), "class A { int x = 2; }");
+        File.WriteAllText(Path.Combine(dir1, "A.cs"), "class A { int x = 1; }");
+        File.WriteAllText(Path.Combine(dir2, "A.cs"), "class A { int x = 2; }");
 
-            var reviewSet = new ReviewSet("Test", "Test Review", ["**/*.cs"]);
+        var reviewSet = new ReviewSet("Test", "Test Review", ["**/*.cs"]);
 
-            // Act
-            var fp1 = reviewSet.GetFingerprint(dir1);
-            var fp2 = reviewSet.GetFingerprint(dir2);
+        // Act
+        var fp1 = reviewSet.GetFingerprint(dir1);
+        var fp2 = reviewSet.GetFingerprint(dir2);
 
-            // Assert — different content produces different fingerprints
-            Assert.AreNotEqual(fp1, fp2);
-        }
-        finally
-        {
-            Directory.Delete(dir1, recursive: true);
-            Directory.Delete(dir2, recursive: true);
-        }
+        // Assert — different content produces different fingerprints
+        Assert.AreNotEqual(fp1, fp2);
     }
 
     /// <summary>
@@ -258,32 +260,25 @@ public class ReviewMarkConfigurationTests
     [TestMethod]
     public void ReviewSet_GetFingerprint_RenameFile_ReturnsSameFingerprint()
     {
-        // Arrange — two directories where one file differs only in name but has identical content
-        var dir1 = Path.Combine(Path.GetTempPath(), Path.GetRandomFileName());
-        var dir2 = Path.Combine(Path.GetTempPath(), Path.GetRandomFileName());
+        // Arrange — two subdirectories where one file differs only in name but has identical content
+        var dir1 = Path.Combine(_testDirectory, "dir1");
+        var dir2 = Path.Combine(_testDirectory, "dir2");
         Directory.CreateDirectory(dir1);
         Directory.CreateDirectory(dir2);
-        try
-        {
-            // dir1 has OriginalName.cs; dir2 has the same content under RenamedFile.cs
-            const string content = "class SameContent {}";
-            File.WriteAllText(Path.Combine(dir1, "OriginalName.cs"), content);
-            File.WriteAllText(Path.Combine(dir2, "RenamedFile.cs"), content);
 
-            var reviewSet = new ReviewSet("Test", "Test Review", ["**/*.cs"]);
+        // dir1 has OriginalName.cs; dir2 has the same content under RenamedFile.cs
+        const string content = "class SameContent {}";
+        File.WriteAllText(Path.Combine(dir1, "OriginalName.cs"), content);
+        File.WriteAllText(Path.Combine(dir2, "RenamedFile.cs"), content);
 
-            // Act
-            var fp1 = reviewSet.GetFingerprint(dir1);
-            var fp2 = reviewSet.GetFingerprint(dir2);
+        var reviewSet = new ReviewSet("Test", "Test Review", ["**/*.cs"]);
 
-            // Assert — renaming should not affect the content-based fingerprint
-            Assert.AreEqual(fp1, fp2);
-        }
-        finally
-        {
-            Directory.Delete(dir1, recursive: true);
-            Directory.Delete(dir2, recursive: true);
-        }
+        // Act
+        var fp1 = reviewSet.GetFingerprint(dir1);
+        var fp2 = reviewSet.GetFingerprint(dir2);
+
+        // Assert — renaming should not affect the content-based fingerprint
+        Assert.AreEqual(fp1, fp2);
     }
 
     /// <summary>
@@ -292,8 +287,8 @@ public class ReviewMarkConfigurationTests
     [TestMethod]
     public void ReviewMarkConfiguration_Load_NonExistentFile_ThrowsException()
     {
-        // Arrange — a path that does not exist
-        var nonExistentPath = Path.Combine(Path.GetTempPath(), Path.GetRandomFileName(), ".reviewmark.yaml");
+        // Arrange — a path within the test directory that does not exist
+        var nonExistentPath = Path.Combine(_testDirectory, ".reviewmark.yaml");
 
         // Act & Assert
         Assert.Throws<InvalidOperationException>(() =>
