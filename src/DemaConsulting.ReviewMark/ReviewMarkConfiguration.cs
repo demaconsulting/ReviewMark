@@ -358,7 +358,15 @@ internal sealed class ReviewMarkConfiguration
                     throw new ArgumentException($"Review set '{r.Id}' is missing a required 'title' field.");
                 }
 
-                return new ReviewSet(r.Id, r.Title, r.Paths ?? []);
+                // Each review set must have at least one non-empty path pattern
+                var paths = r.Paths;
+                if (paths is null || !paths.Any(p => !string.IsNullOrWhiteSpace(p)))
+                {
+                    throw new ArgumentException(
+                        $"Review set '{r.Id}' at index {i} is missing required 'paths' entries.");
+                }
+
+                return new ReviewSet(r.Id, r.Title, paths);
             })
             .ToList();
 
