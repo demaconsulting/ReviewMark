@@ -58,38 +58,38 @@ internal static class GlobMatcher
             throw new ArgumentException("Base directory must not be empty or whitespace.", nameof(baseDirectory));
         }
 
-        // Build the glob matcher by iterating patterns in order
-        var matcher = new Matcher();
-        var hasIncludes = false;
+        // Process patterns in order, maintaining a running set of matched files.
+        // Each include pattern adds files; each exclude pattern removes files.
+        // This implements the documented ordered semantics from ARCHITECTURE.md,
+        // allowing a later include to re-add files removed by an earlier exclude.
+        var fileSet = new HashSet<string>(StringComparer.Ordinal);
         foreach (var pattern in patterns)
         {
-            // Patterns prefixed with '!' are excludes; everything else is an include
             if (pattern.StartsWith('!'))
             {
-                matcher.AddExclude(pattern[1..]);
+                // Exclude: build a single-pattern matcher and remove all matching files
+                var excludeMatcher = new Matcher();
+                excludeMatcher.AddInclude(pattern[1..]);
+                foreach (var fullPath in excludeMatcher.GetResultsInFullPath(baseDirectory))
+                {
+                    fileSet.Remove(Path.GetRelativePath(baseDirectory, fullPath));
+                }
             }
             else
             {
-                matcher.AddInclude(pattern);
-                hasIncludes = true;
+                // Include: build a single-pattern matcher and add all matching files
+                var includeMatcher = new Matcher();
+                includeMatcher.AddInclude(pattern);
+                foreach (var fullPath in includeMatcher.GetResultsInFullPath(baseDirectory))
+                {
+                    fileSet.Add(Path.GetRelativePath(baseDirectory, fullPath));
+                }
             }
         }
 
-        // Return early if no include patterns were added — the matcher would match nothing anyway
-        if (!hasIncludes)
-        {
-            return [];
-        }
-
-        // Execute the match and collect relative paths, normalizing separators to forward slashes
-        var result = matcher
-            .GetResultsInFullPath(baseDirectory)
-            .Select(fullPath =>
-            {
-                // Convert the full path back to a relative path using forward slashes
-                var relativePath = Path.GetRelativePath(baseDirectory, fullPath);
-                return relativePath.Replace(Path.DirectorySeparatorChar, '/');
-            })
+        // Normalize path separators to forward slashes and sort the results
+        var result = fileSet
+            .Select(relativePath => relativePath.Replace(Path.DirectorySeparatorChar, '/'))
             .Order(StringComparer.Ordinal)
             .ToList();
 

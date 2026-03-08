@@ -111,6 +111,9 @@ public class ReviewMarkConfigurationTests
               - "**/*.cs"
               - "**/*.yaml"
               - "!**/obj/**"
+            evidence-source:
+              type: url
+              location: https://reviews.example.com/
             """;
 
         // Act
@@ -191,6 +194,9 @@ public class ReviewMarkConfigurationTests
         var yaml = """
             needs-review:
               - "**/*.cs"
+            evidence-source:
+              type: url
+              location: https://reviews.example.com/
             """;
         var config = ReviewMarkConfiguration.Parse(yaml);
         File.WriteAllText(PathHelpers.SafePathCombine(_testDirectory, "Program.cs"), "class Program {}");

@@ -199,4 +199,31 @@ public class GlobMatcherTests
         // Assert — empty list because no .cs files are present
         Assert.AreEqual(0, result.Count);
     }
+
+    /// <summary>
+    ///     Test that an include pattern appearing after an exclude re-adds previously excluded files.
+    /// </summary>
+    [TestMethod]
+    public void GlobMatcher_GetMatchingFiles_ReIncludeAfterExclude_ReturnsReIncludedFiles()
+    {
+        // Arrange — create files in src and Generated directories
+        var srcDir = PathHelpers.SafePathCombine(_testDirectory, "src");
+        var genDir = PathHelpers.SafePathCombine(_testDirectory, "Generated");
+        Directory.CreateDirectory(srcDir);
+        Directory.CreateDirectory(genDir);
+        File.WriteAllText(PathHelpers.SafePathCombine(srcDir, "Real.cs"), "class Real {}");
+        File.WriteAllText(PathHelpers.SafePathCombine(genDir, "Other.cs"), "class Other {}");
+        File.WriteAllText(PathHelpers.SafePathCombine(genDir, "Special.cs"), "class Special {}");
+
+        // Act — include all .cs, exclude Generated/, then re-include Generated/Special.cs
+        var result = GlobMatcher.GetMatchingFiles(
+            _testDirectory,
+            ["**/*.cs", "!Generated/**", "Generated/Special.cs"]);
+
+        // Assert — src/Real.cs and Generated/Special.cs are present; Generated/Other.cs is not
+        Assert.AreEqual(2, result.Count);
+        Assert.IsTrue(result.Contains("src/Real.cs"));
+        Assert.IsTrue(result.Contains("Generated/Special.cs"));
+        Assert.IsFalse(result.Contains("Generated/Other.cs"));
+    }
 }

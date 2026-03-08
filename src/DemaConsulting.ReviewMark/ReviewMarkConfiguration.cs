@@ -213,8 +213,8 @@ internal sealed class ReviewSet
             {
                 // Safely combine base directory with relative path to get the full file path
                 var fullPath = PathHelpers.SafePathCombine(directory, relativePath);
-                var bytes = File.ReadAllBytes(fullPath);
-                var hash = SHA256.HashData(bytes);
+                using var stream = File.OpenRead(fullPath);
+                var hash = SHA256.HashData(stream);
                 return Convert.ToHexString(hash).ToLowerInvariant();
             })
             .ToList();
