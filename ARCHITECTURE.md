@@ -38,7 +38,7 @@ reviews:
       - "src/Core/**/*.yaml"
       - "!src/Core/Generated/**"   # exclude auto-generated files within the set
   - id: Security-Layer
-    title: Review of authentication and authorisation
+    title: Review of authentication and authorization
     paths:
       - "src/Auth/**/*.cs"
 ```
@@ -173,7 +173,7 @@ evidence-source:
     password-env: REVIEWMARK_TOKEN
 ```
 
-In CI/CD, these are mapped from repository or organisation secrets:
+In CI/CD, these are mapped from repository or organization secrets:
 
 ```yaml
 - name: Run ReviewMark
@@ -202,7 +202,7 @@ least one review-set. It lists each review-set, the files it covers, and flags a
 | Review ID      | Title                          | Files | Fingerprint  |
 | :------------- | :----------------------------- | ----: | :----------- |
 | Core-Logic     | Review of core business logic  | 14    | `a3f9…`      |
-| Security-Layer | Review of auth/authorisation   | 6     | `c72b…`      |
+| Security-Layer | Review of auth/authorization   | 6     | `c72b…`      |
 
 ### Uncovered Files
 
