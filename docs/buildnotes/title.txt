@@ -1,11 +1,11 @@
 ---
-title: Template DotNet Tool
+title: ReviewMark
 subtitle: Build Notes
 author: DEMA Consulting
-description: Build notes for the Template DotNet Tool reference implementation
+description: Build notes for ReviewMark
 lang: en-US
 keywords:
-  - Template DotNet Tool
+  - ReviewMark
   - Build Notes
   - Release Notes
   - C#

@@ -18,10 +18,10 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
-namespace DemaConsulting.TemplateDotNetTool.Tests;
+namespace DemaConsulting.ReviewMark.Tests;
 
 /// <summary>
-///     Integration tests that run the Template DotNet Tool application through dotnet.
+///     Integration tests that run the ReviewMark application through dotnet.
 /// </summary>
 [TestClass]
 public class IntegrationTests
@@ -29,7 +29,7 @@ public class IntegrationTests
     private string _dllPath = string.Empty;
 
     /// <summary>
-    ///     Initialize test by locating the Template DotNet Tool DLL.
+    ///     Initialize test by locating the ReviewMark DLL.
     /// </summary>
     [TestInitialize]
     public void TestInitialize()
@@ -37,9 +37,9 @@ public class IntegrationTests
         // The DLL should be in the same directory as the test assembly
         // because the test project references the main project
         var baseDir = AppContext.BaseDirectory;
-        _dllPath = PathHelpers.SafePathCombine(baseDir, "DemaConsulting.TemplateDotNetTool.dll");
+        _dllPath = PathHelpers.SafePathCombine(baseDir, "DemaConsulting.ReviewMark.dll");
 
-        Assert.IsTrue(File.Exists(_dllPath), $"Could not find Template DotNet Tool DLL at {_dllPath}");
+        Assert.IsTrue(File.Exists(_dllPath), $"Could not find ReviewMark DLL at {_dllPath}");
     }
 
     /// <summary>
@@ -182,7 +182,7 @@ public class IntegrationTests
             Assert.IsTrue(File.Exists(logFile), "Log file was not created");
 
             var logContent = File.ReadAllText(logFile);
-            Assert.Contains("Template DotNet Tool version", logContent);
+            Assert.Contains("ReviewMark version", logContent);
         }
         finally
         {

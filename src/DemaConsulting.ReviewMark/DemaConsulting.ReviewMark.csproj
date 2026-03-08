@@ -9,21 +9,21 @@
 
     <!-- NuGet Tool Package Configuration -->
     <PackAsTool>true</PackAsTool>
-    <ToolCommandName>templatetool</ToolCommandName>
-    <PackageId>DemaConsulting.TemplateDotNetTool</PackageId>
+    <ToolCommandName>reviewmark</ToolCommandName>
+    <PackageId>DemaConsulting.ReviewMark</PackageId>
     <Version>0.0.0</Version>
     <Authors>DEMA Consulting</Authors>
     <Company>DEMA Consulting</Company>
-    <Description>Template project for DEMA Consulting DotNet Tools</Description>
+    <Description>File-review evidence management tool for regulated environments</Description>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
-    <PackageProjectUrl>https://github.com/demaconsulting/TemplateDotNetTool</PackageProjectUrl>
-    <RepositoryUrl>https://github.com/demaconsulting/TemplateDotNetTool</RepositoryUrl>
+    <PackageProjectUrl>https://github.com/demaconsulting/ReviewMark</PackageProjectUrl>
+    <RepositoryUrl>https://github.com/demaconsulting/ReviewMark</RepositoryUrl>
     <PackageReadmeFile>README.md</PackageReadmeFile>
     <PackageIcon>Icon.png</PackageIcon>
-    <PackageTags>template;dotnet-tool</PackageTags>
+    <PackageTags>review;compliance;dotnet-tool</PackageTags>
     <Copyright>Copyright DEMA Consulting</Copyright>
-    <Title>Template DotNet Tool</Title>
-    <Product>DemaConsulting.TemplateDotNetTool</Product>
+    <Title>ReviewMark</Title>
+    <Product>DemaConsulting.ReviewMark</Product>
 
     <!-- Symbol Package Configuration -->
     <IncludeSymbols>true</IncludeSymbols>
@@ -76,7 +76,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <InternalsVisibleTo Include="DemaConsulting.TemplateDotNetTool.Tests" />
+    <InternalsVisibleTo Include="DemaConsulting.ReviewMark.Tests" />
   </ItemGroup>
 
   <ItemGroup>

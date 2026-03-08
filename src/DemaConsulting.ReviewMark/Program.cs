@@ -20,10 +20,10 @@
 
 using System.Reflection;
 
-namespace DemaConsulting.TemplateDotNetTool;
+namespace DemaConsulting.ReviewMark;
 
 /// <summary>
-///     Main program entry point for the Template DotNet Tool.
+///     Main program entry point for ReviewMark.
 /// </summary>
 internal static class Program
 {
@@ -45,7 +45,7 @@ internal static class Program
     }
 
     /// <summary>
-    ///     Main entry point for the Template DotNet Tool.
+    ///     Main entry point for ReviewMark.
     /// </summary>
     /// <param name="args">Command-line arguments.</param>
     /// <returns>Exit code: 0 for success, non-zero for failure.</returns>
@@ -122,7 +122,7 @@ internal static class Program
     /// <param name="context">The context for output.</param>
     private static void PrintBanner(Context context)
     {
-        context.WriteLine($"Template DotNet Tool version {Version}");
+        context.WriteLine($"ReviewMark version {Version}");
         context.WriteLine("Copyright (c) DEMA Consulting");
         context.WriteLine("");
     }
@@ -133,7 +133,7 @@ internal static class Program
     /// <param name="context">The context for output.</param>
     private static void PrintHelp(Context context)
     {
-        context.WriteLine("Usage: templatetool [options]");
+        context.WriteLine("Usage: reviewmark [options]");
         context.WriteLine("");
         context.WriteLine("Options:");
         context.WriteLine("  -v, --version              Display version information");
@@ -150,9 +150,9 @@ internal static class Program
     /// <param name="context">The context containing command line arguments and program state.</param>
     private static void RunToolLogic(Context context)
     {
-        context.WriteLine("Template DotNet Tool - Demo Functionality");
-        context.WriteLine("This is a template project demonstrating best practices.");
+        context.WriteLine("ReviewMark - File Review Evidence Management");
+        context.WriteLine("ReviewMark automates file-review evidence management.");
         context.WriteLine("");
-        context.WriteLine("Replace this with your actual tool implementation.");
+        context.WriteLine("Use --help to see available options.");
     }
 }

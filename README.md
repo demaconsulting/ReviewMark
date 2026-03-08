@@ -1,4 +1,4 @@
-# Template DotNet Tool
+# ReviewMark
 
 [![GitHub forks][badge-forks]][link-forks]
 [![GitHub stars][badge-stars]][link-stars]
@@ -9,52 +9,55 @@
 [![Security][badge-security]][link-security]
 [![NuGet][badge-nuget]][link-nuget]
 
-DEMA Consulting template project for DotNet Tools, demonstrating best practices for building command-line tools with .NET.
+DEMA Consulting tool for automated file-review evidence management in regulated environments.
 
 ## Features
 
-This template demonstrates:
-
-- **Standardized Command-Line Interface**: Context class handling common arguments
-  (`--version`, `--help`, `--silent`, `--validate`, `--results`, `--log`)
+- **Cryptographic Fingerprinting**: Computes SHA256 fingerprints of defined file-sets so that
+  content changes are detected and reviews go stale automatically
+- **Evidence Querying**: Queries a review evidence store (URL or file-share) for corresponding
+  code-review PDFs via an `index.json` catalogue
+- **Coverage Reporting**: Generates a review plan showing which files are covered and flagging
+  any files that are not included in any review-set
+- **Status Reporting**: Generates a review report showing whether each review-set is Current,
+  Stale, or Missing
+- **Enforcement**: `--enforce` flag causes a non-zero exit code if any review-set is stale or
+  missing, or if any file is not covered by a review-set
+- **Re-indexing**: `--reindex` command scans a folder of review PDFs and regenerates `index.json`
+  from PDF Keywords metadata
 - **Self-Validation**: Built-in validation tests with TRX/JUnit output
 - **Multi-Platform Support**: Builds and runs on Windows, Linux, and macOS
 - **Multi-Runtime Support**: Targets .NET 8, 9, and 10
 - **Comprehensive CI/CD**: GitHub Actions workflows with quality checks, builds, and
   integration tests
-- **Linting Enforcement**: markdownlint, cspell, and yamllint enforced on every CI run
 - **Continuous Compliance**: Compliance evidence generated automatically on every CI run, following
   the [Continuous Compliance][link-continuous-compliance] methodology
-- **SonarCloud Integration**: Quality gate and security analysis on every build
-- **Documentation Generation**: Automated build notes, user guide, code quality reports,
-  requirements, justifications, and trace matrix
-- **Requirements Traceability**: Requirements linked to passing tests with auto-generated trace matrix
 
 ## Installation
 
 Install the tool globally using the .NET CLI:
 
 ```bash
-dotnet tool install -g DemaConsulting.TemplateDotNetTool
+dotnet tool install -g DemaConsulting.ReviewMark
 ```
 
 ## Usage
 
 ```bash
 # Display version
-templatetool --version
+reviewmark --version
 
 # Display help
-templatetool --help
+reviewmark --help
 
 # Run self-validation
-templatetool --validate
+reviewmark --validate
 
 # Save validation results
-templatetool --validate --results results.trx
+reviewmark --validate --results results.trx
 
 # Silent mode with logging
-templatetool --silent --log output.log
+reviewmark --silent --log output.log
 ```
 
 ## Command-Line Options
@@ -73,7 +76,7 @@ templatetool --silent --log output.log
 Running self-validation produces a report containing the following information:
 
 ```text
-# DEMA Consulting Template DotNet Tool
+# DEMA Consulting ReviewMark
 
 | Information         | Value                                              |
 | :------------------ | :------------------------------------------------- |
@@ -83,8 +86,8 @@ Running self-validation produces a report containing the following information:
 | DotNet Runtime      | <dotnet-runtime-version>                           |
 | Time Stamp          | <timestamp> UTC                                    |
 
-✓ TemplateTool_VersionDisplay - Passed
-✓ TemplateTool_HelpDisplay - Passed
+✓ ReviewMark_VersionDisplay - Passed
+✓ ReviewMark_HelpDisplay - Passed
 
 Total Tests: 2
 Passed: 2
@@ -93,8 +96,8 @@ Failed: 0
 
 Each test in the report proves:
 
-- **`TemplateTool_VersionDisplay`** - `--version` outputs a valid version string.
-- **`TemplateTool_HelpDisplay`** - `--help` outputs usage and options information.
+- **`ReviewMark_VersionDisplay`** - `--version` outputs a valid version string.
+- **`ReviewMark_HelpDisplay`** - `--help` outputs usage and options information.
 
 See the [User Guide][link-guide] for more details on the self-validation tests.
 
@@ -118,23 +121,23 @@ Copyright (c) DEMA Consulting. Licensed under the MIT License. See [LICENSE][lin
 By contributing to this project, you agree that your contributions will be licensed under the MIT License.
 
 <!-- Badge References -->
-[badge-forks]: https://img.shields.io/github/forks/demaconsulting/TemplateDotNetTool?style=plastic
-[badge-stars]: https://img.shields.io/github/stars/demaconsulting/TemplateDotNetTool?style=plastic
-[badge-contributors]: https://img.shields.io/github/contributors/demaconsulting/TemplateDotNetTool?style=plastic
-[badge-license]: https://img.shields.io/github/license/demaconsulting/TemplateDotNetTool?style=plastic
-[badge-build]: https://img.shields.io/github/actions/workflow/status/demaconsulting/TemplateDotNetTool/build_on_push.yaml?style=plastic
-[badge-quality]: https://sonarcloud.io/api/project_badges/measure?project=demaconsulting_TemplateDotNetTool&metric=alert_status
-[badge-security]: https://sonarcloud.io/api/project_badges/measure?project=demaconsulting_TemplateDotNetTool&metric=security_rating
-[badge-nuget]: https://img.shields.io/nuget/v/DemaConsulting.TemplateDotNetTool?style=plastic
+[badge-forks]: https://img.shields.io/github/forks/demaconsulting/ReviewMark?style=plastic
+[badge-stars]: https://img.shields.io/github/stars/demaconsulting/ReviewMark?style=plastic
+[badge-contributors]: https://img.shields.io/github/contributors/demaconsulting/ReviewMark?style=plastic
+[badge-license]: https://img.shields.io/github/license/demaconsulting/ReviewMark?style=plastic
+[badge-build]: https://img.shields.io/github/actions/workflow/status/demaconsulting/ReviewMark/build_on_push.yaml?style=plastic
+[badge-quality]: https://sonarcloud.io/api/project_badges/measure?project=demaconsulting_ReviewMark&metric=alert_status
+[badge-security]: https://sonarcloud.io/api/project_badges/measure?project=demaconsulting_ReviewMark&metric=security_rating
+[badge-nuget]: https://img.shields.io/nuget/v/DemaConsulting.ReviewMark?style=plastic
 
 <!-- Link References -->
-[link-forks]: https://github.com/demaconsulting/TemplateDotNetTool/network/members
-[link-stars]: https://github.com/demaconsulting/TemplateDotNetTool/stargazers
-[link-contributors]: https://github.com/demaconsulting/TemplateDotNetTool/graphs/contributors
-[link-license]: https://github.com/demaconsulting/TemplateDotNetTool/blob/main/LICENSE
-[link-build]: https://github.com/demaconsulting/TemplateDotNetTool/actions/workflows/build_on_push.yaml
-[link-quality]: https://sonarcloud.io/dashboard?id=demaconsulting_TemplateDotNetTool
-[link-security]: https://sonarcloud.io/dashboard?id=demaconsulting_TemplateDotNetTool
-[link-nuget]: https://www.nuget.org/packages/DemaConsulting.TemplateDotNetTool
-[link-guide]: https://github.com/demaconsulting/TemplateDotNetTool/blob/main/docs/guide/guide.md
+[link-forks]: https://github.com/demaconsulting/ReviewMark/network/members
+[link-stars]: https://github.com/demaconsulting/ReviewMark/stargazers
+[link-contributors]: https://github.com/demaconsulting/ReviewMark/graphs/contributors
+[link-license]: https://github.com/demaconsulting/ReviewMark/blob/main/LICENSE
+[link-build]: https://github.com/demaconsulting/ReviewMark/actions/workflows/build_on_push.yaml
+[link-quality]: https://sonarcloud.io/dashboard?id=demaconsulting_ReviewMark
+[link-security]: https://sonarcloud.io/dashboard?id=demaconsulting_ReviewMark
+[link-nuget]: https://www.nuget.org/packages/DemaConsulting.ReviewMark
+[link-guide]: https://github.com/demaconsulting/ReviewMark/blob/main/docs/guide/guide.md
 [link-continuous-compliance]: https://github.com/demaconsulting/ContinuousCompliance

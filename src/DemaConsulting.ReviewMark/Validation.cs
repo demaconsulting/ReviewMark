@@ -21,10 +21,10 @@
 using System.Runtime.InteropServices;
 using DemaConsulting.TestResults.IO;
 
-namespace DemaConsulting.TemplateDotNetTool;
+namespace DemaConsulting.ReviewMark;
 
 /// <summary>
-///     Provides self-validation functionality for the Template DotNet Tool.
+///     Provides self-validation functionality for ReviewMark.
 /// </summary>
 internal static class Validation
 {
@@ -43,7 +43,7 @@ internal static class Validation
         // Create test results collection
         var testResults = new DemaConsulting.TestResults.TestResults
         {
-            Name = "Template DotNet Tool Self-Validation"
+            Name = "ReviewMark Self-Validation"
         };
 
         // Run core functionality tests
@@ -81,7 +81,7 @@ internal static class Validation
     /// <param name="context">The context for output.</param>
     private static void PrintValidationHeader(Context context)
     {
-        context.WriteLine("# DEMA Consulting Template DotNet Tool");
+        context.WriteLine("# DEMA Consulting ReviewMark");
         context.WriteLine("");
         context.WriteLine("| Information         | Value                                              |");
         context.WriteLine("| :------------------ | :------------------------------------------------- |");
@@ -101,7 +101,7 @@ internal static class Validation
     private static void RunVersionTest(Context context, DemaConsulting.TestResults.TestResults testResults)
     {
         var startTime = DateTime.UtcNow;
-        var test = CreateTestResult("TemplateTool_VersionDisplay");
+        var test = CreateTestResult("ReviewMark_VersionDisplay");
 
         try
         {
@@ -135,27 +135,27 @@ internal static class Validation
                     logContent.Split('.').Length >= 3)
                 {
                     test.Outcome = DemaConsulting.TestResults.TestOutcome.Passed;
-                    context.WriteLine($"✓ TemplateTool_VersionDisplay - Passed");
+                    context.WriteLine($"✓ ReviewMark_VersionDisplay - Passed");
                 }
                 else
                 {
                     test.Outcome = DemaConsulting.TestResults.TestOutcome.Failed;
                     test.ErrorMessage = "Version string not found in log";
-                    context.WriteError($"✗ TemplateTool_VersionDisplay - Failed: Version string not found in log");
+                    context.WriteError($"✗ ReviewMark_VersionDisplay - Failed: Version string not found in log");
                 }
             }
             else
             {
                 test.Outcome = DemaConsulting.TestResults.TestOutcome.Failed;
                 test.ErrorMessage = $"Program exited with code {exitCode}";
-                context.WriteError($"✗ TemplateTool_VersionDisplay - Failed: Exit code {exitCode}");
+                context.WriteError($"✗ ReviewMark_VersionDisplay - Failed: Exit code {exitCode}");
             }
         }
         // Generic catch is justified here as this is a test framework - any exception should be
         // recorded as a test failure to ensure robust test execution and reporting.
         catch (Exception ex)
         {
-            HandleTestException(test, context, "TemplateTool_VersionDisplay", ex);
+            HandleTestException(test, context, "ReviewMark_VersionDisplay", ex);
         }
 
         FinalizeTestResult(test, startTime, testResults);
@@ -169,7 +169,7 @@ internal static class Validation
     private static void RunHelpTest(Context context, DemaConsulting.TestResults.TestResults testResults)
     {
         var startTime = DateTime.UtcNow;
-        var test = CreateTestResult("TemplateTool_HelpDisplay");
+        var test = CreateTestResult("ReviewMark_HelpDisplay");
 
         try
         {
@@ -202,27 +202,27 @@ internal static class Validation
                 if (logContent.Contains("Usage:") && logContent.Contains("Options:"))
                 {
                     test.Outcome = DemaConsulting.TestResults.TestOutcome.Passed;
-                    context.WriteLine($"✓ TemplateTool_HelpDisplay - Passed");
+                    context.WriteLine($"✓ ReviewMark_HelpDisplay - Passed");
                 }
                 else
                 {
                     test.Outcome = DemaConsulting.TestResults.TestOutcome.Failed;
                     test.ErrorMessage = "Help text not found in log";
-                    context.WriteError($"✗ TemplateTool_HelpDisplay - Failed: Help text not found in log");
+                    context.WriteError($"✗ ReviewMark_HelpDisplay - Failed: Help text not found in log");
                 }
             }
             else
             {
                 test.Outcome = DemaConsulting.TestResults.TestOutcome.Failed;
                 test.ErrorMessage = $"Program exited with code {exitCode}";
-                context.WriteError($"✗ TemplateTool_HelpDisplay - Failed: Exit code {exitCode}");
+                context.WriteError($"✗ ReviewMark_HelpDisplay - Failed: Exit code {exitCode}");
             }
         }
         // Generic catch is justified here as this is a test framework - any exception should be
         // recorded as a test failure to ensure robust test execution and reporting.
         catch (Exception ex)
         {
-            HandleTestException(test, context, "TemplateTool_HelpDisplay", ex);
+            HandleTestException(test, context, "ReviewMark_HelpDisplay", ex);
         }
 
         FinalizeTestResult(test, startTime, testResults);
@@ -281,7 +281,7 @@ internal static class Validation
         {
             Name = testName,
             ClassName = "Validation",
-            CodeBase = "TemplateDotNetTool"
+            CodeBase = "ReviewMark"
         };
     }
 
@@ -333,7 +333,7 @@ internal static class Validation
         /// </summary>
         public TemporaryDirectory()
         {
-            DirectoryPath = PathHelpers.SafePathCombine(Path.GetTempPath(), $"templatetool_validation_{Guid.NewGuid()}");
+            DirectoryPath = PathHelpers.SafePathCombine(Path.GetTempPath(), $"reviewmark_validation_{Guid.NewGuid()}");
 
             try
             {

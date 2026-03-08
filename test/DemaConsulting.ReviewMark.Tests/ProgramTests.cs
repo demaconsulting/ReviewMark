@@ -18,7 +18,7 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
-namespace DemaConsulting.TemplateDotNetTool.Tests;
+namespace DemaConsulting.ReviewMark.Tests;
 
 /// <summary>
 ///     Unit tests for the Program class.
@@ -46,7 +46,7 @@ public class ProgramTests
             // Assert
             var output = outWriter.ToString();
             Assert.DoesNotContain("Copyright", output);
-            Assert.DoesNotContain("Template DotNet Tool version", output);
+            Assert.DoesNotContain("ReviewMark version", output);
         }
         finally
         {
@@ -130,7 +130,7 @@ public class ProgramTests
 
             // Assert
             var output = outWriter.ToString();
-            Assert.Contains("Template DotNet Tool version", output);
+            Assert.Contains("ReviewMark version", output);
             Assert.Contains("Copyright", output);
         }
         finally

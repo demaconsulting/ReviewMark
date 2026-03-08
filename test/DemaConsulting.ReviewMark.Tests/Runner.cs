@@ -20,7 +20,7 @@
 
 using System.Diagnostics;
 
-namespace DemaConsulting.TemplateDotNetTool.Tests;
+namespace DemaConsulting.ReviewMark.Tests;
 
 /// <summary>
 ///     Program runner class for integration testing.
