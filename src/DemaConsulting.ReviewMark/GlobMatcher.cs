@@ -81,7 +81,7 @@ internal static class GlobMatcher
             return [];
         }
 
-        // Execute the match and collect relative paths, normalising separators to forward slashes
+        // Execute the match and collect relative paths, normalizing separators to forward slashes
         var result = matcher
             .GetResultsInFullPath(baseDirectory)
             .Select(fullPath =>
