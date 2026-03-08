@@ -1,6 +1,6 @@
 # File Review
 
-In regulated environments, software artefacts — source files, configuration, requirements, test code —
+In regulated environments, software artifacts — source files, configuration, requirements, test code —
 must be formally reviewed before release. Tracking which files have been reviewed, whether those reviews
 are current, and whether every file in the repository is covered by a review is a significant manual
 burden. Without automation, reviews go stale silently and coverage gaps are discovered only at audit time.
@@ -262,7 +262,7 @@ ReviewMark runs in the document generation stage, after all build and test jobs 
 ```
 
 The generated Markdown documents feed into the standard Pandoc → Weasyprint pipeline and are published
-as PDF/A-3u release artefacts alongside the requirements trace matrix and code quality report.
+as PDF/A-3u release artifacts alongside the requirements trace matrix and code quality report.
 
 ## Re-indexing the Evidence Store
 
@@ -294,7 +294,7 @@ ReviewMark's own requirements.
 
 ## Standards Alignment
 
-The review plan and review report together provide the artefact-review evidence required by:
+The review plan and review report together provide the artifact-review evidence required by:
 
 - **IEC 62443** — design review and verification records
 - **ISO 26262** — software unit and integration review evidence
