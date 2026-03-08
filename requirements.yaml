@@ -139,22 +139,6 @@ sections:
 
       - title: Configuration Reading
         requirements:
-          - id: ReviewMark-Config-GlobMatcher
-            title: The tool shall implement a GlobMatcher helper class that resolves ordered include/exclude glob patterns to a list of files.
-            justification: |
-              Provides reusable, testable glob pattern resolution for identifying files covered by
-              needs-review and review-set definitions. Supports the `!` prefix for exclusion patterns,
-              with patterns applied in order so later patterns override earlier ones.
-            tests:
-              - GlobMatcher_GetMatchingFiles_NullBaseDirectory_ThrowsArgumentNullException
-              - GlobMatcher_GetMatchingFiles_NullPatterns_ThrowsArgumentNullException
-              - GlobMatcher_GetMatchingFiles_EmptyPatterns_ReturnsEmptyList
-              - GlobMatcher_GetMatchingFiles_SingleIncludePattern_ReturnsMatchingFiles
-              - GlobMatcher_GetMatchingFiles_ExcludePattern_ExcludesMatchingFiles
-              - GlobMatcher_GetMatchingFiles_MultipleIncludePatterns_ReturnsAllMatching
-              - GlobMatcher_GetMatchingFiles_IncludeAndExclude_ReturnsFilteredFiles
-              - GlobMatcher_GetMatchingFiles_NoMatchingFiles_ReturnsEmptyList
-
           - id: ReviewMark-Config-Reading
             title: The tool shall implement a ReviewMarkConfiguration class that reads and parses the .reviewmark.yaml configuration file.
             justification: |

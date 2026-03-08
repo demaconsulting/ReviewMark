@@ -20,6 +20,7 @@
 
 using System.Security.Cryptography;
 using System.Text;
+using YamlDotNet.Core;
 using YamlDotNet.Serialization;
 using YamlDotNet.Serialization.NamingConventions;
 
@@ -283,13 +284,14 @@ internal sealed class ReviewMarkConfiguration
         // Read the file contents and wrap any file-system exception with useful context.
         // Generic catch is justified here: Expected exceptions include IOException (and its subtypes
         // such as FileNotFoundException, DirectoryNotFoundException, PathTooLongException),
-        // UnauthorizedAccessException, NotSupportedException, and other file-system exceptions.
+        // UnauthorizedAccessException, ArgumentException (invalid path characters),
+        // NotSupportedException, and other file-system exceptions.
         string yaml;
         try
         {
             yaml = File.ReadAllText(filePath);
         }
-        catch (Exception ex) when (ex is not (ArgumentException or InvalidOperationException))
+        catch (Exception ex) when (ex is not InvalidOperationException)
         {
             throw new InvalidOperationException($"Failed to read configuration file '{filePath}': {ex.Message}", ex);
         }
@@ -323,7 +325,7 @@ internal sealed class ReviewMarkConfiguration
             raw = deserializer.Deserialize<ReviewMarkYaml>(yaml)
                   ?? throw new ArgumentException("YAML content is empty or invalid.", nameof(yaml));
         }
-        catch (Exception ex) when (ex is not ArgumentException)
+        catch (YamlException ex)
         {
             throw new ArgumentException($"Invalid YAML content: {ex.Message}", nameof(yaml), ex);
         }
