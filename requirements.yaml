@@ -137,6 +137,43 @@ sections:
               - Context_WriteError_SetsErrorExitCode
               - IntegrationTest_UnknownArgument_ReturnsError
 
+      - title: Configuration Reading
+        requirements:
+          - id: ReviewMark-Config-GlobMatcher
+            title: The tool shall implement a GlobMatcher helper class that resolves ordered include/exclude glob patterns to a list of files.
+            justification: |
+              Provides reusable, testable glob pattern resolution for identifying files covered by
+              needs-review and review-set definitions. Supports the `!` prefix for exclusion patterns,
+              with patterns applied in order so later patterns override earlier ones.
+            tests:
+              - GlobMatcher_GetMatchingFiles_NullBaseDirectory_ThrowsArgumentNullException
+              - GlobMatcher_GetMatchingFiles_NullPatterns_ThrowsArgumentNullException
+              - GlobMatcher_GetMatchingFiles_EmptyPatterns_ReturnsEmptyList
+              - GlobMatcher_GetMatchingFiles_SingleIncludePattern_ReturnsMatchingFiles
+              - GlobMatcher_GetMatchingFiles_ExcludePattern_ExcludesMatchingFiles
+              - GlobMatcher_GetMatchingFiles_MultipleIncludePatterns_ReturnsAllMatching
+              - GlobMatcher_GetMatchingFiles_IncludeAndExclude_ReturnsFilteredFiles
+              - GlobMatcher_GetMatchingFiles_NoMatchingFiles_ReturnsEmptyList
+
+          - id: ReviewMark-Config-Reading
+            title: The tool shall implement a ReviewMarkConfiguration class that reads and parses the .reviewmark.yaml configuration file.
+            justification: |
+              Enables the tool to read its configuration from the standard `.reviewmark.yaml` file,
+              exposing needs-review patterns, evidence source, and review set definitions. Review sets
+              support SHA256 content-based fingerprinting to detect changes to covered files.
+            tests:
+              - ReviewMarkConfiguration_Parse_NullYaml_ThrowsArgumentNullException
+              - ReviewMarkConfiguration_Parse_ValidYaml_ReturnsConfiguration
+              - ReviewMarkConfiguration_Parse_NeedsReviewPatterns_ParsedCorrectly
+              - ReviewMarkConfiguration_Parse_EvidenceSource_ParsedCorrectly
+              - ReviewMarkConfiguration_Parse_Reviews_ParsedCorrectly
+              - ReviewMarkConfiguration_Parse_EvidenceSourceWithCredentials_ParsedCorrectly
+              - ReviewMarkConfiguration_GetNeedsReviewFiles_ReturnsMatchingFiles
+              - ReviewSet_GetFingerprint_SameContent_ReturnsSameFingerprint
+              - ReviewSet_GetFingerprint_DifferentContent_ReturnsDifferentFingerprint
+              - ReviewSet_GetFingerprint_RenameFile_ReturnsSameFingerprint
+              - ReviewMarkConfiguration_Load_NonExistentFile_ThrowsException
+
       - title: Platform Support
         requirements:
           - id: ReviewMark-Platform-Windows
