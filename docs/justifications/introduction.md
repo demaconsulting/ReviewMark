@@ -1,10 +1,10 @@
 # Introduction
 
-This document contains the justifications for the requirements of the Template DotNet Tool project.
+This document contains the justifications for the requirements of the ReviewMark project.
 
 ## Purpose
 
-This justifications document provides the rationale behind each requirement in the Template DotNet Tool
+This justifications document provides the rationale behind each requirement in the ReviewMark
 project. Each requirement justification explains why the requirement exists, what problem it
 solves, and how it contributes to the overall value of the tool.
 

@@ -2,8 +2,9 @@
 
 ## Purpose
 
-Template DotNet Tool is a demonstration project that showcases best practices for DEMA
-Consulting DotNet Tools.
+ReviewMark is a tool for automated file-review evidence management in regulated environments.
+It computes cryptographic fingerprints of defined file-sets, queries a review evidence store
+for corresponding code-review PDFs, and produces compliance documents with every CI/CD run.
 
 ## Scope
 
@@ -16,7 +17,7 @@ This user guide covers:
 
 # Continuous Compliance
 
-This template follows the [Continuous Compliance][continuous-compliance] methodology, which ensures
+This tool follows the [Continuous Compliance][continuous-compliance] methodology, which ensures
 compliance evidence is generated automatically on every CI run.
 
 ## Key Practices
@@ -33,7 +34,7 @@ compliance evidence is generated automatically on every CI run.
 Install the tool globally using the .NET CLI:
 
 ```bash
-dotnet tool install -g DemaConsulting.TemplateDotNetTool
+dotnet tool install -g DemaConsulting.ReviewMark
 ```
 
 # Usage
@@ -43,7 +44,7 @@ dotnet tool install -g DemaConsulting.TemplateDotNetTool
 Display the tool version:
 
 ```bash
-templatetool --version
+reviewmark --version
 ```
 
 ## Display Help
@@ -51,12 +52,12 @@ templatetool --version
 Display usage information:
 
 ```bash
-templatetool --help
+reviewmark --help
 ```
 
 ## Self-Validation
 
-Self-validation produces a report demonstrating that Template DotNet Tool is functioning
+Self-validation produces a report demonstrating that ReviewMark is functioning
 correctly. This is useful in regulated industries where tool validation evidence is required.
 
 ### Running Validation
@@ -64,13 +65,13 @@ correctly. This is useful in regulated industries where tool validation evidence
 To perform self-validation:
 
 ```bash
-templatetool --validate
+reviewmark --validate
 ```
 
 To save validation results to a file:
 
 ```bash
-templatetool --validate --results results.trx
+reviewmark --validate --results results.trx
 ```
 
 The results file format is determined by the file extension: `.trx` for TRX (MSTest) format,
@@ -84,7 +85,7 @@ The validation report contains the tool version, machine name, operating system 
 Example validation report:
 
 ```text
-# DEMA Consulting Template DotNet Tool
+# DEMA Consulting ReviewMark
 
 | Information         | Value                                              |
 | :------------------ | :------------------------------------------------- |
@@ -94,8 +95,8 @@ Example validation report:
 | DotNet Runtime      | .NET 10.0.0                                        |
 | Time Stamp          | 2024-01-15 10:30:00 UTC                            |
 
-✓ TemplateTool_VersionDisplay - Passed
-✓ TemplateTool_HelpDisplay - Passed
+✓ ReviewMark_VersionDisplay - Passed
+✓ ReviewMark_HelpDisplay - Passed
 
 Total Tests: 2
 Passed: 2
@@ -106,15 +107,15 @@ Failed: 0
 
 Each test proves specific functionality works correctly:
 
-- **`TemplateTool_VersionDisplay`** - `--version` outputs a valid version string.
-- **`TemplateTool_HelpDisplay`** - `--help` outputs usage and options information.
+- **`ReviewMark_VersionDisplay`** - `--version` outputs a valid version string.
+- **`ReviewMark_HelpDisplay`** - `--help` outputs usage and options information.
 
 ## Silent Mode
 
 Suppress console output:
 
 ```bash
-templatetool --silent
+reviewmark --silent
 ```
 
 ## Logging
@@ -122,7 +123,7 @@ templatetool --silent
 Write output to a log file:
 
 ```bash
-templatetool --log output.log
+reviewmark --log output.log
 ```
 
 # Command-Line Options
@@ -143,19 +144,19 @@ The following command-line options are supported:
 ## Example 1: Basic Usage
 
 ```bash
-templatetool
+reviewmark
 ```
 
 ## Example 2: Self-Validation with Results
 
 ```bash
-templatetool --validate --results validation-results.trx
+reviewmark --validate --results validation-results.trx
 ```
 
 ## Example 3: Silent Mode with Logging
 
 ```bash
-templatetool --silent --log tool-output.log
+reviewmark --silent --log tool-output.log
 ```
 
 <!-- Link References -->
