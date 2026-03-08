@@ -140,7 +140,7 @@ sections:
       - title: Configuration Reading
         requirements:
           - id: ReviewMark-Config-Reading
-            title: The tool shall implement a ReviewMarkConfiguration class that reads and parses the .reviewmark.yaml configuration file.
+            title: The tool shall read and parse the .reviewmark.yaml file into an in-memory configuration model.
             justification: |
               Enables the tool to read its configuration from the standard `.reviewmark.yaml` file,
               exposing needs-review patterns, evidence source, and review set definitions. Review sets
