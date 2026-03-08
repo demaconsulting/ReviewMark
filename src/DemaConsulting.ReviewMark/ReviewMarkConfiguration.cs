@@ -333,15 +333,27 @@ internal sealed class ReviewMarkConfiguration
         // Map needs-review patterns (default to empty list if absent)
         var needsReviewPatterns = (IReadOnlyList<string>)(raw.NeedsReview ?? []);
 
-        // Map evidence-source (default to empty record if absent)
-        var evidenceSource = raw.EvidenceSource is { } es
-            ? new EvidenceSource(
-                Type: es.Type ?? string.Empty,
-                Location: es.Location ?? string.Empty,
-                UsernameEnv: es.Credentials?.UsernameEnv,
-                PasswordEnv: es.Credentials?.PasswordEnv)
-            : new EvidenceSource(string.Empty, string.Empty, null, null);
+        // Map evidence-source (required: evidence-source block, type, and location)
+        if (raw.EvidenceSource is not { } es)
+        {
+            throw new ArgumentException("Configuration is missing required 'evidence-source' block.", nameof(yaml));
+        }
 
+        if (string.IsNullOrWhiteSpace(es.Type))
+        {
+            throw new ArgumentException("Configuration 'evidence-source' is missing a required 'type' field.", nameof(yaml));
+        }
+
+        if (string.IsNullOrWhiteSpace(es.Location))
+        {
+            throw new ArgumentException("Configuration 'evidence-source' is missing a required 'location' field.", nameof(yaml));
+        }
+
+        var evidenceSource = new EvidenceSource(
+            Type: es.Type,
+            Location: es.Location,
+            UsernameEnv: es.Credentials?.UsernameEnv,
+            PasswordEnv: es.Credentials?.PasswordEnv);
         // Map review sets, requiring id, title, and paths for each entry
         var reviews = (raw.Reviews ?? [])
             .Select((r, i) =>
