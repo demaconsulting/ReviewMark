@@ -20,6 +20,7 @@
 
 using System.Runtime.InteropServices;
 using DemaConsulting.TestResults.IO;
+using PdfSharp.Pdf;
 
 namespace DemaConsulting.ReviewMark;
 
@@ -49,6 +50,8 @@ internal static class Validation
         // Run core functionality tests
         RunVersionTest(context, testResults);
         RunHelpTest(context, testResults);
+        RunIndexLoadTest(context, testResults);
+        RunIndexScanTest(context, testResults);
 
         // Calculate totals
         var totalTests = testResults.Results.Count;
@@ -223,6 +226,111 @@ internal static class Validation
         catch (Exception ex)
         {
             HandleTestException(test, context, "ReviewMark_HelpDisplay", ex);
+        }
+
+        FinalizeTestResult(test, startTime, testResults);
+    }
+
+    /// <summary>
+    ///     Runs a test for loading a review index from JSON content.
+    /// </summary>
+    /// <param name="context">The context for output.</param>
+    /// <param name="testResults">The test results collection.</param>
+    private static void RunIndexLoadTest(Context context, DemaConsulting.TestResults.TestResults testResults)
+    {
+        var startTime = DateTime.UtcNow;
+        var test = CreateTestResult("ReviewMark_IndexLoad");
+
+        try
+        {
+            // Build a minimal index JSON document
+            const string indexJson = """
+                {
+                  "reviews": [
+                    {
+                      "id": "Core-Logic",
+                      "fingerprint": "abc123",
+                      "date": "2026-03-08",
+                      "result": "pass",
+                      "file": "CR-2026-014 Core Logic Review.pdf"
+                    }
+                  ]
+                }
+                """;
+
+            // Load the index from a stream built from the JSON string
+            using var stream = new System.IO.MemoryStream(System.Text.Encoding.UTF8.GetBytes(indexJson));
+            var index = ReviewIndex.Load(stream);
+
+            // Verify the loaded entry is retrievable
+            var evidence = index.GetEvidence("Core-Logic", "abc123");
+            if (evidence is { Id: "Core-Logic", Fingerprint: "abc123", Result: "pass" } &&
+                index.HasId("Core-Logic"))
+            {
+                test.Outcome = DemaConsulting.TestResults.TestOutcome.Passed;
+                context.WriteLine("✓ ReviewMark_IndexLoad - Passed");
+            }
+            else
+            {
+                test.Outcome = DemaConsulting.TestResults.TestOutcome.Failed;
+                test.ErrorMessage = "Index did not load expected evidence entry";
+                context.WriteError("✗ ReviewMark_IndexLoad - Failed: Index did not load expected evidence entry");
+            }
+        }
+        // Generic catch is justified here as this is a test framework - any exception should be
+        // recorded as a test failure to ensure robust test execution and reporting.
+        catch (Exception ex)
+        {
+            HandleTestException(test, context, "ReviewMark_IndexLoad", ex);
+        }
+
+        FinalizeTestResult(test, startTime, testResults);
+    }
+
+    /// <summary>
+    ///     Runs a test for scanning PDF files to build a review index.
+    /// </summary>
+    /// <param name="context">The context for output.</param>
+    /// <param name="testResults">The test results collection.</param>
+    private static void RunIndexScanTest(Context context, DemaConsulting.TestResults.TestResults testResults)
+    {
+        var startTime = DateTime.UtcNow;
+        var test = CreateTestResult("ReviewMark_IndexScan");
+
+        try
+        {
+            using var tempDir = new TemporaryDirectory();
+
+            // Create a minimal PDF with review metadata in its Keywords field
+            var pdfPath = PathHelpers.SafePathCombine(tempDir.DirectoryPath, "review.pdf");
+            var document = new PdfDocument();
+            document.AddPage();
+            document.Info.Keywords = "id=Core-Logic fingerprint=abc123 date=2026-03-08 result=pass";
+            document.Save(pdfPath);
+
+            // Scan the directory and verify the index is populated
+            var index = ReviewIndex.Empty();
+            index.Scan(tempDir.DirectoryPath, ["**/*.pdf"]);
+
+            var evidence = index.GetEvidence("Core-Logic", "abc123");
+            if (evidence is { Id: "Core-Logic", Fingerprint: "abc123", Result: "pass" } &&
+                index.HasId("Core-Logic"))
+            {
+                test.Outcome = DemaConsulting.TestResults.TestOutcome.Passed;
+                context.WriteLine("✓ ReviewMark_IndexScan - Passed");
+            }
+            else
+            {
+                test.Outcome = DemaConsulting.TestResults.TestOutcome.Failed;
+                test.ErrorMessage = "Index did not contain expected evidence after scan";
+                context.WriteError("✗ ReviewMark_IndexScan - Failed: Index did not contain expected evidence after scan");
+            }
+        }
+        // Generic catch is justified here as this is a test framework - any exception should be
+        // recorded as a test failure to ensure robust test execution and reporting.
+        catch (Exception ex)
+        {
+            HandleTestException(test, context, "ReviewMark_IndexScan", ex);
         }
 
         FinalizeTestResult(test, startTime, testResults);
