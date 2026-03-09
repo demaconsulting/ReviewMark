@@ -67,8 +67,8 @@ reviews:
       - "src/Auth/**/*.cs"
 ```
 
-See [ARCHITECTURE.md][link-architecture] for the full design including fingerprinting, evidence
-indexing, and compliance report formats.
+See [THEORY-OF-OPERATIONS.md][link-theory-of-operations] for the theory of operations including fingerprinting,
+evidence indexing, and compliance report formats.
 
 ## Installation
 
@@ -177,5 +177,5 @@ By contributing to this project, you agree that your contributions will be licen
 [link-security]: https://sonarcloud.io/dashboard?id=demaconsulting_ReviewMark
 [link-nuget]: https://www.nuget.org/packages/DemaConsulting.ReviewMark
 [link-guide]: https://github.com/demaconsulting/ReviewMark/blob/main/docs/guide/guide.md
-[link-architecture]: https://github.com/demaconsulting/ReviewMark/blob/main/ARCHITECTURE.md
+[link-theory-of-operations]: https://github.com/demaconsulting/ReviewMark/blob/main/THEORY-OF-OPERATIONS.md
 [link-continuous-compliance]: https://github.com/demaconsulting/ContinuousCompliance
