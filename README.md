@@ -67,8 +67,8 @@ reviews:
       - "src/Auth/**/*.cs"
 ```
 
-See [THEORY-OF-OPERATIONS.md][link-architecture] for the full design including fingerprinting, evidence
-indexing, and compliance report formats.
+See [THEORY-OF-OPERATIONS.md][link-architecture] for the theory of operations including fingerprinting,
+evidence indexing, and compliance report formats.
 
 ## Installation
 
