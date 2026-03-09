@@ -60,7 +60,7 @@ internal static class GlobMatcher
 
         // Process patterns in order, maintaining a running set of matched files.
         // Each include pattern adds files; each exclude pattern removes files.
-        // This implements the documented ordered semantics from ARCHITECTURE.md,
+        // This implements the documented ordered semantics from THEORY-OF-OPERATIONS.md,
         // allowing a later include to re-add files removed by an earlier exclude.
         var fileSet = new HashSet<string>(StringComparer.Ordinal);
         foreach (var pattern in patterns)
