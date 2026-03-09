@@ -163,7 +163,7 @@ internal sealed class ReviewIndex
     ///     Thrown when <paramref name="filePath" /> cannot be read or the
     ///     JSON content is invalid.
     /// </exception>
-    internal static ReviewIndex Load(string filePath)
+    private static ReviewIndex Load(string filePath)
     {
         // Validate the path argument
         if (string.IsNullOrWhiteSpace(filePath))
@@ -200,7 +200,7 @@ internal sealed class ReviewIndex
     /// <exception cref="ArgumentException">
     ///     Thrown when the stream does not contain valid JSON.
     /// </exception>
-    internal static ReviewIndex Load(Stream stream)
+    private static ReviewIndex Load(Stream stream)
     {
         // Validate the stream argument
         ArgumentNullException.ThrowIfNull(stream);

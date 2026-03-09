@@ -58,53 +58,56 @@ public class IndexTests
     }
 
     // -------------------------------------------------------------------------
+    // Private helpers
+    // -------------------------------------------------------------------------
+
+    /// <summary>
+    ///     Writes <paramref name="json" /> to a unique file inside the test temp directory
+    ///     and loads it as a <see cref="ReviewIndex" /> via
+    ///     <see cref="ReviewIndex.Load(EvidenceSource)" />.
+    /// </summary>
+    /// <param name="json">The JSON content for the index file.</param>
+    /// <returns>The loaded <see cref="ReviewIndex" />.</returns>
+    private ReviewIndex LoadIndexFromJson(string json)
+    {
+        var path = PathHelpers.SafePathCombine(_testDirectory, $"index-{Guid.NewGuid():N}.json");
+        File.WriteAllText(path, json);
+        return ReviewIndex.Load(new EvidenceSource("fileshare", path, null, null));
+    }
+
+    // -------------------------------------------------------------------------
     // Load / Save tests
     // -------------------------------------------------------------------------
 
     /// <summary>
-    ///     Test that passing a null stream to <see cref="ReviewIndex.Load(Stream)" />
-    ///     throws <see cref="ArgumentNullException" />.
+    ///     Test that loading a file with invalid JSON via a <c>fileshare</c>
+    ///     <see cref="EvidenceSource" /> throws <see cref="InvalidOperationException" />.
     /// </summary>
     [TestMethod]
-    public void ReviewIndex_Load_Stream_NullStream_ThrowsArgumentNullException()
+    public void ReviewIndex_Load_EvidenceSource_Fileshare_InvalidJson_ThrowsInvalidOperationException()
     {
-        // Arrange
-        Stream? nullStream = null;
+        // Arrange — write non-JSON content to a temp file
+        var path = PathHelpers.SafePathCombine(_testDirectory, "invalid.json");
+        File.WriteAllText(path, "this is not json {{{");
+        var source = new EvidenceSource("fileshare", path, null, null);
 
-        // Act & Assert
-#pragma warning disable CS8604 // Possible null reference argument — intentional for this test
-        Assert.Throws<ArgumentNullException>(() =>
-            ReviewIndex.Load(nullStream!));
-#pragma warning restore CS8604
+        // Act & Assert — invalid JSON content should cause an InvalidOperationException
+        Assert.Throws<InvalidOperationException>(() =>
+            ReviewIndex.Load(source));
     }
 
     /// <summary>
-    ///     Test that passing a stream containing invalid JSON to
-    ///     <see cref="ReviewIndex.Load(Stream)" /> throws <see cref="ArgumentException" />.
+    ///     Test that loading a file with an empty reviews array via a <c>fileshare</c>
+    ///     <see cref="EvidenceSource" /> returns an empty index.
     /// </summary>
     [TestMethod]
-    public void ReviewIndex_Load_Stream_InvalidJson_ThrowsArgumentException()
-    {
-        // Arrange — a stream containing non-JSON content
-        using var stream = new MemoryStream(Encoding.UTF8.GetBytes("this is not json {{{"));
-
-        // Act & Assert — invalid JSON should cause an ArgumentException
-        Assert.Throws<ArgumentException>(() =>
-            ReviewIndex.Load(stream));
-    }
-
-    /// <summary>
-    ///     Test that loading from a stream with an empty reviews array returns an empty index.
-    /// </summary>
-    [TestMethod]
-    public void ReviewIndex_Load_Stream_EmptyReviews_ReturnsEmptyIndex()
+    public void ReviewIndex_Load_EvidenceSource_Fileshare_EmptyReviews_ReturnsEmptyIndex()
     {
         // Arrange — JSON with an empty reviews array
         const string json = """{"reviews":[]}""";
-        using var stream = new MemoryStream(Encoding.UTF8.GetBytes(json));
 
         // Act
-        var index = ReviewIndex.Load(stream);
+        var index = LoadIndexFromJson(json);
 
         // Assert — empty index should report no evidence for any id
         Assert.IsNotNull(index);
@@ -113,11 +116,11 @@ public class IndexTests
     }
 
     /// <summary>
-    ///     Test that loading a valid JSON stream with two entries returns a fully
-    ///     populated index where both entries can be retrieved by id and fingerprint.
+    ///     Test that loading a valid JSON file with two entries via a <c>fileshare</c>
+    ///     <see cref="EvidenceSource" /> returns a fully populated index.
     /// </summary>
     [TestMethod]
-    public void ReviewIndex_Load_Stream_ValidJson_ReturnsPopulatedIndex()
+    public void ReviewIndex_Load_EvidenceSource_Fileshare_ValidJson_ReturnsPopulatedIndex()
     {
         // Arrange — JSON containing two distinct review evidence entries
         const string json = """
@@ -140,10 +143,9 @@ public class IndexTests
               ]
             }
             """;
-        using var stream = new MemoryStream(Encoding.UTF8.GetBytes(json));
 
         // Act
-        var index = ReviewIndex.Load(stream);
+        var index = LoadIndexFromJson(json);
 
         // Assert — both entries are retrievable by their respective ids and fingerprints
         var evidence1 = index.GetEvidence("Core-Logic", "abc123");
@@ -165,10 +167,10 @@ public class IndexTests
 
     /// <summary>
     ///     Test that entries missing required fields (id or fingerprint) are silently
-    ///     skipped when loading from a stream.
+    ///     skipped when loading via a <c>fileshare</c> <see cref="EvidenceSource" />.
     /// </summary>
     [TestMethod]
-    public void ReviewIndex_Load_Stream_MissingRequiredFields_SkipsInvalidEntries()
+    public void ReviewIndex_Load_EvidenceSource_Fileshare_MissingRequiredFields_SkipsInvalidEntries()
     {
         // Arrange — JSON containing three entries:
         //   1. missing 'id'
@@ -199,10 +201,9 @@ public class IndexTests
               ]
             }
             """;
-        using var stream = new MemoryStream(Encoding.UTF8.GetBytes(json));
 
         // Act
-        var index = ReviewIndex.Load(stream);
+        var index = LoadIndexFromJson(json);
 
         // Assert — only the valid entry is present; the two incomplete entries are skipped
         var validEvidence = index.GetEvidence("Valid-Entry", "fp-valid");
@@ -210,36 +211,6 @@ public class IndexTests
 
         Assert.IsFalse(index.HasId("No-Fingerprint"),
             "Entry missing 'fingerprint' should not appear in the index.");
-    }
-
-    /// <summary>
-    ///     Test that loading from a non-existent file path throws
-    ///     <see cref="InvalidOperationException" />.
-    /// </summary>
-    [TestMethod]
-    public void ReviewIndex_Load_File_NonExistentFile_ThrowsInvalidOperationException()
-    {
-        // Arrange — a path to a file that does not exist
-        var missingPath = PathHelpers.SafePathCombine(_testDirectory, "does-not-exist.json");
-
-        // Act & Assert — loading from a missing file should fail with a clear error
-        Assert.Throws<InvalidOperationException>(() =>
-            ReviewIndex.Load(missingPath));
-    }
-
-    /// <summary>
-    ///     Test that passing a null or empty path to <see cref="ReviewIndex.Load(string)" />
-    ///     throws <see cref="ArgumentException" />.
-    /// </summary>
-    [TestMethod]
-    public void ReviewIndex_Load_File_NullPath_ThrowsArgumentException()
-    {
-        // Arrange
-        var emptyPath = string.Empty;
-
-        // Act & Assert — an empty path is invalid and should throw
-        Assert.Throws<ArgumentException>(() =>
-            ReviewIndex.Load(emptyPath));
     }
 
     /// <summary>
@@ -304,14 +275,12 @@ public class IndexTests
               ]
             }
             """;
-        using var loadStream = new MemoryStream(Encoding.UTF8.GetBytes(json));
-        var original = ReviewIndex.Load(loadStream);
+        var original = LoadIndexFromJson(json);
 
-        // Act — serialize the index to a MemoryStream, then load it back
-        using var saveStream = new MemoryStream();
-        original.Save(saveStream);
-        saveStream.Position = 0;
-        var reloaded = ReviewIndex.Load(saveStream);
+        // Act — save the index to a temp file, then reload it via an EvidenceSource
+        var savedPath = PathHelpers.SafePathCombine(_testDirectory, "saved-index.json");
+        original.Save(savedPath);
+        var reloaded = ReviewIndex.Load(new EvidenceSource("fileshare", savedPath, null, null));
 
         // Assert — every original entry is present in the reloaded index with identical field values
         var alpha = reloaded.GetEvidence("Alpha", "fp-alpha");
@@ -539,8 +508,7 @@ public class IndexTests
               ]
             }
             """;
-        using var loadStream = new MemoryStream(Encoding.UTF8.GetBytes(json));
-        var existingIndex = ReviewIndex.Load(loadStream);
+        var existingIndex = LoadIndexFromJson(json);
         Assert.IsTrue(existingIndex.HasId("Old-Entry"), "Pre-condition: Old-Entry should be present in the loaded index.");
 
         // Act — scan is a static factory; it always creates a fresh index independent of any prior index
@@ -577,8 +545,7 @@ public class IndexTests
               ]
             }
             """;
-        using var stream = new MemoryStream(Encoding.UTF8.GetBytes(json));
-        var index = ReviewIndex.Load(stream);
+        var index = LoadIndexFromJson(json);
 
         // Act
         var evidence = index.GetEvidence("Core-Logic", "abc123");
@@ -613,8 +580,7 @@ public class IndexTests
               ]
             }
             """;
-        using var stream = new MemoryStream(Encoding.UTF8.GetBytes(json));
-        var index = ReviewIndex.Load(stream);
+        var index = LoadIndexFromJson(json);
 
         // Act — use the correct id but a fingerprint that was never stored
         var evidence = index.GetEvidence("Core-Logic", "wrong-fingerprint");
@@ -644,8 +610,7 @@ public class IndexTests
               ]
             }
             """;
-        using var stream = new MemoryStream(Encoding.UTF8.GetBytes(json));
-        var index = ReviewIndex.Load(stream);
+        var index = LoadIndexFromJson(json);
 
         // Act — query with an id that was never loaded
         var evidence = index.GetEvidence("Unknown-Id", "fp-known");
@@ -675,8 +640,7 @@ public class IndexTests
               ]
             }
             """;
-        using var stream = new MemoryStream(Encoding.UTF8.GetBytes(json));
-        var index = ReviewIndex.Load(stream);
+        var index = LoadIndexFromJson(json);
 
         // Act
         var result = index.HasId("Core-Logic");
@@ -706,8 +670,7 @@ public class IndexTests
               ]
             }
             """;
-        using var stream = new MemoryStream(Encoding.UTF8.GetBytes(json));
-        var index = ReviewIndex.Load(stream);
+        var index = LoadIndexFromJson(json);
 
         // Act
         var result = index.HasId("Unknown-Id");
@@ -744,8 +707,7 @@ public class IndexTests
               ]
             }
             """;
-        using var stream = new MemoryStream(Encoding.UTF8.GetBytes(json));
-        var index = ReviewIndex.Load(stream);
+        var index = LoadIndexFromJson(json);
 
         // Act
         var entries = index.GetAllForId("Core-Logic");
@@ -780,8 +742,7 @@ public class IndexTests
               ]
             }
             """;
-        using var stream = new MemoryStream(Encoding.UTF8.GetBytes(json));
-        var index = ReviewIndex.Load(stream);
+        var index = LoadIndexFromJson(json);
 
         // Act
         var entries = index.GetAllForId("Unknown-Id");
