@@ -18,6 +18,7 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
+using System.Net.Http;
 using System.Text;
 using PdfSharp.Pdf;
 
@@ -789,5 +790,278 @@ public class IndexTests
         Assert.IsNotNull(entries, "GetAllForId should never return null.");
         Assert.AreEqual(0, entries.Count,
             "GetAllForId should return an empty list for an id that is not in the index.");
+    }
+
+    // -------------------------------------------------------------------------
+    // Load(EvidenceSource) tests
+    // -------------------------------------------------------------------------
+
+    /// <summary>
+    ///     Helper that builds a fake <see cref="HttpMessageHandler" /> returning a canned
+    ///     response.  The handler takes ownership of the response and disposes it when
+    ///     the handler itself is disposed.
+    /// </summary>
+    private sealed class FakeHttpMessageHandler : HttpMessageHandler
+    {
+        /// <summary>
+        ///     The response that will be returned for every request.
+        /// </summary>
+        private readonly HttpResponseMessage _response;
+
+        /// <summary>
+        ///     Initializes a new instance of <see cref="FakeHttpMessageHandler" />.
+        /// </summary>
+        /// <param name="response">The pre-built response to return.</param>
+        public FakeHttpMessageHandler(HttpResponseMessage response)
+        {
+            _response = response;
+        }
+
+        /// <inheritdoc />
+        protected override HttpResponseMessage Send(
+            HttpRequestMessage request,
+            CancellationToken cancellationToken)
+        {
+            return _response;
+        }
+
+        /// <inheritdoc />
+        protected override Task<HttpResponseMessage> SendAsync(
+            HttpRequestMessage request,
+            CancellationToken cancellationToken)
+        {
+            return Task.FromResult(_response);
+        }
+
+        /// <inheritdoc />
+        protected override void Dispose(bool disposing)
+        {
+            if (disposing)
+            {
+                _response.Dispose();
+            }
+
+            base.Dispose(disposing);
+        }
+    }
+
+    /// <summary>
+    ///     Test that passing a null <see cref="EvidenceSource" /> to
+    ///     <see cref="ReviewIndex.Load(EvidenceSource)" /> throws
+    ///     <see cref="ArgumentNullException" />.
+    /// </summary>
+    [TestMethod]
+    public void ReviewIndex_Load_EvidenceSource_NullSource_ThrowsArgumentNullException()
+    {
+        // Arrange
+        EvidenceSource? nullSource = null;
+
+        // Act & Assert
+#pragma warning disable CS8604 // Possible null reference argument — intentional for this test
+        Assert.Throws<ArgumentNullException>(() =>
+            ReviewIndex.Load(nullSource!));
+#pragma warning restore CS8604
+    }
+
+    /// <summary>
+    ///     Test that passing an <see cref="EvidenceSource" /> with an unrecognised type to
+    ///     <see cref="ReviewIndex.Load(EvidenceSource)" /> throws
+    ///     <see cref="InvalidOperationException" />.
+    /// </summary>
+    [TestMethod]
+    public void ReviewIndex_Load_EvidenceSource_UnknownType_ThrowsInvalidOperationException()
+    {
+        // Arrange — a source with an unsupported type value
+        var source = new EvidenceSource(
+            Type: "unknown-type",
+            Location: "/some/path",
+            UsernameEnv: null,
+            PasswordEnv: null);
+
+        // Act & Assert
+        Assert.Throws<InvalidOperationException>(() =>
+            ReviewIndex.Load(source));
+    }
+
+    /// <summary>
+    ///     Test that <see cref="ReviewIndex.Load(EvidenceSource)" /> with a <c>fileshare</c>
+    ///     source loads the index from the path given in
+    ///     <see cref="EvidenceSource.Location" />.
+    /// </summary>
+    [TestMethod]
+    public void ReviewIndex_Load_EvidenceSource_Fileshare_LoadsFromFile()
+    {
+        // Arrange — write a valid index JSON file to the temp directory
+        const string json = """
+            {
+              "reviews": [
+                {
+                  "id": "Core-Logic",
+                  "fingerprint": "abc123",
+                  "date": "2026-02-14",
+                  "result": "pass",
+                  "file": "review.pdf"
+                }
+              ]
+            }
+            """;
+        var indexPath = PathHelpers.SafePathCombine(_testDirectory, "index.json");
+        File.WriteAllText(indexPath, json);
+
+        var source = new EvidenceSource(
+            Type: "fileshare",
+            Location: indexPath,
+            UsernameEnv: null,
+            PasswordEnv: null);
+
+        // Act
+        var index = ReviewIndex.Load(source);
+
+        // Assert — the entry written to disk is present in the loaded index
+        var evidence = index.GetEvidence("Core-Logic", "abc123");
+        Assert.IsNotNull(evidence, "Evidence loaded via fileshare source should be present.");
+        Assert.AreEqual("Core-Logic", evidence.Id);
+        Assert.AreEqual("abc123", evidence.Fingerprint);
+    }
+
+    /// <summary>
+    ///     Test that <see cref="ReviewIndex.Load(EvidenceSource)" /> with a <c>fileshare</c>
+    ///     source pointing at a non-existent file throws
+    ///     <see cref="InvalidOperationException" />.
+    /// </summary>
+    [TestMethod]
+    public void ReviewIndex_Load_EvidenceSource_Fileshare_NonExistentFile_ThrowsInvalidOperationException()
+    {
+        // Arrange — a path to a file that does not exist
+        var missingPath = PathHelpers.SafePathCombine(_testDirectory, "missing-index.json");
+        var source = new EvidenceSource(
+            Type: "fileshare",
+            Location: missingPath,
+            UsernameEnv: null,
+            PasswordEnv: null);
+
+        // Act & Assert
+        Assert.Throws<InvalidOperationException>(() =>
+            ReviewIndex.Load(source));
+    }
+
+    /// <summary>
+    ///     Test that <see cref="ReviewIndex.Load(EvidenceSource, HttpClient)" /> with a
+    ///     <c>url</c> source and a 200 OK response correctly deserializes the index.
+    /// </summary>
+    [TestMethod]
+    public void ReviewIndex_Load_EvidenceSource_Url_SuccessResponse_LoadsIndex()
+    {
+        // Arrange — canned JSON served by a fake HTTP handler
+        const string json = """
+            {
+              "reviews": [
+                {
+                  "id": "UI-Layer",
+                  "fingerprint": "def456",
+                  "date": "2026-03-01",
+                  "result": "pass",
+                  "file": "ui-review.pdf"
+                }
+              ]
+            }
+            """;
+
+        var fakeResponse = new HttpResponseMessage(System.Net.HttpStatusCode.OK)
+        {
+            Content = new StringContent(json, Encoding.UTF8, "application/json")
+        };
+
+        using var handler = new FakeHttpMessageHandler(fakeResponse);
+        using var httpClient = new HttpClient(handler);
+
+        var source = new EvidenceSource(
+            Type: "url",
+            Location: "https://example.com/evidence/index.json",
+            UsernameEnv: null,
+            PasswordEnv: null);
+
+        // Act
+        var index = ReviewIndex.Load(source, httpClient);
+
+        // Assert
+        var evidence = index.GetEvidence("UI-Layer", "def456");
+        Assert.IsNotNull(evidence, "Evidence returned via URL source should be present.");
+        Assert.AreEqual("UI-Layer", evidence.Id);
+        Assert.AreEqual("def456", evidence.Fingerprint);
+    }
+
+    /// <summary>
+    ///     Test that <see cref="ReviewIndex.Load(EvidenceSource, HttpClient)" /> with a
+    ///     <c>url</c> source and a non-success HTTP status code throws
+    ///     <see cref="InvalidOperationException" />.
+    /// </summary>
+    [TestMethod]
+    public void ReviewIndex_Load_EvidenceSource_Url_NotFoundResponse_ThrowsInvalidOperationException()
+    {
+        // Arrange — fake handler returns HTTP 404
+        var fakeResponse = new HttpResponseMessage(System.Net.HttpStatusCode.NotFound);
+        using var handler = new FakeHttpMessageHandler(fakeResponse);
+        using var httpClient = new HttpClient(handler);
+
+        var source = new EvidenceSource(
+            Type: "url",
+            Location: "https://example.com/evidence/index.json",
+            UsernameEnv: null,
+            PasswordEnv: null);
+
+        // Act & Assert — a 404 should be reported as an InvalidOperationException
+        Assert.Throws<InvalidOperationException>(() =>
+            ReviewIndex.Load(source, httpClient));
+    }
+
+    /// <summary>
+    ///     Test that <see cref="ReviewIndex.Load(EvidenceSource, HttpClient)" /> with a
+    ///     <c>url</c> source returning invalid JSON throws
+    ///     <see cref="InvalidOperationException" />.
+    /// </summary>
+    [TestMethod]
+    public void ReviewIndex_Load_EvidenceSource_Url_InvalidJson_ThrowsInvalidOperationException()
+    {
+        // Arrange — fake handler returns HTTP 200 with malformed JSON
+        var fakeResponse = new HttpResponseMessage(System.Net.HttpStatusCode.OK)
+        {
+            Content = new StringContent("this is not json {{{", Encoding.UTF8, "application/json")
+        };
+        using var handler = new FakeHttpMessageHandler(fakeResponse);
+        using var httpClient = new HttpClient(handler);
+
+        var source = new EvidenceSource(
+            Type: "url",
+            Location: "https://example.com/evidence/index.json",
+            UsernameEnv: null,
+            PasswordEnv: null);
+
+        // Act & Assert — malformed JSON should produce an InvalidOperationException
+        Assert.Throws<InvalidOperationException>(() =>
+            ReviewIndex.Load(source, httpClient));
+    }
+
+    /// <summary>
+    ///     Test that passing a null <see cref="HttpClient" /> to
+    ///     <see cref="ReviewIndex.Load(EvidenceSource, HttpClient)" /> throws
+    ///     <see cref="ArgumentNullException" />.
+    /// </summary>
+    [TestMethod]
+    public void ReviewIndex_Load_EvidenceSource_NullHttpClient_ThrowsArgumentNullException()
+    {
+        // Arrange
+        var source = new EvidenceSource(
+            Type: "url",
+            Location: "https://example.com/evidence/index.json",
+            UsernameEnv: null,
+            PasswordEnv: null);
+        HttpClient? nullClient = null;
+
+        // Act & Assert
+#pragma warning disable CS8604 // Possible null reference argument — intentional for this test
+        Assert.Throws<ArgumentNullException>(() =>
+            ReviewIndex.Load(source, nullClient!));
+#pragma warning restore CS8604
     }
 }
