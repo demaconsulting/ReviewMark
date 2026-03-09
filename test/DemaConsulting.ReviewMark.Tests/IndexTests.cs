@@ -340,19 +340,16 @@ public class IndexTests
     // -------------------------------------------------------------------------
 
     /// <summary>
-    ///     Test that scanning an empty directory with a PDF glob pattern leaves the
-    ///     index empty.
+    ///     Test that scanning an empty directory with a PDF glob pattern returns an
+    ///     empty index.
     /// </summary>
     [TestMethod]
     public void ReviewIndex_Scan_NoMatchingFiles_LeavesIndexEmpty()
     {
-        // Arrange — an empty directory and a freshly created index
-        var index = ReviewIndex.Empty();
-
         // Act — scan with a PDF glob pattern; no files exist so nothing should be indexed
-        index.Scan(_testDirectory, ["**/*.pdf"]);
+        var index = ReviewIndex.Scan(_testDirectory, ["**/*.pdf"]);
 
-        // Assert — the index should remain empty after scanning an empty directory
+        // Assert — the index should be empty when no PDFs are found
         Assert.IsFalse(index.HasId("any-id"),
             "Index should be empty when no PDFs are found.");
     }
@@ -371,10 +368,8 @@ public class IndexTests
         document.Info.Keywords = "id=Core-Logic fingerprint=abc123 date=2026-03-08 result=pass";
         document.Save(pdfPath);
 
-        var index = ReviewIndex.Empty();
-
         // Act
-        index.Scan(_testDirectory, ["**/*.pdf"]);
+        var index = ReviewIndex.Scan(_testDirectory, ["**/*.pdf"]);
 
         // Assert — the entry is retrievable and all fields match the PDF keywords
         var evidence = index.GetEvidence("Core-Logic", "abc123");
@@ -401,11 +396,10 @@ public class IndexTests
         document.Info.Keywords = "fingerprint=abc123 date=2026-03-08 result=pass";
         document.Save(pdfPath);
 
-        var index = ReviewIndex.Empty();
         var warnings = new List<string>();
 
         // Act
-        index.Scan(_testDirectory, ["**/*.pdf"], onWarning: msg => warnings.Add(msg));
+        var index = ReviewIndex.Scan(_testDirectory, ["**/*.pdf"], onWarning: msg => warnings.Add(msg));
 
         // Assert — the file is skipped and at least one warning is emitted; no entry in the index
         Assert.IsTrue(warnings.Count > 0, "A warning should be emitted for a PDF missing 'id'.");
@@ -427,11 +421,10 @@ public class IndexTests
         document.Info.Keywords = "id=Core-Logic date=2026-03-08 result=pass";
         document.Save(pdfPath);
 
-        var index = ReviewIndex.Empty();
         var warnings = new List<string>();
 
         // Act
-        index.Scan(_testDirectory, ["**/*.pdf"], onWarning: msg => warnings.Add(msg));
+        var index = ReviewIndex.Scan(_testDirectory, ["**/*.pdf"], onWarning: msg => warnings.Add(msg));
 
         // Assert — the file is skipped and at least one warning is emitted; no entry in the index
         Assert.IsTrue(warnings.Count > 0, "A warning should be emitted for a PDF missing 'fingerprint'.");
@@ -453,11 +446,10 @@ public class IndexTests
         document.Info.Keywords = string.Empty;
         document.Save(pdfPath);
 
-        var index = ReviewIndex.Empty();
         var warnings = new List<string>();
 
         // Act
-        index.Scan(_testDirectory, ["**/*.pdf"], onWarning: msg => warnings.Add(msg));
+        var index = ReviewIndex.Scan(_testDirectory, ["**/*.pdf"], onWarning: msg => warnings.Add(msg));
 
         // Assert — the file is skipped and at least one warning is emitted; index remains empty
         Assert.IsTrue(warnings.Count > 0, "A warning should be emitted for a PDF with no keywords.");
@@ -485,10 +477,8 @@ public class IndexTests
         doc2.Info.Keywords = "id=Beta fingerprint=fp-beta date=2026-05-02 result=pass";
         doc2.Save(pdf2Path);
 
-        var index = ReviewIndex.Empty();
-
         // Act
-        index.Scan(_testDirectory, ["**/*.pdf"]);
+        var index = ReviewIndex.Scan(_testDirectory, ["**/*.pdf"]);
 
         // Assert — both entries are present in the index
         var alpha = index.GetEvidence("Alpha", "fp-alpha");
@@ -501,14 +491,13 @@ public class IndexTests
     }
 
     /// <summary>
-    ///     Test that calling <see cref="ReviewIndex.Scan" /> on an index that already
-    ///     contains entries clears those entries and rebuilds from the current directory
-    ///     contents.
+    ///     Test that <see cref="ReviewIndex.Scan" /> always returns a fresh index
+    ///     that does not include entries from any separately loaded index.
     /// </summary>
     [TestMethod]
     public void ReviewIndex_Scan_ClearsExistingEntries()
     {
-        // Arrange — load an index with a pre-existing entry, then scan an empty directory
+        // Arrange — load an index with a pre-existing entry
         const string json = """
             {
               "reviews": [
@@ -523,15 +512,15 @@ public class IndexTests
             }
             """;
         using var loadStream = new MemoryStream(Encoding.UTF8.GetBytes(json));
-        var index = ReviewIndex.Load(loadStream);
-        Assert.IsTrue(index.HasId("Old-Entry"), "Pre-condition: Old-Entry should be present before scan.");
+        var existingIndex = ReviewIndex.Load(loadStream);
+        Assert.IsTrue(existingIndex.HasId("Old-Entry"), "Pre-condition: Old-Entry should be present in the loaded index.");
 
-        // Act — scan the empty test directory; no PDFs exist so all previous entries must be gone
-        index.Scan(_testDirectory, ["**/*.pdf"]);
+        // Act — scan is a static factory; it always creates a fresh index independent of any prior index
+        var scannedIndex = ReviewIndex.Scan(_testDirectory, ["**/*.pdf"]);
 
-        // Assert — the previously loaded entry no longer appears after the scan
-        Assert.IsFalse(index.HasId("Old-Entry"),
-            "Scan should clear existing entries before rebuilding the index.");
+        // Assert — the scanned index does not contain entries from the separately loaded index
+        Assert.IsFalse(scannedIndex.HasId("Old-Entry"),
+            "Scan should return a fresh index containing only scanned PDFs.");
     }
 
     // -------------------------------------------------------------------------

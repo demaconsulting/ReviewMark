@@ -309,8 +309,7 @@ internal static class Validation
             document.Save(pdfPath);
 
             // Scan the directory and verify the index is populated
-            var index = ReviewIndex.Empty();
-            index.Scan(tempDir.DirectoryPath, ["**/*.pdf"]);
+            var index = ReviewIndex.Scan(tempDir.DirectoryPath, ["**/*.pdf"]);
 
             var evidence = index.GetEvidence("Core-Logic", "abc123");
             if (evidence is { Id: "Core-Logic", Fingerprint: "abc123", Result: "pass" } &&

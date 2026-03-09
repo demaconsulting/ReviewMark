@@ -308,13 +308,13 @@ internal sealed class ReviewIndex
     }
 
     // ---------------------------------------------------------------------------
-    // Instance methods — scanning
+    // Static factory methods — scanning
     // ---------------------------------------------------------------------------
 
     /// <summary>
-    ///     Rebuilds the index by scanning PDF files in <paramref name="directory" />
-    ///     that match the given glob <paramref name="paths" />. Any existing entries
-    ///     are discarded before the scan begins.
+    ///     Creates a new <see cref="ReviewIndex" /> by scanning PDF files in
+    ///     <paramref name="directory" /> that match the given glob
+    ///     <paramref name="paths" />.
     /// </summary>
     /// <param name="directory">The root directory to search.</param>
     /// <param name="paths">Ordered include/exclude glob patterns.</param>
@@ -322,10 +322,11 @@ internal sealed class ReviewIndex
     ///     Optional callback invoked with a human-readable message whenever a PDF
     ///     is skipped (missing required metadata or unreadable).
     /// </param>
-    internal void Scan(string directory, IReadOnlyList<string> paths, Action<string>? onWarning = null)
+    /// <returns>A new <see cref="ReviewIndex" /> populated from the scanned PDFs.</returns>
+    internal static ReviewIndex Scan(string directory, IReadOnlyList<string> paths, Action<string>? onWarning = null)
     {
-        // Discard all existing entries so this is always a fresh rebuild
-        _byId.Clear();
+        // Create a fresh index to populate
+        var index = new ReviewIndex();
 
         // Resolve the set of PDF files that match the caller's glob patterns
         var matchedFiles = GlobMatcher.GetMatchingFiles(directory, paths);
@@ -339,7 +340,7 @@ internal sealed class ReviewIndex
             // Attempt to open and parse each PDF, capturing per-file failures as warnings
             try
             {
-                ProcessPdf(fullPath, relativePath, onWarning);
+                index.ProcessPdf(fullPath, relativePath, onWarning);
             }
             catch (Exception ex)
             {
@@ -347,6 +348,8 @@ internal sealed class ReviewIndex
                     $"Skipping '{relativePath}': failed to process PDF — {ex.Message}");
             }
         }
+
+        return index;
     }
 
     /// <summary>
