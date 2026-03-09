@@ -19,6 +19,8 @@
 // SOFTWARE.
 
 using System.Net.Http;
+using System.Net.Http.Headers;
+using System.Text;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using PdfSharp.Pdf;
@@ -155,8 +157,8 @@ internal sealed class ReviewIndex
     ///     Loads a <see cref="ReviewIndex" /> from an <see cref="EvidenceSource" />.
     ///     For <c>fileshare</c> sources the <see cref="EvidenceSource.Location" /> is treated as the
     ///     path to the <c>index.json</c> file. For <c>url</c> sources the location is the HTTP(S) URL
-    ///     of the <c>index.json</c> file; an <see cref="HttpClient" /> with optional Basic-auth
-    ///     credentials read from the environment variables named by
+    ///     of the <c>index.json</c> file; an <see cref="HttpClient" /> with optional pre-emptive
+    ///     Basic-auth credentials read from the environment variables named by
     ///     <see cref="EvidenceSource.UsernameEnv" /> and <see cref="EvidenceSource.PasswordEnv" /> is
     ///     created internally.
     /// </summary>
@@ -172,7 +174,13 @@ internal sealed class ReviewIndex
     {
         ArgumentNullException.ThrowIfNull(evidenceSource);
 
-        // Create an HttpClient configured with any credentials specified in the source
+        // Short-circuit for fileshare sources — no HttpClient needed
+        if (evidenceSource.Type.Equals("fileshare", StringComparison.OrdinalIgnoreCase))
+        {
+            return LoadFromFile(evidenceSource.Location);
+        }
+
+        // For all other types, create a configured HttpClient and delegate to the testable overload
         using var httpClient = CreateHttpClient(evidenceSource);
         return Load(evidenceSource, httpClient);
     }
@@ -310,14 +318,14 @@ internal sealed class ReviewIndex
     /// <summary>
     ///     Creates an <see cref="HttpClient" /> configured for the given
     ///     <see cref="EvidenceSource" />. If the source specifies credential environment-variable
-    ///     names and those variables are set, Basic-auth credentials are applied via
-    ///     <see cref="HttpClientHandler.Credentials" />.
+    ///     names and those variables are set, a pre-emptive Basic auth header is applied directly
+    ///     to <see cref="HttpClient.DefaultRequestHeaders" />.
     /// </summary>
     /// <param name="evidenceSource">The evidence source configuration.</param>
     /// <returns>A configured <see cref="HttpClient" /> instance.</returns>
     private static HttpClient CreateHttpClient(EvidenceSource evidenceSource)
     {
-        var handler = new HttpClientHandler();
+        var client = new HttpClient();
 
         // Look up credentials from environment variables if names were specified
         var username = evidenceSource.UsernameEnv != null
@@ -327,13 +335,15 @@ internal sealed class ReviewIndex
             ? Environment.GetEnvironmentVariable(evidenceSource.PasswordEnv)
             : null;
 
-        // Apply credentials when both username and password are available
+        // Apply pre-emptive Basic auth header when both username and password are available
         if (!string.IsNullOrEmpty(username) && !string.IsNullOrEmpty(password))
         {
-            handler.Credentials = new System.Net.NetworkCredential(username, password);
+            var encoded = Convert.ToBase64String(Encoding.UTF8.GetBytes($"{username}:{password}"));
+            client.DefaultRequestHeaders.Authorization =
+                new AuthenticationHeaderValue("Basic", encoded);
         }
 
-        return new HttpClient(handler);
+        return client;
     }
 
     /// <summary>
@@ -352,7 +362,8 @@ internal sealed class ReviewIndex
         try
         {
             // Send a synchronous GET request to the index URL
-            using var response = httpClient.Send(new HttpRequestMessage(HttpMethod.Get, url));
+            using var request = new HttpRequestMessage(HttpMethod.Get, url);
+            using var response = httpClient.Send(request);
 
             // Treat any non-success HTTP status as a load failure
             if (!response.IsSuccessStatusCode)
