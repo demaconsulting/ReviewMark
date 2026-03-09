@@ -152,102 +152,6 @@ internal sealed class ReviewIndex
     internal static ReviewIndex Empty() => new();
 
     /// <summary>
-    ///     Loads a <see cref="ReviewIndex" /> from a JSON file on disk.
-    /// </summary>
-    /// <param name="filePath">Absolute or relative path to the <c>index.json</c> file.</param>
-    /// <returns>A populated <see cref="ReviewIndex" /> instance.</returns>
-    /// <exception cref="ArgumentException">
-    ///     Thrown when <paramref name="filePath" /> is <c>null</c>, empty, or whitespace.
-    /// </exception>
-    /// <exception cref="InvalidOperationException">
-    ///     Thrown when <paramref name="filePath" /> cannot be read or the
-    ///     JSON content is invalid.
-    /// </exception>
-    private static ReviewIndex Load(string filePath)
-    {
-        // Validate the path argument
-        if (string.IsNullOrWhiteSpace(filePath))
-        {
-            throw new ArgumentException("File path must not be null or empty.", nameof(filePath));
-        }
-
-        // Open the file and delegate to the stream overload for deserialization
-        try
-        {
-            using var stream = File.OpenRead(filePath);
-            return Load(stream);
-        }
-        catch (InvalidOperationException)
-        {
-            // Re-throw exceptions that already carry context
-            throw;
-        }
-        catch (Exception ex)
-        {
-            throw new InvalidOperationException(
-                $"Failed to read review index file '{filePath}': {ex.Message}", ex);
-        }
-    }
-
-    /// <summary>
-    ///     Loads a <see cref="ReviewIndex" /> from a JSON <see cref="Stream" />.
-    /// </summary>
-    /// <param name="stream">The stream containing the JSON index document.</param>
-    /// <returns>A populated <see cref="ReviewIndex" /> instance.</returns>
-    /// <exception cref="ArgumentNullException">
-    ///     Thrown when <paramref name="stream" /> is <c>null</c>.
-    /// </exception>
-    /// <exception cref="ArgumentException">
-    ///     Thrown when the stream does not contain valid JSON.
-    /// </exception>
-    private static ReviewIndex Load(Stream stream)
-    {
-        // Validate the stream argument
-        ArgumentNullException.ThrowIfNull(stream);
-
-        // Deserialize the JSON document from the stream
-        ReviewIndexJson? raw;
-        try
-        {
-            raw = JsonSerializer.Deserialize<ReviewIndexJson>(stream, JsonOptions);
-        }
-        catch (JsonException ex)
-        {
-            throw new ArgumentException($"Invalid JSON content in review index: {ex.Message}", nameof(stream), ex);
-        }
-
-        // Build and populate a new index from the deserialized model
-        var index = new ReviewIndex();
-        foreach (var entry in raw?.Reviews ?? [])
-        {
-            // Skip entries missing required fields
-            if (string.IsNullOrWhiteSpace(entry.Id) || string.IsNullOrWhiteSpace(entry.Fingerprint))
-            {
-                continue;
-            }
-
-            // Create and store the evidence record
-            var evidence = new ReviewEvidence(
-                Id: entry.Id,
-                Fingerprint: entry.Fingerprint,
-                Date: entry.Date ?? string.Empty,
-                Result: entry.Result ?? string.Empty,
-                File: entry.File ?? string.Empty);
-
-            // Insert into the two-level dictionary
-            if (!index._byId.TryGetValue(evidence.Id, out var byFingerprint))
-            {
-                byFingerprint = new Dictionary<string, ReviewEvidence>();
-                index._byId[evidence.Id] = byFingerprint;
-            }
-
-            byFingerprint[evidence.Fingerprint] = evidence;
-        }
-
-        return index;
-    }
-
-    /// <summary>
     ///     Loads a <see cref="ReviewIndex" /> from an <see cref="EvidenceSource" />.
     ///     For <c>fileshare</c> sources the <see cref="EvidenceSource.Location" /> is treated as the
     ///     path to the <c>index.json</c> file. For <c>url</c> sources the location is the HTTP(S) URL
@@ -296,11 +200,111 @@ internal sealed class ReviewIndex
         // Dispatch to the appropriate loader based on the evidence-source type
         return evidenceSource.Type.ToLowerInvariant() switch
         {
-            "fileshare" => Load(evidenceSource.Location),
+            "fileshare" => LoadFromFile(evidenceSource.Location),
             "url" => LoadFromUrl(evidenceSource.Location, httpClient),
             _ => throw new InvalidOperationException(
                 $"Unsupported evidence source type '{evidenceSource.Type}'.")
         };
+    }
+
+    // ---------------------------------------------------------------------------
+    // Private helpers — load implementation
+    // ---------------------------------------------------------------------------
+
+    /// <summary>
+    ///     Loads a <see cref="ReviewIndex" /> from a JSON file on disk.
+    /// </summary>
+    /// <param name="filePath">Absolute or relative path to the <c>index.json</c> file.</param>
+    /// <returns>A populated <see cref="ReviewIndex" /> instance.</returns>
+    /// <exception cref="ArgumentException">
+    ///     Thrown when <paramref name="filePath" /> is <c>null</c>, empty, or whitespace.
+    /// </exception>
+    /// <exception cref="InvalidOperationException">
+    ///     Thrown when <paramref name="filePath" /> cannot be read or the
+    ///     JSON content is invalid.
+    /// </exception>
+    private static ReviewIndex LoadFromFile(string filePath)
+    {
+        // Validate the path argument
+        if (string.IsNullOrWhiteSpace(filePath))
+        {
+            throw new ArgumentException("File path must not be null or empty.", nameof(filePath));
+        }
+
+        // Open the file and delegate to the stream overload for deserialization
+        try
+        {
+            using var stream = File.OpenRead(filePath);
+            return LoadFromStream(stream);
+        }
+        catch (InvalidOperationException)
+        {
+            // Re-throw exceptions that already carry context
+            throw;
+        }
+        catch (Exception ex)
+        {
+            throw new InvalidOperationException(
+                $"Failed to read review index file '{filePath}': {ex.Message}", ex);
+        }
+    }
+
+    /// <summary>
+    ///     Loads a <see cref="ReviewIndex" /> from a JSON <see cref="Stream" />.
+    /// </summary>
+    /// <param name="stream">The stream containing the JSON index document.</param>
+    /// <returns>A populated <see cref="ReviewIndex" /> instance.</returns>
+    /// <exception cref="ArgumentNullException">
+    ///     Thrown when <paramref name="stream" /> is <c>null</c>.
+    /// </exception>
+    /// <exception cref="ArgumentException">
+    ///     Thrown when the stream does not contain valid JSON.
+    /// </exception>
+    private static ReviewIndex LoadFromStream(Stream stream)
+    {
+        // Validate the stream argument
+        ArgumentNullException.ThrowIfNull(stream);
+
+        // Deserialize the JSON document from the stream
+        ReviewIndexJson? raw;
+        try
+        {
+            raw = JsonSerializer.Deserialize<ReviewIndexJson>(stream, JsonOptions);
+        }
+        catch (JsonException ex)
+        {
+            throw new ArgumentException($"Invalid JSON content in review index: {ex.Message}", nameof(stream), ex);
+        }
+
+        // Build and populate a new index from the deserialized model
+        var index = new ReviewIndex();
+        foreach (var entry in raw?.Reviews ?? [])
+        {
+            // Skip entries missing required fields
+            if (string.IsNullOrWhiteSpace(entry.Id) || string.IsNullOrWhiteSpace(entry.Fingerprint))
+            {
+                continue;
+            }
+
+            // Create and store the evidence record
+            var evidence = new ReviewEvidence(
+                Id: entry.Id,
+                Fingerprint: entry.Fingerprint,
+                Date: entry.Date ?? string.Empty,
+                Result: entry.Result ?? string.Empty,
+                File: entry.File ?? string.Empty);
+
+            // Insert into the two-level dictionary
+            if (!index._byId.TryGetValue(evidence.Id, out var byFingerprint))
+            {
+                byFingerprint = new Dictionary<string, ReviewEvidence>();
+                index._byId[evidence.Id] = byFingerprint;
+            }
+
+            byFingerprint[evidence.Fingerprint] = evidence;
+        }
+
+        return index;
     }
 
     /// <summary>
@@ -361,7 +365,7 @@ internal sealed class ReviewIndex
             using var stream = response.Content.ReadAsStream();
             try
             {
-                return Load(stream);
+                return LoadFromStream(stream);
             }
             catch (ArgumentException ex)
             {
