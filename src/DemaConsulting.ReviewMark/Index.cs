@@ -155,12 +155,21 @@ internal sealed class ReviewIndex
     /// </summary>
     /// <param name="filePath">Absolute or relative path to the <c>index.json</c> file.</param>
     /// <returns>A populated <see cref="ReviewIndex" /> instance.</returns>
+    /// <exception cref="ArgumentException">
+    ///     Thrown when <paramref name="filePath" /> is <c>null</c>, empty, or whitespace.
+    /// </exception>
     /// <exception cref="InvalidOperationException">
     ///     Thrown when <paramref name="filePath" /> cannot be read or the
     ///     JSON content is invalid.
     /// </exception>
     internal static ReviewIndex Load(string filePath)
     {
+        // Validate the path argument
+        if (string.IsNullOrWhiteSpace(filePath))
+        {
+            throw new ArgumentException("File path must not be null or empty.", nameof(filePath));
+        }
+
         // Open the file and delegate to the stream overload for deserialization
         try
         {
@@ -413,7 +422,7 @@ internal sealed class ReviewIndex
     /// </summary>
     /// <param name="keywords">The raw keywords string from a PDF document.</param>
     /// <returns>
-    ///     A dictionary mapping each key to its value; keys are lowercased.
+    ///     A case-insensitive dictionary mapping each key to its value.
     ///     Tokens that do not contain <c>=</c> are ignored.
     /// </returns>
     private static Dictionary<string, string> ParseKeywordPairs(string keywords)

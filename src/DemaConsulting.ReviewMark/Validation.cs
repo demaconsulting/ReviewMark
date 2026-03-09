@@ -303,10 +303,12 @@ internal static class Validation
 
             // Create a minimal PDF with review metadata in its Keywords field
             var pdfPath = PathHelpers.SafePathCombine(tempDir.DirectoryPath, "review.pdf");
-            var document = new PdfDocument();
-            document.AddPage();
-            document.Info.Keywords = "id=Core-Logic fingerprint=abc123 date=2026-03-08 result=pass";
-            document.Save(pdfPath);
+            using (var document = new PdfDocument())
+            {
+                document.AddPage();
+                document.Info.Keywords = "id=Core-Logic fingerprint=abc123 date=2026-03-08 result=pass";
+                document.Save(pdfPath);
+            }
 
             // Scan the directory and verify the index is populated
             var index = ReviewIndex.Scan(tempDir.DirectoryPath, ["**/*.pdf"]);

@@ -227,6 +227,21 @@ public class IndexTests
     }
 
     /// <summary>
+    ///     Test that passing a null or empty path to <see cref="ReviewIndex.Load(string)" />
+    ///     throws <see cref="ArgumentException" />.
+    /// </summary>
+    [TestMethod]
+    public void ReviewIndex_Load_File_NullPath_ThrowsArgumentException()
+    {
+        // Arrange
+        var emptyPath = string.Empty;
+
+        // Act & Assert — an empty path is invalid and should throw
+        Assert.Throws<ArgumentException>(() =>
+            ReviewIndex.Load(emptyPath));
+    }
+
+    /// <summary>
     ///     Test that passing a null stream to <see cref="ReviewIndex.Save(Stream)" />
     ///     throws <see cref="ArgumentNullException" />.
     /// </summary>
@@ -363,10 +378,12 @@ public class IndexTests
     {
         // Arrange — create a PDF with all required keywords
         var pdfPath = PathHelpers.SafePathCombine(_testDirectory, "valid-review.pdf");
-        var document = new PdfDocument();
-        document.AddPage();
-        document.Info.Keywords = "id=Core-Logic fingerprint=abc123 date=2026-03-08 result=pass";
-        document.Save(pdfPath);
+        using (var document = new PdfDocument())
+        {
+            document.AddPage();
+            document.Info.Keywords = "id=Core-Logic fingerprint=abc123 date=2026-03-08 result=pass";
+            document.Save(pdfPath);
+        }
 
         // Act
         var index = ReviewIndex.Scan(_testDirectory, ["**/*.pdf"]);
@@ -391,10 +408,12 @@ public class IndexTests
     {
         // Arrange — create a PDF that has fingerprint but no id
         var pdfPath = PathHelpers.SafePathCombine(_testDirectory, "missing-id.pdf");
-        var document = new PdfDocument();
-        document.AddPage();
-        document.Info.Keywords = "fingerprint=abc123 date=2026-03-08 result=pass";
-        document.Save(pdfPath);
+        using (var document = new PdfDocument())
+        {
+            document.AddPage();
+            document.Info.Keywords = "fingerprint=abc123 date=2026-03-08 result=pass";
+            document.Save(pdfPath);
+        }
 
         var warnings = new List<string>();
 
@@ -416,10 +435,12 @@ public class IndexTests
     {
         // Arrange — create a PDF that has id but no fingerprint
         var pdfPath = PathHelpers.SafePathCombine(_testDirectory, "missing-fingerprint.pdf");
-        var document = new PdfDocument();
-        document.AddPage();
-        document.Info.Keywords = "id=Core-Logic date=2026-03-08 result=pass";
-        document.Save(pdfPath);
+        using (var document = new PdfDocument())
+        {
+            document.AddPage();
+            document.Info.Keywords = "id=Core-Logic date=2026-03-08 result=pass";
+            document.Save(pdfPath);
+        }
 
         var warnings = new List<string>();
 
@@ -441,10 +462,12 @@ public class IndexTests
     {
         // Arrange — create a PDF with an empty Keywords field
         var pdfPath = PathHelpers.SafePathCombine(_testDirectory, "no-keywords.pdf");
-        var document = new PdfDocument();
-        document.AddPage();
-        document.Info.Keywords = string.Empty;
-        document.Save(pdfPath);
+        using (var document = new PdfDocument())
+        {
+            document.AddPage();
+            document.Info.Keywords = string.Empty;
+            document.Save(pdfPath);
+        }
 
         var warnings = new List<string>();
 
@@ -466,16 +489,20 @@ public class IndexTests
     {
         // Arrange — create two PDFs with different ids and fingerprints
         var pdf1Path = PathHelpers.SafePathCombine(_testDirectory, "review-alpha.pdf");
-        var doc1 = new PdfDocument();
-        doc1.AddPage();
-        doc1.Info.Keywords = "id=Alpha fingerprint=fp-alpha date=2026-05-01 result=pass";
-        doc1.Save(pdf1Path);
+        using (var doc1 = new PdfDocument())
+        {
+            doc1.AddPage();
+            doc1.Info.Keywords = "id=Alpha fingerprint=fp-alpha date=2026-05-01 result=pass";
+            doc1.Save(pdf1Path);
+        }
 
         var pdf2Path = PathHelpers.SafePathCombine(_testDirectory, "review-beta.pdf");
-        var doc2 = new PdfDocument();
-        doc2.AddPage();
-        doc2.Info.Keywords = "id=Beta fingerprint=fp-beta date=2026-05-02 result=pass";
-        doc2.Save(pdf2Path);
+        using (var doc2 = new PdfDocument())
+        {
+            doc2.AddPage();
+            doc2.Info.Keywords = "id=Beta fingerprint=fp-beta date=2026-05-02 result=pass";
+            doc2.Save(pdf2Path);
+        }
 
         // Act
         var index = ReviewIndex.Scan(_testDirectory, ["**/*.pdf"]);
