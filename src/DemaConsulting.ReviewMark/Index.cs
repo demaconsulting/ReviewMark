@@ -274,9 +274,9 @@ internal sealed class ReviewIndex
             using var stream = File.Create(filePath);
             Save(stream);
         }
-        catch (ArgumentException)
+        catch (ArgumentException ex) when (ex.ParamName == nameof(filePath))
         {
-            // Re-throw validation exceptions as-is
+            // Re-throw our own path-validation exception as-is
             throw;
         }
         catch (Exception ex)

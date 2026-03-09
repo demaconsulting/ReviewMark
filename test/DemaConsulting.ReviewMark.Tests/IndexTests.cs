@@ -346,7 +346,7 @@ public class IndexTests
             "GetEvidence should return null on an empty index.");
         Assert.IsFalse(index.HasId("any-id"),
             "HasId should return false on an empty index.");
-        Assert.HasCount(0, index.GetAllForId("any-id"),
+        Assert.AreEqual(0, index.GetAllForId("any-id").Count,
             "GetAllForId should return an empty list on an empty index.");
     }
 
@@ -750,7 +750,7 @@ public class IndexTests
         var entries = index.GetAllForId("Core-Logic");
 
         // Assert — both entries for "Core-Logic" are returned
-        Assert.HasCount(2, entries,
+        Assert.AreEqual(2, entries.Count,
             "GetAllForId should return exactly two entries for the id with two fingerprints.");
 
         var fingerprints = entries.Select(e => e.Fingerprint).ToHashSet();
@@ -787,7 +787,7 @@ public class IndexTests
 
         // Assert — an unknown id produces an empty list, not null
         Assert.IsNotNull(entries, "GetAllForId should never return null.");
-        Assert.HasCount(0, entries,
+        Assert.AreEqual(0, entries.Count,
             "GetAllForId should return an empty list for an id that is not in the index.");
     }
 }
