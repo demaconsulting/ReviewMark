@@ -167,7 +167,7 @@ public class IndexTests
     }
 
     /// <summary>
-    ///     Test that passing an <see cref="EvidenceSource" /> with an unrecognised type to
+    ///     Test that passing an <see cref="EvidenceSource" /> with an unrecognized type to
     ///     <see cref="ReviewIndex.Load(EvidenceSource)" /> throws
     ///     <see cref="InvalidOperationException" />.
     /// </summary>
