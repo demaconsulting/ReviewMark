@@ -324,7 +324,8 @@ internal sealed class ReviewMarkConfiguration
         if (string.Equals(config.EvidenceSource.Type, "fileshare", StringComparison.OrdinalIgnoreCase) &&
             !Path.IsPathRooted(config.EvidenceSource.Location))
         {
-            var baseDirectory = Path.GetDirectoryName(Path.GetFullPath(filePath)) ?? string.Empty;
+            var baseDirectory = Path.GetDirectoryName(Path.GetFullPath(filePath))
+                ?? throw new InvalidOperationException($"Cannot determine base directory for configuration file '{filePath}'.");
             var absoluteLocation = Path.GetFullPath(config.EvidenceSource.Location, baseDirectory);
             return new ReviewMarkConfiguration(
                 config.NeedsReviewPatterns,
