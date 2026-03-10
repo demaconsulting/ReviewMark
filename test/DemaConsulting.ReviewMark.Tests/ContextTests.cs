@@ -641,13 +641,13 @@ public class ContextTests
     }
 
     /// <summary>
-    ///     Test that --report-depth with a non-numeric value throws ArgumentException.
+    ///     Test that --report-depth with a missing value throws ArgumentException.
     /// </summary>
     [TestMethod]
-    public void Context_Create_ReportDepthFlag_WithInvalidValue_ThrowsArgumentException()
+    public void Context_Create_ReportDepthFlag_MissingValue_ThrowsArgumentException()
     {
-        // Act & Assert - --report-depth with a non-numeric value should throw
-        Assert.Throws<ArgumentException>(() => Context.Create(["--report-depth", "not-a-number"]));
+        // Act & Assert - --report-depth without a depth value should throw
+        Assert.Throws<ArgumentException>(() => Context.Create(["--report-depth"]));
     }
 
     /// <summary>
