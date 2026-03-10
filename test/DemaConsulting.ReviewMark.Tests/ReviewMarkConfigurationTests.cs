@@ -544,4 +544,41 @@ public class ReviewMarkConfigurationTests
         // Assert — heading is at depth 2
         Assert.StartsWith("## Review Status", result.Markdown);
     }
+
+    /// <summary>
+    ///     Test that PublishReviewPlan throws when markdownDepth exceeds 5,
+    ///     since subheadings at depth+1 would exceed the maximum Markdown heading level of 6.
+    /// </summary>
+    [TestMethod]
+    public void ReviewMarkConfiguration_PublishReviewPlan_MarkdownDepthAbove5_Throws()
+    {
+        // Arrange
+        var config = ReviewMarkConfiguration.Parse(MinimalYaml);
+        var srcDir = PathHelpers.SafePathCombine(_testDirectory, "src");
+        Directory.CreateDirectory(srcDir);
+        File.WriteAllText(PathHelpers.SafePathCombine(srcDir, "A.cs"), "class A {}");
+
+        // Act & Assert — depth 6 should throw because subheadings would require level 7
+        Assert.Throws<ArgumentOutOfRangeException>(
+            () => config.PublishReviewPlan(_testDirectory, markdownDepth: 6));
+    }
+
+    /// <summary>
+    ///     Test that PublishReviewReport throws when markdownDepth exceeds 5,
+    ///     since subheadings at depth+1 would exceed the maximum Markdown heading level of 6.
+    /// </summary>
+    [TestMethod]
+    public void ReviewMarkConfiguration_PublishReviewReport_MarkdownDepthAbove5_Throws()
+    {
+        // Arrange
+        var config = ReviewMarkConfiguration.Parse(MinimalYaml);
+        var srcDir = PathHelpers.SafePathCombine(_testDirectory, "src");
+        Directory.CreateDirectory(srcDir);
+        File.WriteAllText(PathHelpers.SafePathCombine(srcDir, "A.cs"), "class A {}");
+        var index = ReviewIndex.Empty();
+
+        // Act & Assert — depth 6 should throw because subheadings would require level 7
+        Assert.Throws<ArgumentOutOfRangeException>(
+            () => config.PublishReviewReport(index, _testDirectory, markdownDepth: 6));
+    }
 }

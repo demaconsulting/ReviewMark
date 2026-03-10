@@ -245,7 +245,7 @@ internal sealed record ReviewPlanResult(string Markdown, bool HasIssues);
 /// </summary>
 /// <param name="Markdown">The generated Markdown content.</param>
 /// <param name="HasIssues">
-///     <c>true</c> if any reviews are stale or missing; otherwise <c>false</c>.
+///     <c>true</c> if any reviews are failed, stale, or missing; otherwise <c>false</c>.
 /// </param>
 internal sealed record ReviewReportResult(string Markdown, bool HasIssues);
 
@@ -426,12 +426,16 @@ internal sealed class ReviewMarkConfiguration
     ///     indicating whether any files requiring review are uncovered.
     /// </returns>
     /// <exception cref="ArgumentException">Thrown when <paramref name="directory" /> is null or whitespace.</exception>
-    /// <exception cref="ArgumentOutOfRangeException">Thrown when <paramref name="markdownDepth" /> is less than 1.</exception>
+    /// <exception cref="ArgumentOutOfRangeException">
+    ///     Thrown when <paramref name="markdownDepth" /> is less than 1 or greater than 5
+    ///     (subheadings at depth+1 would exceed the maximum Markdown heading level of 6).
+    /// </exception>
     internal ReviewPlanResult PublishReviewPlan(string directory, int markdownDepth = 1)
     {
         // Validate input parameters
         ArgumentException.ThrowIfNullOrWhiteSpace(directory);
         ArgumentOutOfRangeException.ThrowIfNegativeOrZero(markdownDepth);
+        ArgumentOutOfRangeException.ThrowIfGreaterThan(markdownDepth, 5);
 
         // Build the section heading at the requested depth
         var sb = new StringBuilder();
@@ -508,11 +512,14 @@ internal sealed class ReviewMarkConfiguration
     /// </param>
     /// <returns>
     ///     A <see cref="ReviewReportResult" /> containing the Markdown text and a flag
-    ///     indicating whether any reviews are stale or missing.
+    ///     indicating whether any reviews are failed, stale, or missing.
     /// </returns>
     /// <exception cref="ArgumentNullException">Thrown when <paramref name="index" /> is <c>null</c>.</exception>
     /// <exception cref="ArgumentException">Thrown when <paramref name="directory" /> is null or whitespace.</exception>
-    /// <exception cref="ArgumentOutOfRangeException">Thrown when <paramref name="markdownDepth" /> is less than 1.</exception>
+    /// <exception cref="ArgumentOutOfRangeException">
+    ///     Thrown when <paramref name="markdownDepth" /> is less than 1 or greater than 5
+    ///     (subheadings at depth+1 would exceed the maximum Markdown heading level of 6).
+    /// </exception>
     internal ReviewReportResult PublishReviewReport(ReviewIndex index, string directory, int markdownDepth = 1)
     {
         // Validate the required index argument
@@ -521,6 +528,7 @@ internal sealed class ReviewMarkConfiguration
         // Validate remaining input parameters
         ArgumentException.ThrowIfNullOrWhiteSpace(directory);
         ArgumentOutOfRangeException.ThrowIfNegativeOrZero(markdownDepth);
+        ArgumentOutOfRangeException.ThrowIfGreaterThan(markdownDepth, 5);
 
         // Build the section heading at the requested depth
         var sb = new StringBuilder();
@@ -532,7 +540,7 @@ internal sealed class ReviewMarkConfiguration
         sb.AppendLine("| Review ID | Status | Date | Result |");
         sb.AppendLine("| :--- | :--- | :--- | :--- |");
 
-        // Track whether any reviews are stale or missing
+        // Track whether any reviews are failed, stale, or missing
         var hasIssues = false;
 
         // Collect referenced documents (review ID and file) while iterating
