@@ -396,10 +396,10 @@ public class ContextTests
     [TestMethod]
     public void Context_Create_DefinitionFlag_SetsDefinitionFile()
     {
-        // Act
+        // Act - create context specifying a definition YAML file
         using var context = Context.Create(["--definition", "spec.yaml"]);
 
-        // Assert
+        // Assert - DefinitionFile is set to the provided path and exit code is 0
         Assert.AreEqual("spec.yaml", context.DefinitionFile);
         Assert.AreEqual(0, context.ExitCode);
     }
@@ -410,7 +410,7 @@ public class ContextTests
     [TestMethod]
     public void Context_Create_DefinitionFlag_WithoutValue_ThrowsArgumentException()
     {
-        // Act & Assert
+        // Act & Assert - --definition with no following value should throw and include the flag name in the message
         var exception = Assert.Throws<ArgumentException>(() => Context.Create(["--definition"]));
         Assert.Contains("--definition", exception.Message);
     }
@@ -421,10 +421,10 @@ public class ContextTests
     [TestMethod]
     public void Context_Create_PlanFlag_SetsPlanFile()
     {
-        // Act
+        // Act - create context specifying a plan output file
         using var context = Context.Create(["--plan", "plan.yaml"]);
 
-        // Assert
+        // Assert - PlanFile is set to the provided path and exit code is 0
         Assert.AreEqual("plan.yaml", context.PlanFile);
         Assert.AreEqual(0, context.ExitCode);
     }
@@ -435,10 +435,10 @@ public class ContextTests
     [TestMethod]
     public void Context_Create_PlanDepthFlag_SetsPlanDepth()
     {
-        // Act
+        // Act - create context specifying a heading depth of 3
         using var context = Context.Create(["--plan-depth", "3"]);
 
-        // Assert
+        // Assert - PlanDepth is set to the parsed integer value and exit code is 0
         Assert.AreEqual(3, context.PlanDepth);
         Assert.AreEqual(0, context.ExitCode);
     }
@@ -450,7 +450,7 @@ public class ContextTests
     [TestMethod]
     public void Context_Create_PlanDepthFlag_WithInvalidValue_ThrowsArgumentException()
     {
-        // Act & Assert
+        // Act & Assert - --plan-depth with a non-numeric value should throw
         Assert.Throws<ArgumentException>(() => Context.Create(["--plan-depth", "not-a-number"]));
     }
 
@@ -461,7 +461,7 @@ public class ContextTests
     [TestMethod]
     public void Context_Create_PlanDepthFlag_WithZeroValue_ThrowsArgumentException()
     {
-        // Act & Assert
+        // Act & Assert - --plan-depth requires a positive integer; zero is not valid
         Assert.Throws<ArgumentException>(() => Context.Create(["--plan-depth", "0"]));
     }
 
@@ -471,10 +471,10 @@ public class ContextTests
     [TestMethod]
     public void Context_Create_ReportFlag_SetsReportFile()
     {
-        // Act
+        // Act - create context specifying a report output file
         using var context = Context.Create(["--report", "report.md"]);
 
-        // Assert
+        // Assert - ReportFile is set to the provided path and exit code is 0
         Assert.AreEqual("report.md", context.ReportFile);
         Assert.AreEqual(0, context.ExitCode);
     }
@@ -485,10 +485,10 @@ public class ContextTests
     [TestMethod]
     public void Context_Create_ReportDepthFlag_SetsReportDepth()
     {
-        // Act
+        // Act - create context specifying a heading depth of 2
         using var context = Context.Create(["--report-depth", "2"]);
 
-        // Assert
+        // Assert - ReportDepth is set to the parsed integer value and exit code is 0
         Assert.AreEqual(2, context.ReportDepth);
         Assert.AreEqual(0, context.ExitCode);
     }
@@ -499,10 +499,10 @@ public class ContextTests
     [TestMethod]
     public void Context_Create_IndexFlag_AddsIndexPath()
     {
-        // Act
+        // Act - create context specifying one glob pattern for PDF evidence files
         using var context = Context.Create(["--index", "*.pdf"]);
 
-        // Assert
+        // Assert - IndexPaths contains the provided glob pattern and exit code is 0
         Assert.HasCount(1, context.IndexPaths);
         Assert.AreEqual("*.pdf", context.IndexPaths[0]);
         Assert.AreEqual(0, context.ExitCode);
@@ -514,10 +514,10 @@ public class ContextTests
     [TestMethod]
     public void Context_Create_IndexFlag_MultipleTimes_AddsAllPaths()
     {
-        // Act
+        // Act - create context with two different --index glob patterns
         using var context = Context.Create(["--index", "*.pdf", "--index", "docs/**/*.md"]);
 
-        // Assert
+        // Assert - IndexPaths contains both patterns and exit code is 0
         Assert.HasCount(2, context.IndexPaths);
         Assert.Contains("*.pdf", context.IndexPaths);
         Assert.Contains("docs/**/*.md", context.IndexPaths);
@@ -530,10 +530,10 @@ public class ContextTests
     [TestMethod]
     public void Context_Create_NoArguments_IndexPathsEmpty()
     {
-        // Act
+        // Act - create context with no arguments
         using var context = Context.Create([]);
 
-        // Assert
+        // Assert - IndexPaths is empty when no --index flags are provided
         Assert.HasCount(0, context.IndexPaths);
     }
 
@@ -543,10 +543,10 @@ public class ContextTests
     [TestMethod]
     public void Context_Create_NoArguments_PlanDepthDefaultsToOne()
     {
-        // Act
+        // Act - create context with no arguments
         using var context = Context.Create([]);
 
-        // Assert
+        // Assert - PlanDepth defaults to 1
         Assert.AreEqual(1, context.PlanDepth);
     }
 
@@ -556,10 +556,10 @@ public class ContextTests
     [TestMethod]
     public void Context_Create_NoArguments_ReportDepthDefaultsToOne()
     {
-        // Act
+        // Act - create context with no arguments
         using var context = Context.Create([]);
 
-        // Assert
+        // Assert - ReportDepth defaults to 1
         Assert.AreEqual(1, context.ReportDepth);
     }
 
@@ -569,10 +569,10 @@ public class ContextTests
     [TestMethod]
     public void Context_Create_EnforceFlag_SetsEnforceTrue()
     {
-        // Act
+        // Act - create context with the --enforce flag
         using var context = Context.Create(["--enforce"]);
 
-        // Assert
+        // Assert - Enforce is set to true and exit code is 0
         Assert.IsTrue(context.Enforce);
         Assert.AreEqual(0, context.ExitCode);
     }
@@ -583,10 +583,10 @@ public class ContextTests
     [TestMethod]
     public void Context_Create_NoArguments_EnforceFalse()
     {
-        // Act
+        // Act - create context with no arguments
         using var context = Context.Create([]);
 
-        // Assert
+        // Assert - Enforce defaults to false
         Assert.IsFalse(context.Enforce);
     }
 }

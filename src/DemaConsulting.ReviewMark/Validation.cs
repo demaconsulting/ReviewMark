@@ -104,65 +104,29 @@ internal static class Validation
     /// <param name="testResults">The test results collection.</param>
     private static void RunVersionTest(Context context, DemaConsulting.TestResults.TestResults testResults)
     {
-        var startTime = DateTime.UtcNow;
-        var test = CreateTestResult("ReviewMark_VersionDisplay");
-
-        try
+        RunValidationTest(context, testResults, "ReviewMark_VersionDisplay", () =>
         {
             using var tempDir = new TemporaryDirectory();
             var logFile = PathHelpers.SafePathCombine(tempDir.DirectoryPath, "version-test.log");
 
-            // Build command line arguments
-            var args = new List<string>
-            {
-                "--silent",
-                "--log", logFile,
-                "--version"
-            };
-
-            // Run the program
+            // Run the program capturing output to a log file
             int exitCode;
-            using (var testContext = Context.Create([.. args]))
+            using (var testContext = Context.Create(["--silent", "--log", logFile, "--version"]))
             {
                 Program.Run(testContext);
                 exitCode = testContext.ExitCode;
             }
 
-            // Check if execution succeeded
-            if (exitCode == 0)
+            if (exitCode != 0)
             {
-                // Read log content
-                var logContent = File.ReadAllText(logFile);
-
-                // Verify version string is in log (version contains dots like 0.0.0)
-                if (!string.IsNullOrWhiteSpace(logContent) &&
-                    logContent.Split('.').Length >= 3)
-                {
-                    test.Outcome = DemaConsulting.TestResults.TestOutcome.Passed;
-                    context.WriteLine($"✓ ReviewMark_VersionDisplay - Passed");
-                }
-                else
-                {
-                    test.Outcome = DemaConsulting.TestResults.TestOutcome.Failed;
-                    test.ErrorMessage = "Version string not found in log";
-                    context.WriteError($"✗ ReviewMark_VersionDisplay - Failed: Version string not found in log");
-                }
+                return $"Program exited with code {exitCode}";
             }
-            else
-            {
-                test.Outcome = DemaConsulting.TestResults.TestOutcome.Failed;
-                test.ErrorMessage = $"Program exited with code {exitCode}";
-                context.WriteError($"✗ ReviewMark_VersionDisplay - Failed: Exit code {exitCode}");
-            }
-        }
-        // Generic catch is justified here as this is a test framework - any exception should be
-        // recorded as a test failure to ensure robust test execution and reporting.
-        catch (Exception ex)
-        {
-            HandleTestException(test, context, "ReviewMark_VersionDisplay", ex);
-        }
 
-        FinalizeTestResult(test, startTime, testResults);
+            // Verify version string is present in the log (version contains at least two dots)
+            var logContent = File.ReadAllText(logFile);
+            return (!string.IsNullOrWhiteSpace(logContent) && logContent.Split('.').Length >= 3)
+                ? null : "Version string not found in log";
+        });
     }
 
     /// <summary>
@@ -172,64 +136,29 @@ internal static class Validation
     /// <param name="testResults">The test results collection.</param>
     private static void RunHelpTest(Context context, DemaConsulting.TestResults.TestResults testResults)
     {
-        var startTime = DateTime.UtcNow;
-        var test = CreateTestResult("ReviewMark_HelpDisplay");
-
-        try
+        RunValidationTest(context, testResults, "ReviewMark_HelpDisplay", () =>
         {
             using var tempDir = new TemporaryDirectory();
             var logFile = PathHelpers.SafePathCombine(tempDir.DirectoryPath, "help-test.log");
 
-            // Build command line arguments
-            var args = new List<string>
-            {
-                "--silent",
-                "--log", logFile,
-                "--help"
-            };
-
-            // Run the program
+            // Run the program capturing output to a log file
             int exitCode;
-            using (var testContext = Context.Create([.. args]))
+            using (var testContext = Context.Create(["--silent", "--log", logFile, "--help"]))
             {
                 Program.Run(testContext);
                 exitCode = testContext.ExitCode;
             }
 
-            // Check if execution succeeded
-            if (exitCode == 0)
+            if (exitCode != 0)
             {
-                // Read log content
-                var logContent = File.ReadAllText(logFile);
-
-                // Verify help text is in log
-                if (logContent.Contains("Usage:") && logContent.Contains("Options:"))
-                {
-                    test.Outcome = DemaConsulting.TestResults.TestOutcome.Passed;
-                    context.WriteLine($"✓ ReviewMark_HelpDisplay - Passed");
-                }
-                else
-                {
-                    test.Outcome = DemaConsulting.TestResults.TestOutcome.Failed;
-                    test.ErrorMessage = "Help text not found in log";
-                    context.WriteError($"✗ ReviewMark_HelpDisplay - Failed: Help text not found in log");
-                }
+                return $"Program exited with code {exitCode}";
             }
-            else
-            {
-                test.Outcome = DemaConsulting.TestResults.TestOutcome.Failed;
-                test.ErrorMessage = $"Program exited with code {exitCode}";
-                context.WriteError($"✗ ReviewMark_HelpDisplay - Failed: Exit code {exitCode}");
-            }
-        }
-        // Generic catch is justified here as this is a test framework - any exception should be
-        // recorded as a test failure to ensure robust test execution and reporting.
-        catch (Exception ex)
-        {
-            HandleTestException(test, context, "ReviewMark_HelpDisplay", ex);
-        }
 
-        FinalizeTestResult(test, startTime, testResults);
+            // Verify expected help headings are present in the log
+            var logContent = File.ReadAllText(logFile);
+            return (logContent.Contains("Usage:") && logContent.Contains("Options:"))
+                ? null : "Help text not found in log";
+        });
     }
 
     /// <summary>
@@ -239,74 +168,34 @@ internal static class Validation
     /// <param name="testResults">The test results collection.</param>
     private static void RunDefinitionPlanTest(Context context, DemaConsulting.TestResults.TestResults testResults)
     {
-        var startTime = DateTime.UtcNow;
-        var test = CreateTestResult("ReviewMark_DefinitionPlan");
-
-        try
+        RunValidationTest(context, testResults, "ReviewMark_DefinitionPlan", () =>
         {
             using var tempDir = new TemporaryDirectory();
-
-            // Create the shared definition fixtures (src file, definition YAML, empty index)
             var (definitionFile, _) = CreateTestDefinitionFixtures(tempDir.DirectoryPath);
-
-            // Define the plan output file
             var planFile = PathHelpers.SafePathCombine(tempDir.DirectoryPath, "plan.md");
 
-            // Build command line arguments
-            var args = new[]
-            {
-                "--silent",
-                "--definition", definitionFile,
-                "--plan", planFile
-            };
-
-            // Run the program - all src/**/*.cs files are covered so HasIssues should be false
+            // Run the program to generate the plan file
             int exitCode;
-            using (var testContext = Context.Create(args))
+            using (var testContext = Context.Create(["--silent", "--definition", definitionFile, "--plan", planFile]))
             {
                 Program.Run(testContext);
                 exitCode = testContext.ExitCode;
             }
 
-            // Verify execution succeeded with no coverage issues
             if (exitCode != 0)
             {
-                test.Outcome = DemaConsulting.TestResults.TestOutcome.Failed;
-                test.ErrorMessage = $"Program exited with code {exitCode}";
-                context.WriteError($"✗ ReviewMark_DefinitionPlan - Failed: Exit code {exitCode}");
+                return $"Program exited with code {exitCode}";
             }
-            else if (!File.Exists(planFile))
-            {
-                // Verify the plan file was written
-                test.Outcome = DemaConsulting.TestResults.TestOutcome.Failed;
-                test.ErrorMessage = "Plan file was not created";
-                context.WriteError($"✗ ReviewMark_DefinitionPlan - Failed: Plan file was not created");
-            }
-            else
-            {
-                // Verify plan file contains expected review coverage heading
-                var planContent = File.ReadAllText(planFile);
-                if (planContent.Contains("Review Coverage"))
-                {
-                    test.Outcome = DemaConsulting.TestResults.TestOutcome.Passed;
-                    context.WriteLine($"✓ ReviewMark_DefinitionPlan - Passed");
-                }
-                else
-                {
-                    test.Outcome = DemaConsulting.TestResults.TestOutcome.Failed;
-                    test.ErrorMessage = "Plan file does not contain 'Review Coverage'";
-                    context.WriteError($"✗ ReviewMark_DefinitionPlan - Failed: Plan file does not contain 'Review Coverage'");
-                }
-            }
-        }
-        // Generic catch is justified here as this is a test framework - any exception should be
-        // recorded as a test failure to ensure robust test execution and reporting.
-        catch (Exception ex)
-        {
-            HandleTestException(test, context, "ReviewMark_DefinitionPlan", ex);
-        }
 
-        FinalizeTestResult(test, startTime, testResults);
+            if (!File.Exists(planFile))
+            {
+                return "Plan file was not created";
+            }
+
+            // Verify the plan file contains the expected review coverage heading
+            var planContent = File.ReadAllText(planFile);
+            return planContent.Contains("Review Coverage") ? null : "Plan file does not contain 'Review Coverage'";
+        });
     }
 
     /// <summary>
@@ -316,66 +205,27 @@ internal static class Validation
     /// <param name="testResults">The test results collection.</param>
     private static void RunDefinitionReportTest(Context context, DemaConsulting.TestResults.TestResults testResults)
     {
-        var startTime = DateTime.UtcNow;
-        var test = CreateTestResult("ReviewMark_DefinitionReport");
-
-        try
+        RunValidationTest(context, testResults, "ReviewMark_DefinitionReport", () =>
         {
             using var tempDir = new TemporaryDirectory();
-
-            // Create the shared definition fixtures (src file, definition YAML, empty index)
             var (definitionFile, _) = CreateTestDefinitionFixtures(tempDir.DirectoryPath);
-
-            // Define the report output file
             var reportFile = PathHelpers.SafePathCombine(tempDir.DirectoryPath, "report.md");
 
-            // Build command line arguments
-            var args = new[]
-            {
-                "--silent",
-                "--definition", definitionFile,
-                "--report", reportFile
-            };
-
-            // Run the program - empty index means all reviews are Missing, but without --enforce
-            // the tool still exits with code 0 and writes a warning to stdout
-            using (var testContext = Context.Create(args))
+            // Run without --enforce so missing reviews only emit a warning; exit code is 0
+            using (var testContext = Context.Create(["--silent", "--definition", definitionFile, "--report", reportFile]))
             {
                 Program.Run(testContext);
             }
 
-            // Verify the report file was written regardless of exit code
             if (!File.Exists(reportFile))
             {
-                test.Outcome = DemaConsulting.TestResults.TestOutcome.Failed;
-                test.ErrorMessage = "Report file was not created";
-                context.WriteError($"✗ ReviewMark_DefinitionReport - Failed: Report file was not created");
+                return "Report file was not created";
             }
-            else
-            {
-                // Verify report file contains expected review status heading
-                var reportContent = File.ReadAllText(reportFile);
-                if (reportContent.Contains("Review Status"))
-                {
-                    test.Outcome = DemaConsulting.TestResults.TestOutcome.Passed;
-                    context.WriteLine($"✓ ReviewMark_DefinitionReport - Passed");
-                }
-                else
-                {
-                    test.Outcome = DemaConsulting.TestResults.TestOutcome.Failed;
-                    test.ErrorMessage = "Report file does not contain 'Review Status'";
-                    context.WriteError($"✗ ReviewMark_DefinitionReport - Failed: Report file does not contain 'Review Status'");
-                }
-            }
-        }
-        // Generic catch is justified here as this is a test framework - any exception should be
-        // recorded as a test failure to ensure robust test execution and reporting.
-        catch (Exception ex)
-        {
-            HandleTestException(test, context, "ReviewMark_DefinitionReport", ex);
-        }
 
-        FinalizeTestResult(test, startTime, testResults);
+            // Verify the report file contains the expected review status heading
+            var reportContent = File.ReadAllText(reportFile);
+            return reportContent.Contains("Review Status") ? null : "Report file does not contain 'Review Status'";
+        });
     }
 
     /// <summary>
@@ -385,80 +235,38 @@ internal static class Validation
     /// <param name="testResults">The test results collection.</param>
     private static void RunIndexScanTest(Context context, DemaConsulting.TestResults.TestResults testResults)
     {
-        var startTime = DateTime.UtcNow;
-        var test = CreateTestResult("ReviewMark_IndexScan");
-
-        // Save current directory so it can be restored after the test
-        var originalDirectory = Directory.GetCurrentDirectory();
-
-        try
+        RunValidationTest(context, testResults, "ReviewMark_IndexScan", () =>
         {
             using var tempDir = new TemporaryDirectory();
+            var indexJsonPath = PathHelpers.SafePathCombine(tempDir.DirectoryPath, "index.json");
 
             // Change to temp directory so index.json is written there, not to the working directory.
-            // The inner try/finally below ensures the directory is restored. It is intentionally
-            // placed AFTER this call so the finally block only runs if the directory was actually
-            // changed — any exception thrown before this point is caught by the outer catch block.
+            // The try/finally ensures the directory is restored even if the program throws.
+            var originalDirectory = Directory.GetCurrentDirectory();
             Directory.SetCurrentDirectory(tempDir.DirectoryPath);
-
             try
             {
-                // Build command line arguments - glob matches no PDFs so result will be empty
-                var args = new[]
-                {
-                    "--silent",
-                    "--index", "**/*.pdf"
-                };
-
-                // Run the program
+                // Run the program - glob matches no PDFs so result will be an empty index
                 int exitCode;
-                using (var testContext = Context.Create(args))
+                using (var testContext = Context.Create(["--silent", "--index", "**/*.pdf"]))
                 {
                     Program.Run(testContext);
                     exitCode = testContext.ExitCode;
                 }
 
-                // Verify execution succeeded
                 if (exitCode != 0)
                 {
-                    test.Outcome = DemaConsulting.TestResults.TestOutcome.Failed;
-                    test.ErrorMessage = $"Program exited with code {exitCode}";
-                    context.WriteError($"✗ ReviewMark_IndexScan - Failed: Exit code {exitCode}");
+                    return $"Program exited with code {exitCode}";
                 }
-                else
-                {
-                    // Verify the index.json file was written to the temp directory
-                    var indexJsonPath = PathHelpers.SafePathCombine(tempDir.DirectoryPath, "index.json");
-                    if (File.Exists(indexJsonPath))
-                    {
-                        test.Outcome = DemaConsulting.TestResults.TestOutcome.Passed;
-                        context.WriteLine($"✓ ReviewMark_IndexScan - Passed");
-                    }
-                    else
-                    {
-                        test.Outcome = DemaConsulting.TestResults.TestOutcome.Failed;
-                        test.ErrorMessage = "index.json was not created";
-                        context.WriteError($"✗ ReviewMark_IndexScan - Failed: index.json was not created");
-                    }
-                }
+
+                return File.Exists(indexJsonPath) ? null : "index.json was not created";
             }
             finally
             {
-                // Always restore the original directory to avoid affecting subsequent tests.
-                // The finally block ensures restoration even if an exception occurs during
-                // the test, keeping the process state consistent for all subsequent tests
-                // which run sequentially on the same thread.
+                // Always restore the original directory to avoid affecting subsequent tests
                 Directory.SetCurrentDirectory(originalDirectory);
             }
-        }
-        // Generic catch is justified here as this is a test framework - any exception should be
-        // recorded as a test failure to ensure robust test execution and reporting.
-        catch (Exception ex)
-        {
-            HandleTestException(test, context, "ReviewMark_IndexScan", ex);
-        }
-
-        FinalizeTestResult(test, startTime, testResults);
+        });
     }
 
     /// <summary>
@@ -468,55 +276,65 @@ internal static class Validation
     /// <param name="testResults">The test results collection.</param>
     private static void RunEnforceTest(Context context, DemaConsulting.TestResults.TestResults testResults)
     {
-        var startTime = DateTime.UtcNow;
-        var test = CreateTestResult("ReviewMark_Enforce");
-
-        try
+        RunValidationTest(context, testResults, "ReviewMark_Enforce", () =>
         {
             using var tempDir = new TemporaryDirectory();
-
-            // Create fixtures: src file, definition YAML, and empty index (no review evidence)
             var (definitionFile, _) = CreateTestDefinitionFixtures(tempDir.DirectoryPath);
-
-            // Define the report output file
             var reportFile = PathHelpers.SafePathCombine(tempDir.DirectoryPath, "report.md");
 
-            // Build command line arguments - empty index means all reviews are Missing
-            // so --enforce should cause exit code 1
-            var args = new[]
-            {
-                "--silent",
-                "--definition", definitionFile,
-                "--report", reportFile,
-                "--enforce"
-            };
-
-            // Run the program
+            // Run with --enforce: missing reviews should cause non-zero exit code
             int exitCode;
-            using (var testContext = Context.Create(args))
+            using (var testContext = Context.Create(["--silent", "--definition", definitionFile, "--report", reportFile, "--enforce"]))
             {
                 Program.Run(testContext);
                 exitCode = testContext.ExitCode;
             }
 
-            // Verify that --enforce caused a non-zero exit code due to missing reviews
-            if (exitCode != 0)
+            return exitCode != 0 ? null : "Expected non-zero exit code with --enforce and missing reviews";
+        });
+    }
+
+    /// <summary>
+    ///     Runs a single validation test, recording the outcome in the test results collection.
+    /// </summary>
+    /// <param name="context">The context for output.</param>
+    /// <param name="testResults">The test results collection.</param>
+    /// <param name="testName">The name of the test.</param>
+    /// <param name="testBody">
+    ///     A function that performs the test logic. Returns <c>null</c> on success, or an error
+    ///     message string on failure.
+    /// </param>
+    private static void RunValidationTest(
+        Context context,
+        DemaConsulting.TestResults.TestResults testResults,
+        string testName,
+        Func<string?> testBody)
+    {
+        // Record when the test started so duration can be calculated at the end
+        var startTime = DateTime.UtcNow;
+        var test = CreateTestResult(testName);
+
+        try
+        {
+            // Execute the test body and interpret null as success, non-null as failure
+            var errorMessage = testBody();
+            if (errorMessage == null)
             {
                 test.Outcome = DemaConsulting.TestResults.TestOutcome.Passed;
-                context.WriteLine($"✓ ReviewMark_Enforce - Passed");
+                context.WriteLine($"✓ {testName} - Passed");
             }
             else
             {
                 test.Outcome = DemaConsulting.TestResults.TestOutcome.Failed;
-                test.ErrorMessage = "Expected non-zero exit code with --enforce and missing reviews";
-                context.WriteError($"✗ ReviewMark_Enforce - Failed: Expected non-zero exit code with --enforce and missing reviews");
+                test.ErrorMessage = errorMessage;
+                context.WriteError($"✗ {testName} - Failed: {errorMessage}");
             }
         }
         // Generic catch is justified here as this is a test framework - any exception should be
         // recorded as a test failure to ensure robust test execution and reporting.
         catch (Exception ex)
         {
-            HandleTestException(test, context, "ReviewMark_Enforce", ex);
+            HandleTestException(test, context, testName, ex);
         }
 
         FinalizeTestResult(test, startTime, testResults);
