@@ -126,16 +126,26 @@ review has ever been recorded for this review-set.
 
 #### Re-indexing
 
-The index is not maintained by hand. Instead, ReviewMark provides a `--reindex` command that scans
-a folder of review PDFs, reads the embedded metadata from each PDF using
-[PdfSharp](https://github.com/empira/PDFsharp), and writes an up-to-date `index.json`:
+The index is not maintained by hand. Instead, ReviewMark provides a `--index` command that scans
+PDF evidence files matching a glob path, reads the embedded metadata from each PDF using
+[PdfSharp](https://github.com/empira/PDFsharp), and writes an up-to-date `index.json` to the
+working directory.
+
+Use `--dir` to set the working directory without changing the process directory:
 
 ```bash
-dotnet reviewmark --reindex \\reviews.example.com\evidence\
+dotnet reviewmark --dir \\reviews.example.com\evidence\ --index "**/*.pdf"
+```
+
+Alternatively, change to the directory first:
+
+```bash
+cd \\reviews.example.com\evidence\
+dotnet reviewmark --index "**/*.pdf"
 ```
 
 Review teams deposit completed review PDFs into the evidence store folder with whatever file name
-their QMS document-numbering standard requires. Running `--reindex` regenerates the index from the
+their QMS document-numbering standard requires. Running `--index` regenerates the index from the
 PDF metadata — the tool never dictates file names.
 
 #### PDF Metadata Format
@@ -156,7 +166,7 @@ id=Core-Logic fingerprint=a3f9c2d1e4b5... date=2026-03-08 result=pass
 
 Using the standard Keywords field means the metadata is readable by any PDF viewer or document
 management system without requiring custom property support. PDFs that do not carry the expected
-keys in their Keywords field are skipped with a warning during re-indexing.
+keys in their Keywords field are skipped with a warning during indexing.
 
 #### Credentials
 
@@ -279,21 +289,27 @@ ReviewMark runs in the document generation stage, after all build and test jobs 
 The generated Markdown documents feed into the standard Pandoc → Weasyprint pipeline and are published
 as PDF/A-3u release artifacts alongside the requirements trace matrix and code quality report.
 
-## Re-indexing the Evidence Store
+## Indexing the Evidence Store
 
 When new review PDFs are deposited into the evidence store, the index must be regenerated. This is
-typically performed by the review team after completing a review, or as a scheduled job:
+typically performed by the review team after completing a review, or as a scheduled job.
+
+Use `--dir` to target the evidence store directly:
 
 ```bash
-dotnet reviewmark --reindex \\reviews.example.com\evidence\
+dotnet reviewmark --dir \\reviews.example.com\evidence\ --index "**/*.pdf"
 ```
 
-ReviewMark scans all PDF files in the folder, reads the Keywords field from each using PdfSharp,
-parses the `name=value` pairs, and writes a fresh `index.json` to the same folder. PDFs whose
-Keywords field does not contain the required keys are skipped with a warning.
+Or change to the evidence store directory first:
 
-For a `url` evidence source the re-index command targets a local folder or UNC path where the PDFs
-are stored; the resulting `index.json` is then served alongside the PDFs by the web server.
+```bash
+cd \\reviews.example.com\evidence\
+dotnet reviewmark --index "**/*.pdf"
+```
+
+ReviewMark scans all PDF files matching the glob path, reads the Keywords field from each using
+PdfSharp, parses the `name=value` pairs, and writes a fresh `index.json` to the working directory.
+PDFs whose Keywords field does not contain the required keys are skipped with a warning.
 
 ## Self-Validation
 

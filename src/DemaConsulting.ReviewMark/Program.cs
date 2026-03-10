@@ -142,17 +142,128 @@ internal static class Program
         context.WriteLine("  --validate                 Run self-validation");
         context.WriteLine("  --results <file>           Write validation results to file (.trx or .xml)");
         context.WriteLine("  --log <file>               Write output to log file");
+        context.WriteLine("  --definition <file>        Specify the definition YAML file (default: .reviewmark.yaml)");
+        context.WriteLine("  --plan <file>              Write review plan to the specified Markdown file");
+        context.WriteLine("  --plan-depth <#>           Set the heading depth for the review plan (default: 1)");
+        context.WriteLine("  --report <file>            Write review report to the specified Markdown file");
+        context.WriteLine("  --report-depth <#>         Set the heading depth for the review report (default: 1)");
+        context.WriteLine("  --index <glob-path>        Index PDF evidence files matching the glob path");
+        context.WriteLine("  --dir <directory>          Set the working directory (used for default paths and glob scanning)");
+        context.WriteLine("                             Note: explicit paths given to --definition/--plan/--report are used as-is");
+        context.WriteLine("  --enforce                  Exit with non-zero code if there are review issues");
     }
 
     /// <summary>
     ///     Runs the main tool logic.
     /// </summary>
     /// <param name="context">The context containing command line arguments and program state.</param>
+    /// <remarks>
+    ///     Path resolution convention: <c>--dir</c> sets the working directory used for operations
+    ///     that do not have an explicit path argument.  Paths that the user explicitly provides via
+    ///     <c>--definition</c>, <c>--plan</c>, or <c>--report</c> are used exactly as given and are
+    ///     NOT re-rooted under <c>--dir</c>.  This keeps each argument independent — specifying one
+    ///     argument's path cannot inadvertently change the resolution of another argument's path.
+    /// </remarks>
     private static void RunToolLogic(Context context)
     {
-        context.WriteLine("ReviewMark - File Review Evidence Management");
-        context.WriteLine("ReviewMark automates file-review evidence management.");
-        context.WriteLine("");
-        context.WriteLine("Use --help to see available options.");
+        // The working directory is used for operations without an explicit path argument:
+        //   - the default definition file (.reviewmark.yaml) when --definition is omitted
+        //   - glob scanning root and index.json output for --index
+        //   - file scanning root for plan/report generation
+        // Explicit paths provided via --definition, --plan, and --report are used as-is.
+        var directory = context.WorkingDirectory ?? Directory.GetCurrentDirectory();
+
+        // Handle --index: scan PDF evidence files and write index.json
+        if (context.IndexPaths.Count > 0)
+        {
+            RunIndexLogic(context, directory);
+        }
+
+        // Handle definition-based actions (--plan, --report, or explicit --definition).
+        // Use .reviewmark.yaml as the default when --definition is not specified,
+        // resolved under the working directory.
+        if (context.PlanFile != null || context.ReportFile != null || context.DefinitionFile != null)
+        {
+            var definitionFile = context.DefinitionFile ?? PathHelpers.SafePathCombine(directory, ".reviewmark.yaml");
+            RunDefinitionLogic(context, directory, definitionFile);
+            return;
+        }
+
+        // If neither index nor definition actions are specified, show usage hint
+        if (context.IndexPaths.Count == 0)
+        {
+            context.WriteLine("ReviewMark - File Review Evidence Management");
+            context.WriteLine("ReviewMark automates file-review evidence management.");
+            context.WriteLine("");
+            context.WriteLine("Use --help to see available options.");
+        }
+    }
+
+    /// <summary>
+    ///     Runs the index scanning logic.
+    /// </summary>
+    /// <param name="context">The context for output.</param>
+    /// <param name="directory">The working directory.</param>
+    private static void RunIndexLogic(Context context, string directory)
+    {
+        // Scan PDF evidence files and save the resulting index
+        context.WriteLine("Scanning PDF evidence files...");
+        var index = ReviewIndex.Scan(directory, context.IndexPaths, onWarning: context.WriteLine);
+        var indexFile = PathHelpers.SafePathCombine(directory, "index.json");
+        index.Save(indexFile);
+        context.WriteLine($"Index written to {indexFile}");
+    }
+
+    /// <summary>
+    ///     Runs the definition-based logic (plan and/or report generation).
+    /// </summary>
+    /// <param name="context">The context for output.</param>
+    /// <param name="directory">The working directory.</param>
+    /// <param name="definitionFile">The path to the definition YAML file.</param>
+    private static void RunDefinitionLogic(Context context, string directory, string definitionFile)
+    {
+        // Load the configuration from the definition file
+        var config = ReviewMarkConfiguration.Load(definitionFile);
+
+        // Handle --plan: generate and write the review plan
+        if (context.PlanFile != null)
+        {
+            var planResult = config.PublishReviewPlan(directory, context.PlanDepth);
+            File.WriteAllText(context.PlanFile, planResult.Markdown);
+            context.WriteLine($"Review plan written to {context.PlanFile}");
+            if (planResult.HasIssues)
+            {
+                // With --enforce, exit with non-zero; otherwise emit a non-fatal warning
+                if (context.Enforce)
+                {
+                    context.WriteError("Review plan has coverage issues.");
+                }
+                else
+                {
+                    context.WriteLine("Warning: Review plan has coverage issues.");
+                }
+            }
+        }
+
+        // Handle --report: load index and generate the review report
+        if (context.ReportFile != null)
+        {
+            var index = ReviewIndex.Load(config.EvidenceSource);
+            var reportResult = config.PublishReviewReport(index, directory, context.ReportDepth);
+            File.WriteAllText(context.ReportFile, reportResult.Markdown);
+            context.WriteLine($"Review report written to {context.ReportFile}");
+            if (reportResult.HasIssues)
+            {
+                // With --enforce, exit with non-zero; otherwise emit a non-fatal warning
+                if (context.Enforce)
+                {
+                    context.WriteError("Review report has review issues.");
+                }
+                else
+                {
+                    context.WriteLine("Warning: Review report has review issues.");
+                }
+            }
+        }
     }
 }

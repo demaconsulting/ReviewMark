@@ -49,6 +49,11 @@ internal static class Validation
         // Run core functionality tests
         RunVersionTest(context, testResults);
         RunHelpTest(context, testResults);
+        RunDefinitionPlanTest(context, testResults);
+        RunDefinitionReportTest(context, testResults);
+        RunIndexScanTest(context, testResults);
+        RunDirTest(context, testResults);
+        RunEnforceTest(context, testResults);
 
         // Calculate totals
         var totalTests = testResults.Results.Count;
@@ -100,65 +105,29 @@ internal static class Validation
     /// <param name="testResults">The test results collection.</param>
     private static void RunVersionTest(Context context, DemaConsulting.TestResults.TestResults testResults)
     {
-        var startTime = DateTime.UtcNow;
-        var test = CreateTestResult("ReviewMark_VersionDisplay");
-
-        try
+        RunValidationTest(context, testResults, "ReviewMark_VersionDisplay", () =>
         {
             using var tempDir = new TemporaryDirectory();
             var logFile = PathHelpers.SafePathCombine(tempDir.DirectoryPath, "version-test.log");
 
-            // Build command line arguments
-            var args = new List<string>
-            {
-                "--silent",
-                "--log", logFile,
-                "--version"
-            };
-
-            // Run the program
+            // Run the program capturing output to a log file
             int exitCode;
-            using (var testContext = Context.Create([.. args]))
+            using (var testContext = Context.Create(["--silent", "--log", logFile, "--version"]))
             {
                 Program.Run(testContext);
                 exitCode = testContext.ExitCode;
             }
 
-            // Check if execution succeeded
-            if (exitCode == 0)
+            if (exitCode != 0)
             {
-                // Read log content
-                var logContent = File.ReadAllText(logFile);
-
-                // Verify version string is in log (version contains dots like 0.0.0)
-                if (!string.IsNullOrWhiteSpace(logContent) &&
-                    logContent.Split('.').Length >= 3)
-                {
-                    test.Outcome = DemaConsulting.TestResults.TestOutcome.Passed;
-                    context.WriteLine($"✓ ReviewMark_VersionDisplay - Passed");
-                }
-                else
-                {
-                    test.Outcome = DemaConsulting.TestResults.TestOutcome.Failed;
-                    test.ErrorMessage = "Version string not found in log";
-                    context.WriteError($"✗ ReviewMark_VersionDisplay - Failed: Version string not found in log");
-                }
+                return $"Program exited with code {exitCode}";
             }
-            else
-            {
-                test.Outcome = DemaConsulting.TestResults.TestOutcome.Failed;
-                test.ErrorMessage = $"Program exited with code {exitCode}";
-                context.WriteError($"✗ ReviewMark_VersionDisplay - Failed: Exit code {exitCode}");
-            }
-        }
-        // Generic catch is justified here as this is a test framework - any exception should be
-        // recorded as a test failure to ensure robust test execution and reporting.
-        catch (Exception ex)
-        {
-            HandleTestException(test, context, "ReviewMark_VersionDisplay", ex);
-        }
 
-        FinalizeTestResult(test, startTime, testResults);
+            // Verify version string is present in the log (version contains at least two dots)
+            var logContent = File.ReadAllText(logFile);
+            return (!string.IsNullOrWhiteSpace(logContent) && logContent.Split('.').Length >= 3)
+                ? null : "Version string not found in log";
+        });
     }
 
     /// <summary>
@@ -168,64 +137,274 @@ internal static class Validation
     /// <param name="testResults">The test results collection.</param>
     private static void RunHelpTest(Context context, DemaConsulting.TestResults.TestResults testResults)
     {
-        var startTime = DateTime.UtcNow;
-        var test = CreateTestResult("ReviewMark_HelpDisplay");
-
-        try
+        RunValidationTest(context, testResults, "ReviewMark_HelpDisplay", () =>
         {
             using var tempDir = new TemporaryDirectory();
             var logFile = PathHelpers.SafePathCombine(tempDir.DirectoryPath, "help-test.log");
 
-            // Build command line arguments
-            var args = new List<string>
-            {
-                "--silent",
-                "--log", logFile,
-                "--help"
-            };
-
-            // Run the program
+            // Run the program capturing output to a log file
             int exitCode;
-            using (var testContext = Context.Create([.. args]))
+            using (var testContext = Context.Create(["--silent", "--log", logFile, "--help"]))
             {
                 Program.Run(testContext);
                 exitCode = testContext.ExitCode;
             }
 
-            // Check if execution succeeded
-            if (exitCode == 0)
+            if (exitCode != 0)
             {
-                // Read log content
-                var logContent = File.ReadAllText(logFile);
+                return $"Program exited with code {exitCode}";
+            }
 
-                // Verify help text is in log
-                if (logContent.Contains("Usage:") && logContent.Contains("Options:"))
-                {
-                    test.Outcome = DemaConsulting.TestResults.TestOutcome.Passed;
-                    context.WriteLine($"✓ ReviewMark_HelpDisplay - Passed");
-                }
-                else
-                {
-                    test.Outcome = DemaConsulting.TestResults.TestOutcome.Failed;
-                    test.ErrorMessage = "Help text not found in log";
-                    context.WriteError($"✗ ReviewMark_HelpDisplay - Failed: Help text not found in log");
-                }
+            // Verify expected help headings are present in the log
+            var logContent = File.ReadAllText(logFile);
+            return (logContent.Contains("Usage:") && logContent.Contains("Options:"))
+                ? null : "Help text not found in log";
+        });
+    }
+
+    /// <summary>
+    ///     Runs a test for definition + plan generation functionality.
+    /// </summary>
+    /// <param name="context">The context for output.</param>
+    /// <param name="testResults">The test results collection.</param>
+    private static void RunDefinitionPlanTest(Context context, DemaConsulting.TestResults.TestResults testResults)
+    {
+        RunValidationTest(context, testResults, "ReviewMark_DefinitionPlan", () =>
+        {
+            using var tempDir = new TemporaryDirectory();
+            var (definitionFile, _) = CreateTestDefinitionFixtures(tempDir.DirectoryPath);
+            var planFile = PathHelpers.SafePathCombine(tempDir.DirectoryPath, "plan.md");
+
+            // Run the program to generate the plan file
+            int exitCode;
+            using (var testContext = Context.Create(["--silent", "--definition", definitionFile, "--plan", planFile]))
+            {
+                Program.Run(testContext);
+                exitCode = testContext.ExitCode;
+            }
+
+            if (exitCode != 0)
+            {
+                return $"Program exited with code {exitCode}";
+            }
+
+            if (!File.Exists(planFile))
+            {
+                return "Plan file was not created";
+            }
+
+            // Verify the plan file contains the expected review coverage heading
+            var planContent = File.ReadAllText(planFile);
+            return planContent.Contains("Review Coverage") ? null : "Plan file does not contain 'Review Coverage'";
+        });
+    }
+
+    /// <summary>
+    ///     Runs a test for definition + report generation functionality.
+    /// </summary>
+    /// <param name="context">The context for output.</param>
+    /// <param name="testResults">The test results collection.</param>
+    private static void RunDefinitionReportTest(Context context, DemaConsulting.TestResults.TestResults testResults)
+    {
+        RunValidationTest(context, testResults, "ReviewMark_DefinitionReport", () =>
+        {
+            using var tempDir = new TemporaryDirectory();
+            var (definitionFile, _) = CreateTestDefinitionFixtures(tempDir.DirectoryPath);
+            var reportFile = PathHelpers.SafePathCombine(tempDir.DirectoryPath, "report.md");
+
+            // Run without --enforce so missing reviews only emit a warning; exit code is 0
+            int exitCode;
+            using (var testContext = Context.Create(["--silent", "--definition", definitionFile, "--report", reportFile]))
+            {
+                Program.Run(testContext);
+                exitCode = testContext.ExitCode;
+            }
+
+            if (exitCode != 0)
+            {
+                return $"Expected exit code 0 but got {exitCode}";
+            }
+
+            if (!File.Exists(reportFile))
+            {
+                return "Report file was not created";
+            }
+
+            // Verify the report file contains the expected review status heading
+            var reportContent = File.ReadAllText(reportFile);
+            return reportContent.Contains("Review Status") ? null : "Report file does not contain 'Review Status'";
+        });
+    }
+
+    /// <summary>
+    ///     Runs a test for index scanning functionality.
+    /// </summary>
+    /// <param name="context">The context for output.</param>
+    /// <param name="testResults">The test results collection.</param>
+    private static void RunIndexScanTest(Context context, DemaConsulting.TestResults.TestResults testResults)
+    {
+        RunValidationTest(context, testResults, "ReviewMark_IndexScan", () =>
+        {
+            using var tempDir = new TemporaryDirectory();
+            var indexJsonPath = PathHelpers.SafePathCombine(tempDir.DirectoryPath, "index.json");
+
+            // Run with --dir so index.json is written to the temporary directory
+            int exitCode;
+            using (var testContext = Context.Create(["--silent", "--dir", tempDir.DirectoryPath, "--index", "**/*.pdf"]))
+            {
+                Program.Run(testContext);
+                exitCode = testContext.ExitCode;
+            }
+
+            if (exitCode != 0)
+            {
+                return $"Program exited with code {exitCode}";
+            }
+
+            return File.Exists(indexJsonPath) ? null : "index.json was not created";
+        });
+    }
+
+    /// <summary>
+    ///     Runs a test for the --dir argument overriding the working directory for file operations.
+    /// </summary>
+    /// <param name="context">The context for output.</param>
+    /// <param name="testResults">The test results collection.</param>
+    private static void RunDirTest(Context context, DemaConsulting.TestResults.TestResults testResults)
+    {
+        RunValidationTest(context, testResults, "ReviewMark_Dir", () =>
+        {
+            using var tempDir = new TemporaryDirectory();
+            var (definitionFile, _) = CreateTestDefinitionFixtures(tempDir.DirectoryPath);
+            var planFile = PathHelpers.SafePathCombine(tempDir.DirectoryPath, "plan.md");
+
+            // Run with --dir pointing to the temp directory; glob patterns in the definition
+            // are resolved under that directory rather than the process working directory
+            int exitCode;
+            using (var testContext = Context.Create(["--silent", "--dir", tempDir.DirectoryPath, "--definition", definitionFile, "--plan", planFile]))
+            {
+                Program.Run(testContext);
+                exitCode = testContext.ExitCode;
+            }
+
+            if (exitCode != 0)
+            {
+                return $"Program exited with code {exitCode}";
+            }
+
+            return File.Exists(planFile) ? null : "Plan file was not created";
+        });
+    }
+
+    /// <summary>
+    ///     Runs a test for --enforce flag causing a non-zero exit code when reviews have issues.
+    /// </summary>
+    /// <param name="context">The context for output.</param>
+    /// <param name="testResults">The test results collection.</param>
+    private static void RunEnforceTest(Context context, DemaConsulting.TestResults.TestResults testResults)
+    {
+        RunValidationTest(context, testResults, "ReviewMark_Enforce", () =>
+        {
+            using var tempDir = new TemporaryDirectory();
+            var (definitionFile, _) = CreateTestDefinitionFixtures(tempDir.DirectoryPath);
+            var reportFile = PathHelpers.SafePathCombine(tempDir.DirectoryPath, "report.md");
+
+            // Run with --enforce: missing reviews should cause non-zero exit code
+            int exitCode;
+            using (var testContext = Context.Create(["--silent", "--definition", definitionFile, "--report", reportFile, "--enforce"]))
+            {
+                Program.Run(testContext);
+                exitCode = testContext.ExitCode;
+            }
+
+            return exitCode != 0 ? null : "Expected non-zero exit code with --enforce and missing reviews";
+        });
+    }
+
+    /// <summary>
+    ///     Runs a single validation test, recording the outcome in the test results collection.
+    /// </summary>
+    /// <param name="context">The context for output.</param>
+    /// <param name="testResults">The test results collection.</param>
+    /// <param name="testName">The name of the test.</param>
+    /// <param name="testBody">
+    ///     A function that performs the test logic. Returns <c>null</c> on success, or an error
+    ///     message string on failure.
+    /// </param>
+    private static void RunValidationTest(
+        Context context,
+        DemaConsulting.TestResults.TestResults testResults,
+        string testName,
+        Func<string?> testBody)
+    {
+        // Record when the test started so duration can be calculated at the end
+        var startTime = DateTime.UtcNow;
+        var test = CreateTestResult(testName);
+
+        try
+        {
+            // Execute the test body and interpret null as success, non-null as failure
+            var errorMessage = testBody();
+            if (errorMessage == null)
+            {
+                test.Outcome = DemaConsulting.TestResults.TestOutcome.Passed;
+                context.WriteLine($"✓ {testName} - Passed");
             }
             else
             {
                 test.Outcome = DemaConsulting.TestResults.TestOutcome.Failed;
-                test.ErrorMessage = $"Program exited with code {exitCode}";
-                context.WriteError($"✗ ReviewMark_HelpDisplay - Failed: Exit code {exitCode}");
+                test.ErrorMessage = errorMessage;
+                context.WriteError($"✗ {testName} - Failed: {errorMessage}");
             }
         }
         // Generic catch is justified here as this is a test framework - any exception should be
         // recorded as a test failure to ensure robust test execution and reporting.
         catch (Exception ex)
         {
-            HandleTestException(test, context, "ReviewMark_HelpDisplay", ex);
+            HandleTestException(test, context, testName, ex);
         }
 
         FinalizeTestResult(test, startTime, testResults);
+    }
+
+    /// <summary>
+    ///     Creates the standard test fixtures for definition-based tests: a <c>src/foo.cs</c>
+    ///     source file, a <c>definition.yaml</c> covering <c>src/**/*.cs</c>, and an empty
+    ///     <c>index.json</c> evidence file.
+    /// </summary>
+    /// <param name="directoryPath">The root of the temporary directory to populate.</param>
+    /// <returns>
+    ///     A tuple containing the path to the created <c>definition.yaml</c> and
+    ///     <c>index.json</c> files.
+    /// </returns>
+    private static (string DefinitionFile, string IndexFile) CreateTestDefinitionFixtures(string directoryPath)
+    {
+        // Create src subdirectory and a source file to be covered by the review
+        var srcDir = PathHelpers.SafePathCombine(directoryPath, "src");
+        Directory.CreateDirectory(srcDir);
+        File.WriteAllText(PathHelpers.SafePathCombine(srcDir, "foo.cs"), "// test content");
+
+        // Create an empty index file so evidence-source resolves
+        var indexFile = PathHelpers.SafePathCombine(directoryPath, "index.json");
+        File.WriteAllText(indexFile, """{"reviews":[]}""");
+
+        // Create the definition YAML file referencing the source file glob
+        var definitionFile = PathHelpers.SafePathCombine(directoryPath, "definition.yaml");
+        var definitionYaml = $"""
+            needs-review:
+              - "src/**/*.cs"
+            evidence-source:
+              type: fileshare
+              location: {indexFile}
+            reviews:
+              - id: Core-Logic
+                title: Review of core business logic
+                paths:
+                  - "src/**/*.cs"
+            """;
+        File.WriteAllText(definitionFile, definitionYaml);
+
+        return (definitionFile, indexFile);
     }
 
     /// <summary>

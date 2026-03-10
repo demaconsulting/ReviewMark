@@ -137,6 +137,91 @@ sections:
               - Context_WriteError_SetsErrorExitCode
               - IntegrationTest_UnknownArgument_ReturnsError
 
+          - id: ReviewMark-Cmd-Definition
+            title: The tool shall support --definition flag to specify the definition YAML file.
+            justification: |
+              Users must be able to specify the path to the .reviewmark.yaml definition file,
+              which configures needs-review patterns, evidence source, and review set definitions.
+            tests:
+              - Context_Create_DefinitionFlag_SetsDefinitionFile
+              - Context_Create_DefinitionFlag_WithoutValue_ThrowsArgumentException
+              - ReviewMark_DefinitionPlan
+              - ReviewMark_DefinitionReport
+
+          - id: ReviewMark-Cmd-Plan
+            title: The tool shall support --plan flag to write the review plan to a Markdown file.
+            justification: |
+              Enables automated generation of a review plan document that lists all review sets
+              and coverage status, suitable for inclusion in release documentation.
+            tests:
+              - Context_Create_PlanFlag_SetsPlanFile
+              - ReviewMark_DefinitionPlan
+
+          - id: ReviewMark-Cmd-PlanDepth
+            title: The tool shall support --plan-depth flag to set the Markdown heading depth for the review plan.
+            justification: |
+              Allows the review plan to be embedded at any heading level within a larger
+              Markdown document, with a default depth of 1 when not specified.
+            tests:
+              - Context_Create_PlanDepthFlag_SetsPlanDepth
+              - Context_Create_PlanDepthFlag_WithInvalidValue_ThrowsArgumentException
+              - Context_Create_PlanDepthFlag_WithZeroValue_ThrowsArgumentException
+              - Context_Create_NoArguments_PlanDepthDefaultsToOne
+
+          - id: ReviewMark-Cmd-Report
+            title: The tool shall support --report flag to write the review report to a Markdown file.
+            justification: |
+              Enables automated generation of a review report document showing the current
+              status of each review set against the evidence index, suitable for release documentation.
+            tests:
+              - Context_Create_ReportFlag_SetsReportFile
+              - ReviewMark_DefinitionReport
+
+          - id: ReviewMark-Cmd-ReportDepth
+            title: The tool shall support --report-depth flag to set the Markdown heading depth for the review report.
+            justification: |
+              Allows the review report to be embedded at any heading level within a larger
+              Markdown document, with a default depth of 1 when not specified.
+            tests:
+              - Context_Create_ReportDepthFlag_SetsReportDepth
+              - Context_Create_NoArguments_ReportDepthDefaultsToOne
+
+          - id: ReviewMark-Cmd-Index
+            title: The tool shall support --index flag to scan PDF evidence files matching a glob path and write
+              index.json.
+            justification: |
+              Provides a mechanism to regenerate the review evidence index from scanned PDF
+              files, reading embedded metadata from each PDF's Keywords field to populate
+              the index with review IDs, fingerprints, dates, results, and file names.
+            tests:
+              - Context_Create_IndexFlag_AddsIndexPath
+              - Context_Create_IndexFlag_MultipleTimes_AddsAllPaths
+              - Context_Create_NoArguments_IndexPathsEmpty
+              - ReviewMark_IndexScan
+
+          - id: ReviewMark-Cmd-Enforce
+            title: The tool shall support --enforce flag to exit with a non-zero code when there are review issues.
+            justification: |
+              Enables CI/CD pipelines to block downstream stages when review sets are failed,
+              stale, or missing, or when files requiring review are not covered by any review-set.
+              Without --enforce the tool generates the plan and report but exits with code 0.
+            tests:
+              - Context_Create_EnforceFlag_SetsEnforceTrue
+              - Context_Create_NoArguments_EnforceFalse
+              - ReviewMark_Enforce
+
+          - id: ReviewMark-Cmd-Dir
+            title: The tool shall support --dir flag to set the working directory for file operations.
+            justification: |
+              Allows users to target an evidence store or project directory without changing
+              the process working directory, enabling consistent scripting and CI/CD usage
+              without requiring a cd command before invoking the tool.
+            tests:
+              - Context_Create_DirFlag_SetsWorkingDirectory
+              - Context_Create_NoArguments_WorkingDirectoryIsNull
+              - Context_Create_DirFlag_MissingValue_ThrowsArgumentException
+              - ReviewMark_Dir
+
       - title: Configuration Reading
         requirements:
           - id: ReviewMark-Config-Reading
@@ -157,6 +242,7 @@ sections:
               - ReviewSet_GetFingerprint_DifferentContent_ReturnsDifferentFingerprint
               - ReviewSet_GetFingerprint_RenameFile_ReturnsSameFingerprint
               - ReviewMarkConfiguration_Load_NonExistentFile_ThrowsException
+              - ReviewMarkConfiguration_Load_FileshareRelativeLocation_ResolvesToAbsolutePath
 
           - id: ReviewMark-Index-EvidenceSource
             title: The tool shall load a ReviewIndex from an EvidenceSource supporting fileshare and url types.
@@ -191,6 +277,11 @@ sections:
               # Tests link to "windows" to ensure results come from Windows platform
               - "windows@ReviewMark_VersionDisplay"
               - "windows@ReviewMark_HelpDisplay"
+              - "windows@ReviewMark_DefinitionPlan"
+              - "windows@ReviewMark_DefinitionReport"
+              - "windows@ReviewMark_IndexScan"
+              - "windows@ReviewMark_Enforce"
+              - "windows@ReviewMark_Dir"
 
           - id: ReviewMark-Platform-Linux
             title: The tool shall build and run on Linux platforms.
@@ -200,6 +291,11 @@ sections:
               # Tests link to "ubuntu" to ensure results come from Linux platform
               - "ubuntu@ReviewMark_VersionDisplay"
               - "ubuntu@ReviewMark_HelpDisplay"
+              - "ubuntu@ReviewMark_DefinitionPlan"
+              - "ubuntu@ReviewMark_DefinitionReport"
+              - "ubuntu@ReviewMark_IndexScan"
+              - "ubuntu@ReviewMark_Enforce"
+              - "ubuntu@ReviewMark_Dir"
 
           - id: ReviewMark-Platform-MacOS
             title: The tool shall build and run on macOS platforms.
@@ -209,6 +305,11 @@ sections:
               # Tests link to "macos" to ensure results come from macOS platform
               - "macos@ReviewMark_VersionDisplay"
               - "macos@ReviewMark_HelpDisplay"
+              - "macos@ReviewMark_DefinitionPlan"
+              - "macos@ReviewMark_DefinitionReport"
+              - "macos@ReviewMark_IndexScan"
+              - "macos@ReviewMark_Enforce"
+              - "macos@ReviewMark_Dir"
 
           - id: ReviewMark-Platform-Net8
             title: The tool shall support .NET 8 runtime.
@@ -217,6 +318,11 @@ sections:
             tests:
               - "dotnet8.x@ReviewMark_VersionDisplay"
               - "dotnet8.x@ReviewMark_HelpDisplay"
+              - "dotnet8.x@ReviewMark_DefinitionPlan"
+              - "dotnet8.x@ReviewMark_DefinitionReport"
+              - "dotnet8.x@ReviewMark_IndexScan"
+              - "dotnet8.x@ReviewMark_Enforce"
+              - "dotnet8.x@ReviewMark_Dir"
 
           - id: ReviewMark-Platform-Net9
             title: The tool shall support .NET 9 runtime.
@@ -225,6 +331,11 @@ sections:
             tests:
               - "dotnet9.x@ReviewMark_VersionDisplay"
               - "dotnet9.x@ReviewMark_HelpDisplay"
+              - "dotnet9.x@ReviewMark_DefinitionPlan"
+              - "dotnet9.x@ReviewMark_DefinitionReport"
+              - "dotnet9.x@ReviewMark_IndexScan"
+              - "dotnet9.x@ReviewMark_Enforce"
+              - "dotnet9.x@ReviewMark_Dir"
 
           - id: ReviewMark-Platform-Net10
             title: The tool shall support .NET 10 runtime.
@@ -233,6 +344,11 @@ sections:
             tests:
               - "dotnet10.x@ReviewMark_VersionDisplay"
               - "dotnet10.x@ReviewMark_HelpDisplay"
+              - "dotnet10.x@ReviewMark_DefinitionPlan"
+              - "dotnet10.x@ReviewMark_DefinitionReport"
+              - "dotnet10.x@ReviewMark_IndexScan"
+              - "dotnet10.x@ReviewMark_Enforce"
+              - "dotnet10.x@ReviewMark_Dir"
 
       - title: OTS Software
         requirements:

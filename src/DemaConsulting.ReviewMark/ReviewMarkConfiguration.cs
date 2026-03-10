@@ -315,8 +315,25 @@ internal sealed class ReviewMarkConfiguration
             throw new InvalidOperationException($"Failed to read configuration file '{filePath}': {ex.Message}", ex);
         }
 
-        // Delegate to Parse for deserialization
-        return Parse(yaml);
+        // Delegate to Parse for deserialization and apply path resolution
+        var config = Parse(yaml);
+
+        // Resolve relative fileshare locations against the config file's directory so that
+        // a relative location (e.g., "index.json") works correctly regardless of the process
+        // working directory.
+        if (string.Equals(config.EvidenceSource.Type, "fileshare", StringComparison.OrdinalIgnoreCase) &&
+            !Path.IsPathRooted(config.EvidenceSource.Location))
+        {
+            var baseDirectory = Path.GetDirectoryName(Path.GetFullPath(filePath))
+                ?? throw new InvalidOperationException($"Cannot determine base directory for configuration file '{filePath}'.");
+            var absoluteLocation = Path.GetFullPath(config.EvidenceSource.Location, baseDirectory);
+            return new ReviewMarkConfiguration(
+                config.NeedsReviewPatterns,
+                config.EvidenceSource with { Location = absoluteLocation },
+                config.Reviews);
+        }
+
+        return config;
     }
 
     /// <summary>
