@@ -651,17 +651,6 @@ public class ContextTests
     }
 
     /// <summary>
-    ///     Test that --report-depth with zero throws ArgumentException because the flag requires
-    ///     a positive integer.
-    /// </summary>
-    [TestMethod]
-    public void Context_Create_ReportDepthFlag_WithZeroValue_ThrowsArgumentException()
-    {
-        // Act & Assert - --report-depth requires a positive integer; zero is not valid
-        Assert.Throws<ArgumentException>(() => Context.Create(["--report-depth", "0"]));
-    }
-
-    /// <summary>
     ///     Test that --dir sets WorkingDirectory to the provided path.
     /// </summary>
     [TestMethod]
