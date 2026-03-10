@@ -49,6 +49,9 @@ internal static class Validation
         // Run core functionality tests
         RunVersionTest(context, testResults);
         RunHelpTest(context, testResults);
+        RunDefinitionPlanTest(context, testResults);
+        RunDefinitionReportTest(context, testResults);
+        RunIndexScanTest(context, testResults);
 
         // Calculate totals
         var totalTests = testResults.Results.Count;
@@ -226,6 +229,276 @@ internal static class Validation
         }
 
         FinalizeTestResult(test, startTime, testResults);
+    }
+
+    /// <summary>
+    ///     Runs a test for definition + plan generation functionality.
+    /// </summary>
+    /// <param name="context">The context for output.</param>
+    /// <param name="testResults">The test results collection.</param>
+    private static void RunDefinitionPlanTest(Context context, DemaConsulting.TestResults.TestResults testResults)
+    {
+        var startTime = DateTime.UtcNow;
+        var test = CreateTestResult("ReviewMark_DefinitionPlan");
+
+        try
+        {
+            using var tempDir = new TemporaryDirectory();
+
+            // Create the shared definition fixtures (src file, definition YAML, empty index)
+            var (definitionFile, _) = CreateTestDefinitionFixtures(tempDir.DirectoryPath);
+
+            // Define the plan output file
+            var planFile = PathHelpers.SafePathCombine(tempDir.DirectoryPath, "plan.md");
+
+            // Build command line arguments
+            var args = new[]
+            {
+                "--silent",
+                "--definition", definitionFile,
+                "--plan", planFile
+            };
+
+            // Run the program - all src/**/*.cs files are covered so HasIssues should be false
+            int exitCode;
+            using (var testContext = Context.Create(args))
+            {
+                Program.Run(testContext);
+                exitCode = testContext.ExitCode;
+            }
+
+            // Verify execution succeeded with no coverage issues
+            if (exitCode != 0)
+            {
+                test.Outcome = DemaConsulting.TestResults.TestOutcome.Failed;
+                test.ErrorMessage = $"Program exited with code {exitCode}";
+                context.WriteError($"✗ ReviewMark_DefinitionPlan - Failed: Exit code {exitCode}");
+            }
+            else if (!File.Exists(planFile))
+            {
+                // Verify the plan file was written
+                test.Outcome = DemaConsulting.TestResults.TestOutcome.Failed;
+                test.ErrorMessage = "Plan file was not created";
+                context.WriteError($"✗ ReviewMark_DefinitionPlan - Failed: Plan file was not created");
+            }
+            else
+            {
+                // Verify plan file contains expected review coverage heading
+                var planContent = File.ReadAllText(planFile);
+                if (planContent.Contains("Review Coverage"))
+                {
+                    test.Outcome = DemaConsulting.TestResults.TestOutcome.Passed;
+                    context.WriteLine($"✓ ReviewMark_DefinitionPlan - Passed");
+                }
+                else
+                {
+                    test.Outcome = DemaConsulting.TestResults.TestOutcome.Failed;
+                    test.ErrorMessage = "Plan file does not contain 'Review Coverage'";
+                    context.WriteError($"✗ ReviewMark_DefinitionPlan - Failed: Plan file does not contain 'Review Coverage'");
+                }
+            }
+        }
+        // Generic catch is justified here as this is a test framework - any exception should be
+        // recorded as a test failure to ensure robust test execution and reporting.
+        catch (Exception ex)
+        {
+            HandleTestException(test, context, "ReviewMark_DefinitionPlan", ex);
+        }
+
+        FinalizeTestResult(test, startTime, testResults);
+    }
+
+    /// <summary>
+    ///     Runs a test for definition + report generation functionality.
+    /// </summary>
+    /// <param name="context">The context for output.</param>
+    /// <param name="testResults">The test results collection.</param>
+    private static void RunDefinitionReportTest(Context context, DemaConsulting.TestResults.TestResults testResults)
+    {
+        var startTime = DateTime.UtcNow;
+        var test = CreateTestResult("ReviewMark_DefinitionReport");
+
+        try
+        {
+            using var tempDir = new TemporaryDirectory();
+
+            // Create the shared definition fixtures (src file, definition YAML, empty index)
+            var (definitionFile, _) = CreateTestDefinitionFixtures(tempDir.DirectoryPath);
+
+            // Define the report output file
+            var reportFile = PathHelpers.SafePathCombine(tempDir.DirectoryPath, "report.md");
+
+            // Build command line arguments
+            var args = new[]
+            {
+                "--silent",
+                "--definition", definitionFile,
+                "--report", reportFile
+            };
+
+            // Run the program - empty index means all reviews are Missing so HasIssues is true
+            using (var testContext = Context.Create(args))
+            {
+                Program.Run(testContext);
+
+                // Exit code 1 is expected since the reviews will be Missing
+            }
+
+            // Verify the report file was written regardless of exit code
+            if (!File.Exists(reportFile))
+            {
+                test.Outcome = DemaConsulting.TestResults.TestOutcome.Failed;
+                test.ErrorMessage = "Report file was not created";
+                context.WriteError($"✗ ReviewMark_DefinitionReport - Failed: Report file was not created");
+            }
+            else
+            {
+                // Verify report file contains expected review status heading
+                var reportContent = File.ReadAllText(reportFile);
+                if (reportContent.Contains("Review Status"))
+                {
+                    test.Outcome = DemaConsulting.TestResults.TestOutcome.Passed;
+                    context.WriteLine($"✓ ReviewMark_DefinitionReport - Passed");
+                }
+                else
+                {
+                    test.Outcome = DemaConsulting.TestResults.TestOutcome.Failed;
+                    test.ErrorMessage = "Report file does not contain 'Review Status'";
+                    context.WriteError($"✗ ReviewMark_DefinitionReport - Failed: Report file does not contain 'Review Status'");
+                }
+            }
+        }
+        // Generic catch is justified here as this is a test framework - any exception should be
+        // recorded as a test failure to ensure robust test execution and reporting.
+        catch (Exception ex)
+        {
+            HandleTestException(test, context, "ReviewMark_DefinitionReport", ex);
+        }
+
+        FinalizeTestResult(test, startTime, testResults);
+    }
+
+    /// <summary>
+    ///     Runs a test for index scanning functionality.
+    /// </summary>
+    /// <param name="context">The context for output.</param>
+    /// <param name="testResults">The test results collection.</param>
+    private static void RunIndexScanTest(Context context, DemaConsulting.TestResults.TestResults testResults)
+    {
+        var startTime = DateTime.UtcNow;
+        var test = CreateTestResult("ReviewMark_IndexScan");
+
+        // Save current directory so it can be restored after the test
+        var originalDirectory = Directory.GetCurrentDirectory();
+
+        try
+        {
+            using var tempDir = new TemporaryDirectory();
+
+            // Change to temp directory so index.json is written there, not to the working directory.
+            // The inner try/finally below ensures the directory is restored. It is intentionally
+            // placed AFTER this call so the finally block only runs if the directory was actually
+            // changed — any exception thrown before this point is caught by the outer catch block.
+            Directory.SetCurrentDirectory(tempDir.DirectoryPath);
+
+            try
+            {
+                // Build command line arguments - glob matches no PDFs so result will be empty
+                var args = new[]
+                {
+                    "--silent",
+                    "--index", "**/*.pdf"
+                };
+
+                // Run the program
+                int exitCode;
+                using (var testContext = Context.Create(args))
+                {
+                    Program.Run(testContext);
+                    exitCode = testContext.ExitCode;
+                }
+
+                // Verify execution succeeded
+                if (exitCode != 0)
+                {
+                    test.Outcome = DemaConsulting.TestResults.TestOutcome.Failed;
+                    test.ErrorMessage = $"Program exited with code {exitCode}";
+                    context.WriteError($"✗ ReviewMark_IndexScan - Failed: Exit code {exitCode}");
+                }
+                else
+                {
+                    // Verify the index.json file was written to the temp directory
+                    var indexJsonPath = PathHelpers.SafePathCombine(tempDir.DirectoryPath, "index.json");
+                    if (File.Exists(indexJsonPath))
+                    {
+                        test.Outcome = DemaConsulting.TestResults.TestOutcome.Passed;
+                        context.WriteLine($"✓ ReviewMark_IndexScan - Passed");
+                    }
+                    else
+                    {
+                        test.Outcome = DemaConsulting.TestResults.TestOutcome.Failed;
+                        test.ErrorMessage = "index.json was not created";
+                        context.WriteError($"✗ ReviewMark_IndexScan - Failed: index.json was not created");
+                    }
+                }
+            }
+            finally
+            {
+                // Always restore the original directory to avoid affecting subsequent tests.
+                // The finally block ensures restoration even if an exception occurs during
+                // the test, keeping the process state consistent for all subsequent tests
+                // which run sequentially on the same thread.
+                Directory.SetCurrentDirectory(originalDirectory);
+            }
+        }
+        // Generic catch is justified here as this is a test framework - any exception should be
+        // recorded as a test failure to ensure robust test execution and reporting.
+        catch (Exception ex)
+        {
+            HandleTestException(test, context, "ReviewMark_IndexScan", ex);
+        }
+
+        FinalizeTestResult(test, startTime, testResults);
+    }
+
+    /// <summary>
+    ///     Creates the standard test fixtures for definition-based tests: a <c>src/foo.cs</c>
+    ///     source file, a <c>definition.yaml</c> covering <c>src/**/*.cs</c>, and an empty
+    ///     <c>index.json</c> evidence file.
+    /// </summary>
+    /// <param name="directoryPath">The root of the temporary directory to populate.</param>
+    /// <returns>
+    ///     A tuple containing the path to the created <c>definition.yaml</c> and
+    ///     <c>index.json</c> files.
+    /// </returns>
+    private static (string DefinitionFile, string IndexFile) CreateTestDefinitionFixtures(string directoryPath)
+    {
+        // Create src subdirectory and a source file to be covered by the review
+        var srcDir = PathHelpers.SafePathCombine(directoryPath, "src");
+        Directory.CreateDirectory(srcDir);
+        File.WriteAllText(PathHelpers.SafePathCombine(srcDir, "foo.cs"), "// test content");
+
+        // Create an empty index file so evidence-source resolves
+        var indexFile = PathHelpers.SafePathCombine(directoryPath, "index.json");
+        File.WriteAllText(indexFile, """{"reviews":[]}""");
+
+        // Create the definition YAML file referencing the source file glob
+        var definitionFile = PathHelpers.SafePathCombine(directoryPath, "definition.yaml");
+        var definitionYaml = $"""
+            needs-review:
+              - "src/**/*.cs"
+            evidence-source:
+              type: fileshare
+              location: {indexFile}
+            reviews:
+              - id: Core-Logic
+                title: Review of core business logic
+                paths:
+                  - "src/**/*.cs"
+            """;
+        File.WriteAllText(definitionFile, definitionYaml);
+
+        return (definitionFile, indexFile);
     }
 
     /// <summary>

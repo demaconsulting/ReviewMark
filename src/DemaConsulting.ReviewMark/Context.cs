@@ -61,6 +61,36 @@ internal sealed class Context : IDisposable
     public string? ResultsFile { get; private init; }
 
     /// <summary>
+    ///     Gets the definition file path.
+    /// </summary>
+    public string? DefinitionFile { get; private init; }
+
+    /// <summary>
+    ///     Gets the plan file path.
+    /// </summary>
+    public string? PlanFile { get; private init; }
+
+    /// <summary>
+    ///     Gets the heading depth for the review plan.
+    /// </summary>
+    public int PlanDepth { get; private init; } = 1;
+
+    /// <summary>
+    ///     Gets the report file path.
+    /// </summary>
+    public string? ReportFile { get; private init; }
+
+    /// <summary>
+    ///     Gets the heading depth for the review report.
+    /// </summary>
+    public int ReportDepth { get; private init; } = 1;
+
+    /// <summary>
+    ///     Gets the glob paths for PDF evidence files to index.
+    /// </summary>
+    public IReadOnlyList<string> IndexPaths { get; private init; } = [];
+
+    /// <summary>
     ///     Gets the proposed exit code for the application (0 for success, 1 for errors).
     /// </summary>
     public int ExitCode => _hasErrors ? 1 : 0;
@@ -92,7 +122,13 @@ internal sealed class Context : IDisposable
             Help = parser.Help,
             Silent = parser.Silent,
             Validate = parser.Validate,
-            ResultsFile = parser.ResultsFile
+            ResultsFile = parser.ResultsFile,
+            DefinitionFile = parser.DefinitionFile,
+            PlanFile = parser.PlanFile,
+            PlanDepth = parser.PlanDepth,
+            ReportFile = parser.ReportFile,
+            ReportDepth = parser.ReportDepth,
+            IndexPaths = parser.IndexPaths.AsReadOnly()
         };
 
         // Open log file if specified
@@ -161,6 +197,36 @@ internal sealed class Context : IDisposable
         public string? ResultsFile { get; private set; }
 
         /// <summary>
+        ///     Gets the definition file path.
+        /// </summary>
+        public string? DefinitionFile { get; private set; }
+
+        /// <summary>
+        ///     Gets the plan file path.
+        /// </summary>
+        public string? PlanFile { get; private set; }
+
+        /// <summary>
+        ///     Gets the heading depth for the review plan.
+        /// </summary>
+        public int PlanDepth { get; private set; } = 1;
+
+        /// <summary>
+        ///     Gets the report file path.
+        /// </summary>
+        public string? ReportFile { get; private set; }
+
+        /// <summary>
+        ///     Gets the heading depth for the review report.
+        /// </summary>
+        public int ReportDepth { get; private set; } = 1;
+
+        /// <summary>
+        ///     Gets the glob paths for PDF evidence files to index.
+        /// </summary>
+        public List<string> IndexPaths { get; } = [];
+
+        /// <summary>
         ///     Parses command-line arguments
         /// </summary>
         /// <param name="args">Command-line arguments.</param>
@@ -215,6 +281,30 @@ internal sealed class Context : IDisposable
                     ResultsFile = GetRequiredStringArgument(arg, args, index, "a results filename argument");
                     return index + 1;
 
+                case "--definition":
+                    DefinitionFile = GetRequiredStringArgument(arg, args, index, "a filename argument");
+                    return index + 1;
+
+                case "--plan":
+                    PlanFile = GetRequiredStringArgument(arg, args, index, "a filename argument");
+                    return index + 1;
+
+                case "--plan-depth":
+                    PlanDepth = GetRequiredIntArgument(arg, args, index);
+                    return index + 1;
+
+                case "--report":
+                    ReportFile = GetRequiredStringArgument(arg, args, index, "a filename argument");
+                    return index + 1;
+
+                case "--report-depth":
+                    ReportDepth = GetRequiredIntArgument(arg, args, index);
+                    return index + 1;
+
+                case "--index":
+                    IndexPaths.Add(GetRequiredStringArgument(arg, args, index, "a glob path argument"));
+                    return index + 1;
+
                 default:
                     throw new ArgumentException($"Unsupported argument '{arg}'", nameof(args));
             }
@@ -236,6 +326,24 @@ internal sealed class Context : IDisposable
             }
 
             return args[index];
+        }
+
+        /// <summary>
+        ///     Gets a required integer argument value
+        /// </summary>
+        /// <param name="arg">Argument name</param>
+        /// <param name="args">All arguments</param>
+        /// <param name="index">Current index</param>
+        /// <returns>Integer argument value</returns>
+        private static int GetRequiredIntArgument(string arg, string[] args, int index)
+        {
+            var value = GetRequiredStringArgument(arg, args, index, "a positive integer argument");
+            if (!int.TryParse(value, out var intValue) || intValue < 1)
+            {
+                throw new ArgumentException($"{arg} requires a positive integer argument", nameof(args));
+            }
+
+            return intValue;
         }
     }
 

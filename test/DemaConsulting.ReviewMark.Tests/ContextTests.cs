@@ -389,5 +389,178 @@ public class ContextTests
             }
         }
     }
+
+    /// <summary>
+    ///     Test that --definition sets DefinitionFile to the provided path.
+    /// </summary>
+    [TestMethod]
+    public void Context_Create_DefinitionFlag_SetsDefinitionFile()
+    {
+        // Act
+        using var context = Context.Create(["--definition", "spec.yaml"]);
+
+        // Assert
+        Assert.AreEqual("spec.yaml", context.DefinitionFile);
+        Assert.AreEqual(0, context.ExitCode);
+    }
+
+    /// <summary>
+    ///     Test that --definition without a value throws ArgumentException containing "--definition".
+    /// </summary>
+    [TestMethod]
+    public void Context_Create_DefinitionFlag_WithoutValue_ThrowsArgumentException()
+    {
+        // Act & Assert
+        var exception = Assert.Throws<ArgumentException>(() => Context.Create(["--definition"]));
+        Assert.Contains("--definition", exception.Message);
+    }
+
+    /// <summary>
+    ///     Test that --plan sets PlanFile to the provided path.
+    /// </summary>
+    [TestMethod]
+    public void Context_Create_PlanFlag_SetsPlanFile()
+    {
+        // Act
+        using var context = Context.Create(["--plan", "plan.yaml"]);
+
+        // Assert
+        Assert.AreEqual("plan.yaml", context.PlanFile);
+        Assert.AreEqual(0, context.ExitCode);
+    }
+
+    /// <summary>
+    ///     Test that --plan-depth sets PlanDepth to the provided integer value.
+    /// </summary>
+    [TestMethod]
+    public void Context_Create_PlanDepthFlag_SetsPlanDepth()
+    {
+        // Act
+        using var context = Context.Create(["--plan-depth", "3"]);
+
+        // Assert
+        Assert.AreEqual(3, context.PlanDepth);
+        Assert.AreEqual(0, context.ExitCode);
+    }
+
+    /// <summary>
+    ///     Test that --plan-depth with a non-numeric value throws ArgumentException because
+    ///     the flag requires a positive integer argument.
+    /// </summary>
+    [TestMethod]
+    public void Context_Create_PlanDepthFlag_WithInvalidValue_ThrowsArgumentException()
+    {
+        // Act & Assert
+        Assert.Throws<ArgumentException>(() => Context.Create(["--plan-depth", "not-a-number"]));
+    }
+
+    /// <summary>
+    ///     Test that --plan-depth with zero throws ArgumentException because the flag requires
+    ///     a positive integer argument (value must be >= 1).
+    /// </summary>
+    [TestMethod]
+    public void Context_Create_PlanDepthFlag_WithZeroValue_ThrowsArgumentException()
+    {
+        // Act & Assert
+        Assert.Throws<ArgumentException>(() => Context.Create(["--plan-depth", "0"]));
+    }
+
+    /// <summary>
+    ///     Test that --report sets ReportFile to the provided path.
+    /// </summary>
+    [TestMethod]
+    public void Context_Create_ReportFlag_SetsReportFile()
+    {
+        // Act
+        using var context = Context.Create(["--report", "report.md"]);
+
+        // Assert
+        Assert.AreEqual("report.md", context.ReportFile);
+        Assert.AreEqual(0, context.ExitCode);
+    }
+
+    /// <summary>
+    ///     Test that --report-depth sets ReportDepth to the provided integer value.
+    /// </summary>
+    [TestMethod]
+    public void Context_Create_ReportDepthFlag_SetsReportDepth()
+    {
+        // Act
+        using var context = Context.Create(["--report-depth", "2"]);
+
+        // Assert
+        Assert.AreEqual(2, context.ReportDepth);
+        Assert.AreEqual(0, context.ExitCode);
+    }
+
+    /// <summary>
+    ///     Test that --index adds the provided glob path to IndexPaths.
+    /// </summary>
+    [TestMethod]
+    public void Context_Create_IndexFlag_AddsIndexPath()
+    {
+        // Act
+        using var context = Context.Create(["--index", "*.pdf"]);
+
+        // Assert
+        Assert.HasCount(1, context.IndexPaths);
+        Assert.AreEqual("*.pdf", context.IndexPaths[0]);
+        Assert.AreEqual(0, context.ExitCode);
+    }
+
+    /// <summary>
+    ///     Test that multiple --index flags accumulate all provided paths in IndexPaths.
+    /// </summary>
+    [TestMethod]
+    public void Context_Create_IndexFlag_MultipleTimes_AddsAllPaths()
+    {
+        // Act
+        using var context = Context.Create(["--index", "*.pdf", "--index", "docs/**/*.md"]);
+
+        // Assert
+        Assert.HasCount(2, context.IndexPaths);
+        Assert.Contains("*.pdf", context.IndexPaths);
+        Assert.Contains("docs/**/*.md", context.IndexPaths);
+        Assert.AreEqual(0, context.ExitCode);
+    }
+
+    /// <summary>
+    ///     Test that the default IndexPaths collection is empty when no --index flags are provided.
+    /// </summary>
+    [TestMethod]
+    public void Context_Create_NoArguments_IndexPathsEmpty()
+    {
+        // Act
+        using var context = Context.Create([]);
+
+        // Assert
+        Assert.HasCount(0, context.IndexPaths);
+    }
+
+    /// <summary>
+    ///     Test that the default PlanDepth is 1 when no --plan-depth flag is provided.
+    /// </summary>
+    [TestMethod]
+    public void Context_Create_NoArguments_PlanDepthDefaultsToOne()
+    {
+        // Act
+        using var context = Context.Create([]);
+
+        // Assert
+        Assert.AreEqual(1, context.PlanDepth);
+    }
+
+    /// <summary>
+    ///     Test that the default ReportDepth is 1 when no --report-depth flag is provided.
+    /// </summary>
+    [TestMethod]
+    public void Context_Create_NoArguments_ReportDepthDefaultsToOne()
+    {
+        // Act
+        using var context = Context.Create([]);
+
+        // Assert
+        Assert.AreEqual(1, context.ReportDepth);
+    }
 }
 
