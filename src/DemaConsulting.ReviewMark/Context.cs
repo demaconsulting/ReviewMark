@@ -358,6 +358,11 @@ internal sealed class Context : IDisposable
                 throw new ArgumentException($"{arg} requires a positive integer argument", nameof(args));
             }
 
+            if (intValue > 5)
+            {
+                throw new ArgumentException($"{arg} cannot be greater than 5", nameof(args));
+            }
+
             return intValue;
         }
     }

@@ -212,9 +212,16 @@ internal static class Validation
             var reportFile = PathHelpers.SafePathCombine(tempDir.DirectoryPath, "report.md");
 
             // Run without --enforce so missing reviews only emit a warning; exit code is 0
+            int exitCode;
             using (var testContext = Context.Create(["--silent", "--definition", definitionFile, "--report", reportFile]))
             {
                 Program.Run(testContext);
+                exitCode = testContext.ExitCode;
+            }
+
+            if (exitCode != 0)
+            {
+                return $"Expected exit code 0 but got {exitCode}";
             }
 
             if (!File.Exists(reportFile))

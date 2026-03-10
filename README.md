@@ -23,8 +23,8 @@ DEMA Consulting tool for automated file-review evidence management in regulated 
   Stale, or Missing
 - **Enforcement**: `--enforce` flag causes a non-zero exit code if any review-set is stale or
   missing, or if any file is not covered by a review-set
-- **Re-indexing**: `--reindex` command scans a folder of review PDFs and regenerates `index.json`
-  from PDF Keywords metadata
+- **Re-indexing**: `--index` command scans PDF evidence files matching a glob path and writes
+  `index.json` to the current directory
 - **Self-Validation**: Built-in validation tests with TRX/JUnit output
 - **Multi-Platform Support**: Builds and runs on Windows, Linux, and macOS
 - **Multi-Runtime Support**: Targets .NET 8, 9, and 10

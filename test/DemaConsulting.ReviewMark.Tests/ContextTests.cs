@@ -589,5 +589,25 @@ public class ContextTests
         // Assert - Enforce defaults to false
         Assert.IsFalse(context.Enforce);
     }
+
+    /// <summary>
+    ///     Test that --plan-depth with a value greater than 5 throws ArgumentException.
+    /// </summary>
+    [TestMethod]
+    public void Context_Create_PlanDepthFlag_WithValueGreaterThanFive_ThrowsArgumentException()
+    {
+        // Act & Assert - --plan-depth cannot exceed 5 (max heading depth supported)
+        Assert.Throws<ArgumentException>(() => Context.Create(["--plan-depth", "6"]));
+    }
+
+    /// <summary>
+    ///     Test that --report-depth with a value greater than 5 throws ArgumentException.
+    /// </summary>
+    [TestMethod]
+    public void Context_Create_ReportDepthFlag_WithValueGreaterThanFive_ThrowsArgumentException()
+    {
+        // Act & Assert - --report-depth cannot exceed 5 (max heading depth supported)
+        Assert.Throws<ArgumentException>(() => Context.Create(["--report-depth", "6"]));
+    }
 }
 
