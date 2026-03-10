@@ -193,8 +193,7 @@ In CI/CD, these are mapped from repository or organization secrets:
 ### Review Plan
 
 The review plan is a Markdown document proving that all files subject to review are covered by at
-least one review-set. It lists each review-set, the files it covers, and flags any files matched by
-`needs-review` that are not included in any review-set:
+least one review-set. It lists each review-set, the files it covers, and reports coverage status:
 
 ```markdown
 ## Review Coverage
@@ -204,11 +203,19 @@ least one review-set. It lists each review-set, the files it covers, and flags a
 | Core-Logic     | Review of core business logic  | 14    | `a3f9…`      |
 | Security-Layer | Review of auth/authorization   | 6     | `c72b…`      |
 
-### Uncovered Files
+### Coverage
 
-> ⚠ 2 file(s) require review but are not covered by any review-set:
-> - `src/Utilities/StringHelper.cs`
-> - `src/Utilities/DateHelper.cs`
+⚠ 2 file(s) require review but are not covered by any review-set:
+- `src/Utilities/StringHelper.cs`
+- `src/Utilities/DateHelper.cs`
+```
+
+When all files are covered the `Coverage` subsection reads:
+
+```markdown
+### Coverage
+
+All files requiring review are covered by a review-set.
 ```
 
 ### Review Report
@@ -218,16 +225,21 @@ The review report shows the status of each review against the current file-set f
 ```markdown
 ## Review Status
 
-| Review ID      | Status       | Date       | Result | Evidence PDF                          |
-| :------------- | :----------- | :--------- | :----- | :------------------------------------ |
-| Core-Logic     | ✅ Current   | 2026-02-14 | Pass   | CR-2026-014 Core Logic Review.pdf     |
-| Security-Layer | ⚠ Stale     | 2025-11-03 | Pass   | CR-2025-089 Security Layer Review.pdf |
-| Persistence    | ❌ Missing   |            |        |                                       |
+| Review ID      | Status       | Date       | Result |
+| :------------- | :----------- | :--------- | :----- |
+| Core-Logic     | ✅ Current   | 2026-02-14 | Pass   |
+| Security-Layer | ⚠ Stale     | 2025-11-03 | Pass   |
+| Persistence    | ❌ Missing   |            |        |
+
+### Referenced Documents
+
+- Core-Logic: CR-2026-014 Core Logic Review.pdf
+- Security-Layer: CR-2025-089 Security Layer Review.pdf
 ```
 
 - **Current** — the index contains a matching entry for the current ID and fingerprint with a `pass` result.
 - **Stale** — the index contains entries for the ID, but none match the current fingerprint;
-  the most recent entry's date and file are shown for reference.
+  the most recent entry's date is shown in the table and the referenced document is listed below.
 - **Missing** — the index contains no entries for the ID at all.
 
 ## Enforcement

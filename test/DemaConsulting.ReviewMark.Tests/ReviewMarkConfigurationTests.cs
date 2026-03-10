@@ -323,9 +323,10 @@ public class ReviewMarkConfigurationTests
 
         // Assert — no uncovered files means no issues; the coverage table is present
         Assert.IsFalse(result.HasIssues);
-        Assert.IsTrue(result.Markdown.Contains("# Review Coverage"), "Markdown should contain the top-level heading");
-        Assert.IsTrue(result.Markdown.Contains("| Core-Logic |"), "Markdown should contain a row for Core-Logic");
-        Assert.IsFalse(result.Markdown.Contains("Uncovered Files"), "Markdown should not mention uncovered files when all are covered");
+        Assert.Contains("# Review Coverage", result.Markdown);
+        Assert.Contains("| Core-Logic |", result.Markdown);
+        Assert.Contains("All files requiring review are covered by a review-set.", result.Markdown);
+        Assert.DoesNotContain("⚠", result.Markdown);
     }
 
     /// <summary>
@@ -347,8 +348,8 @@ public class ReviewMarkConfigurationTests
 
         // Assert — the uncovered file triggers HasIssues and appears in the Markdown
         Assert.IsTrue(result.HasIssues, "HasIssues should be true when uncovered files exist");
-        Assert.IsTrue(result.Markdown.Contains("Uncovered Files"), "Markdown should contain an 'Uncovered Files' section");
-        Assert.IsTrue(result.Markdown.Contains("`Uncovered.cs`"), "Markdown should list the uncovered file");
+        Assert.Contains("Coverage", result.Markdown);
+        Assert.Contains("`Uncovered.cs`", result.Markdown);
     }
 
     /// <summary>
@@ -368,9 +369,9 @@ public class ReviewMarkConfigurationTests
         // Act
         var result = config.PublishReviewPlan(_testDirectory, markdownDepth: 2);
 
-        // Assert — main heading is at depth 2; subheading for uncovered files is at depth 3
+        // Assert — main heading is at depth 2; subheading for coverage is at depth 3
         Assert.IsTrue(result.Markdown.StartsWith("## Review Coverage"), "Markdown should start with a depth-2 heading");
-        Assert.IsTrue(result.Markdown.Contains("### Uncovered Files"), "Uncovered-files subheading should use depth markdownDepth+1 (###)");
+        Assert.Contains("### Coverage", result.Markdown);
     }
 
     // -------------------------------------------------------------------------
@@ -415,9 +416,10 @@ public class ReviewMarkConfigurationTests
 
         // Assert — matching fingerprint means "Current"; no issues
         Assert.IsFalse(result.HasIssues, "HasIssues should be false when all reviews are current");
-        Assert.IsTrue(result.Markdown.Contains("# Review Status"), "Markdown should contain the Review Status heading");
-        Assert.IsTrue(result.Markdown.Contains("\u2705 Current"), "Markdown should show the current status indicator");
-        Assert.IsTrue(result.Markdown.Contains("CR-2026-014.pdf"), "Markdown should include the evidence PDF filename");
+        Assert.Contains("# Review Status", result.Markdown);
+        Assert.Contains("\u2705 Current", result.Markdown);
+        Assert.Contains("Referenced Documents", result.Markdown);
+        Assert.Contains("CR-2026-014.pdf", result.Markdown);
     }
 
     /// <summary>
@@ -454,8 +456,8 @@ public class ReviewMarkConfigurationTests
 
         // Assert — mismatched fingerprint means "Stale"; HasIssues is true
         Assert.IsTrue(result.HasIssues, "HasIssues should be true when a review is stale");
-        Assert.IsTrue(result.Markdown.Contains("\u26a0 Stale"), "Markdown should show the stale status indicator");
-        Assert.IsTrue(result.Markdown.Contains("CR-2025-089.pdf"), "Markdown should include the stale evidence PDF filename");
+        Assert.Contains("\u26a0 Stale", result.Markdown);
+        Assert.Contains("CR-2025-089.pdf", result.Markdown);
     }
 
     /// <summary>
@@ -477,7 +479,7 @@ public class ReviewMarkConfigurationTests
 
         // Assert — no evidence in the index means "Missing"; HasIssues is true
         Assert.IsTrue(result.HasIssues, "HasIssues should be true when a review has no evidence");
-        Assert.IsTrue(result.Markdown.Contains("\u274c Missing"), "Markdown should show the missing status indicator");
+        Assert.Contains("\u274c Missing", result.Markdown);
     }
 
     /// <summary>

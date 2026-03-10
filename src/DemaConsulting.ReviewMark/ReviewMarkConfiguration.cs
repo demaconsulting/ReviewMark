@@ -472,20 +472,27 @@ internal sealed class ReviewMarkConfiguration
             .Where(f => !coveredFiles.Contains(f))
             .ToList();
 
-        // If there are uncovered files, emit a warning subsection listing them
-        if (uncoveredFiles.Count > 0)
+        // Always emit a "Coverage" subsection reporting whether all files are covered
+        var subHeading = new string('#', markdownDepth + 1);
+        sb.AppendLine($"{subHeading} Coverage");
+        sb.AppendLine();
+
+        if (uncoveredFiles.Count == 0)
         {
-            var subHeading = new string('#', markdownDepth + 1);
-            sb.AppendLine($"{subHeading} Uncovered Files");
-            sb.AppendLine();
-            sb.AppendLine($"> \u26a0 {uncoveredFiles.Count} file(s) require review but are not covered by any review-set:");
+            // All files requiring review are covered — state it positively
+            sb.AppendLine("All files requiring review are covered by a review-set.");
+        }
+        else
+        {
+            // List uncovered files as a bullet list
+            sb.AppendLine($"\u26a0 {uncoveredFiles.Count} file(s) require review but are not covered by any review-set:");
             foreach (var file in uncoveredFiles)
             {
-                sb.AppendLine($"> - `{file}`");
+                sb.AppendLine($"- `{file}`");
             }
-
-            sb.AppendLine();
         }
+
+        sb.AppendLine();
 
         return new ReviewPlanResult(sb.ToString(), uncoveredFiles.Count > 0);
     }
@@ -521,12 +528,15 @@ internal sealed class ReviewMarkConfiguration
         sb.AppendLine($"{heading} Review Status");
         sb.AppendLine();
 
-        // Emit the review-status table header
-        sb.AppendLine("| Review ID | Status | Date | Result | Evidence PDF |");
-        sb.AppendLine("| :--- | :--- | :--- | :--- | :--- |");
+        // Emit the review-status table header (Evidence PDF filenames are listed separately below)
+        sb.AppendLine("| Review ID | Status | Date | Result |");
+        sb.AppendLine("| :--- | :--- | :--- | :--- |");
 
         // Track whether any reviews are stale or missing
         var hasIssues = false;
+
+        // Collect referenced documents (review ID and file) while iterating
+        var referencedDocuments = new List<(string Id, string File)>();
 
         foreach (var review in Reviews)
         {
@@ -540,7 +550,8 @@ internal sealed class ReviewMarkConfiguration
             {
                 // Current: evidence exists and matches the current fingerprint with a passing result
                 sb.AppendLine(
-                    $"| {review.Id} | \u2705 Current | {currentEvidence.Date} | {FormatResult(currentEvidence.Result)} | {currentEvidence.File} |");
+                    $"| {review.Id} | \u2705 Current | {currentEvidence.Date} | {FormatResult(currentEvidence.Result)} |");
+                referencedDocuments.Add((review.Id, currentEvidence.File));
             }
             else if (index.HasId(review.Id))
             {
@@ -553,17 +564,32 @@ internal sealed class ReviewMarkConfiguration
                     .First();
 
                 sb.AppendLine(
-                    $"| {review.Id} | \u26a0 Stale | {mostRecent.Date} | {FormatResult(mostRecent.Result)} | {mostRecent.File} |");
+                    $"| {review.Id} | \u26a0 Stale | {mostRecent.Date} | {FormatResult(mostRecent.Result)} |");
+                referencedDocuments.Add((review.Id, mostRecent.File));
             }
             else
             {
                 // Missing: no evidence at all for this review ID
                 hasIssues = true;
-                sb.AppendLine($"| {review.Id} | \u274c Missing | | | |");
+                sb.AppendLine($"| {review.Id} | \u274c Missing | | |");
             }
         }
 
         sb.AppendLine();
+
+        // Emit the referenced-documents subsection when any evidence was found
+        if (referencedDocuments.Count > 0)
+        {
+            var subHeading = new string('#', markdownDepth + 1);
+            sb.AppendLine($"{subHeading} Referenced Documents");
+            sb.AppendLine();
+            foreach (var (id, file) in referencedDocuments)
+            {
+                sb.AppendLine($"- {id}: {file}");
+            }
+
+            sb.AppendLine();
+        }
 
         return new ReviewReportResult(sb.ToString(), hasIssues);
     }
