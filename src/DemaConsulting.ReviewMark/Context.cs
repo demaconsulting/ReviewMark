@@ -91,6 +91,11 @@ internal sealed class Context : IDisposable
     public IReadOnlyList<string> IndexPaths { get; private init; } = [];
 
     /// <summary>
+    ///     Gets a value indicating whether the enforce flag was specified.
+    /// </summary>
+    public bool Enforce { get; private init; }
+
+    /// <summary>
     ///     Gets the proposed exit code for the application (0 for success, 1 for errors).
     /// </summary>
     public int ExitCode => _hasErrors ? 1 : 0;
@@ -128,7 +133,8 @@ internal sealed class Context : IDisposable
             PlanDepth = parser.PlanDepth,
             ReportFile = parser.ReportFile,
             ReportDepth = parser.ReportDepth,
-            IndexPaths = parser.IndexPaths.AsReadOnly()
+            IndexPaths = parser.IndexPaths.AsReadOnly(),
+            Enforce = parser.Enforce
         };
 
         // Open log file if specified
@@ -227,6 +233,11 @@ internal sealed class Context : IDisposable
         public List<string> IndexPaths { get; } = [];
 
         /// <summary>
+        ///     Gets a value indicating whether the enforce flag was specified.
+        /// </summary>
+        public bool Enforce { get; private set; }
+
+        /// <summary>
         ///     Parses command-line arguments
         /// </summary>
         /// <param name="args">Command-line arguments.</param>
@@ -304,6 +315,10 @@ internal sealed class Context : IDisposable
                 case "--index":
                     IndexPaths.Add(GetRequiredStringArgument(arg, args, index, "a glob path argument"));
                     return index + 1;
+
+                case "--enforce":
+                    Enforce = true;
+                    return index;
 
                 default:
                     throw new ArgumentException($"Unsupported argument '{arg}'", nameof(args));

@@ -562,5 +562,32 @@ public class ContextTests
         // Assert
         Assert.AreEqual(1, context.ReportDepth);
     }
+
+    /// <summary>
+    ///     Test that --enforce sets Enforce to true.
+    /// </summary>
+    [TestMethod]
+    public void Context_Create_EnforceFlag_SetsEnforceTrue()
+    {
+        // Act
+        using var context = Context.Create(["--enforce"]);
+
+        // Assert
+        Assert.IsTrue(context.Enforce);
+        Assert.AreEqual(0, context.ExitCode);
+    }
+
+    /// <summary>
+    ///     Test that the default Enforce is false when no --enforce flag is provided.
+    /// </summary>
+    [TestMethod]
+    public void Context_Create_NoArguments_EnforceFalse()
+    {
+        // Act
+        using var context = Context.Create([]);
+
+        // Assert
+        Assert.IsFalse(context.Enforce);
+    }
 }
 

@@ -142,12 +142,13 @@ internal static class Program
         context.WriteLine("  --validate                 Run self-validation");
         context.WriteLine("  --results <file>           Write validation results to file (.trx or .xml)");
         context.WriteLine("  --log <file>               Write output to log file");
-        context.WriteLine("  --definition <file>        Specify the definition YAML file");
+        context.WriteLine("  --definition <file>        Specify the definition YAML file (default: .reviewmark.yaml)");
         context.WriteLine("  --plan <file>              Write review plan to the specified Markdown file");
         context.WriteLine("  --plan-depth <#>           Set the heading depth for the review plan (default: 1)");
         context.WriteLine("  --report <file>            Write review report to the specified Markdown file");
         context.WriteLine("  --report-depth <#>         Set the heading depth for the review report (default: 1)");
         context.WriteLine("  --index <glob-path>        Index PDF evidence files matching the glob path");
+        context.WriteLine("  --enforce                  Exit with non-zero code if there are review issues");
     }
 
     /// <summary>
@@ -164,17 +165,16 @@ internal static class Program
             RunIndexLogic(context, directory);
         }
 
-        // Handle --definition: load configuration and process plan/report.
-        // Return early after RunDefinitionLogic so the usage hint below is not
-        // shown when a definition was successfully processed (even if --index was
-        // also provided and already handled above).
-        if (context.DefinitionFile != null)
+        // Handle definition-based actions (--plan, --report, or explicit --definition).
+        // Use .reviewmark.yaml as the default when --definition is not specified.
+        if (context.PlanFile != null || context.ReportFile != null || context.DefinitionFile != null)
         {
-            RunDefinitionLogic(context, directory);
+            var definitionFile = context.DefinitionFile ?? ".reviewmark.yaml";
+            RunDefinitionLogic(context, directory, definitionFile);
             return;
         }
 
-        // If neither is specified, show usage hint
+        // If neither index nor definition actions are specified, show usage hint
         if (context.IndexPaths.Count == 0)
         {
             context.WriteLine("ReviewMark - File Review Evidence Management");
@@ -204,10 +204,11 @@ internal static class Program
     /// </summary>
     /// <param name="context">The context for output.</param>
     /// <param name="directory">The working directory.</param>
-    private static void RunDefinitionLogic(Context context, string directory)
+    /// <param name="definitionFile">The path to the definition YAML file.</param>
+    private static void RunDefinitionLogic(Context context, string directory, string definitionFile)
     {
         // Load the configuration from the definition file
-        var config = ReviewMarkConfiguration.Load(context.DefinitionFile!);
+        var config = ReviewMarkConfiguration.Load(definitionFile);
 
         // Handle --plan: generate and write the review plan
         if (context.PlanFile != null)
@@ -217,7 +218,15 @@ internal static class Program
             context.WriteLine($"Review plan written to {context.PlanFile}");
             if (planResult.HasIssues)
             {
-                context.WriteError("Review plan has coverage issues.");
+                // With --enforce, exit with non-zero; otherwise emit a non-fatal warning
+                if (context.Enforce)
+                {
+                    context.WriteError("Review plan has coverage issues.");
+                }
+                else
+                {
+                    context.WriteLine("Warning: Review plan has coverage issues.");
+                }
             }
         }
 
@@ -230,7 +239,15 @@ internal static class Program
             context.WriteLine($"Review report written to {context.ReportFile}");
             if (reportResult.HasIssues)
             {
-                context.WriteError("Review report has review issues.");
+                // With --enforce, exit with non-zero; otherwise emit a non-fatal warning
+                if (context.Enforce)
+                {
+                    context.WriteError("Review report has review issues.");
+                }
+                else
+                {
+                    context.WriteLine("Warning: Review report has review issues.");
+                }
             }
         }
     }

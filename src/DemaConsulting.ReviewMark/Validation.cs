@@ -52,6 +52,7 @@ internal static class Validation
         RunDefinitionPlanTest(context, testResults);
         RunDefinitionReportTest(context, testResults);
         RunIndexScanTest(context, testResults);
+        RunEnforceTest(context, testResults);
 
         // Calculate totals
         var totalTests = testResults.Results.Count;
@@ -336,12 +337,11 @@ internal static class Validation
                 "--report", reportFile
             };
 
-            // Run the program - empty index means all reviews are Missing so HasIssues is true
+            // Run the program - empty index means all reviews are Missing, but without --enforce
+            // the tool still exits with code 0 and writes a warning to stdout
             using (var testContext = Context.Create(args))
             {
                 Program.Run(testContext);
-
-                // Exit code 1 is expected since the reviews will be Missing
             }
 
             // Verify the report file was written regardless of exit code
@@ -456,6 +456,67 @@ internal static class Validation
         catch (Exception ex)
         {
             HandleTestException(test, context, "ReviewMark_IndexScan", ex);
+        }
+
+        FinalizeTestResult(test, startTime, testResults);
+    }
+
+    /// <summary>
+    ///     Runs a test for --enforce flag causing a non-zero exit code when reviews have issues.
+    /// </summary>
+    /// <param name="context">The context for output.</param>
+    /// <param name="testResults">The test results collection.</param>
+    private static void RunEnforceTest(Context context, DemaConsulting.TestResults.TestResults testResults)
+    {
+        var startTime = DateTime.UtcNow;
+        var test = CreateTestResult("ReviewMark_Enforce");
+
+        try
+        {
+            using var tempDir = new TemporaryDirectory();
+
+            // Create fixtures: src file, definition YAML, and empty index (no review evidence)
+            var (definitionFile, _) = CreateTestDefinitionFixtures(tempDir.DirectoryPath);
+
+            // Define the report output file
+            var reportFile = PathHelpers.SafePathCombine(tempDir.DirectoryPath, "report.md");
+
+            // Build command line arguments - empty index means all reviews are Missing
+            // so --enforce should cause exit code 1
+            var args = new[]
+            {
+                "--silent",
+                "--definition", definitionFile,
+                "--report", reportFile,
+                "--enforce"
+            };
+
+            // Run the program
+            int exitCode;
+            using (var testContext = Context.Create(args))
+            {
+                Program.Run(testContext);
+                exitCode = testContext.ExitCode;
+            }
+
+            // Verify that --enforce caused a non-zero exit code due to missing reviews
+            if (exitCode != 0)
+            {
+                test.Outcome = DemaConsulting.TestResults.TestOutcome.Passed;
+                context.WriteLine($"✓ ReviewMark_Enforce - Passed");
+            }
+            else
+            {
+                test.Outcome = DemaConsulting.TestResults.TestOutcome.Failed;
+                test.ErrorMessage = "Expected non-zero exit code with --enforce and missing reviews";
+                context.WriteError($"✗ ReviewMark_Enforce - Failed: Expected non-zero exit code with --enforce and missing reviews");
+            }
+        }
+        // Generic catch is justified here as this is a test framework - any exception should be
+        // recorded as a test failure to ensure robust test execution and reporting.
+        catch (Exception ex)
+        {
+            HandleTestException(test, context, "ReviewMark_Enforce", ex);
         }
 
         FinalizeTestResult(test, startTime, testResults);
