@@ -52,6 +52,7 @@ internal static class Validation
         RunDefinitionPlanTest(context, testResults);
         RunDefinitionReportTest(context, testResults);
         RunIndexScanTest(context, testResults);
+        RunDirTest(context, testResults);
         RunEnforceTest(context, testResults);
 
         // Calculate totals
@@ -247,32 +248,51 @@ internal static class Validation
             using var tempDir = new TemporaryDirectory();
             var indexJsonPath = PathHelpers.SafePathCombine(tempDir.DirectoryPath, "index.json");
 
-            // Change to temp directory so index.json is written there, not to the working directory.
-            // The try/finally ensures the directory is restored even if the program throws.
-            var originalDirectory = Directory.GetCurrentDirectory();
-            Directory.SetCurrentDirectory(tempDir.DirectoryPath);
-            try
+            // Run with --dir so index.json is written to the temporary directory
+            int exitCode;
+            using (var testContext = Context.Create(["--silent", "--dir", tempDir.DirectoryPath, "--index", "**/*.pdf"]))
             {
-                // Run the program - glob matches no PDFs so result will be an empty index
-                int exitCode;
-                using (var testContext = Context.Create(["--silent", "--index", "**/*.pdf"]))
-                {
-                    Program.Run(testContext);
-                    exitCode = testContext.ExitCode;
-                }
-
-                if (exitCode != 0)
-                {
-                    return $"Program exited with code {exitCode}";
-                }
-
-                return File.Exists(indexJsonPath) ? null : "index.json was not created";
+                Program.Run(testContext);
+                exitCode = testContext.ExitCode;
             }
-            finally
+
+            if (exitCode != 0)
             {
-                // Always restore the original directory to avoid affecting subsequent tests
-                Directory.SetCurrentDirectory(originalDirectory);
+                return $"Program exited with code {exitCode}";
             }
+
+            return File.Exists(indexJsonPath) ? null : "index.json was not created";
+        });
+    }
+
+    /// <summary>
+    ///     Runs a test for the --dir argument overriding the working directory for file operations.
+    /// </summary>
+    /// <param name="context">The context for output.</param>
+    /// <param name="testResults">The test results collection.</param>
+    private static void RunDirTest(Context context, DemaConsulting.TestResults.TestResults testResults)
+    {
+        RunValidationTest(context, testResults, "ReviewMark_Dir", () =>
+        {
+            using var tempDir = new TemporaryDirectory();
+            var (definitionFile, _) = CreateTestDefinitionFixtures(tempDir.DirectoryPath);
+            var planFile = PathHelpers.SafePathCombine(tempDir.DirectoryPath, "plan.md");
+
+            // Run with --dir pointing to the temp directory; glob patterns in the definition
+            // are resolved under that directory rather than the process working directory
+            int exitCode;
+            using (var testContext = Context.Create(["--silent", "--dir", tempDir.DirectoryPath, "--definition", definitionFile, "--plan", planFile]))
+            {
+                Program.Run(testContext);
+                exitCode = testContext.ExitCode;
+            }
+
+            if (exitCode != 0)
+            {
+                return $"Program exited with code {exitCode}";
+            }
+
+            return File.Exists(planFile) ? null : "Plan file was not created";
         });
     }
 

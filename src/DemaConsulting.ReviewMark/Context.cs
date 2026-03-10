@@ -91,6 +91,11 @@ internal sealed class Context : IDisposable
     public IReadOnlyList<string> IndexPaths { get; private init; } = [];
 
     /// <summary>
+    ///     Gets the working directory path override, or null to use the current directory.
+    /// </summary>
+    public string? WorkingDirectory { get; private init; }
+
+    /// <summary>
     ///     Gets a value indicating whether the enforce flag was specified.
     /// </summary>
     public bool Enforce { get; private init; }
@@ -134,6 +139,7 @@ internal sealed class Context : IDisposable
             ReportFile = parser.ReportFile,
             ReportDepth = parser.ReportDepth,
             IndexPaths = parser.IndexPaths.AsReadOnly(),
+            WorkingDirectory = parser.WorkingDirectory,
             Enforce = parser.Enforce
         };
 
@@ -233,6 +239,11 @@ internal sealed class Context : IDisposable
         public List<string> IndexPaths { get; } = [];
 
         /// <summary>
+        ///     Gets the working directory path override.
+        /// </summary>
+        public string? WorkingDirectory { get; private set; }
+
+        /// <summary>
         ///     Gets a value indicating whether the enforce flag was specified.
         /// </summary>
         public bool Enforce { get; private set; }
@@ -324,6 +335,10 @@ internal sealed class Context : IDisposable
 
                 case "--index":
                     IndexPaths.Add(GetRequiredStringArgument(arg, args, index, "a glob path argument"));
+                    return index + 1;
+
+                case "--dir":
+                    WorkingDirectory = GetRequiredStringArgument(arg, args, index, "a directory path argument");
                     return index + 1;
 
                 case "--enforce":

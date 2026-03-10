@@ -24,7 +24,7 @@ DEMA Consulting tool for automated file-review evidence management in regulated 
 - **Enforcement**: `--enforce` flag causes a non-zero exit code if any review-set is stale or
   missing, or if any file is not covered by a review-set
 - **Re-indexing**: `--index` command scans PDF evidence files matching a glob path and writes
-  `index.json` to the current directory
+  `index.json` to the current directory (or to the directory specified by `--dir`)
 - **Self-Validation**: Built-in validation tests with TRX/JUnit output
 - **Multi-Platform Support**: Builds and runs on Windows, Linux, and macOS
 - **Multi-Runtime Support**: Targets .NET 8, 9, and 10
@@ -99,14 +99,22 @@ reviewmark --silent --log output.log
 
 ## Command-Line Options
 
-| Option               | Description                                                  |
-| -------------------- | ------------------------------------------------------------ |
-| `-v`, `--version`    | Display version information                                  |
-| `-?`, `-h`, `--help` | Display help message                                         |
-| `--silent`           | Suppress console output                                      |
-| `--validate`         | Run self-validation                                          |
-| `--results <file>`   | Write validation results to file (TRX or JUnit format)       |
-| `--log <file>`       | Write output to log file                                     |
+| Option                    | Description                                                  |
+| ------------------------- | ------------------------------------------------------------ |
+| `-v`, `--version`         | Display version information                                  |
+| `-?`, `-h`, `--help`      | Display help message                                         |
+| `--silent`                | Suppress console output                                      |
+| `--validate`              | Run self-validation                                          |
+| `--results <file>`        | Write validation results to file (TRX or JUnit format)       |
+| `--log <file>`            | Write output to log file                                     |
+| `--definition <file>`     | Specify the definition YAML file (default: `.reviewmark.yaml`) |
+| `--plan <file>`           | Write review plan to the specified Markdown file             |
+| `--plan-depth <#>`        | Set the heading depth for the review plan (default: 1)       |
+| `--report <file>`         | Write review report to the specified Markdown file           |
+| `--report-depth <#>`      | Set the heading depth for the review report (default: 1)     |
+| `--index <glob-path>`     | Index PDF evidence files matching the glob path              |
+| `--dir <directory>`       | Set the working directory for file operations                |
+| `--enforce`               | Exit with non-zero code if there are review issues           |
 
 ## Self Validation
 

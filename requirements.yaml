@@ -210,6 +210,18 @@ sections:
               - Context_Create_NoArguments_EnforceFalse
               - ReviewMark_Enforce
 
+          - id: ReviewMark-Cmd-Dir
+            title: The tool shall support --dir flag to set the working directory for file operations.
+            justification: |
+              Allows users to target an evidence store or project directory without changing
+              the process working directory, enabling consistent scripting and CI/CD usage
+              without requiring a cd command before invoking the tool.
+            tests:
+              - Context_Create_DirFlag_SetsWorkingDirectory
+              - Context_Create_NoArguments_WorkingDirectoryIsNull
+              - Context_Create_DirFlag_MissingValue_ThrowsArgumentException
+              - ReviewMark_Dir
+
       - title: Configuration Reading
         requirements:
           - id: ReviewMark-Config-Reading

@@ -129,7 +129,15 @@ review has ever been recorded for this review-set.
 The index is not maintained by hand. Instead, ReviewMark provides a `--index` command that scans
 PDF evidence files matching a glob path, reads the embedded metadata from each PDF using
 [PdfSharp](https://github.com/empira/PDFsharp), and writes an up-to-date `index.json` to the
-current directory:
+working directory.
+
+Use `--dir` to set the working directory without changing the process directory:
+
+```bash
+dotnet reviewmark --dir \\reviews.example.com\evidence\ --index "**/*.pdf"
+```
+
+Alternatively, change to the directory first:
 
 ```bash
 cd \\reviews.example.com\evidence\
@@ -284,7 +292,15 @@ as PDF/A-3u release artifacts alongside the requirements trace matrix and code q
 ## Indexing the Evidence Store
 
 When new review PDFs are deposited into the evidence store, the index must be regenerated. This is
-typically performed by the review team after completing a review, or as a scheduled job:
+typically performed by the review team after completing a review, or as a scheduled job.
+
+Use `--dir` to target the evidence store directly:
+
+```bash
+dotnet reviewmark --dir \\reviews.example.com\evidence\ --index "**/*.pdf"
+```
+
+Or change to the evidence store directory first:
 
 ```bash
 cd \\reviews.example.com\evidence\
@@ -292,12 +308,8 @@ dotnet reviewmark --index "**/*.pdf"
 ```
 
 ReviewMark scans all PDF files matching the glob path, reads the Keywords field from each using
-PdfSharp, parses the `name=value` pairs, and writes a fresh `index.json` to the current directory.
+PdfSharp, parses the `name=value` pairs, and writes a fresh `index.json` to the working directory.
 PDFs whose Keywords field does not contain the required keys are skipped with a warning.
-
-For a `url` evidence source the index command targets a local folder or UNC path where the PDFs
-are stored; change to that directory before running `--index` so the resulting `index.json` is
-written alongside the PDFs to be served by the web server.
 
 ## Self-Validation
 

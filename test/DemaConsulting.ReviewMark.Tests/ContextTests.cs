@@ -609,5 +609,63 @@ public class ContextTests
         // Act & Assert - --report-depth cannot exceed 5 (max heading depth supported)
         Assert.Throws<ArgumentException>(() => Context.Create(["--report-depth", "6"]));
     }
+
+    /// <summary>
+    ///     Test that --report-depth with a non-numeric value throws ArgumentException.
+    /// </summary>
+    [TestMethod]
+    public void Context_Create_ReportDepthFlag_WithInvalidValue_ThrowsArgumentException()
+    {
+        // Act & Assert - --report-depth with a non-numeric value should throw
+        Assert.Throws<ArgumentException>(() => Context.Create(["--report-depth", "not-a-number"]));
+    }
+
+    /// <summary>
+    ///     Test that --report-depth with zero throws ArgumentException because the flag requires
+    ///     a positive integer.
+    /// </summary>
+    [TestMethod]
+    public void Context_Create_ReportDepthFlag_WithZeroValue_ThrowsArgumentException()
+    {
+        // Act & Assert - --report-depth requires a positive integer; zero is not valid
+        Assert.Throws<ArgumentException>(() => Context.Create(["--report-depth", "0"]));
+    }
+
+    /// <summary>
+    ///     Test that --dir sets WorkingDirectory to the provided path.
+    /// </summary>
+    [TestMethod]
+    public void Context_Create_DirFlag_SetsWorkingDirectory()
+    {
+        // Act - create context specifying a working directory
+        using var context = Context.Create(["--dir", "/evidence"]);
+
+        // Assert - WorkingDirectory is set to the provided path and exit code is 0
+        Assert.AreEqual("/evidence", context.WorkingDirectory);
+        Assert.AreEqual(0, context.ExitCode);
+    }
+
+    /// <summary>
+    ///     Test that WorkingDirectory is null when no --dir flag is provided.
+    /// </summary>
+    [TestMethod]
+    public void Context_Create_NoArguments_WorkingDirectoryIsNull()
+    {
+        // Act - create context with no arguments
+        using var context = Context.Create([]);
+
+        // Assert - WorkingDirectory is null when --dir is not specified
+        Assert.IsNull(context.WorkingDirectory);
+    }
+
+    /// <summary>
+    ///     Test that --dir with a missing value throws ArgumentException.
+    /// </summary>
+    [TestMethod]
+    public void Context_Create_DirFlag_MissingValue_ThrowsArgumentException()
+    {
+        // Act & Assert - --dir without a path value should throw
+        Assert.Throws<ArgumentException>(() => Context.Create(["--dir"]));
+    }
 }
 

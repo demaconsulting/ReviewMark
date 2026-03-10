@@ -148,6 +148,7 @@ internal static class Program
         context.WriteLine("  --report <file>            Write review report to the specified Markdown file");
         context.WriteLine("  --report-depth <#>         Set the heading depth for the review report (default: 1)");
         context.WriteLine("  --index <glob-path>        Index PDF evidence files matching the glob path");
+        context.WriteLine("  --dir <directory>          Set the working directory for file operations");
         context.WriteLine("  --enforce                  Exit with non-zero code if there are review issues");
     }
 
@@ -157,7 +158,7 @@ internal static class Program
     /// <param name="context">The context containing command line arguments and program state.</param>
     private static void RunToolLogic(Context context)
     {
-        var directory = Directory.GetCurrentDirectory();
+        var directory = context.WorkingDirectory ?? Directory.GetCurrentDirectory();
 
         // Handle --index: scan PDF evidence files and write index.json
         if (context.IndexPaths.Count > 0)
@@ -166,10 +167,11 @@ internal static class Program
         }
 
         // Handle definition-based actions (--plan, --report, or explicit --definition).
-        // Use .reviewmark.yaml as the default when --definition is not specified.
+        // Use .reviewmark.yaml as the default when --definition is not specified,
+        // resolved under the working directory.
         if (context.PlanFile != null || context.ReportFile != null || context.DefinitionFile != null)
         {
-            var definitionFile = context.DefinitionFile ?? ".reviewmark.yaml";
+            var definitionFile = context.DefinitionFile ?? PathHelpers.SafePathCombine(directory, ".reviewmark.yaml");
             RunDefinitionLogic(context, directory, definitionFile);
             return;
         }
