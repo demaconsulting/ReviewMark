@@ -18,6 +18,9 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
+using System.Net.Http;
+using System.Net.Http.Headers;
+using System.Text;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using PdfSharp.Pdf;
@@ -151,6 +154,72 @@ internal sealed class ReviewIndex
     internal static ReviewIndex Empty() => new();
 
     /// <summary>
+    ///     Loads a <see cref="ReviewIndex" /> from an <see cref="EvidenceSource" />.
+    ///     For <c>fileshare</c> sources the <see cref="EvidenceSource.Location" /> is treated as the
+    ///     path to the <c>index.json</c> file. For <c>url</c> sources the location is the HTTP(S) URL
+    ///     of the <c>index.json</c> file; an <see cref="HttpClient" /> with optional pre-emptive
+    ///     Basic-auth credentials read from the environment variables named by
+    ///     <see cref="EvidenceSource.UsernameEnv" /> and <see cref="EvidenceSource.PasswordEnv" /> is
+    ///     created internally.
+    /// </summary>
+    /// <param name="evidenceSource">The evidence source to load the index from.</param>
+    /// <returns>A populated <see cref="ReviewIndex" /> instance.</returns>
+    /// <exception cref="ArgumentNullException">
+    ///     Thrown when <paramref name="evidenceSource" /> is <c>null</c>.
+    /// </exception>
+    /// <exception cref="InvalidOperationException">
+    ///     Thrown when the index cannot be loaded from the evidence source.
+    /// </exception>
+    internal static ReviewIndex Load(EvidenceSource evidenceSource)
+    {
+        ArgumentNullException.ThrowIfNull(evidenceSource);
+
+        // Short-circuit for fileshare sources — no HttpClient needed
+        if (evidenceSource.Type.Equals("fileshare", StringComparison.OrdinalIgnoreCase))
+        {
+            return LoadFromFile(evidenceSource.Location);
+        }
+
+        // For all other types, create a configured HttpClient and delegate to the testable overload
+        using var httpClient = CreateHttpClient(evidenceSource);
+        return Load(evidenceSource, httpClient);
+    }
+
+    /// <summary>
+    ///     Loads a <see cref="ReviewIndex" /> from an <see cref="EvidenceSource" /> using the
+    ///     specified <see cref="HttpClient" />. This overload is exposed internally to allow
+    ///     unit tests to inject a fake <see cref="HttpMessageHandler" /> when testing URL-based
+    ///     evidence sources.
+    /// </summary>
+    /// <param name="evidenceSource">The evidence source to load the index from.</param>
+    /// <param name="httpClient">The HTTP client to use for <c>url</c>-type evidence sources.</param>
+    /// <returns>A populated <see cref="ReviewIndex" /> instance.</returns>
+    /// <exception cref="ArgumentNullException">
+    ///     Thrown when <paramref name="evidenceSource" /> or <paramref name="httpClient" /> is <c>null</c>.
+    /// </exception>
+    /// <exception cref="InvalidOperationException">
+    ///     Thrown when the evidence-source type is unsupported or the index cannot be loaded.
+    /// </exception>
+    internal static ReviewIndex Load(EvidenceSource evidenceSource, HttpClient httpClient)
+    {
+        ArgumentNullException.ThrowIfNull(evidenceSource);
+        ArgumentNullException.ThrowIfNull(httpClient);
+
+        // Dispatch to the appropriate loader based on the evidence-source type
+        return evidenceSource.Type.ToLowerInvariant() switch
+        {
+            "fileshare" => LoadFromFile(evidenceSource.Location),
+            "url" => LoadFromUrl(evidenceSource.Location, httpClient),
+            _ => throw new InvalidOperationException(
+                $"Unsupported evidence source type '{evidenceSource.Type}'.")
+        };
+    }
+
+    // ---------------------------------------------------------------------------
+    // Private helpers — load implementation
+    // ---------------------------------------------------------------------------
+
+    /// <summary>
     ///     Loads a <see cref="ReviewIndex" /> from a JSON file on disk.
     /// </summary>
     /// <param name="filePath">Absolute or relative path to the <c>index.json</c> file.</param>
@@ -162,7 +231,7 @@ internal sealed class ReviewIndex
     ///     Thrown when <paramref name="filePath" /> cannot be read or the
     ///     JSON content is invalid.
     /// </exception>
-    internal static ReviewIndex Load(string filePath)
+    private static ReviewIndex LoadFromFile(string filePath)
     {
         // Validate the path argument
         if (string.IsNullOrWhiteSpace(filePath))
@@ -174,7 +243,7 @@ internal sealed class ReviewIndex
         try
         {
             using var stream = File.OpenRead(filePath);
-            return Load(stream);
+            return LoadFromStream(stream);
         }
         catch (InvalidOperationException)
         {
@@ -199,7 +268,7 @@ internal sealed class ReviewIndex
     /// <exception cref="ArgumentException">
     ///     Thrown when the stream does not contain valid JSON.
     /// </exception>
-    internal static ReviewIndex Load(Stream stream)
+    private static ReviewIndex LoadFromStream(Stream stream)
     {
         // Validate the stream argument
         ArgumentNullException.ThrowIfNull(stream);
@@ -244,6 +313,87 @@ internal sealed class ReviewIndex
         }
 
         return index;
+    }
+
+    /// <summary>
+    ///     Creates an <see cref="HttpClient" /> configured for the given
+    ///     <see cref="EvidenceSource" />. If the source specifies credential environment-variable
+    ///     names and those variables are set, a pre-emptive Basic auth header is applied directly
+    ///     to <see cref="HttpClient.DefaultRequestHeaders" />.
+    /// </summary>
+    /// <param name="evidenceSource">The evidence source configuration.</param>
+    /// <returns>A configured <see cref="HttpClient" /> instance.</returns>
+    private static HttpClient CreateHttpClient(EvidenceSource evidenceSource)
+    {
+        var client = new HttpClient();
+
+        // Look up credentials from environment variables if names were specified
+        var username = evidenceSource.UsernameEnv != null
+            ? Environment.GetEnvironmentVariable(evidenceSource.UsernameEnv)
+            : null;
+        var password = evidenceSource.PasswordEnv != null
+            ? Environment.GetEnvironmentVariable(evidenceSource.PasswordEnv)
+            : null;
+
+        // Apply pre-emptive Basic auth header when both username and password are available
+        if (!string.IsNullOrEmpty(username) && !string.IsNullOrEmpty(password))
+        {
+            var encoded = Convert.ToBase64String(Encoding.UTF8.GetBytes($"{username}:{password}"));
+            client.DefaultRequestHeaders.Authorization =
+                new AuthenticationHeaderValue("Basic", encoded);
+        }
+
+        return client;
+    }
+
+    /// <summary>
+    ///     Downloads the index JSON document from <paramref name="url" /> using
+    ///     <paramref name="httpClient" /> and deserializes it into a
+    ///     <see cref="ReviewIndex" />.
+    /// </summary>
+    /// <param name="url">The URL of the <c>index.json</c> file.</param>
+    /// <param name="httpClient">The HTTP client to use for the request.</param>
+    /// <returns>A populated <see cref="ReviewIndex" /> instance.</returns>
+    /// <exception cref="InvalidOperationException">
+    ///     Thrown when the HTTP request fails or the response content is not valid JSON.
+    /// </exception>
+    private static ReviewIndex LoadFromUrl(string url, HttpClient httpClient)
+    {
+        try
+        {
+            // Send a synchronous GET request to the index URL
+            using var request = new HttpRequestMessage(HttpMethod.Get, url);
+            using var response = httpClient.Send(request);
+
+            // Treat any non-success HTTP status as a load failure
+            if (!response.IsSuccessStatusCode)
+            {
+                throw new InvalidOperationException(
+                    $"Failed to download review index from '{url}': HTTP {(int)response.StatusCode} {response.ReasonPhrase}.");
+            }
+
+            // Deserialize the response body; wrap any JSON parse error with URL context
+            using var stream = response.Content.ReadAsStream();
+            try
+            {
+                return LoadFromStream(stream);
+            }
+            catch (ArgumentException ex)
+            {
+                throw new InvalidOperationException(
+                    $"Failed to parse review index downloaded from '{url}': {ex.Message}", ex);
+            }
+        }
+        catch (InvalidOperationException)
+        {
+            // Re-throw exceptions that already carry context
+            throw;
+        }
+        catch (Exception ex)
+        {
+            throw new InvalidOperationException(
+                $"Failed to download review index from '{url}': {ex.Message}", ex);
+        }
     }
 
     // ---------------------------------------------------------------------------

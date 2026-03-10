@@ -158,6 +158,29 @@ sections:
               - ReviewSet_GetFingerprint_RenameFile_ReturnsSameFingerprint
               - ReviewMarkConfiguration_Load_NonExistentFile_ThrowsException
 
+          - id: ReviewMark-Index-EvidenceSource
+            title: The tool shall load a ReviewIndex from an EvidenceSource supporting fileshare and url types.
+            justification: |
+              The tool must be able to load review evidence index data from the EvidenceSource
+              specified in its configuration. Two source types are supported: `fileshare` loads
+              the index JSON from a local or network file path, and `url` downloads it over
+              HTTP(S) with optional Basic-auth credentials read from environment variables.
+              An internal overload accepting an HttpClient enables unit testing via a fake
+              HttpMessageHandler without network access.
+            tests:
+              - ReviewIndex_Load_EvidenceSource_NullSource_ThrowsArgumentNullException
+              - ReviewIndex_Load_EvidenceSource_UnknownType_ThrowsInvalidOperationException
+              - ReviewIndex_Load_EvidenceSource_Fileshare_LoadsFromFile
+              - ReviewIndex_Load_EvidenceSource_Fileshare_NonExistentFile_ThrowsInvalidOperationException
+              - ReviewIndex_Load_EvidenceSource_Fileshare_InvalidJson_ThrowsInvalidOperationException
+              - ReviewIndex_Load_EvidenceSource_Fileshare_EmptyReviews_ReturnsEmptyIndex
+              - ReviewIndex_Load_EvidenceSource_Fileshare_ValidJson_ReturnsPopulatedIndex
+              - ReviewIndex_Load_EvidenceSource_Fileshare_MissingRequiredFields_SkipsInvalidEntries
+              - ReviewIndex_Load_EvidenceSource_Url_SuccessResponse_LoadsIndex
+              - ReviewIndex_Load_EvidenceSource_Url_NotFoundResponse_ThrowsInvalidOperationException
+              - ReviewIndex_Load_EvidenceSource_Url_InvalidJson_ThrowsInvalidOperationException
+              - ReviewIndex_Load_EvidenceSource_NullHttpClient_ThrowsArgumentNullException
+
       - title: Platform Support
         requirements:
           - id: ReviewMark-Platform-Windows
