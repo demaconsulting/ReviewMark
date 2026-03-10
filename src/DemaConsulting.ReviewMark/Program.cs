@@ -148,7 +148,8 @@ internal static class Program
         context.WriteLine("  --report <file>            Write review report to the specified Markdown file");
         context.WriteLine("  --report-depth <#>         Set the heading depth for the review report (default: 1)");
         context.WriteLine("  --index <glob-path>        Index PDF evidence files matching the glob path");
-        context.WriteLine("  --dir <directory>          Set the working directory for file operations");
+        context.WriteLine("  --dir <directory>          Set the working directory (used for default paths and glob scanning)");
+        context.WriteLine("                             Note: explicit paths given to --definition/--plan/--report are used as-is");
         context.WriteLine("  --enforce                  Exit with non-zero code if there are review issues");
     }
 
@@ -156,8 +157,20 @@ internal static class Program
     ///     Runs the main tool logic.
     /// </summary>
     /// <param name="context">The context containing command line arguments and program state.</param>
+    /// <remarks>
+    ///     Path resolution convention: <c>--dir</c> sets the working directory used for operations
+    ///     that do not have an explicit path argument.  Paths that the user explicitly provides via
+    ///     <c>--definition</c>, <c>--plan</c>, or <c>--report</c> are used exactly as given and are
+    ///     NOT re-rooted under <c>--dir</c>.  This keeps each argument independent — specifying one
+    ///     argument's path cannot inadvertently change the resolution of another argument's path.
+    /// </remarks>
     private static void RunToolLogic(Context context)
     {
+        // The working directory is used for operations without an explicit path argument:
+        //   - the default definition file (.reviewmark.yaml) when --definition is omitted
+        //   - glob scanning root and index.json output for --index
+        //   - file scanning root for plan/report generation
+        // Explicit paths provided via --definition, --plan, and --report are used as-is.
         var directory = context.WorkingDirectory ?? Directory.GetCurrentDirectory();
 
         // Handle --index: scan PDF evidence files and write index.json

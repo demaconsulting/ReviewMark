@@ -93,6 +93,23 @@ internal sealed class Context : IDisposable
     /// <summary>
     ///     Gets the working directory path override, or null to use the current directory.
     /// </summary>
+    /// <remarks>
+    ///     <para>
+    ///         When specified via <c>--dir</c>, this directory is used as the root for operations
+    ///         that do not have an explicit path provided by another argument:
+    ///     </para>
+    ///     <list type="bullet">
+    ///         <item>The default definition file (<c>.reviewmark.yaml</c>) is resolved under this directory.</item>
+    ///         <item>Glob patterns supplied via <c>--index</c> are rooted here, and <c>index.json</c> is written here.</item>
+    ///         <item>File scanning for plan/report generation is rooted here.</item>
+    ///     </list>
+    ///     <para>
+    ///         Paths that are explicitly specified via other arguments (<c>--definition</c>, <c>--plan</c>,
+    ///         <c>--report</c>) are used exactly as provided and are not resolved relative to this directory.
+    ///         This ensures that an explicit path passed to one argument is never silently re-rooted by
+    ///         a different argument.
+    ///     </para>
+    /// </remarks>
     public string? WorkingDirectory { get; private init; }
 
     /// <summary>

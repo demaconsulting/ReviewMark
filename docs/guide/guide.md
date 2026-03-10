@@ -130,14 +130,39 @@ reviewmark --log output.log
 
 The following command-line options are supported:
 
-| Option               | Description                                                  |
-| -------------------- | ------------------------------------------------------------ |
-| `-v`, `--version`    | Display version information                                  |
-| `-?`, `-h`, `--help` | Display help message                                         |
-| `--silent`           | Suppress console output                                      |
-| `--validate`         | Run self-validation                                          |
-| `--results <file>`   | Write validation results to file (TRX or JUnit format)       |
-| `--log <file>`       | Write output to log file                                     |
+| Option                    | Description                                                  |
+| ------------------------- | ------------------------------------------------------------ |
+| `-v`, `--version`         | Display version information                                  |
+| `-?`, `-h`, `--help`      | Display help message                                         |
+| `--silent`                | Suppress console output                                      |
+| `--validate`              | Run self-validation                                          |
+| `--results <file>`        | Write validation results to file (TRX or JUnit format)       |
+| `--log <file>`            | Write output to log file                                     |
+| `--definition <file>`     | Specify the definition YAML file (default: .reviewmark.yaml) |
+| `--plan <file>`           | Write review plan to the specified Markdown file             |
+| `--plan-depth <#>`        | Set the heading depth for the review plan (default: 1)       |
+| `--report <file>`         | Write review report to the specified Markdown file           |
+| `--report-depth <#>`      | Set the heading depth for the review report (default: 1)     |
+| `--index <glob-path>`     | Index PDF evidence files matching the glob path              |
+| `--dir <directory>`       | Set the working directory for default paths and glob paths   |
+| `--enforce`               | Exit with non-zero code if there are review issues           |
+
+## Working Directory (`--dir`)
+
+`--dir` sets the root directory used for operations that do not have an explicit path
+provided by another argument. Specifically it affects:
+
+- **Default definition file** — when `--definition` is omitted, `.reviewmark.yaml` is
+  resolved relative to `--dir` (or the current directory if `--dir` is also omitted).
+- **Glob scanning** — `--index` glob patterns are rooted at `--dir`, and `index.json`
+  is written there.
+- **File scanning** — when generating a plan or report, source files are enumerated
+  relative to `--dir`.
+
+Paths that the caller explicitly supplies via `--definition`, `--plan`, or `--report`
+are used exactly as provided and are **not** re-rooted under `--dir`. This keeps each
+argument independent: specifying one argument's path cannot silently change another
+argument's path.
 
 # Examples
 
