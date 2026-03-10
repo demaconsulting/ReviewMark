@@ -302,6 +302,11 @@ internal sealed class Context : IDisposable
 
                 case "--plan-depth":
                     PlanDepth = GetRequiredIntArgument(arg, args, index);
+                    if (PlanDepth > 5)
+                    {
+                        throw new ArgumentException($"{arg} cannot be greater than 5", nameof(args));
+                    }
+
                     return index + 1;
 
                 case "--report":
@@ -310,6 +315,11 @@ internal sealed class Context : IDisposable
 
                 case "--report-depth":
                     ReportDepth = GetRequiredIntArgument(arg, args, index);
+                    if (ReportDepth > 5)
+                    {
+                        throw new ArgumentException($"{arg} cannot be greater than 5", nameof(args));
+                    }
+
                     return index + 1;
 
                 case "--index":
@@ -356,11 +366,6 @@ internal sealed class Context : IDisposable
             if (!int.TryParse(value, out var intValue) || intValue < 1)
             {
                 throw new ArgumentException($"{arg} requires a positive integer argument", nameof(args));
-            }
-
-            if (intValue > 5)
-            {
-                throw new ArgumentException($"{arg} cannot be greater than 5", nameof(args));
             }
 
             return intValue;
