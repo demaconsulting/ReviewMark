@@ -494,6 +494,36 @@ public class ContextTests
     }
 
     /// <summary>
+    ///     Test that --report-depth with a non-numeric value throws an ArgumentException.
+    /// </summary>
+    [TestMethod]
+    public void Context_Create_ReportDepthFlag_NonNumeric_ThrowsArgumentException()
+    {
+        // Act & Assert - creating a context with a non-numeric report depth should fail validation
+        Assert.ThrowsException<ArgumentException>(() => Context.Create(["--report-depth", "abc"]));
+    }
+
+    /// <summary>
+    ///     Test that --report-depth with a value of 0 throws an ArgumentException.
+    /// </summary>
+    [TestMethod]
+    public void Context_Create_ReportDepthFlag_Zero_ThrowsArgumentException()
+    {
+        // Act & Assert - creating a context with a report depth of 0 should fail validation
+        Assert.ThrowsException<ArgumentException>(() => Context.Create(["--report-depth", "0"]));
+    }
+
+    /// <summary>
+    ///     Test that --report-depth with a missing value throws an ArgumentException.
+    /// </summary>
+    [TestMethod]
+    public void Context_Create_ReportDepthFlag_MissingValue_ThrowsArgumentException()
+    {
+        // Act & Assert - creating a context with --report-depth but no value should fail validation
+        Assert.ThrowsException<ArgumentException>(() => Context.Create(["--report-depth"]));
+    }
+
+    /// <summary>
     ///     Test that --index adds the provided glob path to IndexPaths.
     /// </summary>
     [TestMethod]
