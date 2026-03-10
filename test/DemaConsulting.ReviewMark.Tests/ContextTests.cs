@@ -500,7 +500,7 @@ public class ContextTests
     public void Context_Create_ReportDepthFlag_NonNumeric_ThrowsArgumentException()
     {
         // Act & Assert - creating a context with a non-numeric report depth should fail validation
-        Assert.ThrowsException<ArgumentException>(() => Context.Create(["--report-depth", "abc"]));
+        Assert.Throws<ArgumentException>(() => Context.Create(["--report-depth", "abc"]));
     }
 
     /// <summary>
@@ -510,7 +510,7 @@ public class ContextTests
     public void Context_Create_ReportDepthFlag_Zero_ThrowsArgumentException()
     {
         // Act & Assert - creating a context with a report depth of 0 should fail validation
-        Assert.ThrowsException<ArgumentException>(() => Context.Create(["--report-depth", "0"]));
+        Assert.Throws<ArgumentException>(() => Context.Create(["--report-depth", "0"]));
     }
 
     /// <summary>
@@ -520,7 +520,7 @@ public class ContextTests
     public void Context_Create_ReportDepthFlag_MissingValue_ThrowsArgumentException()
     {
         // Act & Assert - creating a context with --report-depth but no value should fail validation
-        Assert.ThrowsException<ArgumentException>(() => Context.Create(["--report-depth"]));
+        Assert.Throws<ArgumentException>(() => Context.Create(["--report-depth"]));
     }
 
     /// <summary>
