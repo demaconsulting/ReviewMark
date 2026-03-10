@@ -107,7 +107,7 @@ reviewmark --silent --log output.log
 | `--validate`              | Run self-validation                                          |
 | `--results <file>`        | Write validation results to file (TRX or JUnit format)       |
 | `--log <file>`            | Write output to log file                                     |
-| `--definition <file>`     | Specify the definition YAML file (default: `.reviewmark.yaml`) |
+| `--definition <file>`     | Specify the definition YAML file (default: .reviewmark.yaml) |
 | `--plan <file>`           | Write review plan to the specified Markdown file             |
 | `--plan-depth <#>`        | Set the heading depth for the review plan (default: 1)       |
 | `--report <file>`         | Write review report to the specified Markdown file           |
