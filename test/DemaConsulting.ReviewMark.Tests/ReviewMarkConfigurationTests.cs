@@ -301,6 +301,35 @@ public class ReviewMarkConfigurationTests
             ReviewMarkConfiguration.Load(nonExistentPath));
     }
 
+    /// <summary>
+    ///     Test that Load resolves a relative fileshare location against the config file's directory.
+    /// </summary>
+    [TestMethod]
+    public void ReviewMarkConfiguration_Load_FileshareRelativeLocation_ResolvesToAbsolutePath()
+    {
+        // Arrange — write a config file with a relative fileshare location
+        var configPath = PathHelpers.SafePathCombine(_testDirectory, ".reviewmark.yaml");
+        File.WriteAllText(configPath, """
+            needs-review:
+              - "**/*.cs"
+            evidence-source:
+              type: fileshare
+              location: index.json
+            reviews:
+              - id: Core-Logic
+                title: Review of core business logic
+                paths:
+                  - "src/**/*.cs"
+            """);
+
+        // Act - load the configuration
+        var config = ReviewMarkConfiguration.Load(configPath);
+
+        // Assert - relative location is resolved to an absolute path under the config directory
+        Assert.IsTrue(Path.IsPathRooted(config.EvidenceSource.Location));
+        Assert.AreEqual(PathHelpers.SafePathCombine(_testDirectory, "index.json"), config.EvidenceSource.Location);
+    }
+
     // -------------------------------------------------------------------------
     // PublishReviewPlan tests
     // -------------------------------------------------------------------------

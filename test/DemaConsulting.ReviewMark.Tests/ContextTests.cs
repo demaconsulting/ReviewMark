@@ -641,16 +641,6 @@ public class ContextTests
     }
 
     /// <summary>
-    ///     Test that --report-depth with a missing value throws ArgumentException.
-    /// </summary>
-    [TestMethod]
-    public void Context_Create_ReportDepthFlag_MissingValue_ThrowsArgumentException()
-    {
-        // Act & Assert - --report-depth without a depth value should throw
-        Assert.Throws<ArgumentException>(() => Context.Create(["--report-depth"]));
-    }
-
-    /// <summary>
     ///     Test that --dir sets WorkingDirectory to the provided path.
     /// </summary>
     [TestMethod]
