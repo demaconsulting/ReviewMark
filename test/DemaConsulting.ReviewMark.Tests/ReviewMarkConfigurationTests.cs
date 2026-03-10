@@ -300,4 +300,285 @@ public class ReviewMarkConfigurationTests
         Assert.Throws<InvalidOperationException>(() =>
             ReviewMarkConfiguration.Load(nonExistentPath));
     }
+
+    // -------------------------------------------------------------------------
+    // PublishReviewPlan tests
+    // -------------------------------------------------------------------------
+
+    /// <summary>
+    ///     Test that PublishReviewPlan returns no issues and a table row when all
+    ///     needs-review files are covered by a review set.
+    /// </summary>
+    [TestMethod]
+    public void ReviewMarkConfiguration_PublishReviewPlan_AllCovered_NoIssues()
+    {
+        // Arrange — config whose review set covers every .cs file; create one .cs file
+        var config = ReviewMarkConfiguration.Parse(MinimalYaml);
+        var srcDir = PathHelpers.SafePathCombine(_testDirectory, "src");
+        Directory.CreateDirectory(srcDir);
+        File.WriteAllText(PathHelpers.SafePathCombine(srcDir, "A.cs"), "class A {}");
+
+        // Act
+        var result = config.PublishReviewPlan(_testDirectory);
+
+        // Assert — no uncovered files means no issues; the coverage table is present
+        Assert.IsFalse(result.HasIssues);
+        Assert.Contains("# Review Coverage", result.Markdown);
+        Assert.Contains("| Core-Logic |", result.Markdown);
+        Assert.Contains("All files requiring review are covered by a review-set.", result.Markdown);
+        Assert.DoesNotContain("⚠", result.Markdown);
+    }
+
+    /// <summary>
+    ///     Test that PublishReviewPlan sets HasIssues and lists uncovered files
+    ///     when at least one needs-review file is not matched by any review set.
+    /// </summary>
+    [TestMethod]
+    public void ReviewMarkConfiguration_PublishReviewPlan_UncoveredFiles_HasIssues()
+    {
+        // Arrange — config covers only src/**/*.cs; Uncovered.cs at the root is not covered
+        var config = ReviewMarkConfiguration.Parse(MinimalYaml);
+        var srcDir = PathHelpers.SafePathCombine(_testDirectory, "src");
+        Directory.CreateDirectory(srcDir);
+        File.WriteAllText(PathHelpers.SafePathCombine(srcDir, "A.cs"), "class A {}");
+        File.WriteAllText(PathHelpers.SafePathCombine(_testDirectory, "Uncovered.cs"), "class Uncovered {}");
+
+        // Act
+        var result = config.PublishReviewPlan(_testDirectory);
+
+        // Assert — the uncovered file triggers HasIssues and appears in the Markdown
+        Assert.IsTrue(result.HasIssues, "HasIssues should be true when uncovered files exist");
+        Assert.Contains("Coverage", result.Markdown);
+        Assert.Contains("`Uncovered.cs`", result.Markdown);
+    }
+
+    /// <summary>
+    ///     Test that PublishReviewPlan honours the markdownDepth parameter when
+    ///     building heading levels, including subheadings for uncovered files.
+    /// </summary>
+    [TestMethod]
+    public void ReviewMarkConfiguration_PublishReviewPlan_MarkdownDepth_UsedForHeadings()
+    {
+        // Arrange — depth 2; create an uncovered file so the subheading also appears
+        var config = ReviewMarkConfiguration.Parse(MinimalYaml);
+        var srcDir = PathHelpers.SafePathCombine(_testDirectory, "src");
+        Directory.CreateDirectory(srcDir);
+        File.WriteAllText(PathHelpers.SafePathCombine(srcDir, "A.cs"), "class A {}");
+        File.WriteAllText(PathHelpers.SafePathCombine(_testDirectory, "Uncovered.cs"), "class Uncovered {}");
+
+        // Act
+        var result = config.PublishReviewPlan(_testDirectory, markdownDepth: 2);
+
+        // Assert — main heading is at depth 2; subheading for coverage is at depth 3
+        Assert.StartsWith("## Review Coverage", result.Markdown);
+        Assert.Contains("### Coverage", result.Markdown);
+    }
+
+    // -------------------------------------------------------------------------
+    // PublishReviewReport tests
+    // -------------------------------------------------------------------------
+
+    /// <summary>
+    ///     Test that PublishReviewReport returns no issues and marks the review as
+    ///     current when the index fingerprint matches the computed fingerprint.
+    /// </summary>
+    [TestMethod]
+    public void ReviewMarkConfiguration_PublishReviewReport_CurrentReview_NoIssues()
+    {
+        // Arrange — create the source file so the fingerprint can be computed
+        var config = ReviewMarkConfiguration.Parse(MinimalYaml);
+        var srcDir = PathHelpers.SafePathCombine(_testDirectory, "src");
+        Directory.CreateDirectory(srcDir);
+        File.WriteAllText(PathHelpers.SafePathCombine(srcDir, "A.cs"), "class A {}");
+
+        // Compute the actual fingerprint so the index entry matches
+        var fingerprint = config.Reviews[0].GetFingerprint(_testDirectory);
+
+        // Write a JSON index file with the correct fingerprint
+        var indexPath = PathHelpers.SafePathCombine(_testDirectory, "index.json");
+        File.WriteAllText(indexPath, $$"""
+            {
+              "reviews": [
+                {
+                  "id": "Core-Logic",
+                  "fingerprint": "{{fingerprint}}",
+                  "date": "2026-02-14",
+                  "result": "pass",
+                  "file": "CR-2026-014.pdf"
+                }
+              ]
+            }
+            """);
+        var index = ReviewIndex.Load(new EvidenceSource("fileshare", indexPath, null, null));
+
+        // Act
+        var result = config.PublishReviewReport(index, _testDirectory);
+
+        // Assert — matching fingerprint means "Current"; no issues
+        Assert.IsFalse(result.HasIssues, "HasIssues should be false when all reviews are current");
+        Assert.Contains("# Review Status", result.Markdown);
+        Assert.Contains("\u2705 Current", result.Markdown);
+        Assert.Contains("Referenced Documents", result.Markdown);
+        Assert.Contains("CR-2026-014.pdf", result.Markdown);
+    }
+
+    /// <summary>
+    ///     Test that PublishReviewReport sets HasIssues and marks the review as
+    ///     stale when the index fingerprint does not match the current fingerprint.
+    /// </summary>
+    [TestMethod]
+    public void ReviewMarkConfiguration_PublishReviewReport_StaleReview_HasIssues()
+    {
+        // Arrange — create the source file; write an index with an outdated fingerprint
+        var config = ReviewMarkConfiguration.Parse(MinimalYaml);
+        var srcDir = PathHelpers.SafePathCombine(_testDirectory, "src");
+        Directory.CreateDirectory(srcDir);
+        File.WriteAllText(PathHelpers.SafePathCombine(srcDir, "A.cs"), "class A {}");
+
+        var indexPath = PathHelpers.SafePathCombine(_testDirectory, "index.json");
+        File.WriteAllText(indexPath, """
+            {
+              "reviews": [
+                {
+                  "id": "Core-Logic",
+                  "fingerprint": "old-fingerprint",
+                  "date": "2025-11-03",
+                  "result": "pass",
+                  "file": "CR-2025-089.pdf"
+                }
+              ]
+            }
+            """);
+        var index = ReviewIndex.Load(new EvidenceSource("fileshare", indexPath, null, null));
+
+        // Act
+        var result = config.PublishReviewReport(index, _testDirectory);
+
+        // Assert — mismatched fingerprint means "Stale"; HasIssues is true
+        Assert.IsTrue(result.HasIssues, "HasIssues should be true when a review is stale");
+        Assert.Contains("\u26a0 Stale", result.Markdown);
+        Assert.Contains("CR-2025-089.pdf", result.Markdown);
+    }
+
+    /// <summary>
+    ///     Test that PublishReviewReport sets HasIssues and marks the review as
+    ///     failed when the index has a matching fingerprint but a non-passing result.
+    /// </summary>
+    [TestMethod]
+    public void ReviewMarkConfiguration_PublishReviewReport_FailedReview_HasIssues()
+    {
+        // Arrange — create the source file so the fingerprint can be computed
+        var config = ReviewMarkConfiguration.Parse(MinimalYaml);
+        var srcDir = PathHelpers.SafePathCombine(_testDirectory, "src");
+        Directory.CreateDirectory(srcDir);
+        File.WriteAllText(PathHelpers.SafePathCombine(srcDir, "A.cs"), "class A {}");
+
+        // Compute the actual fingerprint so the index entry matches the current code
+        var fingerprint = config.Reviews[0].GetFingerprint(_testDirectory);
+
+        // Write a JSON index file with a matching fingerprint but a failing result
+        var indexPath = PathHelpers.SafePathCombine(_testDirectory, "index.json");
+        File.WriteAllText(indexPath, $$"""
+            {
+              "reviews": [
+                {
+                  "id": "Core-Logic",
+                  "fingerprint": "{{fingerprint}}",
+                  "date": "2026-02-14",
+                  "result": "fail",
+                  "file": "CR-2026-014.pdf"
+                }
+              ]
+            }
+            """);
+        var index = ReviewIndex.Load(new EvidenceSource("fileshare", indexPath, null, null));
+
+        // Act
+        var result = config.PublishReviewReport(index, _testDirectory);
+
+        // Assert — matching fingerprint with a failing result means "Failed"; HasIssues is true
+        Assert.IsTrue(result.HasIssues, "HasIssues should be true when a review has failed");
+        Assert.Contains("\u274c Failed", result.Markdown);
+        Assert.Contains("CR-2026-014.pdf", result.Markdown);
+    }
+
+    /// <summary>
+    ///     Test that PublishReviewReport sets HasIssues and marks the review as
+    ///     missing when the index contains no entry for a review set.
+    /// </summary>
+    [TestMethod]
+    public void ReviewMarkConfiguration_PublishReviewReport_MissingReview_HasIssues()
+    {
+        // Arrange — config with one review set; empty index has no evidence
+        var config = ReviewMarkConfiguration.Parse(MinimalYaml);
+        var srcDir = PathHelpers.SafePathCombine(_testDirectory, "src");
+        Directory.CreateDirectory(srcDir);
+        File.WriteAllText(PathHelpers.SafePathCombine(srcDir, "A.cs"), "class A {}");
+        var index = ReviewIndex.Empty();
+
+        // Act
+        var result = config.PublishReviewReport(index, _testDirectory);
+
+        // Assert — no evidence in the index means "Missing"; HasIssues is true
+        Assert.IsTrue(result.HasIssues, "HasIssues should be true when a review has no evidence");
+        Assert.Contains("\u274c Missing", result.Markdown);
+    }
+
+    /// <summary>
+    ///     Test that PublishReviewReport honours the markdownDepth parameter when
+    ///     building heading levels.
+    /// </summary>
+    [TestMethod]
+    public void ReviewMarkConfiguration_PublishReviewReport_MarkdownDepth_UsedForHeadings()
+    {
+        // Arrange — depth 2 should produce "## Review Status"
+        var config = ReviewMarkConfiguration.Parse(MinimalYaml);
+        var srcDir = PathHelpers.SafePathCombine(_testDirectory, "src");
+        Directory.CreateDirectory(srcDir);
+        File.WriteAllText(PathHelpers.SafePathCombine(srcDir, "A.cs"), "class A {}");
+        var index = ReviewIndex.Empty();
+
+        // Act
+        var result = config.PublishReviewReport(index, _testDirectory, markdownDepth: 2);
+
+        // Assert — heading is at depth 2
+        Assert.StartsWith("## Review Status", result.Markdown);
+    }
+
+    /// <summary>
+    ///     Test that PublishReviewPlan throws when markdownDepth exceeds 5,
+    ///     since subheadings at depth+1 would exceed the maximum Markdown heading level of 6.
+    /// </summary>
+    [TestMethod]
+    public void ReviewMarkConfiguration_PublishReviewPlan_MarkdownDepthAbove5_Throws()
+    {
+        // Arrange
+        var config = ReviewMarkConfiguration.Parse(MinimalYaml);
+        var srcDir = PathHelpers.SafePathCombine(_testDirectory, "src");
+        Directory.CreateDirectory(srcDir);
+        File.WriteAllText(PathHelpers.SafePathCombine(srcDir, "A.cs"), "class A {}");
+
+        // Act & Assert — depth 6 should throw because subheadings would require level 7
+        Assert.Throws<ArgumentOutOfRangeException>(
+            () => config.PublishReviewPlan(_testDirectory, markdownDepth: 6));
+    }
+
+    /// <summary>
+    ///     Test that PublishReviewReport throws when markdownDepth exceeds 5,
+    ///     since subheadings at depth+1 would exceed the maximum Markdown heading level of 6.
+    /// </summary>
+    [TestMethod]
+    public void ReviewMarkConfiguration_PublishReviewReport_MarkdownDepthAbove5_Throws()
+    {
+        // Arrange
+        var config = ReviewMarkConfiguration.Parse(MinimalYaml);
+        var srcDir = PathHelpers.SafePathCombine(_testDirectory, "src");
+        Directory.CreateDirectory(srcDir);
+        File.WriteAllText(PathHelpers.SafePathCombine(srcDir, "A.cs"), "class A {}");
+        var index = ReviewIndex.Empty();
+
+        // Act & Assert — depth 6 should throw because subheadings would require level 7
+        Assert.Throws<ArgumentOutOfRangeException>(
+            () => config.PublishReviewReport(index, _testDirectory, markdownDepth: 6));
+    }
 }

@@ -231,6 +231,25 @@ internal sealed class ReviewSet
 }
 
 /// <summary>
+///     Represents the result of publishing a review plan.
+/// </summary>
+/// <param name="Markdown">The generated Markdown content.</param>
+/// <param name="HasIssues">
+///     <c>true</c> if any files requiring review are not covered by any review-set;
+///     otherwise <c>false</c>.
+/// </param>
+internal sealed record ReviewPlanResult(string Markdown, bool HasIssues);
+
+/// <summary>
+///     Represents the result of publishing a review report.
+/// </summary>
+/// <param name="Markdown">The generated Markdown content.</param>
+/// <param name="HasIssues">
+///     <c>true</c> if any reviews are failed, stale, or missing; otherwise <c>false</c>.
+/// </param>
+internal sealed record ReviewReportResult(string Markdown, bool HasIssues);
+
+/// <summary>
 ///     Represents the parsed contents of a <c>.reviewmark.yaml</c> configuration file.
 /// </summary>
 internal sealed class ReviewMarkConfiguration
@@ -393,4 +412,221 @@ internal sealed class ReviewMarkConfiguration
     /// <returns>A sorted list of relative file paths.</returns>
     internal IReadOnlyList<string> GetNeedsReviewFiles(string directory) =>
         GlobMatcher.GetMatchingFiles(directory, NeedsReviewPatterns);
+
+    /// <summary>
+    ///     Generates a Markdown "Review Coverage" section listing all review sets
+    ///     and any uncovered files.
+    /// </summary>
+    /// <param name="directory">The root directory to search for files.</param>
+    /// <param name="markdownDepth">
+    ///     The heading depth for the section title (1 = <c>#</c>, 2 = <c>##</c>, etc.).
+    /// </param>
+    /// <returns>
+    ///     A <see cref="ReviewPlanResult" /> containing the Markdown text and a flag
+    ///     indicating whether any files requiring review are uncovered.
+    /// </returns>
+    /// <exception cref="ArgumentException">Thrown when <paramref name="directory" /> is null or whitespace.</exception>
+    /// <exception cref="ArgumentOutOfRangeException">
+    ///     Thrown when <paramref name="markdownDepth" /> is less than 1 or greater than 5
+    ///     (subheadings at depth+1 would exceed the maximum Markdown heading level of 6).
+    /// </exception>
+    internal ReviewPlanResult PublishReviewPlan(string directory, int markdownDepth = 1)
+    {
+        // Validate input parameters
+        ArgumentException.ThrowIfNullOrWhiteSpace(directory);
+        ArgumentOutOfRangeException.ThrowIfNegativeOrZero(markdownDepth);
+        ArgumentOutOfRangeException.ThrowIfGreaterThan(markdownDepth, 5);
+
+        // Build the section heading at the requested depth
+        var sb = new StringBuilder();
+        var heading = new string('#', markdownDepth);
+        sb.AppendLine($"{heading} Review Coverage");
+        sb.AppendLine();
+
+        // Emit the review-set coverage table
+        sb.AppendLine("| Review ID | Title | Files | Fingerprint |");
+        sb.AppendLine("| :--- | :--- | ---: | :--- |");
+
+        // Collect the set of all files covered by at least one review set
+        var coveredFiles = new HashSet<string>(StringComparer.Ordinal);
+        foreach (var review in Reviews)
+        {
+            // Resolve matched files and compute the fingerprint for this review set
+            var files = review.GetFiles(directory);
+            var fingerprint = review.GetFingerprint(directory);
+
+            // Abbreviate the fingerprint to first 8 characters followed by an ellipsis
+            var abbreviatedFingerprint = $"`{fingerprint[..8]}\u2026`";
+
+            // Emit the table row for this review set
+            sb.AppendLine($"| {review.Id} | {review.Title} | {files.Count} | {abbreviatedFingerprint} |");
+
+            // Track all files as covered
+            foreach (var file in files)
+            {
+                coveredFiles.Add(file);
+            }
+        }
+
+        sb.AppendLine();
+
+        // Identify files that require review but are not covered by any review set
+        var needsReviewFiles = GetNeedsReviewFiles(directory);
+        var uncoveredFiles = needsReviewFiles
+            .Where(f => !coveredFiles.Contains(f))
+            .ToList();
+
+        // Always emit a "Coverage" subsection reporting whether all files are covered
+        var subHeading = new string('#', markdownDepth + 1);
+        sb.AppendLine($"{subHeading} Coverage");
+        sb.AppendLine();
+
+        if (uncoveredFiles.Count == 0)
+        {
+            // All files requiring review are covered — state it positively
+            sb.AppendLine("All files requiring review are covered by a review-set.");
+        }
+        else
+        {
+            // List uncovered files as a bullet list
+            sb.AppendLine($"\u26a0 {uncoveredFiles.Count} file(s) require review but are not covered by any review-set:");
+            foreach (var file in uncoveredFiles)
+            {
+                sb.AppendLine($"- `{file}`");
+            }
+        }
+
+        sb.AppendLine();
+
+        return new ReviewPlanResult(sb.ToString(), uncoveredFiles.Count > 0);
+    }
+
+    /// <summary>
+    ///     Generates a Markdown "Review Status" section reporting the currency of
+    ///     review evidence for every review set.
+    /// </summary>
+    /// <param name="index">The loaded review-evidence index to query.</param>
+    /// <param name="directory">The root directory to search for files.</param>
+    /// <param name="markdownDepth">
+    ///     The heading depth for the section title (1 = <c>#</c>, 2 = <c>##</c>, etc.).
+    /// </param>
+    /// <returns>
+    ///     A <see cref="ReviewReportResult" /> containing the Markdown text and a flag
+    ///     indicating whether any reviews are failed, stale, or missing.
+    /// </returns>
+    /// <exception cref="ArgumentNullException">Thrown when <paramref name="index" /> is <c>null</c>.</exception>
+    /// <exception cref="ArgumentException">Thrown when <paramref name="directory" /> is null or whitespace.</exception>
+    /// <exception cref="ArgumentOutOfRangeException">
+    ///     Thrown when <paramref name="markdownDepth" /> is less than 1 or greater than 5
+    ///     (subheadings at depth+1 would exceed the maximum Markdown heading level of 6).
+    /// </exception>
+    internal ReviewReportResult PublishReviewReport(ReviewIndex index, string directory, int markdownDepth = 1)
+    {
+        // Validate the required index argument
+        ArgumentNullException.ThrowIfNull(index);
+
+        // Validate remaining input parameters
+        ArgumentException.ThrowIfNullOrWhiteSpace(directory);
+        ArgumentOutOfRangeException.ThrowIfNegativeOrZero(markdownDepth);
+        ArgumentOutOfRangeException.ThrowIfGreaterThan(markdownDepth, 5);
+
+        // Build the section heading at the requested depth
+        var sb = new StringBuilder();
+        var heading = new string('#', markdownDepth);
+        sb.AppendLine($"{heading} Review Status");
+        sb.AppendLine();
+
+        // Emit the review-status table header (Evidence PDF filenames are listed separately below)
+        sb.AppendLine("| Review ID | Status | Date | Result |");
+        sb.AppendLine("| :--- | :--- | :--- | :--- |");
+
+        // Track whether any reviews are failed, stale, or missing
+        var hasIssues = false;
+
+        // Collect referenced documents (review ID and file) while iterating
+        var referencedDocuments = new List<(string Id, string File)>();
+
+        foreach (var review in Reviews)
+        {
+            // Compute the current content fingerprint for this review set
+            var fingerprint = review.GetFingerprint(directory);
+
+            // Check if there is evidence with a matching fingerprint for this review set
+            var currentEvidence = index.GetEvidence(review.Id, fingerprint);
+            if (currentEvidence != null &&
+                string.Equals(currentEvidence.Result, "pass", StringComparison.OrdinalIgnoreCase))
+            {
+                // Current: evidence exists with a matching fingerprint and a passing result
+                sb.AppendLine(
+                    $"| {review.Id} | \u2705 Current | {currentEvidence.Date} | {FormatResult(currentEvidence.Result)} |");
+                referencedDocuments.Add((review.Id, currentEvidence.File));
+            }
+            else if (currentEvidence != null)
+            {
+                // Failed: evidence exists with a matching fingerprint but the result is not passing
+                hasIssues = true;
+                sb.AppendLine(
+                    $"| {review.Id} | \u274c Failed | {currentEvidence.Date} | {FormatResult(currentEvidence.Result)} |");
+                referencedDocuments.Add((review.Id, currentEvidence.File));
+            }
+            else if (index.HasId(review.Id))
+            {
+                // Stale: there is evidence for this review ID but none matches the current fingerprint
+                hasIssues = true;
+
+                // Pick the most recent evidence entry by sorting on Date descending (ISO 8601 dates sort lexicographically)
+                var mostRecent = index.GetAllForId(review.Id)
+                    .OrderByDescending(e => e.Date, StringComparer.Ordinal)
+                    .First();
+
+                sb.AppendLine(
+                    $"| {review.Id} | \u26a0 Stale | {mostRecent.Date} | {FormatResult(mostRecent.Result)} |");
+                referencedDocuments.Add((review.Id, mostRecent.File));
+            }
+            else
+            {
+                // Missing: no evidence at all for this review ID
+                hasIssues = true;
+                sb.AppendLine($"| {review.Id} | \u274c Missing | | |");
+            }
+        }
+
+        sb.AppendLine();
+
+        // Emit the referenced-documents subsection when any evidence was found
+        if (referencedDocuments.Count > 0)
+        {
+            var subHeading = new string('#', markdownDepth + 1);
+            sb.AppendLine($"{subHeading} Referenced Documents");
+            sb.AppendLine();
+            foreach (var (id, file) in referencedDocuments)
+            {
+                sb.AppendLine($"- {id}: {file}");
+            }
+
+            sb.AppendLine();
+        }
+
+        return new ReviewReportResult(sb.ToString(), hasIssues);
+    }
+
+    /// <summary>
+    ///     Formats a result string by capitalizing its first letter.
+    /// </summary>
+    /// <param name="result">The raw result string (e.g. <c>"pass"</c>).</param>
+    /// <returns>
+    ///     The result with its first character upper-cased (e.g. <c>"Pass"</c>),
+    ///     or an empty string if <paramref name="result" /> is empty.
+    /// </returns>
+    private static string FormatResult(string result)
+    {
+        // Return empty string unchanged to avoid index-out-of-range on empty input
+        if (result.Length == 0)
+        {
+            return result;
+        }
+
+        // Capitalize just the first character and append the remainder unchanged
+        return char.ToUpperInvariant(result[0]) + result[1..];
+    }
 }
