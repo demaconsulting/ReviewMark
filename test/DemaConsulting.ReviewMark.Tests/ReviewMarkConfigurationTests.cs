@@ -370,7 +370,7 @@ public class ReviewMarkConfigurationTests
         var result = config.PublishReviewPlan(_testDirectory, markdownDepth: 2);
 
         // Assert — main heading is at depth 2; subheading for coverage is at depth 3
-        Assert.IsTrue(result.Markdown.StartsWith("## Review Coverage"), "Markdown should start with a depth-2 heading");
+        Assert.StartsWith("## Review Coverage", result.Markdown);
         Assert.Contains("### Coverage", result.Markdown);
     }
 
@@ -462,6 +462,48 @@ public class ReviewMarkConfigurationTests
 
     /// <summary>
     ///     Test that PublishReviewReport sets HasIssues and marks the review as
+    ///     failed when the index has a matching fingerprint but a non-passing result.
+    /// </summary>
+    [TestMethod]
+    public void ReviewMarkConfiguration_PublishReviewReport_FailedReview_HasIssues()
+    {
+        // Arrange — create the source file so the fingerprint can be computed
+        var config = ReviewMarkConfiguration.Parse(MinimalYaml);
+        var srcDir = PathHelpers.SafePathCombine(_testDirectory, "src");
+        Directory.CreateDirectory(srcDir);
+        File.WriteAllText(PathHelpers.SafePathCombine(srcDir, "A.cs"), "class A {}");
+
+        // Compute the actual fingerprint so the index entry matches the current code
+        var fingerprint = config.Reviews[0].GetFingerprint(_testDirectory);
+
+        // Write a JSON index file with a matching fingerprint but a failing result
+        var indexPath = PathHelpers.SafePathCombine(_testDirectory, "index.json");
+        File.WriteAllText(indexPath, $$"""
+            {
+              "reviews": [
+                {
+                  "id": "Core-Logic",
+                  "fingerprint": "{{fingerprint}}",
+                  "date": "2026-02-14",
+                  "result": "fail",
+                  "file": "CR-2026-014.pdf"
+                }
+              ]
+            }
+            """);
+        var index = ReviewIndex.Load(new EvidenceSource("fileshare", indexPath, null, null));
+
+        // Act
+        var result = config.PublishReviewReport(index, _testDirectory);
+
+        // Assert — matching fingerprint with a failing result means "Failed"; HasIssues is true
+        Assert.IsTrue(result.HasIssues, "HasIssues should be true when a review has failed");
+        Assert.Contains("\u274c Failed", result.Markdown);
+        Assert.Contains("CR-2026-014.pdf", result.Markdown);
+    }
+
+    /// <summary>
+    ///     Test that PublishReviewReport sets HasIssues and marks the review as
     ///     missing when the index contains no entry for a review set.
     /// </summary>
     [TestMethod]
@@ -500,6 +542,6 @@ public class ReviewMarkConfigurationTests
         var result = config.PublishReviewReport(index, _testDirectory, markdownDepth: 2);
 
         // Assert — heading is at depth 2
-        Assert.IsTrue(result.Markdown.StartsWith("## Review Status"), "Markdown should start with a depth-2 heading");
+        Assert.StartsWith("## Review Status", result.Markdown);
     }
 }

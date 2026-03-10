@@ -229,23 +229,26 @@ The review report shows the status of each review against the current file-set f
 | :------------- | :----------- | :--------- | :----- |
 | Core-Logic     | ✅ Current   | 2026-02-14 | Pass   |
 | Security-Layer | ⚠ Stale     | 2025-11-03 | Pass   |
+| Auth-Module    | ❌ Failed    | 2026-03-01 | Fail   |
 | Persistence    | ❌ Missing   |            |        |
 
 ### Referenced Documents
 
 - Core-Logic: CR-2026-014 Core Logic Review.pdf
 - Security-Layer: CR-2025-089 Security Layer Review.pdf
+- Auth-Module: CR-2026-021 Auth Module Review.pdf
 ```
 
 - **Current** — the index contains a matching entry for the current ID and fingerprint with a `pass` result.
+- **Failed** — the index contains a matching entry for the current ID and fingerprint but the result is not `pass`.
 - **Stale** — the index contains entries for the ID, but none match the current fingerprint;
   the most recent entry's date is shown in the table and the referenced document is listed below.
 - **Missing** — the index contains no entries for the ID at all.
 
 ## Enforcement
 
-The `--enforce` flag causes ReviewMark to exit with a non-zero code if any review-set is stale or
-missing, or if any file matching `needs-review` is not covered by a review-set. This blocks
+The `--enforce` flag causes ReviewMark to exit with a non-zero code if any review-set is failed,
+stale, or missing, or if any file matching `needs-review` is not covered by a review-set. This blocks
 downstream pipeline stages until the issues are resolved:
 
 ```bash

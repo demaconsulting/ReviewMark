@@ -543,19 +543,27 @@ internal sealed class ReviewMarkConfiguration
             // Compute the current content fingerprint for this review set
             var fingerprint = review.GetFingerprint(directory);
 
-            // Check if there is current (matching fingerprint) passing evidence
+            // Check if there is evidence with a matching fingerprint for this review set
             var currentEvidence = index.GetEvidence(review.Id, fingerprint);
             if (currentEvidence != null &&
                 string.Equals(currentEvidence.Result, "pass", StringComparison.OrdinalIgnoreCase))
             {
-                // Current: evidence exists and matches the current fingerprint with a passing result
+                // Current: evidence exists with a matching fingerprint and a passing result
                 sb.AppendLine(
                     $"| {review.Id} | \u2705 Current | {currentEvidence.Date} | {FormatResult(currentEvidence.Result)} |");
                 referencedDocuments.Add((review.Id, currentEvidence.File));
             }
+            else if (currentEvidence != null)
+            {
+                // Failed: evidence exists with a matching fingerprint but the result is not passing
+                hasIssues = true;
+                sb.AppendLine(
+                    $"| {review.Id} | \u274c Failed | {currentEvidence.Date} | {FormatResult(currentEvidence.Result)} |");
+                referencedDocuments.Add((review.Id, currentEvidence.File));
+            }
             else if (index.HasId(review.Id))
             {
-                // Stale: there is evidence for this review ID but it does not match the current fingerprint or isn't passing
+                // Stale: there is evidence for this review ID but none matches the current fingerprint
                 hasIssues = true;
 
                 // Pick the most recent evidence entry by sorting on Date descending (ISO 8601 dates sort lexicographically)
