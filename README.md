@@ -16,7 +16,7 @@ DEMA Consulting tool for automated file-review evidence management in regulated 
 - 🔐 **Cryptographic Fingerprinting** - SHA256 fingerprints detect content changes automatically
 - 📂 **Evidence Querying** - Queries URL or file-share evidence stores via an `index.json` catalogue
 - 📋 **Coverage Reporting** - Review plan shows which files are covered and flags uncovered files
-- 📊 **Status Reporting** - Review report shows whether each review-set is Current, Stale, or Missing
+- 📊 **Status Reporting** - Review report shows whether each review-set is Current, Stale, Missing, or Failed
 - 🚦 **Enforcement** - `--enforce` exits non-zero if any review-set is stale or missing, or any file is uncovered
 - 🔄 **Re-indexing** - `--index` scans PDF evidence files and writes an up-to-date `index.json`
 - ✅ **Self-Validation** - Built-in validation tests with TRX and JUnit output
