@@ -207,7 +207,7 @@ public class ReviewMarkConfigurationTests
 
         // Assert — only the .cs file is returned
         Assert.HasCount(1, files);
-        Assert.IsTrue(files.Contains("Program.cs"));
+        Assert.Contains("Program.cs", files);
     }
 
     /// <summary>
