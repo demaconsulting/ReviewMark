@@ -43,8 +43,9 @@ public class ProgramTests
             // Act
             Program.Run(context);
 
-            // Assert
+            // Assert — output is exactly the version string; copyright and banner text are absent
             var output = outWriter.ToString();
+            Assert.AreEqual(Program.Version, output.Trim());
             Assert.DoesNotContain("Copyright", output);
             Assert.DoesNotContain("ReviewMark version", output);
         }
@@ -71,7 +72,7 @@ public class ProgramTests
             // Act
             Program.Run(context);
 
-            // Assert
+            // Assert — output contains usage and options sections listing known flags
             var output = outWriter.ToString();
             Assert.Contains("Usage:", output);
             Assert.Contains("Options:", output);
@@ -101,7 +102,7 @@ public class ProgramTests
             // Act
             Program.Run(context);
 
-            // Assert
+            // Assert — output contains the validation summary with a total test count
             var output = outWriter.ToString();
             Assert.Contains("Total Tests:", output);
         }
@@ -128,7 +129,7 @@ public class ProgramTests
             // Act
             Program.Run(context);
 
-            // Assert
+            // Assert — output contains the version banner and copyright notice
             var output = outWriter.ToString();
             Assert.Contains("ReviewMark version", output);
             Assert.Contains("Copyright", output);
@@ -148,7 +149,7 @@ public class ProgramTests
         // Act
         var version = Program.Version;
 
-        // Assert
+        // Assert — Version is a non-empty, non-whitespace string
         Assert.IsFalse(string.IsNullOrWhiteSpace(version));
     }
 }

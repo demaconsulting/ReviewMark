@@ -95,7 +95,7 @@ public class ReviewMarkConfigurationTests
         // Act
         var config = ReviewMarkConfiguration.Parse(MinimalYaml);
 
-        // Assert
+        // Assert — a non-null configuration is returned from valid YAML
         Assert.IsNotNull(config);
     }
 
@@ -135,7 +135,7 @@ public class ReviewMarkConfigurationTests
         // Act
         var config = ReviewMarkConfiguration.Parse(MinimalYaml);
 
-        // Assert
+        // Assert — evidence-source type, location, and absent credentials are parsed correctly
         Assert.AreEqual("url", config.EvidenceSource.Type);
         Assert.AreEqual("https://reviews.example.com/", config.EvidenceSource.Location);
         Assert.IsNull(config.EvidenceSource.UsernameEnv);
@@ -179,7 +179,7 @@ public class ReviewMarkConfigurationTests
         // Act
         var config = ReviewMarkConfiguration.Parse(yaml);
 
-        // Assert
+        // Assert — credential environment variable names are parsed correctly
         Assert.AreEqual("REVIEWMARK_USER", config.EvidenceSource.UsernameEnv);
         Assert.AreEqual("REVIEWMARK_TOKEN", config.EvidenceSource.PasswordEnv);
     }
@@ -325,7 +325,7 @@ public class ReviewMarkConfigurationTests
         // Act - load the configuration
         var config = ReviewMarkConfiguration.Load(configPath);
 
-        // Assert - relative location is resolved to an absolute path under the config directory
+        // Assert — relative location is resolved to an absolute path under the config directory
         Assert.IsTrue(Path.IsPathRooted(config.EvidenceSource.Location));
         Assert.AreEqual(PathHelpers.SafePathCombine(_testDirectory, "index.json"), config.EvidenceSource.Location);
     }

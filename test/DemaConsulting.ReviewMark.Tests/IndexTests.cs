@@ -724,6 +724,60 @@ public class IndexTests
     }
 
     /// <summary>
+    ///     Test that a PDF with id and fingerprint but no date keyword is skipped
+    ///     and the warning callback is invoked.
+    /// </summary>
+    [TestMethod]
+    public void ReviewIndex_Scan_PdfWithMissingDate_SkipsWithWarning()
+    {
+        // Arrange — create a PDF that has id and fingerprint but no date
+        var pdfPath = PathHelpers.SafePathCombine(_testDirectory, "missing-date.pdf");
+        using (var document = new PdfDocument())
+        {
+            document.AddPage();
+            document.Info.Keywords = "id=Core-Logic fingerprint=abc123 result=pass";
+            document.Save(pdfPath);
+        }
+
+        var warnings = new List<string>();
+
+        // Act
+        var index = ReviewIndex.Scan(_testDirectory, ["**/*.pdf"], onWarning: msg => warnings.Add(msg));
+
+        // Assert — the file is skipped and at least one warning is emitted; no entry in the index
+        Assert.IsTrue(warnings.Count > 0, "A warning should be emitted for a PDF missing 'date'.");
+        Assert.IsFalse(index.HasId("Core-Logic"),
+            "No entry should be added when the 'date' keyword is missing.");
+    }
+
+    /// <summary>
+    ///     Test that a PDF with id, fingerprint, and date but no result keyword is skipped
+    ///     and the warning callback is invoked.
+    /// </summary>
+    [TestMethod]
+    public void ReviewIndex_Scan_PdfWithMissingResult_SkipsWithWarning()
+    {
+        // Arrange — create a PDF that has id, fingerprint, and date but no result
+        var pdfPath = PathHelpers.SafePathCombine(_testDirectory, "missing-result.pdf");
+        using (var document = new PdfDocument())
+        {
+            document.AddPage();
+            document.Info.Keywords = "id=Core-Logic fingerprint=abc123 date=2026-03-08";
+            document.Save(pdfPath);
+        }
+
+        var warnings = new List<string>();
+
+        // Act
+        var index = ReviewIndex.Scan(_testDirectory, ["**/*.pdf"], onWarning: msg => warnings.Add(msg));
+
+        // Assert — the file is skipped and at least one warning is emitted; no entry in the index
+        Assert.IsTrue(warnings.Count > 0, "A warning should be emitted for a PDF missing 'result'.");
+        Assert.IsFalse(index.HasId("Core-Logic"),
+            "No entry should be added when the 'result' keyword is missing.");
+    }
+
+    /// <summary>
     ///     Test that scanning a directory with two PDFs, each with distinct metadata,
     ///     populates the index with both entries.
     /// </summary>

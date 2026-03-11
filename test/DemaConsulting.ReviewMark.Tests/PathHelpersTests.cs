@@ -39,7 +39,7 @@ public class PathHelpersTests
         // Act
         var result = PathHelpers.SafePathCombine(basePath, relativePath);
 
-        // Assert
+        // Assert — result equals the expected combined path
         Assert.AreEqual(Path.Combine(basePath, relativePath), result);
     }
 
@@ -112,7 +112,7 @@ public class PathHelpersTests
         // Act
         var result = PathHelpers.SafePathCombine(basePath, relativePath);
 
-        // Assert
+        // Assert — current directory reference is preserved in the combined path
         Assert.AreEqual(Path.Combine(basePath, relativePath), result);
     }
 
@@ -129,7 +129,7 @@ public class PathHelpersTests
         // Act
         var result = PathHelpers.SafePathCombine(basePath, relativePath);
 
-        // Assert
+        // Assert — nested path segments are combined correctly
         Assert.AreEqual(Path.Combine(basePath, relativePath), result);
     }
 
@@ -146,7 +146,7 @@ public class PathHelpersTests
         // Act
         var result = PathHelpers.SafePathCombine(basePath, relativePath);
 
-        // Assert
+        // Assert — empty relative path results in the base path unchanged
         Assert.AreEqual(Path.Combine(basePath, relativePath), result);
     }
 }
