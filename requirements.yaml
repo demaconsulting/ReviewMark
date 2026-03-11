@@ -267,6 +267,20 @@ sections:
               - ReviewIndex_Load_EvidenceSource_Url_InvalidJson_ThrowsInvalidOperationException
               - ReviewIndex_Load_EvidenceSource_NullHttpClient_ThrowsArgumentNullException
 
+          - id: ReviewMark-Index-PdfParsing
+            title: The tool shall parse PDF metadata from the Keywords field when indexing evidence files.
+            justification: |
+              When scanning PDF evidence files, the tool must read the standard PDF Keywords
+              field and extract space-separated `name=value` pairs to populate review evidence
+              entries with id, fingerprint, date, result, and file name. PDFs whose Keywords
+              field does not contain all required keys must be skipped with a warning, ensuring
+              the index only contains complete, valid entries.
+            tests:
+              - ReviewIndex_Scan_PdfWithValidMetadata_PopulatesIndex
+              - ReviewIndex_Scan_PdfWithMissingId_SkipsWithWarning
+              - ReviewIndex_Scan_PdfWithMissingFingerprint_SkipsWithWarning
+              - ReviewIndex_Scan_PdfWithNoKeywords_SkipsWithWarning
+
       - title: Platform Support
         requirements:
           - id: ReviewMark-Platform-Windows

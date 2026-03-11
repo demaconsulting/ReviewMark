@@ -55,7 +55,7 @@ public class IntegrationTests
             _dllPath,
             "--version");
 
-        // Assert
+        // Assert — exit succeeds, output is non-empty, and contains no error or copyright text
         Assert.AreEqual(0, exitCode);
         Assert.IsFalse(string.IsNullOrWhiteSpace(output));
         Assert.DoesNotContain("Error", output);
@@ -75,7 +75,7 @@ public class IntegrationTests
             _dllPath,
             "--help");
 
-        // Assert
+        // Assert — exit succeeds and output contains usage, options, and version flag
         Assert.AreEqual(0, exitCode);
         Assert.Contains("Usage:", output);
         Assert.Contains("Options:", output);
@@ -95,7 +95,7 @@ public class IntegrationTests
             _dllPath,
             "--validate");
 
-        // Assert
+        // Assert — exit succeeds and output contains the validation summary
         Assert.AreEqual(0, exitCode);
         Assert.Contains("Total Tests:", output);
         Assert.Contains("Passed:", output);
@@ -122,7 +122,7 @@ public class IntegrationTests
                 "--results",
                 resultsFile);
 
-            // Assert
+            // Assert — exit succeeds, results file is created, and contains valid TRX XML
             Assert.AreEqual(0, exitCode);
             Assert.IsTrue(File.Exists(resultsFile), "Results file was not created");
 
@@ -152,7 +152,7 @@ public class IntegrationTests
             _dllPath,
             "--silent");
 
-        // Assert
+        // Assert — exit code is zero, proving silent mode did not cause an error
         Assert.AreEqual(0, exitCode);
 
         // Output check removed since silent mode may still produce some output
@@ -177,7 +177,7 @@ public class IntegrationTests
                 "--log",
                 logFile);
 
-            // Assert
+            // Assert — exit succeeds, log file is created, and contains the version banner
             Assert.AreEqual(0, exitCode);
             Assert.IsTrue(File.Exists(logFile), "Log file was not created");
 
@@ -214,7 +214,7 @@ public class IntegrationTests
                 "--results",
                 resultsFile);
 
-            // Assert
+            // Assert — exit succeeds, results file is created, and contains JUnit XML root element
             Assert.AreEqual(0, exitCode);
             Assert.IsTrue(File.Exists(resultsFile), "Results file was not created");
 
@@ -243,7 +243,7 @@ public class IntegrationTests
             _dllPath,
             "--unknown");
 
-        // Assert
+        // Assert — unknown argument produces a non-zero exit code and an error message
         Assert.AreNotEqual(0, exitCode);
         Assert.Contains("Error", output);
     }

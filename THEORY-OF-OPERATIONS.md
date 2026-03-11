@@ -128,10 +128,10 @@ review has ever been recorded for this review-set.
 
 The index is not maintained by hand. Instead, ReviewMark provides a `--index` command that scans
 PDF evidence files matching a glob path, reads the embedded metadata from each PDF using
-[PdfSharp](https://github.com/empira/PDFsharp), and writes an up-to-date `index.json` to the
-working directory.
+[PdfSharp][pdfsharp], and writes an up-to-date `index.json` to the same directory.
 
-Use `--dir` to set the working directory without changing the process directory:
+The `--dir` flag sets the root directory against which `--index` glob patterns are resolved, and
+is also where `index.json` is written. Without `--dir`, the current working directory is used:
 
 ```bash
 dotnet reviewmark --dir \\reviews.example.com\evidence\ --index "**/*.pdf"
@@ -142,6 +142,13 @@ Alternatively, change to the directory first:
 ```bash
 cd \\reviews.example.com\evidence\
 dotnet reviewmark --index "**/*.pdf"
+```
+
+The `--index` flag may be repeated to supply multiple glob patterns. This is useful when evidence
+is organized across subdirectories:
+
+```bash
+dotnet reviewmark --dir \\reviews.example.com\evidence\ --index "2024/**/*.pdf" --index "2025/**/*.pdf"
 ```
 
 Review teams deposit completed review PDFs into the evidence store folder with whatever file name
@@ -314,14 +321,20 @@ PDFs whose Keywords field does not contain the required keys are skipped with a 
 ## Self-Validation
 
 ReviewMark includes a built-in `--validate` command that verifies fingerprinting, index parsing,
-evidence matching, and report generation using mock data — no live evidence store required:
+evidence matching, and report generation using mock data — no live evidence store required.
+
+Two output formats are supported, selected by the `--results` file extension:
 
 ```bash
+# TRX format (NUnit-compatible)
 dotnet reviewmark --validate --results artifacts/reviewmark-self-validation.trx
+
+# JUnit XML format
+dotnet reviewmark --validate --results artifacts/reviewmark-self-validation.xml
 ```
 
-The resulting TRX file is consumed by [ReqStream](requirements.md) as test coverage evidence for
-ReviewMark's own requirements.
+The TRX file is consumed by [ReqStream][reqstream] as test coverage evidence for ReviewMark's own
+requirements.
 
 ## Standards Alignment
 
@@ -330,3 +343,6 @@ The review plan and review report together provide the artifact-review evidence 
 - **IEC 62443** — design review and verification records
 - **ISO 26262** — software unit and integration review evidence
 - **DO-178C** — peer review records for software life-cycle data
+
+[pdfsharp]: https://github.com/empira/PDFsharp
+[reqstream]: requirements.md

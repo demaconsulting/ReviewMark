@@ -35,7 +35,7 @@ public class ContextTests
         // Act
         using var context = Context.Create([]);
 
-        // Assert
+        // Assert — default context has all flags false and exit code is zero
         Assert.IsFalse(context.Version);
         Assert.IsFalse(context.Help);
         Assert.IsFalse(context.Silent);
@@ -52,7 +52,7 @@ public class ContextTests
         // Act
         using var context = Context.Create(["--version"]);
 
-        // Assert
+        // Assert — Version is true, Help remains false, and exit code is zero
         Assert.IsTrue(context.Version);
         Assert.IsFalse(context.Help);
         Assert.AreEqual(0, context.ExitCode);
@@ -67,7 +67,7 @@ public class ContextTests
         // Act
         using var context = Context.Create(["-v"]);
 
-        // Assert
+        // Assert — short flag also sets Version to true, Help remains false, and exit code is zero
         Assert.IsTrue(context.Version);
         Assert.IsFalse(context.Help);
         Assert.AreEqual(0, context.ExitCode);
@@ -82,7 +82,7 @@ public class ContextTests
         // Act
         using var context = Context.Create(["--help"]);
 
-        // Assert
+        // Assert — Help is true, Version remains false, and exit code is zero
         Assert.IsFalse(context.Version);
         Assert.IsTrue(context.Help);
         Assert.AreEqual(0, context.ExitCode);
@@ -97,7 +97,7 @@ public class ContextTests
         // Act
         using var context = Context.Create(["-h"]);
 
-        // Assert
+        // Assert — -h flag sets Help to true, Version remains false, and exit code is zero
         Assert.IsFalse(context.Version);
         Assert.IsTrue(context.Help);
         Assert.AreEqual(0, context.ExitCode);
@@ -112,7 +112,7 @@ public class ContextTests
         // Act
         using var context = Context.Create(["-?"]);
 
-        // Assert
+        // Assert — -? flag sets Help to true, Version remains false, and exit code is zero
         Assert.IsFalse(context.Version);
         Assert.IsTrue(context.Help);
         Assert.AreEqual(0, context.ExitCode);
@@ -127,7 +127,7 @@ public class ContextTests
         // Act
         using var context = Context.Create(["--silent"]);
 
-        // Assert
+        // Assert — Silent is true and exit code is zero
         Assert.IsTrue(context.Silent);
         Assert.AreEqual(0, context.ExitCode);
     }
@@ -141,7 +141,7 @@ public class ContextTests
         // Act
         using var context = Context.Create(["--validate"]);
 
-        // Assert
+        // Assert — Validate is true and exit code is zero
         Assert.IsTrue(context.Validate);
         Assert.AreEqual(0, context.ExitCode);
     }
@@ -155,7 +155,7 @@ public class ContextTests
         // Act
         using var context = Context.Create(["--results", "test.trx"]);
 
-        // Assert
+        // Assert — ResultsFile is set to the provided path and exit code is zero
         Assert.AreEqual("test.trx", context.ResultsFile);
         Assert.AreEqual(0, context.ExitCode);
     }
@@ -177,8 +177,7 @@ public class ContextTests
                 Assert.AreEqual(0, context.ExitCode);
             }
 
-            // Assert
-            // Verify log file was written
+            // Assert — log file exists and contains the written message
             Assert.IsTrue(File.Exists(logFile));
             var logContent = File.ReadAllText(logFile);
             Assert.Contains("Test message", logContent);
@@ -242,7 +241,7 @@ public class ContextTests
             // Act
             context.WriteLine("Test message");
 
-            // Assert
+            // Assert — the message appears in console output when not silent
             var output = outWriter.ToString();
             Assert.Contains("Test message", output);
         }
@@ -269,7 +268,7 @@ public class ContextTests
             // Act
             context.WriteLine("Test message");
 
-            // Assert
+            // Assert — the message is suppressed from console output when silent
             var output = outWriter.ToString();
             Assert.DoesNotContain("Test message", output);
         }
@@ -296,7 +295,7 @@ public class ContextTests
             // Act
             context.WriteError("Test error message");
 
-            // Assert - error output should be suppressed in silent mode
+            // Assert — error output should be suppressed in silent mode
             var output = errWriter.ToString();
             Assert.DoesNotContain("Test error message", output);
         }
@@ -323,7 +322,7 @@ public class ContextTests
             // Act
             context.WriteError("Test error message");
 
-            // Assert
+            // Assert — exit code is set to 1 after writing an error
             Assert.AreEqual(1, context.ExitCode);
         }
         finally
@@ -349,7 +348,7 @@ public class ContextTests
             // Act
             context.WriteError("Test error message");
 
-            // Assert
+            // Assert — the error message appears in stderr when not silent
             var output = errWriter.ToString();
             Assert.Contains("Test error message", output);
         }
@@ -376,7 +375,7 @@ public class ContextTests
                 Assert.AreEqual(1, context.ExitCode);
             }
 
-            // Assert - log file should contain the error message
+            // Assert — log file should contain the error message
             Assert.IsTrue(File.Exists(logFile));
             var logContent = File.ReadAllText(logFile);
             Assert.Contains("Test error in log", logContent);
@@ -399,7 +398,7 @@ public class ContextTests
         // Act - create context specifying a definition YAML file
         using var context = Context.Create(["--definition", "spec.yaml"]);
 
-        // Assert - DefinitionFile is set to the provided path and exit code is 0
+        // Assert — DefinitionFile is set to the provided path and exit code is 0
         Assert.AreEqual("spec.yaml", context.DefinitionFile);
         Assert.AreEqual(0, context.ExitCode);
     }
@@ -424,7 +423,7 @@ public class ContextTests
         // Act - create context specifying a plan output file
         using var context = Context.Create(["--plan", "plan.yaml"]);
 
-        // Assert - PlanFile is set to the provided path and exit code is 0
+        // Assert — PlanFile is set to the provided path and exit code is 0
         Assert.AreEqual("plan.yaml", context.PlanFile);
         Assert.AreEqual(0, context.ExitCode);
     }
@@ -438,7 +437,7 @@ public class ContextTests
         // Act - create context specifying a heading depth of 3
         using var context = Context.Create(["--plan-depth", "3"]);
 
-        // Assert - PlanDepth is set to the parsed integer value and exit code is 0
+        // Assert — PlanDepth is set to the parsed integer value and exit code is 0
         Assert.AreEqual(3, context.PlanDepth);
         Assert.AreEqual(0, context.ExitCode);
     }
@@ -474,7 +473,7 @@ public class ContextTests
         // Act - create context specifying a report output file
         using var context = Context.Create(["--report", "report.md"]);
 
-        // Assert - ReportFile is set to the provided path and exit code is 0
+        // Assert — ReportFile is set to the provided path and exit code is 0
         Assert.AreEqual("report.md", context.ReportFile);
         Assert.AreEqual(0, context.ExitCode);
     }
@@ -488,7 +487,7 @@ public class ContextTests
         // Act - create context specifying a heading depth of 2
         using var context = Context.Create(["--report-depth", "2"]);
 
-        // Assert - ReportDepth is set to the parsed integer value and exit code is 0
+        // Assert — ReportDepth is set to the parsed integer value and exit code is 0
         Assert.AreEqual(2, context.ReportDepth);
         Assert.AreEqual(0, context.ExitCode);
     }
@@ -532,7 +531,7 @@ public class ContextTests
         // Act - create context specifying one glob pattern for PDF evidence files
         using var context = Context.Create(["--index", "*.pdf"]);
 
-        // Assert - IndexPaths contains the provided glob pattern and exit code is 0
+        // Assert — IndexPaths contains the provided glob pattern and exit code is 0
         Assert.HasCount(1, context.IndexPaths);
         Assert.AreEqual("*.pdf", context.IndexPaths[0]);
         Assert.AreEqual(0, context.ExitCode);
@@ -547,7 +546,7 @@ public class ContextTests
         // Act - create context with two different --index glob patterns
         using var context = Context.Create(["--index", "*.pdf", "--index", "docs/**/*.md"]);
 
-        // Assert - IndexPaths contains both patterns and exit code is 0
+        // Assert — IndexPaths contains both patterns and exit code is 0
         Assert.HasCount(2, context.IndexPaths);
         Assert.Contains("*.pdf", context.IndexPaths);
         Assert.Contains("docs/**/*.md", context.IndexPaths);
@@ -563,7 +562,7 @@ public class ContextTests
         // Act - create context with no arguments
         using var context = Context.Create([]);
 
-        // Assert - IndexPaths is empty when no --index flags are provided
+        // Assert — IndexPaths is empty when no --index flags are provided
         Assert.HasCount(0, context.IndexPaths);
     }
 
@@ -576,7 +575,7 @@ public class ContextTests
         // Act - create context with no arguments
         using var context = Context.Create([]);
 
-        // Assert - PlanDepth defaults to 1
+        // Assert — PlanDepth defaults to 1
         Assert.AreEqual(1, context.PlanDepth);
     }
 
@@ -589,7 +588,7 @@ public class ContextTests
         // Act - create context with no arguments
         using var context = Context.Create([]);
 
-        // Assert - ReportDepth defaults to 1
+        // Assert — ReportDepth defaults to 1
         Assert.AreEqual(1, context.ReportDepth);
     }
 
@@ -602,7 +601,7 @@ public class ContextTests
         // Act - create context with the --enforce flag
         using var context = Context.Create(["--enforce"]);
 
-        // Assert - Enforce is set to true and exit code is 0
+        // Assert — Enforce is set to true and exit code is 0
         Assert.IsTrue(context.Enforce);
         Assert.AreEqual(0, context.ExitCode);
     }
@@ -616,7 +615,7 @@ public class ContextTests
         // Act - create context with no arguments
         using var context = Context.Create([]);
 
-        // Assert - Enforce defaults to false
+        // Assert — Enforce defaults to false
         Assert.IsFalse(context.Enforce);
     }
 
@@ -649,7 +648,7 @@ public class ContextTests
         // Act - create context specifying a working directory
         using var context = Context.Create(["--dir", "/evidence"]);
 
-        // Assert - WorkingDirectory is set to the provided path and exit code is 0
+        // Assert — WorkingDirectory is set to the provided path and exit code is 0
         Assert.AreEqual("/evidence", context.WorkingDirectory);
         Assert.AreEqual(0, context.ExitCode);
     }
@@ -663,7 +662,7 @@ public class ContextTests
         // Act - create context with no arguments
         using var context = Context.Create([]);
 
-        // Assert - WorkingDirectory is null when --dir is not specified
+        // Assert — WorkingDirectory is null when --dir is not specified
         Assert.IsNull(context.WorkingDirectory);
     }
 
