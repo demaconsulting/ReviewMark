@@ -156,11 +156,11 @@ internal sealed class ReviewIndex
     /// <summary>
     ///     Loads a <see cref="ReviewIndex" /> from an <see cref="EvidenceSource" />.
     ///     For <c>fileshare</c> sources the <see cref="EvidenceSource.Location" /> is treated as the
-    ///     path to the <c>index.json</c> file. For <c>url</c> sources the location is the HTTP(S) URL
-    ///     of the <c>index.json</c> file; an <see cref="HttpClient" /> with optional pre-emptive
-    ///     Basic-auth credentials read from the environment variables named by
-    ///     <see cref="EvidenceSource.UsernameEnv" /> and <see cref="EvidenceSource.PasswordEnv" /> is
-    ///     created internally.
+    ///     path to the <c>index.json</c> file. For <c>url</c> sources the location is the base HTTP(S)
+    ///     URL (the directory containing <c>index.json</c>); <c>index.json</c> is appended automatically.
+    ///     An <see cref="HttpClient" /> with optional pre-emptive Basic-auth credentials read from the
+    ///     environment variables named by <see cref="EvidenceSource.UsernameEnv" /> and
+    ///     <see cref="EvidenceSource.PasswordEnv" /> is created internally.
     /// </summary>
     /// <param name="evidenceSource">The evidence source to load the index from.</param>
     /// <returns>A populated <see cref="ReviewIndex" /> instance.</returns>
@@ -189,7 +189,8 @@ internal sealed class ReviewIndex
     ///     Loads a <see cref="ReviewIndex" /> from an <see cref="EvidenceSource" /> using the
     ///     specified <see cref="HttpClient" />. This overload is exposed internally to allow
     ///     unit tests to inject a fake <see cref="HttpMessageHandler" /> when testing URL-based
-    ///     evidence sources.
+    ///     evidence sources. For <c>url</c> sources the location is the base HTTP(S) URL (the
+    ///     directory containing <c>index.json</c>); <c>index.json</c> is appended automatically.
     /// </summary>
     /// <param name="evidenceSource">The evidence source to load the index from.</param>
     /// <param name="httpClient">The HTTP client to use for <c>url</c>-type evidence sources.</param>
@@ -209,7 +210,7 @@ internal sealed class ReviewIndex
         return evidenceSource.Type.ToLowerInvariant() switch
         {
             "fileshare" => LoadFromFile(evidenceSource.Location),
-            "url" => LoadFromUrl(evidenceSource.Location, httpClient),
+            "url" => LoadFromUrl(GetIndexUrl(evidenceSource.Location), httpClient),
             _ => throw new InvalidOperationException(
                 $"Unsupported evidence source type '{evidenceSource.Type}'.")
         };
@@ -316,6 +317,29 @@ internal sealed class ReviewIndex
     }
 
     /// <summary>
+    ///     Computes the full <c>index.json</c> URL from a base URL, appending
+    ///     <c>/index.json</c> when necessary.  If the base URL already ends with
+    ///     <c>/index.json</c> (case-insensitive) it is returned unchanged, preserving
+    ///     backward compatibility for callers that still include the filename.
+    /// </summary>
+    /// <param name="baseUrl">
+    ///     The base HTTP(S) URL of the evidence-source directory, with or without
+    ///     a trailing slash and with or without an existing <c>index.json</c> suffix.
+    /// </param>
+    /// <returns>The full URL pointing directly at the <c>index.json</c> file.</returns>
+    private static string GetIndexUrl(string baseUrl)
+    {
+        // If the URL already ends with /index.json, use it as-is for backward compatibility
+        if (baseUrl.EndsWith("/index.json", StringComparison.OrdinalIgnoreCase))
+        {
+            return baseUrl;
+        }
+
+        // Append /index.json with proper trailing-slash handling
+        return baseUrl.TrimEnd('/') + "/index.json";
+    }
+
+    /// <summary>
     ///     Creates an <see cref="HttpClient" /> configured for the given
     ///     <see cref="EvidenceSource" />. If the source specifies credential environment-variable
     ///     names and those variables are set, a pre-emptive Basic auth header is applied directly
@@ -351,7 +375,10 @@ internal sealed class ReviewIndex
     ///     <paramref name="httpClient" /> and deserializes it into a
     ///     <see cref="ReviewIndex" />.
     /// </summary>
-    /// <param name="url">The URL of the <c>index.json</c> file.</param>
+    /// <param name="url">
+    ///     The full URL of the <c>index.json</c> file (after <see cref="GetIndexUrl" /> has been
+    ///     applied to the base location from the evidence source).
+    /// </param>
     /// <param name="httpClient">The HTTP client to use for the request.</param>
     /// <returns>A populated <see cref="ReviewIndex" /> instance.</returns>
     /// <exception cref="InvalidOperationException">

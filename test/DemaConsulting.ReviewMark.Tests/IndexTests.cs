@@ -125,6 +125,63 @@ public class IndexTests
     }
 
     /// <summary>
+    ///     A fake <see cref="HttpMessageHandler" /> that returns a canned response and
+    ///     invokes a callback with the request URI for assertion purposes.
+    /// </summary>
+    private sealed class CapturingFakeHttpMessageHandler : HttpMessageHandler
+    {
+        /// <summary>
+        ///     The response that will be returned for every request.
+        /// </summary>
+        private readonly HttpResponseMessage _response;
+
+        /// <summary>
+        ///     The callback invoked with the request URI on each call.
+        /// </summary>
+        private readonly Action<Uri?> _capture;
+
+        /// <summary>
+        ///     Initializes a new instance of <see cref="CapturingFakeHttpMessageHandler" />.
+        /// </summary>
+        /// <param name="response">The pre-built response to return.</param>
+        /// <param name="capture">Callback that receives the request URI.</param>
+        public CapturingFakeHttpMessageHandler(HttpResponseMessage response, Action<Uri?> capture)
+        {
+            _response = response;
+            _capture = capture;
+        }
+
+        /// <inheritdoc />
+        protected override HttpResponseMessage Send(
+            HttpRequestMessage request,
+            CancellationToken cancellationToken)
+        {
+            _capture(request.RequestUri);
+            return _response;
+        }
+
+        /// <inheritdoc />
+        protected override Task<HttpResponseMessage> SendAsync(
+            HttpRequestMessage request,
+            CancellationToken cancellationToken)
+        {
+            _capture(request.RequestUri);
+            return Task.FromResult(_response);
+        }
+
+        /// <inheritdoc />
+        protected override void Dispose(bool disposing)
+        {
+            if (disposing)
+            {
+                _response.Dispose();
+            }
+
+            base.Dispose(disposing);
+        }
+    }
+
+    /// <summary>
     ///     Test that <see cref="ReviewIndex.Empty" /> returns an index that reports no
     ///     evidence for any query, proving the factory method creates a truly empty index.
     /// </summary>
@@ -414,7 +471,7 @@ public class IndexTests
 
         var source = new EvidenceSource(
             Type: "url",
-            Location: "https://example.com/evidence/index.json",
+            Location: "https://example.com/evidence/",
             UsernameEnv: null,
             PasswordEnv: null);
 
@@ -443,7 +500,7 @@ public class IndexTests
 
         var source = new EvidenceSource(
             Type: "url",
-            Location: "https://example.com/evidence/index.json",
+            Location: "https://example.com/evidence/",
             UsernameEnv: null,
             PasswordEnv: null);
 
@@ -470,7 +527,7 @@ public class IndexTests
 
         var source = new EvidenceSource(
             Type: "url",
-            Location: "https://example.com/evidence/index.json",
+            Location: "https://example.com/evidence/",
             UsernameEnv: null,
             PasswordEnv: null);
 
@@ -500,6 +557,44 @@ public class IndexTests
         Assert.Throws<ArgumentNullException>(() =>
             ReviewIndex.Load(source, nullClient!));
 #pragma warning restore CS8604
+    }
+
+    /// <summary>
+    ///     Test that <see cref="ReviewIndex.Load(EvidenceSource, HttpClient)" /> with a
+    ///     <c>url</c> source automatically appends <c>index.json</c> to the base URL.
+    /// </summary>
+    [TestMethod]
+    public void ReviewIndex_Load_EvidenceSource_Url_AppendsIndexJson_ToBaseUrl()
+    {
+        // Arrange — canned JSON response with a capturing handler to record the request URI
+        const string json = """
+            {
+              "reviews": []
+            }
+            """;
+
+        var fakeResponse = new HttpResponseMessage(System.Net.HttpStatusCode.OK)
+        {
+            Content = new StringContent(json, Encoding.UTF8, "application/json")
+        };
+
+        Uri? capturedUri = null;
+        using var handler = new CapturingFakeHttpMessageHandler(fakeResponse, uri => capturedUri = uri);
+        using var httpClient = new HttpClient(handler);
+
+        // Use a base URL without trailing slash to verify both slash-handling and index.json appending
+        var source = new EvidenceSource(
+            Type: "url",
+            Location: "https://example.com/evidence",
+            UsernameEnv: null,
+            PasswordEnv: null);
+
+        // Act
+        _ = ReviewIndex.Load(source, httpClient);
+
+        // Assert — the request URL must include index.json
+        Assert.IsNotNull(capturedUri);
+        Assert.AreEqual("https://example.com/evidence/index.json", capturedUri.AbsoluteUri);
     }
 
     // -------------------------------------------------------------------------
