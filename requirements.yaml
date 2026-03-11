@@ -222,6 +222,28 @@ sections:
               - Context_Create_DirFlag_MissingValue_ThrowsArgumentException
               - ReviewMark_Dir
 
+          - id: ReviewMark-Cmd-Elaborate
+            title: The tool shall support --elaborate <id> flag to print a Markdown elaboration of a review set.
+            justification: |
+              When preparing for a review, the reviewer needs the review set ID, its current
+              fingerprint, and the full sorted list of files to be reviewed. The --elaborate
+              command provides this information formatted as Markdown so it can be copied
+              directly into review documentation.
+            tests:
+              - Context_Create_ElaborateFlag_SetsElaborateId
+              - Context_Create_NoArguments_ElaborateIdIsNull
+              - Context_Create_ElaborateFlag_WithoutValue_ThrowsArgumentException
+              - ReviewMarkConfiguration_ElaborateReviewSet_ValidId_ReturnsElaboration
+              - ReviewMarkConfiguration_ElaborateReviewSet_UnknownId_ThrowsArgumentException
+              - ReviewMarkConfiguration_ElaborateReviewSet_NullId_ThrowsArgumentException
+              - ReviewMarkConfiguration_ElaborateReviewSet_MarkdownDepth_UsedForHeadings
+              - ReviewMarkConfiguration_ElaborateReviewSet_MarkdownDepthAbove5_Throws
+              - ReviewMarkConfiguration_ElaborateReviewSet_ContainsFullFingerprint
+              - Program_Run_WithHelpFlag_IncludesElaborateOption
+              - Program_Run_WithElaborateFlag_OutputsElaboration
+              - Program_Run_WithElaborateFlag_UnknownId_ReportsError
+              - ReviewMark_Elaborate
+
       - title: Configuration Reading
         requirements:
           - id: ReviewMark-Config-Reading
@@ -298,6 +320,7 @@ sections:
               - "windows@ReviewMark_IndexScan"
               - "windows@ReviewMark_Enforce"
               - "windows@ReviewMark_Dir"
+              - "windows@ReviewMark_Elaborate"
 
           - id: ReviewMark-Platform-Linux
             title: The tool shall build and run on Linux platforms.
@@ -312,6 +335,7 @@ sections:
               - "ubuntu@ReviewMark_IndexScan"
               - "ubuntu@ReviewMark_Enforce"
               - "ubuntu@ReviewMark_Dir"
+              - "ubuntu@ReviewMark_Elaborate"
 
           - id: ReviewMark-Platform-MacOS
             title: The tool shall build and run on macOS platforms.
@@ -326,6 +350,7 @@ sections:
               - "macos@ReviewMark_IndexScan"
               - "macos@ReviewMark_Enforce"
               - "macos@ReviewMark_Dir"
+              - "macos@ReviewMark_Elaborate"
 
           - id: ReviewMark-Platform-Net8
             title: The tool shall support .NET 8 runtime.
@@ -339,6 +364,7 @@ sections:
               - "dotnet8.x@ReviewMark_IndexScan"
               - "dotnet8.x@ReviewMark_Enforce"
               - "dotnet8.x@ReviewMark_Dir"
+              - "dotnet8.x@ReviewMark_Elaborate"
 
           - id: ReviewMark-Platform-Net9
             title: The tool shall support .NET 9 runtime.
@@ -352,6 +378,7 @@ sections:
               - "dotnet9.x@ReviewMark_IndexScan"
               - "dotnet9.x@ReviewMark_Enforce"
               - "dotnet9.x@ReviewMark_Dir"
+              - "dotnet9.x@ReviewMark_Elaborate"
 
           - id: ReviewMark-Platform-Net10
             title: The tool shall support .NET 10 runtime.
@@ -365,6 +392,7 @@ sections:
               - "dotnet10.x@ReviewMark_IndexScan"
               - "dotnet10.x@ReviewMark_Enforce"
               - "dotnet10.x@ReviewMark_Dir"
+              - "dotnet10.x@ReviewMark_Elaborate"
 
       - title: OTS Software
         requirements:

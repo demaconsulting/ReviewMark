@@ -17,6 +17,7 @@ DEMA Consulting tool for automated file-review evidence management in regulated 
 - 📂 **Evidence Querying** - Queries URL or file-share evidence stores via an `index.json` catalogue
 - 📋 **Coverage Reporting** - Review plan shows which files are covered and flags uncovered files
 - 📊 **Status Reporting** - Review report shows whether each review-set is Current, Stale, Missing, or Failed
+- 🔍 **Review Elaboration** - `--elaborate` prints the ID, fingerprint, and file list for a review set
 - 🚦 **Enforcement** - `--enforce` exits non-zero if any review-set is stale or missing, or any file is uncovered
 - 🔄 **Re-indexing** - `--index` scans PDF evidence files and writes an up-to-date `index.json`
 - ✅ **Self-Validation** - Built-in validation tests with TRX and JUnit output
@@ -121,6 +122,7 @@ reviewmark --silent --log output.log
 | `--index <glob-path>`     | Index PDF evidence files matching the glob path              |
 | `--dir <directory>`       | Set the working directory for file operations                |
 | `--enforce`               | Exit with non-zero code if there are review issues           |
+| `--elaborate <id>`        | Print a Markdown elaboration of the specified review set     |
 
 ## Self Validation
 
@@ -144,9 +146,10 @@ Running self-validation produces a report containing the following information:
 ✓ ReviewMark_IndexScan - Passed
 ✓ ReviewMark_Dir - Passed
 ✓ ReviewMark_Enforce - Passed
+✓ ReviewMark_Elaborate - Passed
 
-Total Tests: 7
-Passed: 7
+Total Tests: 8
+Passed: 8
 Failed: 0
 ```
 
@@ -159,6 +162,7 @@ Each test in the report proves:
 - **`ReviewMark_IndexScan`** - `--index` scans PDF evidence files and writes `index.json`.
 - **`ReviewMark_Dir`** - `--dir` overrides the working directory for file operations.
 - **`ReviewMark_Enforce`** - `--enforce` exits with non-zero code when reviews have issues.
+- **`ReviewMark_Elaborate`** - `--elaborate` prints a Markdown elaboration of a review set.
 
 See the [User Guide][link-guide] for more details on the self-validation tests.
 
