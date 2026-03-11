@@ -171,7 +171,7 @@ internal static partial class Validation
     /// <param name="testResults">The test results collection.</param>
     private static void RunDefinitionPlanTest(Context context, DemaConsulting.TestResults.TestResults testResults)
     {
-        RunValidationTest(context, testResults, "ReviewMark_DefinitionPlan", () =>
+        RunValidationTest(context, testResults, "ReviewMark_ReviewPlanGeneration", () =>
         {
             using var tempDir = new TemporaryDirectory();
             var (definitionFile, _) = CreateTestDefinitionFixtures(tempDir.DirectoryPath);
@@ -208,7 +208,7 @@ internal static partial class Validation
     /// <param name="testResults">The test results collection.</param>
     private static void RunDefinitionReportTest(Context context, DemaConsulting.TestResults.TestResults testResults)
     {
-        RunValidationTest(context, testResults, "ReviewMark_DefinitionReport", () =>
+        RunValidationTest(context, testResults, "ReviewMark_ReviewReportGeneration", () =>
         {
             using var tempDir = new TemporaryDirectory();
             var (definitionFile, _) = CreateTestDefinitionFixtures(tempDir.DirectoryPath);
@@ -274,7 +274,7 @@ internal static partial class Validation
     /// <param name="testResults">The test results collection.</param>
     private static void RunDirTest(Context context, DemaConsulting.TestResults.TestResults testResults)
     {
-        RunValidationTest(context, testResults, "ReviewMark_Dir", () =>
+        RunValidationTest(context, testResults, "ReviewMark_WorkingDirectoryOverride", () =>
         {
             using var tempDir = new TemporaryDirectory();
             var (definitionFile, _) = CreateTestDefinitionFixtures(tempDir.DirectoryPath);

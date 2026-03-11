@@ -141,10 +141,10 @@ Running self-validation produces a report containing the following information:
 
 ✓ ReviewMark_VersionDisplay - Passed
 ✓ ReviewMark_HelpDisplay - Passed
-✓ ReviewMark_DefinitionPlan - Passed
-✓ ReviewMark_DefinitionReport - Passed
+✓ ReviewMark_ReviewPlanGeneration - Passed
+✓ ReviewMark_ReviewReportGeneration - Passed
 ✓ ReviewMark_IndexScan - Passed
-✓ ReviewMark_Dir - Passed
+✓ ReviewMark_WorkingDirectoryOverride - Passed
 ✓ ReviewMark_Enforce - Passed
 ✓ ReviewMark_Elaborate - Passed
 
@@ -157,10 +157,10 @@ Each test in the report proves:
 
 - **`ReviewMark_VersionDisplay`** - `--version` outputs a valid version string.
 - **`ReviewMark_HelpDisplay`** - `--help` outputs usage and options information.
-- **`ReviewMark_DefinitionPlan`** - `--definition` + `--plan` generates a review plan.
-- **`ReviewMark_DefinitionReport`** - `--definition` + `--report` generates a review report.
+- **`ReviewMark_ReviewPlanGeneration`** - `--definition` + `--plan` generates a review plan.
+- **`ReviewMark_ReviewReportGeneration`** - `--definition` + `--report` generates a review report.
 - **`ReviewMark_IndexScan`** - `--index` scans PDF evidence files and writes `index.json`.
-- **`ReviewMark_Dir`** - `--dir` overrides the working directory for file operations.
+- **`ReviewMark_WorkingDirectoryOverride`** - `--dir` overrides the working directory for file operations.
 - **`ReviewMark_Enforce`** - `--enforce` exits with non-zero code when reviews have issues.
 - **`ReviewMark_Elaborate`** - `--elaborate` prints a Markdown elaboration of a review set.
 
