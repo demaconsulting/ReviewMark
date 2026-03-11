@@ -610,4 +610,129 @@ public class ReviewMarkConfigurationTests
         Assert.Throws<ArgumentOutOfRangeException>(
             () => config.PublishReviewReport(index, _testDirectory, markdownDepth: 6));
     }
+
+    // -------------------------------------------------------------------------
+    // ElaborateReviewSet tests
+    // -------------------------------------------------------------------------
+
+    /// <summary>
+    ///     Test that ElaborateReviewSet returns the review ID, fingerprint, and file list
+    ///     when given a valid review-set ID.
+    /// </summary>
+    [TestMethod]
+    public void ReviewMarkConfiguration_ElaborateReviewSet_ValidId_ReturnsElaboration()
+    {
+        // Arrange — create a source file so files and fingerprint can be computed
+        var config = ReviewMarkConfiguration.Parse(MinimalYaml);
+        var srcDir = PathHelpers.SafePathCombine(_testDirectory, "src");
+        Directory.CreateDirectory(srcDir);
+        File.WriteAllText(PathHelpers.SafePathCombine(srcDir, "A.cs"), "class A {}");
+
+        // Act
+        var result = config.ElaborateReviewSet("Core-Logic", _testDirectory);
+
+        // Assert — result contains the review ID, a Fingerprint field, and the file listing
+        Assert.IsNotNull(result);
+        Assert.Contains("# Core-Logic", result.Markdown);
+        Assert.Contains("| ID | Core-Logic |", result.Markdown);
+        Assert.Contains("| Fingerprint |", result.Markdown);
+        Assert.Contains("## Files", result.Markdown);
+        Assert.Contains("`src/A.cs`", result.Markdown);
+    }
+
+    /// <summary>
+    ///     Test that ElaborateReviewSet throws ArgumentException when the
+    ///     review-set ID does not exist in the configuration.
+    /// </summary>
+    [TestMethod]
+    public void ReviewMarkConfiguration_ElaborateReviewSet_UnknownId_ThrowsArgumentException()
+    {
+        // Arrange
+        var config = ReviewMarkConfiguration.Parse(MinimalYaml);
+        var srcDir = PathHelpers.SafePathCombine(_testDirectory, "src");
+        Directory.CreateDirectory(srcDir);
+        File.WriteAllText(PathHelpers.SafePathCombine(srcDir, "A.cs"), "class A {}");
+
+        // Act & Assert — an unknown review-set ID should throw ArgumentException
+        Assert.Throws<ArgumentException>(() =>
+            config.ElaborateReviewSet("NonExistent", _testDirectory));
+    }
+
+    /// <summary>
+    ///     Test that ElaborateReviewSet throws ArgumentException when the
+    ///     review-set ID is null or whitespace.
+    /// </summary>
+    [TestMethod]
+    public void ReviewMarkConfiguration_ElaborateReviewSet_NullId_ThrowsArgumentException()
+    {
+        // Arrange
+        var config = ReviewMarkConfiguration.Parse(MinimalYaml);
+
+        // Act & Assert — null review-set ID should throw
+#pragma warning disable CS8625 // Cannot convert null literal to non-nullable reference type — intentional
+        Assert.Throws<ArgumentException>(() =>
+            config.ElaborateReviewSet(null!, _testDirectory));
+#pragma warning restore CS8625
+    }
+
+    /// <summary>
+    ///     Test that ElaborateReviewSet honours the markdownDepth parameter for
+    ///     both the main heading and the Files subheading.
+    /// </summary>
+    [TestMethod]
+    public void ReviewMarkConfiguration_ElaborateReviewSet_MarkdownDepth_UsedForHeadings()
+    {
+        // Arrange — depth 2; create a source file
+        var config = ReviewMarkConfiguration.Parse(MinimalYaml);
+        var srcDir = PathHelpers.SafePathCombine(_testDirectory, "src");
+        Directory.CreateDirectory(srcDir);
+        File.WriteAllText(PathHelpers.SafePathCombine(srcDir, "A.cs"), "class A {}");
+
+        // Act
+        var result = config.ElaborateReviewSet("Core-Logic", _testDirectory, markdownDepth: 2);
+
+        // Assert — main heading at depth 2; files subheading at depth 3
+        Assert.StartsWith("## Core-Logic", result.Markdown);
+        Assert.Contains("### Files", result.Markdown);
+    }
+
+    /// <summary>
+    ///     Test that ElaborateReviewSet throws when markdownDepth exceeds 5.
+    /// </summary>
+    [TestMethod]
+    public void ReviewMarkConfiguration_ElaborateReviewSet_MarkdownDepthAbove5_Throws()
+    {
+        // Arrange
+        var config = ReviewMarkConfiguration.Parse(MinimalYaml);
+        var srcDir = PathHelpers.SafePathCombine(_testDirectory, "src");
+        Directory.CreateDirectory(srcDir);
+        File.WriteAllText(PathHelpers.SafePathCombine(srcDir, "A.cs"), "class A {}");
+
+        // Act & Assert — depth 6 should throw
+        Assert.Throws<ArgumentOutOfRangeException>(
+            () => config.ElaborateReviewSet("Core-Logic", _testDirectory, markdownDepth: 6));
+    }
+
+    /// <summary>
+    ///     Test that ElaborateReviewSet includes the full (non-abbreviated) fingerprint.
+    /// </summary>
+    [TestMethod]
+    public void ReviewMarkConfiguration_ElaborateReviewSet_ContainsFullFingerprint()
+    {
+        // Arrange — create a source file so the fingerprint can be computed
+        var config = ReviewMarkConfiguration.Parse(MinimalYaml);
+        var srcDir = PathHelpers.SafePathCombine(_testDirectory, "src");
+        Directory.CreateDirectory(srcDir);
+        File.WriteAllText(PathHelpers.SafePathCombine(srcDir, "A.cs"), "class A {}");
+
+        // Compute the expected fingerprint independently
+        var expectedFingerprint = config.Reviews[0].GetFingerprint(_testDirectory);
+
+        // Act
+        var result = config.ElaborateReviewSet("Core-Logic", _testDirectory);
+
+        // Assert — the full 64-character hex fingerprint appears in the Markdown (not abbreviated)
+        Assert.Contains(expectedFingerprint, result.Markdown);
+        Assert.AreEqual(64, expectedFingerprint.Length);
+    }
 }

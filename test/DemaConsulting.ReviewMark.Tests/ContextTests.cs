@@ -675,5 +675,42 @@ public class ContextTests
         // Act & Assert - --dir without a path value should throw
         Assert.Throws<ArgumentException>(() => Context.Create(["--dir"]));
     }
+
+    /// <summary>
+    ///     Test that --elaborate flag sets ElaborateId to the provided review-set ID.
+    /// </summary>
+    [TestMethod]
+    public void Context_Create_ElaborateFlag_SetsElaborateId()
+    {
+        // Act
+        using var context = Context.Create(["--elaborate", "Core-Logic"]);
+
+        // Assert — ElaborateId is set to the provided review-set ID
+        Assert.AreEqual("Core-Logic", context.ElaborateId);
+        Assert.AreEqual(0, context.ExitCode);
+    }
+
+    /// <summary>
+    ///     Test that ElaborateId is null when --elaborate is not specified.
+    /// </summary>
+    [TestMethod]
+    public void Context_Create_NoArguments_ElaborateIdIsNull()
+    {
+        // Act
+        using var context = Context.Create([]);
+
+        // Assert — ElaborateId is null when --elaborate is not specified
+        Assert.IsNull(context.ElaborateId);
+    }
+
+    /// <summary>
+    ///     Test that --elaborate without a value throws ArgumentException.
+    /// </summary>
+    [TestMethod]
+    public void Context_Create_ElaborateFlag_WithoutValue_ThrowsArgumentException()
+    {
+        // Act & Assert - --elaborate without an ID argument should throw
+        Assert.Throws<ArgumentException>(() => Context.Create(["--elaborate"]));
+    }
 }
 

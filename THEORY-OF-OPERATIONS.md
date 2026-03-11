@@ -262,6 +262,31 @@ The review report shows the status of each review against the current file-set f
   the most recent entry's date is shown in the table and the referenced document is listed below.
 - **Missing** — the index contains no entries for the ID at all.
 
+### Review Set Elaboration
+
+The `--elaborate <id>` command prints a Markdown elaboration of a single review set to the
+console. It provides the information the reviewer needs when preparing review documentation:
+
+```markdown
+# Core-Logic
+
+| Field | Value |
+| :--- | :--- |
+| ID | Core-Logic |
+| Fingerprint | `a3f9c2d1e4b5e2f8d7c6b9a3f0e2d5c8a1b4e7f0a3d6c9b2e5f8a1d4c7b0e3` |
+
+## Files
+
+- `src/Core/Business/CustomerService.cs`
+- `src/Core/Business/OrderService.cs`
+- `src/Core/Models/Customer.cs`
+- `src/Core/Models/Order.cs`
+
+```
+
+The fingerprint shown is the full SHA-256 hex string — not abbreviated — because the reviewer
+must embed this exact value in the PDF Keywords field of the evidence document.
+
 ## Enforcement
 
 The `--enforce` flag causes ReviewMark to exit with a non-zero code if any review-set is failed,

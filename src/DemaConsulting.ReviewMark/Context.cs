@@ -123,6 +123,11 @@ internal sealed class Context : IDisposable
     public bool Enforce { get; private init; }
 
     /// <summary>
+    ///     Gets the review-set ID to elaborate, or null if --elaborate was not specified.
+    /// </summary>
+    public string? ElaborateId { get; private init; }
+
+    /// <summary>
     ///     Gets the proposed exit code for the application (0 for success, 1 for errors).
     /// </summary>
     public int ExitCode => _hasErrors ? 1 : 0;
@@ -162,7 +167,8 @@ internal sealed class Context : IDisposable
             ReportDepth = parser.ReportDepth,
             IndexPaths = parser.IndexPaths.AsReadOnly(),
             WorkingDirectory = parser.WorkingDirectory,
-            Enforce = parser.Enforce
+            Enforce = parser.Enforce,
+            ElaborateId = parser.ElaborateId
         };
 
         // Open log file if specified
@@ -271,6 +277,11 @@ internal sealed class Context : IDisposable
         public bool Enforce { get; private set; }
 
         /// <summary>
+        ///     Gets the review-set ID to elaborate.
+        /// </summary>
+        public string? ElaborateId { get; private set; }
+
+        /// <summary>
         ///     Parses command-line arguments
         /// </summary>
         /// <param name="args">Command-line arguments.</param>
@@ -366,6 +377,10 @@ internal sealed class Context : IDisposable
                 case "--enforce":
                     Enforce = true;
                     return index;
+
+                case "--elaborate":
+                    ElaborateId = GetRequiredStringArgument(arg, args, index, "a review-set ID argument");
+                    return index + 1;
 
                 default:
                     throw new ArgumentException($"Unsupported argument '{arg}'", nameof(args));

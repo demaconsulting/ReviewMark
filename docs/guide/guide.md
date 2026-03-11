@@ -102,9 +102,10 @@ Example validation report:
 ✓ ReviewMark_IndexScan - Passed
 ✓ ReviewMark_Dir - Passed
 ✓ ReviewMark_Enforce - Passed
+✓ ReviewMark_Elaborate - Passed
 
-Total Tests: 7
-Passed: 7
+Total Tests: 8
+Passed: 8
 Failed: 0
 ```
 
@@ -119,6 +120,7 @@ Each test proves specific functionality works correctly:
 - **`ReviewMark_IndexScan`** - `--index` scans PDF evidence files and writes `index.json`.
 - **`ReviewMark_Dir`** - `--dir` overrides the working directory for file operations.
 - **`ReviewMark_Enforce`** - `--enforce` exits with non-zero code when reviews have issues.
+- **`ReviewMark_Elaborate`** - `--elaborate` prints a Markdown elaboration of a review set.
 
 ## Silent Mode
 
@@ -134,6 +136,21 @@ Write output to a log file:
 
 ```bash
 reviewmark --log output.log
+```
+
+## Elaborate a Review Set
+
+Print the review set ID, fingerprint, and full sorted file list to the console:
+
+```bash
+reviewmark --elaborate Core-Logic
+```
+
+Use `--dir` to specify the root directory when the current working directory is not the repository
+root:
+
+```bash
+reviewmark --dir /path/to/repo --elaborate Core-Logic
 ```
 
 # Command-Line Options
@@ -156,6 +173,7 @@ The following command-line options are supported:
 | `--index <glob-path>`     | Index PDF evidence files matching the glob path              |
 | `--dir <directory>`       | Set the working directory for default paths and glob paths   |
 | `--enforce`               | Exit with non-zero code if there are review issues           |
+| `--elaborate <id>`        | Print a Markdown elaboration of the specified review set     |
 
 ## Working Directory (`--dir`)
 
@@ -377,11 +395,41 @@ reviewmark --plan docs/review/review-plan.md
 The plan is checked into the repository alongside the source code so that reviewers have a structured
 starting point.
 
-## Step 3 — Perform and Record the Review
+## Step 3 — Elaborate the Review Set
 
-A reviewer works through the review plan, examining each file in the listed review sets. When the
-review is complete, the reviewer creates a PDF (following your organization's QMS numbering standard)
-and embeds the review metadata in the PDF Keywords field:
+Before beginning a review, use `--elaborate` to obtain the precise fingerprint and the full sorted
+list of files for a specific review set. This information is required when creating the evidence PDF:
+
+```bash
+reviewmark --elaborate Core-Logic
+```
+
+The command prints a Markdown document to the console:
+
+```markdown
+# Core-Logic
+
+| Field | Value |
+| :--- | :--- |
+| ID | Core-Logic |
+| Fingerprint | `a3f9c2d1e4b5e2f8d7c6b9a3f0e2d5c8a1b4e7f0a3d6c9b2e5f8a1d4c7b0e3` |
+
+## Files
+
+- `src/Core/Business/CustomerService.cs`
+- `src/Core/Business/OrderService.cs`
+- `src/Core/Models/Customer.cs`
+
+```
+
+Copy the full fingerprint and file list into your review documentation. The fingerprint must be
+embedded verbatim in the PDF Keywords field for ReviewMark to recognize the evidence.
+
+## Step 4 — Perform and Record the Review
+
+A reviewer works through the file list from Step 3, examining each file. When the review is
+complete, the reviewer creates a PDF (following your organization's QMS numbering standard) and
+embeds the review metadata in the PDF Keywords field:
 
 ```text
 id=core-module fingerprint=a3f9c2d1... date=2026-03-15 result=pass
@@ -391,7 +439,7 @@ All four fields are **required** — a PDF without any one of them will be skipp
 when the evidence store is scanned. The PDF is deposited in the evidence store folder.
 ReviewMark never dictates file names — the reviewer uses whatever name the QMS requires.
 
-## Step 4 — Update the Evidence Index
+## Step 5 — Update the Evidence Index
 
 Scan the evidence store to regenerate `index.json`. This step is typically run on the evidence
 server after each new PDF is deposited:
@@ -406,7 +454,7 @@ The `--index` flag may be repeated to cover evidence organized across multiple s
 reviewmark --dir \\reviews.example.com\evidence\ --index "2025/**/*.pdf" --index "2026/**/*.pdf"
 ```
 
-## Step 5 — Generate the Review Report
+## Step 6 — Generate the Review Report
 
 Run ReviewMark with both `--plan` and `--report` to produce the Review Report alongside the plan.
 The report shows the status of each review set — Current, Stale, Failed, or Missing — and lists
@@ -416,7 +464,7 @@ the referenced evidence documents.
 reviewmark --plan docs/review/review-plan.md --report docs/review/review-report.md
 ```
 
-## Step 6 — Enforce Compliance in CI
+## Step 7 — Enforce Compliance in CI
 
 Add `--enforce` to fail the CI pipeline when any review set is missing, stale, or failed, or when
 any file matching `needs-review` is not covered by a review set:

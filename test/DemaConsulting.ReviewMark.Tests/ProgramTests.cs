@@ -152,4 +152,158 @@ public class ProgramTests
         // Assert — Version is a non-empty, non-whitespace string
         Assert.IsFalse(string.IsNullOrWhiteSpace(version));
     }
+
+    /// <summary>
+    ///     Test that Run with --help flag includes --elaborate in the usage information.
+    /// </summary>
+    [TestMethod]
+    public void Program_Run_WithHelpFlag_IncludesElaborateOption()
+    {
+        // Arrange
+        var originalOut = Console.Out;
+        try
+        {
+            using var outWriter = new StringWriter();
+            Console.SetOut(outWriter);
+            using var context = Context.Create(["--help"]);
+
+            // Act
+            Program.Run(context);
+
+            // Assert — help text includes the --elaborate option
+            var output = outWriter.ToString();
+            Assert.Contains("--elaborate", output);
+        }
+        finally
+        {
+            Console.SetOut(originalOut);
+        }
+    }
+
+    /// <summary>
+    ///     Test that Run with --elaborate flag outputs the review set elaboration to the console.
+    /// </summary>
+    [TestMethod]
+    public void Program_Run_WithElaborateFlag_OutputsElaboration()
+    {
+        // Arrange — create temp directory with a definition file and source file
+        var testDirectory = PathHelpers.SafePathCombine(
+            Path.GetTempPath(), $"ProgramTests_Elaborate_{Guid.NewGuid()}");
+        try
+        {
+            Directory.CreateDirectory(testDirectory);
+            var srcDir = PathHelpers.SafePathCombine(testDirectory, "src");
+            Directory.CreateDirectory(srcDir);
+            File.WriteAllText(PathHelpers.SafePathCombine(srcDir, "A.cs"), "class A {}");
+
+            var indexFile = PathHelpers.SafePathCombine(testDirectory, "index.json");
+            File.WriteAllText(indexFile, """{"reviews":[]}""");
+
+            var definitionFile = PathHelpers.SafePathCombine(testDirectory, "definition.yaml");
+            File.WriteAllText(definitionFile, $"""
+                needs-review:
+                  - "src/**/*.cs"
+                evidence-source:
+                  type: fileshare
+                  location: {indexFile}
+                reviews:
+                  - id: Core-Logic
+                    title: Review of core business logic
+                    paths:
+                      - "src/**/*.cs"
+                """);
+
+            var originalOut = Console.Out;
+            try
+            {
+                using var outWriter = new StringWriter();
+                Console.SetOut(outWriter);
+                using var context = Context.Create([
+                    "--definition", definitionFile,
+                    "--dir", testDirectory,
+                    "--elaborate", "Core-Logic"]);
+
+                // Act
+                Program.Run(context);
+
+                // Assert — output contains the review set ID and fingerprint heading
+                var output = outWriter.ToString();
+                Assert.Contains("Core-Logic", output);
+                Assert.Contains("Fingerprint", output);
+                Assert.Contains("Files", output);
+                Assert.AreEqual(0, context.ExitCode);
+            }
+            finally
+            {
+                Console.SetOut(originalOut);
+            }
+        }
+        finally
+        {
+            if (Directory.Exists(testDirectory))
+            {
+                Directory.Delete(testDirectory, recursive: true);
+            }
+        }
+    }
+
+    /// <summary>
+    ///     Test that Run with --elaborate and an unknown review-set ID exits with a non-zero code.
+    /// </summary>
+    [TestMethod]
+    public void Program_Run_WithElaborateFlag_UnknownId_ReportsError()
+    {
+        // Arrange — create temp directory with a definition file
+        var testDirectory = PathHelpers.SafePathCombine(
+            Path.GetTempPath(), $"ProgramTests_ElaborateUnknown_{Guid.NewGuid()}");
+        try
+        {
+            Directory.CreateDirectory(testDirectory);
+
+            var indexFile = PathHelpers.SafePathCombine(testDirectory, "index.json");
+            File.WriteAllText(indexFile, """{"reviews":[]}""");
+
+            var definitionFile = PathHelpers.SafePathCombine(testDirectory, "definition.yaml");
+            File.WriteAllText(definitionFile, $"""
+                needs-review:
+                  - "src/**/*.cs"
+                evidence-source:
+                  type: fileshare
+                  location: {indexFile}
+                reviews:
+                  - id: Core-Logic
+                    title: Review of core business logic
+                    paths:
+                      - "src/**/*.cs"
+                """);
+
+            var originalError = Console.Error;
+            try
+            {
+                using var errWriter = new StringWriter();
+                Console.SetError(errWriter);
+                using var context = Context.Create([
+                    "--silent",
+                    "--definition", definitionFile,
+                    "--elaborate", "Unknown-Id"]);
+
+                // Act
+                Program.Run(context);
+
+                // Assert — non-zero exit code when the review-set ID is not found
+                Assert.AreEqual(1, context.ExitCode);
+            }
+            finally
+            {
+                Console.SetError(originalError);
+            }
+        }
+        finally
+        {
+            if (Directory.Exists(testDirectory))
+            {
+                Directory.Delete(testDirectory, recursive: true);
+            }
+        }
+    }
 }

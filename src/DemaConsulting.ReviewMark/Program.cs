@@ -151,6 +151,7 @@ internal static class Program
         context.WriteLine("  --dir <directory>          Set the working directory (used for default paths and glob scanning)");
         context.WriteLine("                             Note: explicit paths given to --definition/--plan/--report are used as-is");
         context.WriteLine("  --enforce                  Exit with non-zero code if there are review issues");
+        context.WriteLine("  --elaborate <id>           Print a Markdown elaboration of the specified review set");
     }
 
     /// <summary>
@@ -182,7 +183,7 @@ internal static class Program
         // Handle definition-based actions (--plan, --report, or explicit --definition).
         // Use .reviewmark.yaml as the default when --definition is not specified,
         // resolved under the working directory.
-        if (context.PlanFile != null || context.ReportFile != null || context.DefinitionFile != null)
+        if (context.PlanFile != null || context.ReportFile != null || context.DefinitionFile != null || context.ElaborateId != null)
         {
             var definitionFile = context.DefinitionFile ?? PathHelpers.SafePathCombine(directory, ".reviewmark.yaml");
             RunDefinitionLogic(context, directory, definitionFile);
@@ -263,6 +264,20 @@ internal static class Program
                 {
                     context.WriteLine("Warning: Review report has review issues.");
                 }
+            }
+        }
+
+        // Handle --elaborate: generate and print the review set elaboration
+        if (context.ElaborateId != null)
+        {
+            try
+            {
+                var elaborateResult = config.ElaborateReviewSet(context.ElaborateId, directory);
+                context.WriteLine(elaborateResult.Markdown);
+            }
+            catch (ArgumentException ex)
+            {
+                context.WriteError($"Error: {ex.Message}");
             }
         }
     }
