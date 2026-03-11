@@ -13,25 +13,31 @@ DEMA Consulting tool for automated file-review evidence management in regulated 
 
 ## Features
 
-- **Cryptographic Fingerprinting**: Computes SHA256 fingerprints of defined file-sets so that
-  content changes are detected and reviews go stale automatically
-- **Evidence Querying**: Queries a review evidence store (URL or file-share) for corresponding
-  code-review PDFs via an `index.json` catalogue
-- **Coverage Reporting**: Generates a review plan showing which files are covered and flagging
-  any files that are not included in any review-set
-- **Status Reporting**: Generates a review report showing whether each review-set is Current,
-  Stale, or Missing
-- **Enforcement**: `--enforce` flag causes a non-zero exit code if any review-set is stale or
-  missing, or if any file is not covered by a review-set
-- **Re-indexing**: `--index` command scans PDF evidence files matching a glob path and writes
-  `index.json` to the current directory (or to the directory specified by `--dir`)
-- **Self-Validation**: Built-in validation tests with TRX/JUnit output
-- **Multi-Platform Support**: Builds and runs on Windows, Linux, and macOS
-- **Multi-Runtime Support**: Targets .NET 8, 9, and 10
-- **Comprehensive CI/CD**: GitHub Actions workflows with quality checks, builds, and
-  integration tests
-- **Continuous Compliance**: Compliance evidence generated automatically on every CI run, following
-  the [Continuous Compliance][link-continuous-compliance] methodology
+- 🔐 **Cryptographic Fingerprinting** - SHA256 fingerprints detect content changes automatically
+- 📂 **Evidence Querying** - Queries URL or file-share evidence stores via an `index.json` catalogue
+- 📋 **Coverage Reporting** - Review plan shows which files are covered and flags uncovered files
+- 📊 **Status Reporting** - Review report shows whether each review-set is Current, Stale, or Missing
+- 🚦 **Enforcement** - `--enforce` exits non-zero if any review-set is stale or missing, or any file is uncovered
+- 🔄 **Re-indexing** - `--index` scans PDF evidence files and writes an up-to-date `index.json`
+- ✅ **Self-Validation** - Built-in validation tests with TRX and JUnit output
+- 🌐 **Multi-Platform** - Builds and runs on Windows, Linux, and macOS
+- 🎯 **Multi-Runtime** - Targets .NET 8, 9, and 10
+- 🚀 **CI/CD Integration** - Automate review evidence generation in your pipelines
+- 📜 **Continuous Compliance** - Proves file coverage and currency ([Continuous Compliance][link-continuous-compliance])
+
+## Role in Continuous Compliance
+
+In the [Continuous Compliance][link-continuous-compliance] methodology, every compliance artifact
+is generated automatically on each CI/CD run. ReviewMark fills the **file-review evidence** role:
+
+| Artifact | Description |
+| :------- | :---------- |
+| Review Plan | Proves every file requiring review is covered by at least one named review-set |
+| Review Report | Proves each review-set is current — the review evidence matches the current file-set fingerprint |
+
+These Markdown documents are published as PDF/A-3u release artifacts alongside the requirements
+trace matrix and code quality report, giving auditors a complete, automatically-maintained evidence
+package on every release.
 
 ## Review Definition
 
