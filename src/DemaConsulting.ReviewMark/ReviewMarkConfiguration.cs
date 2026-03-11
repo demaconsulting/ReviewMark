@@ -667,7 +667,7 @@ internal sealed class ReviewMarkConfiguration
             string.Equals(r.Id, reviewSetId, StringComparison.Ordinal));
         if (review == null)
         {
-            throw new ArgumentException($"No review set found with ID '{reviewSetId}'.", nameof(reviewSetId));
+            throw new ArgumentException($"No review set found with ID '{reviewSetId}'.");
         }
 
         // Build the section heading at the requested depth
