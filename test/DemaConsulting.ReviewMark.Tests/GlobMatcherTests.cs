@@ -181,7 +181,7 @@ public class GlobMatcherTests
 
         // Assert — only src/Main.cs is returned
         Assert.HasCount(1, result);
-        Assert.IsTrue(result.Contains("src/Main.cs"));
+        Assert.Contains("src/Main.cs", result);
     }
 
     /// <summary>
