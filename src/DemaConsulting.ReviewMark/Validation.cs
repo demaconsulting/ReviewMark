@@ -54,6 +54,7 @@ internal static class Validation
         RunIndexScanTest(context, testResults);
         RunDirTest(context, testResults);
         RunEnforceTest(context, testResults);
+        RunElaborateTest(context, testResults);
 
         // Calculate totals
         var totalTests = testResults.Results.Count;
@@ -318,6 +319,55 @@ internal static class Validation
             }
 
             return exitCode != 0 ? null : "Expected non-zero exit code with --enforce and missing reviews";
+        });
+    }
+
+    /// <summary>
+    ///     Runs a test for the --elaborate flag printing review set details.
+    /// </summary>
+    /// <param name="context">The context for output.</param>
+    /// <param name="testResults">The test results collection.</param>
+    private static void RunElaborateTest(Context context, DemaConsulting.TestResults.TestResults testResults)
+    {
+        RunValidationTest(context, testResults, "ReviewMark_Elaborate", () =>
+        {
+            using var tempDir = new TemporaryDirectory();
+            var (definitionFile, _) = CreateTestDefinitionFixtures(tempDir.DirectoryPath);
+            var logFile = PathHelpers.SafePathCombine(tempDir.DirectoryPath, "elaborate-test.log");
+
+            // Run the program to elaborate the review set
+            int exitCode;
+            using (var testContext = Context.Create(["--silent", "--log", logFile, "--definition", definitionFile, "--dir", tempDir.DirectoryPath, "--elaborate", "Core-Logic"]))
+            {
+                Program.Run(testContext);
+                exitCode = testContext.ExitCode;
+            }
+
+            if (exitCode != 0)
+            {
+                return $"Program exited with code {exitCode}";
+            }
+
+            // Verify the log contains the expected elaborate output
+            var logContent = File.ReadAllText(logFile);
+            if (!logContent.Contains("Core-Logic"))
+            {
+                return "Elaborate output does not contain review set ID 'Core-Logic'";
+            }
+
+            // Verify that a Fingerprint row with an actual hex fingerprint value is present
+            if (!System.Text.RegularExpressions.Regex.IsMatch(logContent, @"\| Fingerprint \| `[0-9a-f]{64}` \|"))
+            {
+                return "Elaborate output does not contain a valid Fingerprint row with a 64-character hex value";
+            }
+
+            // Verify that the Files subsection heading is present and at least one file is listed
+            if (!logContent.Contains("Files"))
+            {
+                return "Elaborate output does not contain 'Files'";
+            }
+
+            return logContent.Contains("foo.cs") ? null : "Elaborate output does not list expected file 'foo.cs'";
         });
     }
 

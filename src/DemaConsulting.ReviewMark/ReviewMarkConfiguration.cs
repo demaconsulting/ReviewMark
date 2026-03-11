@@ -250,6 +250,12 @@ internal sealed record ReviewPlanResult(string Markdown, bool HasIssues);
 internal sealed record ReviewReportResult(string Markdown, bool HasIssues);
 
 /// <summary>
+///     Represents the result of elaborating a review set.
+/// </summary>
+/// <param name="Markdown">The generated Markdown content.</param>
+internal sealed record ElaborateResult(string Markdown);
+
+/// <summary>
 ///     Represents the parsed contents of a <c>.reviewmark.yaml</c> configuration file.
 /// </summary>
 internal sealed class ReviewMarkConfiguration
@@ -625,6 +631,72 @@ internal sealed class ReviewMarkConfiguration
         }
 
         return new ReviewReportResult(sb.ToString(), hasIssues);
+    }
+
+    /// <summary>
+    ///     Generates a Markdown elaboration of a specific review set, showing its ID,
+    ///     fingerprint, and the full list of files to review.
+    /// </summary>
+    /// <param name="reviewSetId">The ID of the review set to elaborate.</param>
+    /// <param name="directory">The root directory to search for files.</param>
+    /// <param name="markdownDepth">
+    ///     The heading depth for the section title (1 = <c>#</c>, 2 = <c>##</c>, etc.).
+    /// </param>
+    /// <returns>
+    ///     An <see cref="ElaborateResult" /> containing the Markdown text.
+    /// </returns>
+    /// <exception cref="ArgumentException">
+    ///     Thrown when <paramref name="reviewSetId" /> is null or whitespace,
+    ///     when <paramref name="directory" /> is null or whitespace,
+    ///     or when no review set with the specified ID exists.
+    /// </exception>
+    /// <exception cref="ArgumentOutOfRangeException">
+    ///     Thrown when <paramref name="markdownDepth" /> is less than 1 or greater than 5
+    ///     (subheadings at depth+1 would exceed the maximum Markdown heading level of 6).
+    /// </exception>
+    internal ElaborateResult ElaborateReviewSet(string reviewSetId, string directory, int markdownDepth = 1)
+    {
+        // Validate input parameters
+        ArgumentException.ThrowIfNullOrWhiteSpace(reviewSetId);
+        ArgumentException.ThrowIfNullOrWhiteSpace(directory);
+        ArgumentOutOfRangeException.ThrowIfNegativeOrZero(markdownDepth);
+        ArgumentOutOfRangeException.ThrowIfGreaterThan(markdownDepth, 5);
+
+        // Find the review set with the specified ID (case-sensitive match)
+        var review = Reviews.FirstOrDefault(r =>
+            string.Equals(r.Id, reviewSetId, StringComparison.Ordinal));
+        if (review == null)
+        {
+            throw new ArgumentException($"No review set found with ID '{reviewSetId}'.", nameof(reviewSetId));
+        }
+
+        // Build the section heading at the requested depth
+        var sb = new StringBuilder();
+        var heading = new string('#', markdownDepth);
+        sb.AppendLine($"{heading} {review.Id}");
+        sb.AppendLine();
+
+        // Emit the review metadata table
+        var fingerprint = review.GetFingerprint(directory);
+        sb.AppendLine("| Field | Value |");
+        sb.AppendLine("| :--- | :--- |");
+        sb.AppendLine($"| ID | {review.Id} |");
+        sb.AppendLine($"| Fingerprint | `{fingerprint}` |");
+        sb.AppendLine();
+
+        // Emit the files subsection
+        var subHeading = new string('#', markdownDepth + 1);
+        sb.AppendLine($"{subHeading} Files");
+        sb.AppendLine();
+        var files = review.GetFiles(directory);
+        foreach (var file in files)
+        {
+            sb.AppendLine($"- `{file}`");
+        }
+
+        sb.AppendLine();
+
+        return new ElaborateResult(sb.ToString());
     }
 
     /// <summary>
