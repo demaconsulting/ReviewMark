@@ -118,8 +118,8 @@ public class GlobMatcherTests
 
         // Assert — both .cs files are returned; the .txt file is not
         Assert.HasCount(2, result);
-        Assert.IsTrue(result.Contains("Alpha.cs"));
-        Assert.IsTrue(result.Contains("Beta.cs"));
+        Assert.Contains("Alpha.cs", result);
+        Assert.Contains("Beta.cs", result);
     }
 
     /// <summary>
@@ -139,7 +139,7 @@ public class GlobMatcherTests
 
         // Assert — only Real.cs is returned
         Assert.HasCount(1, result);
-        Assert.IsTrue(result.Contains("Real.cs"));
+        Assert.Contains("Real.cs", result);
     }
 
     /// <summary>
@@ -158,8 +158,8 @@ public class GlobMatcherTests
 
         // Assert — both .cs and .yaml files are included; .txt is not
         Assert.HasCount(2, result);
-        Assert.IsTrue(result.Contains("Program.cs"));
-        Assert.IsTrue(result.Contains("config.yaml"));
+        Assert.Contains("Program.cs", result);
+        Assert.Contains("config.yaml", result);
     }
 
     /// <summary>
