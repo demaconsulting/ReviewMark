@@ -129,7 +129,7 @@ internal sealed class ReviewIndex
     ///     <see cref="ReviewEvidence" />. This two-level structure allows O(1)
     ///     look-up by both ID and fingerprint.
     /// </summary>
-    private readonly Dictionary<string, Dictionary<string, ReviewEvidence>> _byId = new();
+    private readonly Dictionary<string, Dictionary<string, ReviewEvidence>> _byId = [];
 
     // ---------------------------------------------------------------------------
     // Construction
@@ -305,7 +305,7 @@ internal sealed class ReviewIndex
             // Insert into the two-level dictionary
             if (!index._byId.TryGetValue(evidence.Id, out var byFingerprint))
             {
-                byFingerprint = new Dictionary<string, ReviewEvidence>();
+                byFingerprint = [];
                 index._byId[evidence.Id] = byFingerprint;
             }
 
@@ -570,7 +570,7 @@ internal sealed class ReviewIndex
         // Store the evidence at [id][fingerprint], overwriting any previous entry
         if (!_byId.TryGetValue(evidence.Id, out var byFingerprint))
         {
-            byFingerprint = new Dictionary<string, ReviewEvidence>();
+            byFingerprint = [];
             _byId[evidence.Id] = byFingerprint;
         }
 
