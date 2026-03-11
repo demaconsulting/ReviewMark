@@ -28,7 +28,7 @@ needs-review:
 
 evidence-source:
   type: url                # 'url' or 'fileshare'
-  location: https://reviews.example.com/evidence/
+  location: https://reviews.example.com/evidence/index.json
 
 reviews:
   - id: Core-Logic
@@ -70,8 +70,8 @@ ReviewMark queries the configured evidence source for review PDFs. Two source ty
 
 | Type | Description |
 | :--- | :---------- |
-| `url` | HTTP/HTTPS endpoint; credentials supplied via environment variables |
-| `fileshare` | UNC or local file-system path; credentials supplied via environment variables |
+| `url` | Full HTTP/HTTPS URL to `index.json`; credentials supplied via environment variables |
+| `fileshare` | Full UNC or local file-system path to `index.json`; credentials supplied via environment variables |
 
 #### Evidence Index
 
@@ -184,7 +184,7 @@ source:
 ```yaml
 evidence-source:
   type: url
-  location: https://reviews.example.com/evidence/
+  location: https://reviews.example.com/evidence/index.json
   credentials:
     username-env: REVIEWMARK_USER
     password-env: REVIEWMARK_TOKEN

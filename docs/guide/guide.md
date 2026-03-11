@@ -220,7 +220,7 @@ needs-review:
 # Where to find the evidence index (index.json).
 evidence-source:
   type: fileshare
-  location: \\reviews.example.com\evidence\
+  location: \\reviews.example.com\evidence\index.json
 
 # Review sets: groups of related files reviewed together.
 reviews:
@@ -307,17 +307,17 @@ completed review PDFs.
 
 ### Source Types
 
-| Type         | Description                                     |
-| :----------- | :---------------------------------------------- |
-| `fileshare`  | UNC path or local directory                     |
-| `url`        | HTTP or HTTPS endpoint                          |
+| Type         | Description                                             |
+| :----------- | :------------------------------------------------------ |
+| `fileshare`  | Full UNC or local file-system path to `index.json`      |
+| `url`        | Full HTTP or HTTPS URL to `index.json`                  |
 
 #### File Share
 
 ```yaml
 evidence-source:
   type: fileshare
-  location: \\reviews.example.com\evidence\
+  location: \\reviews.example.com\evidence\index.json
 ```
 
 #### URL
@@ -325,7 +325,7 @@ evidence-source:
 ```yaml
 evidence-source:
   type: url
-  location: https://reviews.example.com/evidence/
+  location: https://reviews.example.com/evidence/index.json
 ```
 
 ### Credentials
@@ -336,7 +336,7 @@ are never stored in the definition file or source control:
 ```yaml
 evidence-source:
   type: url
-  location: https://reviews.example.com/evidence/
+  location: https://reviews.example.com/evidence/index.json
   credentials:
     username-env: REVIEWMARK_USER   # name of the environment variable holding the username
     password-env: REVIEWMARK_TOKEN  # name of the environment variable holding the password
@@ -370,7 +370,7 @@ needs-review:
 
 evidence-source:
   type: fileshare
-  location: \\reviews.example.com\evidence\
+  location: \\reviews.example.com\evidence\index.json
 
 reviews:
   - id: core-module
@@ -507,7 +507,7 @@ needs-review:
 
 evidence-source:
   type: url
-  location: https://reviews.example.com/evidence/
+  location: https://reviews.example.com/evidence/index.json
   credentials:
     username-env: REVIEWMARK_USER
     password-env: REVIEWMARK_TOKEN
