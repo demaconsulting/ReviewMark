@@ -19,6 +19,7 @@
 // SOFTWARE.
 
 using System.Runtime.InteropServices;
+using System.Text.RegularExpressions;
 using DemaConsulting.TestResults.IO;
 
 namespace DemaConsulting.ReviewMark;
@@ -26,7 +27,7 @@ namespace DemaConsulting.ReviewMark;
 /// <summary>
 ///     Provides self-validation functionality for ReviewMark.
 /// </summary>
-internal static class Validation
+internal static partial class Validation
 {
     /// <summary>
     ///     Runs self-validation tests and optionally writes results to a file.
@@ -356,7 +357,7 @@ internal static class Validation
             }
 
             // Verify that a Fingerprint row with an actual hex fingerprint value is present
-            if (!System.Text.RegularExpressions.Regex.IsMatch(logContent, @"\| Fingerprint \| `[0-9a-f]{64}` \|"))
+            if (!FingerprintRowRegex().IsMatch(logContent))
             {
                 return "Elaborate output does not contain a valid Fingerprint row with a 64-character hex value";
             }
@@ -546,6 +547,13 @@ internal static class Validation
         test.ErrorMessage = $"Exception: {ex.Message}";
         context.WriteError($"✗ {testName} - FAILED: {ex.Message}");
     }
+
+    /// <summary>
+    ///     Gets the regular expression for matching a Fingerprint row in markdown output.
+    /// </summary>
+    /// <returns>The regular expression.</returns>
+    [GeneratedRegex(@"\| Fingerprint \| `[0-9a-f]{64}` \|")]
+    private static partial Regex FingerprintRowRegex();
 
     /// <summary>
     ///     Represents a temporary directory that is automatically deleted when disposed.

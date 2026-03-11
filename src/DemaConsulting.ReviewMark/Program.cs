@@ -232,18 +232,7 @@ internal static class Program
             var planResult = config.PublishReviewPlan(directory, context.PlanDepth);
             File.WriteAllText(context.PlanFile, planResult.Markdown);
             context.WriteLine($"Review plan written to {context.PlanFile}");
-            if (planResult.HasIssues)
-            {
-                // With --enforce, exit with non-zero; otherwise emit a non-fatal warning
-                if (context.Enforce)
-                {
-                    context.WriteError("Review plan has coverage issues.");
-                }
-                else
-                {
-                    context.WriteLine("Warning: Review plan has coverage issues.");
-                }
-            }
+            HandleIssues(context, planResult.HasIssues, "Review plan has coverage issues.");
         }
 
         // Handle --report: load index and generate the review report
@@ -253,18 +242,7 @@ internal static class Program
             var reportResult = config.PublishReviewReport(index, directory, context.ReportDepth);
             File.WriteAllText(context.ReportFile, reportResult.Markdown);
             context.WriteLine($"Review report written to {context.ReportFile}");
-            if (reportResult.HasIssues)
-            {
-                // With --enforce, exit with non-zero; otherwise emit a non-fatal warning
-                if (context.Enforce)
-                {
-                    context.WriteError("Review report has review issues.");
-                }
-                else
-                {
-                    context.WriteLine("Warning: Review report has review issues.");
-                }
-            }
+            HandleIssues(context, reportResult.HasIssues, "Review report has review issues.");
         }
 
         // Handle --elaborate: generate and print the review set elaboration
@@ -279,6 +257,31 @@ internal static class Program
             {
                 context.WriteError($"Error: {ex.Message}");
             }
+        }
+    }
+
+    /// <summary>
+    ///     Handles review issues by writing an error or warning to the context.
+    /// </summary>
+    /// <param name="context">The context for output.</param>
+    /// <param name="hasIssues">Whether there are issues to report.</param>
+    /// <param name="message">The issue message.</param>
+    private static void HandleIssues(Context context, bool hasIssues, string message)
+    {
+        // Do nothing if there are no issues
+        if (!hasIssues)
+        {
+            return;
+        }
+
+        // With --enforce, exit with non-zero; otherwise emit a non-fatal warning
+        if (context.Enforce)
+        {
+            context.WriteError(message);
+        }
+        else
+        {
+            context.WriteLine($"Warning: {message}");
         }
     }
 }
