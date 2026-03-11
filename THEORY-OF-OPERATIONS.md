@@ -71,7 +71,7 @@ ReviewMark queries the configured evidence source for review PDFs. Two source ty
 | Type | Description |
 | :--- | :---------- |
 | `url` | Full HTTP/HTTPS URL to `index.json`; credentials supplied via environment variables |
-| `fileshare` | Full UNC or local file-system path to `index.json`; access relies on OS/share permissions; the credentials block applies only to `url` sources |
+| `fileshare` | Full UNC or local file-system path to `index.json`; access uses OS/share permissions |
 
 #### Evidence Index
 
