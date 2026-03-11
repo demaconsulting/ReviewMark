@@ -145,8 +145,8 @@ sections:
             tests:
               - Context_Create_DefinitionFlag_SetsDefinitionFile
               - Context_Create_DefinitionFlag_WithoutValue_ThrowsArgumentException
-              - ReviewMark_DefinitionPlan
-              - ReviewMark_DefinitionReport
+              - ReviewMark_ReviewPlanGeneration
+              - ReviewMark_ReviewReportGeneration
 
           - id: ReviewMark-Cmd-Plan
             title: The tool shall support --plan flag to write the review plan to a Markdown file.
@@ -155,7 +155,7 @@ sections:
               and coverage status, suitable for inclusion in release documentation.
             tests:
               - Context_Create_PlanFlag_SetsPlanFile
-              - ReviewMark_DefinitionPlan
+              - ReviewMark_ReviewPlanGeneration
 
           - id: ReviewMark-Cmd-PlanDepth
             title: The tool shall support --plan-depth flag to set the Markdown heading depth for the review plan.
@@ -175,7 +175,7 @@ sections:
               status of each review set against the evidence index, suitable for release documentation.
             tests:
               - Context_Create_ReportFlag_SetsReportFile
-              - ReviewMark_DefinitionReport
+              - ReviewMark_ReviewReportGeneration
 
           - id: ReviewMark-Cmd-ReportDepth
             title: The tool shall support --report-depth flag to set the Markdown heading depth for the review report.
@@ -220,7 +220,7 @@ sections:
               - Context_Create_DirFlag_SetsWorkingDirectory
               - Context_Create_NoArguments_WorkingDirectoryIsNull
               - Context_Create_DirFlag_MissingValue_ThrowsArgumentException
-              - ReviewMark_Dir
+              - ReviewMark_WorkingDirectoryOverride
 
           - id: ReviewMark-Cmd-Elaborate
             title: The tool shall support --elaborate <id> flag to print a Markdown elaboration of a review set.
@@ -315,11 +315,11 @@ sections:
               # Tests link to "windows" to ensure results come from Windows platform
               - "windows@ReviewMark_VersionDisplay"
               - "windows@ReviewMark_HelpDisplay"
-              - "windows@ReviewMark_DefinitionPlan"
-              - "windows@ReviewMark_DefinitionReport"
+              - "windows@ReviewMark_ReviewPlanGeneration"
+              - "windows@ReviewMark_ReviewReportGeneration"
               - "windows@ReviewMark_IndexScan"
               - "windows@ReviewMark_Enforce"
-              - "windows@ReviewMark_Dir"
+              - "windows@ReviewMark_WorkingDirectoryOverride"
               - "windows@ReviewMark_Elaborate"
 
           - id: ReviewMark-Platform-Linux
@@ -330,11 +330,11 @@ sections:
               # Tests link to "ubuntu" to ensure results come from Linux platform
               - "ubuntu@ReviewMark_VersionDisplay"
               - "ubuntu@ReviewMark_HelpDisplay"
-              - "ubuntu@ReviewMark_DefinitionPlan"
-              - "ubuntu@ReviewMark_DefinitionReport"
+              - "ubuntu@ReviewMark_ReviewPlanGeneration"
+              - "ubuntu@ReviewMark_ReviewReportGeneration"
               - "ubuntu@ReviewMark_IndexScan"
               - "ubuntu@ReviewMark_Enforce"
-              - "ubuntu@ReviewMark_Dir"
+              - "ubuntu@ReviewMark_WorkingDirectoryOverride"
               - "ubuntu@ReviewMark_Elaborate"
 
           - id: ReviewMark-Platform-MacOS
@@ -345,11 +345,11 @@ sections:
               # Tests link to "macos" to ensure results come from macOS platform
               - "macos@ReviewMark_VersionDisplay"
               - "macos@ReviewMark_HelpDisplay"
-              - "macos@ReviewMark_DefinitionPlan"
-              - "macos@ReviewMark_DefinitionReport"
+              - "macos@ReviewMark_ReviewPlanGeneration"
+              - "macos@ReviewMark_ReviewReportGeneration"
               - "macos@ReviewMark_IndexScan"
               - "macos@ReviewMark_Enforce"
-              - "macos@ReviewMark_Dir"
+              - "macos@ReviewMark_WorkingDirectoryOverride"
               - "macos@ReviewMark_Elaborate"
 
           - id: ReviewMark-Platform-Net8
@@ -359,11 +359,11 @@ sections:
             tests:
               - "dotnet8.x@ReviewMark_VersionDisplay"
               - "dotnet8.x@ReviewMark_HelpDisplay"
-              - "dotnet8.x@ReviewMark_DefinitionPlan"
-              - "dotnet8.x@ReviewMark_DefinitionReport"
+              - "dotnet8.x@ReviewMark_ReviewPlanGeneration"
+              - "dotnet8.x@ReviewMark_ReviewReportGeneration"
               - "dotnet8.x@ReviewMark_IndexScan"
               - "dotnet8.x@ReviewMark_Enforce"
-              - "dotnet8.x@ReviewMark_Dir"
+              - "dotnet8.x@ReviewMark_WorkingDirectoryOverride"
               - "dotnet8.x@ReviewMark_Elaborate"
 
           - id: ReviewMark-Platform-Net9
@@ -373,11 +373,11 @@ sections:
             tests:
               - "dotnet9.x@ReviewMark_VersionDisplay"
               - "dotnet9.x@ReviewMark_HelpDisplay"
-              - "dotnet9.x@ReviewMark_DefinitionPlan"
-              - "dotnet9.x@ReviewMark_DefinitionReport"
+              - "dotnet9.x@ReviewMark_ReviewPlanGeneration"
+              - "dotnet9.x@ReviewMark_ReviewReportGeneration"
               - "dotnet9.x@ReviewMark_IndexScan"
               - "dotnet9.x@ReviewMark_Enforce"
-              - "dotnet9.x@ReviewMark_Dir"
+              - "dotnet9.x@ReviewMark_WorkingDirectoryOverride"
               - "dotnet9.x@ReviewMark_Elaborate"
 
           - id: ReviewMark-Platform-Net10
@@ -387,11 +387,11 @@ sections:
             tests:
               - "dotnet10.x@ReviewMark_VersionDisplay"
               - "dotnet10.x@ReviewMark_HelpDisplay"
-              - "dotnet10.x@ReviewMark_DefinitionPlan"
-              - "dotnet10.x@ReviewMark_DefinitionReport"
+              - "dotnet10.x@ReviewMark_ReviewPlanGeneration"
+              - "dotnet10.x@ReviewMark_ReviewReportGeneration"
               - "dotnet10.x@ReviewMark_IndexScan"
               - "dotnet10.x@ReviewMark_Enforce"
-              - "dotnet10.x@ReviewMark_Dir"
+              - "dotnet10.x@ReviewMark_WorkingDirectoryOverride"
               - "dotnet10.x@ReviewMark_Elaborate"
 
       - title: OTS Software
