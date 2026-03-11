@@ -387,8 +387,9 @@ and embeds the review metadata in the PDF Keywords field:
 id=core-module fingerprint=a3f9c2d1... date=2026-03-15 result=pass
 ```
 
-The PDF is deposited in the evidence store folder. ReviewMark never dictates file names — the
-reviewer uses whatever name the QMS requires.
+All four fields are **required** — a PDF without any one of them will be skipped with a warning
+when the evidence store is scanned. The PDF is deposited in the evidence store folder.
+ReviewMark never dictates file names — the reviewer uses whatever name the QMS requires.
 
 ## Step 4 — Update the Evidence Index
 

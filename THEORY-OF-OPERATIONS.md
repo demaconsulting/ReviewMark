@@ -172,8 +172,8 @@ id=Core-Logic fingerprint=a3f9c2d1e4b5... date=2026-03-08 result=pass
 | `result` | Outcome of the review: `pass` or `fail` |
 
 Using the standard Keywords field means the metadata is readable by any PDF viewer or document
-management system without requiring custom property support. PDFs that do not carry the expected
-keys in their Keywords field are skipped with a warning during indexing.
+management system without requiring custom property support. PDFs that do not carry all four
+required fields (`id`, `fingerprint`, `date`, and `result`) are skipped with a warning during indexing.
 
 #### Credentials
 
@@ -316,7 +316,8 @@ dotnet reviewmark --index "**/*.pdf"
 
 ReviewMark scans all PDF files matching the glob path, reads the Keywords field from each using
 PdfSharp, parses the `name=value` pairs, and writes a fresh `index.json` to the working directory.
-PDFs whose Keywords field does not contain the required keys are skipped with a warning.
+PDFs missing any of the four required fields (`id`, `fingerprint`, `date`, `result`) are skipped
+with a warning.
 
 ## Self-Validation
 

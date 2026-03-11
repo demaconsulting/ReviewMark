@@ -513,7 +513,9 @@ internal sealed class ReviewIndex
 
     /// <summary>
     ///     Opens a single PDF file, reads its Keywords metadata, and adds a
-    ///     <see cref="ReviewEvidence" /> entry if the required fields are present.
+    ///     <see cref="ReviewEvidence" /> entry if all required fields are present.
+    ///     All four fields — <c>id</c>, <c>fingerprint</c>, <c>date</c>, and <c>result</c> —
+    ///     must be non-empty; any PDF missing one or more is skipped with a warning.
     /// </summary>
     /// <param name="fullPath">The absolute file-system path to the PDF.</param>
     /// <param name="relativePath">
@@ -532,7 +534,7 @@ internal sealed class ReviewIndex
         // Parse the space-separated name=value pairs into a dictionary
         var pairs = ParseKeywordPairs(keywords);
 
-        // The 'id' and 'fingerprint' keys are required; skip with a warning if absent
+        // All four keys are required; skip with a warning if any are absent or empty
         if (!pairs.TryGetValue("id", out var id) || string.IsNullOrWhiteSpace(id))
         {
             onWarning?.Invoke($"Skipping '{relativePath}': PDF Keywords missing required 'id' field.");
@@ -545,15 +547,24 @@ internal sealed class ReviewIndex
             return;
         }
 
-        // Build the evidence record from the parsed metadata
-        pairs.TryGetValue("date", out var date);
-        pairs.TryGetValue("result", out var result);
+        if (!pairs.TryGetValue("date", out var date) || string.IsNullOrWhiteSpace(date))
+        {
+            onWarning?.Invoke($"Skipping '{relativePath}': PDF Keywords missing required 'date' field.");
+            return;
+        }
 
+        if (!pairs.TryGetValue("result", out var result) || string.IsNullOrWhiteSpace(result))
+        {
+            onWarning?.Invoke($"Skipping '{relativePath}': PDF Keywords missing required 'result' field.");
+            return;
+        }
+
+        // Build the evidence record from the parsed metadata
         var evidence = new ReviewEvidence(
             Id: id,
             Fingerprint: fingerprint,
-            Date: date ?? string.Empty,
-            Result: result ?? string.Empty,
+            Date: date,
+            Result: result,
             File: relativePath);
 
         // Store the evidence at [id][fingerprint], overwriting any previous entry
