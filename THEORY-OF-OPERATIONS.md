@@ -326,7 +326,7 @@ evidence matching, and report generation using mock data — no live evidence st
 Two output formats are supported, selected by the `--results` file extension:
 
 ```bash
-# TRX format (NUnit-compatible)
+# TRX format (VSTest-compatible)
 dotnet reviewmark --validate --results artifacts/reviewmark-self-validation.trx
 
 # JUnit XML format
