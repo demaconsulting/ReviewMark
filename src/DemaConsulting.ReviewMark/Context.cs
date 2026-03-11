@@ -26,6 +26,11 @@ namespace DemaConsulting.ReviewMark;
 internal sealed class Context : IDisposable
 {
     /// <summary>
+    ///     Description used in error messages when a filename argument is required.
+    /// </summary>
+    private const string FilenameArgument = "a filename argument";
+
+    /// <summary>
     ///     Log file stream writer (if logging is enabled).
     /// </summary>
     private StreamWriter? _logWriter;
@@ -313,7 +318,7 @@ internal sealed class Context : IDisposable
                     return index;
 
                 case "--log":
-                    LogFile = GetRequiredStringArgument(arg, args, index, "a filename argument");
+                    LogFile = GetRequiredStringArgument(arg, args, index, FilenameArgument);
                     return index + 1;
 
                 case "--results":
@@ -321,11 +326,11 @@ internal sealed class Context : IDisposable
                     return index + 1;
 
                 case "--definition":
-                    DefinitionFile = GetRequiredStringArgument(arg, args, index, "a filename argument");
+                    DefinitionFile = GetRequiredStringArgument(arg, args, index, FilenameArgument);
                     return index + 1;
 
                 case "--plan":
-                    PlanFile = GetRequiredStringArgument(arg, args, index, "a filename argument");
+                    PlanFile = GetRequiredStringArgument(arg, args, index, FilenameArgument);
                     return index + 1;
 
                 case "--plan-depth":
@@ -338,7 +343,7 @@ internal sealed class Context : IDisposable
                     return index + 1;
 
                 case "--report":
-                    ReportFile = GetRequiredStringArgument(arg, args, index, "a filename argument");
+                    ReportFile = GetRequiredStringArgument(arg, args, index, FilenameArgument);
                     return index + 1;
 
                 case "--report-depth":

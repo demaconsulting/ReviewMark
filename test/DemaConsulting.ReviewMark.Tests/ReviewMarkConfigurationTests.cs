@@ -120,7 +120,7 @@ public class ReviewMarkConfigurationTests
         var config = ReviewMarkConfiguration.Parse(yaml);
 
         // Assert — all three patterns are present and in order
-        Assert.AreEqual(3, config.NeedsReviewPatterns.Count);
+        Assert.HasCount(3, config.NeedsReviewPatterns);
         Assert.AreEqual("**/*.cs", config.NeedsReviewPatterns[0]);
         Assert.AreEqual("**/*.yaml", config.NeedsReviewPatterns[1]);
         Assert.AreEqual("!**/obj/**", config.NeedsReviewPatterns[2]);
@@ -152,11 +152,11 @@ public class ReviewMarkConfigurationTests
         var config = ReviewMarkConfiguration.Parse(MinimalYaml);
 
         // Assert — one review set with expected id, title, and path
-        Assert.AreEqual(1, config.Reviews.Count);
+        Assert.HasCount(1, config.Reviews);
         var review = config.Reviews[0];
         Assert.AreEqual("Core-Logic", review.Id);
         Assert.AreEqual("Review of core business logic", review.Title);
-        Assert.AreEqual(1, review.Paths.Count);
+        Assert.HasCount(1, review.Paths);
         Assert.AreEqual("src/**/*.cs", review.Paths[0]);
     }
 
@@ -206,8 +206,8 @@ public class ReviewMarkConfigurationTests
         var files = config.GetNeedsReviewFiles(_testDirectory);
 
         // Assert — only the .cs file is returned
-        Assert.AreEqual(1, files.Count);
-        Assert.IsTrue(files.Contains("Program.cs"));
+        Assert.HasCount(1, files);
+        Assert.Contains("Program.cs", files);
     }
 
     /// <summary>

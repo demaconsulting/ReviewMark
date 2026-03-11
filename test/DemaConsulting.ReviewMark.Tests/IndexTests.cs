@@ -140,7 +140,7 @@ public class IndexTests
             "GetEvidence should return null on an empty index.");
         Assert.IsFalse(index.HasId("any-id"),
             "HasId should return false on an empty index.");
-        Assert.AreEqual(0, index.GetAllForId("any-id").Count,
+        Assert.IsEmpty(index.GetAllForId("any-id"),
             "GetAllForId should return an empty list on an empty index.");
     }
 
@@ -664,7 +664,7 @@ public class IndexTests
         var index = ReviewIndex.Scan(_testDirectory, ["**/*.pdf"], onWarning: msg => warnings.Add(msg));
 
         // Assert — the file is skipped and at least one warning is emitted; no entry in the index
-        Assert.IsTrue(warnings.Count > 0, "A warning should be emitted for a PDF missing 'id'.");
+        Assert.IsNotEmpty(warnings, "A warning should be emitted for a PDF missing 'id'.");
         Assert.IsFalse(index.HasId("any-id"),
             "No entry should be added when the 'id' keyword is missing.");
     }
@@ -691,7 +691,7 @@ public class IndexTests
         var index = ReviewIndex.Scan(_testDirectory, ["**/*.pdf"], onWarning: msg => warnings.Add(msg));
 
         // Assert — the file is skipped and at least one warning is emitted; no entry in the index
-        Assert.IsTrue(warnings.Count > 0, "A warning should be emitted for a PDF missing 'fingerprint'.");
+        Assert.IsNotEmpty(warnings, "A warning should be emitted for a PDF missing 'fingerprint'.");
         Assert.IsFalse(index.HasId("Core-Logic"),
             "No entry should be added when the 'fingerprint' keyword is missing.");
     }
@@ -718,7 +718,7 @@ public class IndexTests
         var index = ReviewIndex.Scan(_testDirectory, ["**/*.pdf"], onWarning: msg => warnings.Add(msg));
 
         // Assert — the file is skipped and at least one warning is emitted; index remains empty
-        Assert.IsTrue(warnings.Count > 0, "A warning should be emitted for a PDF with no keywords.");
+        Assert.IsNotEmpty(warnings, "A warning should be emitted for a PDF with no keywords.");
         Assert.IsFalse(index.HasId("any-id"),
             "No entry should be added when a PDF has no keywords.");
     }
@@ -745,7 +745,7 @@ public class IndexTests
         var index = ReviewIndex.Scan(_testDirectory, ["**/*.pdf"], onWarning: msg => warnings.Add(msg));
 
         // Assert — the file is skipped and at least one warning is emitted; no entry in the index
-        Assert.IsTrue(warnings.Count > 0, "A warning should be emitted for a PDF missing 'date'.");
+        Assert.IsNotEmpty(warnings, "A warning should be emitted for a PDF missing 'date'.");
         Assert.IsFalse(index.HasId("Core-Logic"),
             "No entry should be added when the 'date' keyword is missing.");
     }
@@ -772,7 +772,7 @@ public class IndexTests
         var index = ReviewIndex.Scan(_testDirectory, ["**/*.pdf"], onWarning: msg => warnings.Add(msg));
 
         // Assert — the file is skipped and at least one warning is emitted; no entry in the index
-        Assert.IsTrue(warnings.Count > 0, "A warning should be emitted for a PDF missing 'result'.");
+        Assert.IsNotEmpty(warnings, "A warning should be emitted for a PDF missing 'result'.");
         Assert.IsFalse(index.HasId("Core-Logic"),
             "No entry should be added when the 'result' keyword is missing.");
     }
@@ -1040,12 +1040,12 @@ public class IndexTests
         var entries = index.GetAllForId("Core-Logic");
 
         // Assert — both entries for "Core-Logic" are returned
-        Assert.AreEqual(2, entries.Count,
+        Assert.HasCount(2, entries,
             "GetAllForId should return exactly two entries for the id with two fingerprints.");
 
         var fingerprints = entries.Select(e => e.Fingerprint).ToHashSet();
-        Assert.IsTrue(fingerprints.Contains("fp-v1"), "fp-v1 entry should be included.");
-        Assert.IsTrue(fingerprints.Contains("fp-v2"), "fp-v2 entry should be included.");
+        Assert.Contains("fp-v1", fingerprints, "fp-v1 entry should be included.");
+        Assert.Contains("fp-v2", fingerprints, "fp-v2 entry should be included.");
     }
 
     /// <summary>
@@ -1076,7 +1076,7 @@ public class IndexTests
 
         // Assert — an unknown id produces an empty list, not null
         Assert.IsNotNull(entries, "GetAllForId should never return null.");
-        Assert.AreEqual(0, entries.Count,
+        Assert.IsEmpty(entries,
             "GetAllForId should return an empty list for an id that is not in the index.");
     }
 }

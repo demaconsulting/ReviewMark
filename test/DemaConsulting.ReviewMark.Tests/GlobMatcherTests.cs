@@ -99,7 +99,7 @@ public class GlobMatcherTests
         var result = GlobMatcher.GetMatchingFiles(_testDirectory, patterns);
 
         // Assert
-        Assert.AreEqual(0, result.Count);
+        Assert.IsEmpty(result);
     }
 
     /// <summary>
@@ -117,9 +117,9 @@ public class GlobMatcherTests
         var result = GlobMatcher.GetMatchingFiles(_testDirectory, ["**/*.cs"]);
 
         // Assert — both .cs files are returned; the .txt file is not
-        Assert.AreEqual(2, result.Count);
-        Assert.IsTrue(result.Contains("Alpha.cs"));
-        Assert.IsTrue(result.Contains("Beta.cs"));
+        Assert.HasCount(2, result);
+        Assert.Contains("Alpha.cs", result);
+        Assert.Contains("Beta.cs", result);
     }
 
     /// <summary>
@@ -138,8 +138,8 @@ public class GlobMatcherTests
         var result = GlobMatcher.GetMatchingFiles(_testDirectory, ["**/*.cs", "!Generated/**"]);
 
         // Assert — only Real.cs is returned
-        Assert.AreEqual(1, result.Count);
-        Assert.IsTrue(result.Contains("Real.cs"));
+        Assert.HasCount(1, result);
+        Assert.Contains("Real.cs", result);
     }
 
     /// <summary>
@@ -157,9 +157,9 @@ public class GlobMatcherTests
         var result = GlobMatcher.GetMatchingFiles(_testDirectory, ["**/*.cs", "**/*.yaml"]);
 
         // Assert — both .cs and .yaml files are included; .txt is not
-        Assert.AreEqual(2, result.Count);
-        Assert.IsTrue(result.Contains("Program.cs"));
-        Assert.IsTrue(result.Contains("config.yaml"));
+        Assert.HasCount(2, result);
+        Assert.Contains("Program.cs", result);
+        Assert.Contains("config.yaml", result);
     }
 
     /// <summary>
@@ -180,8 +180,8 @@ public class GlobMatcherTests
         var result = GlobMatcher.GetMatchingFiles(_testDirectory, ["**/*.cs", "!obj/**"]);
 
         // Assert — only src/Main.cs is returned
-        Assert.AreEqual(1, result.Count);
-        Assert.IsTrue(result.Contains("src/Main.cs"));
+        Assert.HasCount(1, result);
+        Assert.Contains("src/Main.cs", result);
     }
 
     /// <summary>
@@ -197,7 +197,7 @@ public class GlobMatcherTests
         var result = GlobMatcher.GetMatchingFiles(_testDirectory, ["**/*.cs"]);
 
         // Assert — empty list because no .cs files are present
-        Assert.AreEqual(0, result.Count);
+        Assert.IsEmpty(result);
     }
 
     /// <summary>
@@ -221,9 +221,9 @@ public class GlobMatcherTests
             ["**/*.cs", "!Generated/**", "Generated/Special.cs"]);
 
         // Assert — src/Real.cs and Generated/Special.cs are present; Generated/Other.cs is not
-        Assert.AreEqual(2, result.Count);
-        Assert.IsTrue(result.Contains("src/Real.cs"));
-        Assert.IsTrue(result.Contains("Generated/Special.cs"));
-        Assert.IsFalse(result.Contains("Generated/Other.cs"));
+        Assert.HasCount(2, result);
+        Assert.Contains("src/Real.cs", result);
+        Assert.Contains("Generated/Special.cs", result);
+        Assert.DoesNotContain("Generated/Other.cs", result);
     }
 }
