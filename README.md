@@ -59,7 +59,7 @@ needs-review:
 
 evidence-source:
   type: url                # 'url' or 'fileshare'
-  location: https://reviews.example.com/evidence/
+  location: https://reviews.example.com/evidence/index.json
 
 reviews:
   - id: Core-Logic
