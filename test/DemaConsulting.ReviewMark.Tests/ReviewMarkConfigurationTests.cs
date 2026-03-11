@@ -438,7 +438,7 @@ public class ReviewMarkConfigurationTests
               ]
             }
             """);
-        var index = ReviewIndex.Load(new EvidenceSource("fileshare", indexPath, null, null));
+        var index = ReviewIndex.Load(new EvidenceSource("fileshare", _testDirectory, null, null));
 
         // Act
         var result = config.PublishReviewReport(index, _testDirectory);
@@ -478,7 +478,7 @@ public class ReviewMarkConfigurationTests
               ]
             }
             """);
-        var index = ReviewIndex.Load(new EvidenceSource("fileshare", indexPath, null, null));
+        var index = ReviewIndex.Load(new EvidenceSource("fileshare", _testDirectory, null, null));
 
         // Act
         var result = config.PublishReviewReport(index, _testDirectory);
@@ -520,7 +520,7 @@ public class ReviewMarkConfigurationTests
               ]
             }
             """);
-        var index = ReviewIndex.Load(new EvidenceSource("fileshare", indexPath, null, null));
+        var index = ReviewIndex.Load(new EvidenceSource("fileshare", _testDirectory, null, null));
 
         // Act
         var result = config.PublishReviewReport(index, _testDirectory);

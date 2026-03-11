@@ -435,7 +435,8 @@ internal static partial class Validation
         Directory.CreateDirectory(srcDir);
         File.WriteAllText(PathHelpers.SafePathCombine(srcDir, "foo.cs"), "// test content");
 
-        // Create an empty index file so evidence-source resolves
+        // Create an empty index file so evidence-source resolves; the fileshare location is
+        // the directory — index.json is appended automatically at load time
         var indexFile = PathHelpers.SafePathCombine(directoryPath, "index.json");
         File.WriteAllText(indexFile, """{"reviews":[]}""");
 
@@ -446,7 +447,7 @@ internal static partial class Validation
               - "src/**/*.cs"
             evidence-source:
               type: fileshare
-              location: {indexFile}
+              location: {directoryPath}
             reviews:
               - id: Core-Logic
                 title: Review of core business logic

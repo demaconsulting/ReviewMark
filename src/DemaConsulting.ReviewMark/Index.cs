@@ -156,8 +156,9 @@ internal sealed class ReviewIndex
     /// <summary>
     ///     Loads a <see cref="ReviewIndex" /> from an <see cref="EvidenceSource" />.
     ///     For <c>fileshare</c> sources the <see cref="EvidenceSource.Location" /> is treated as the
-    ///     path to the <c>index.json</c> file. For <c>url</c> sources the location is the base HTTP(S)
-    ///     URL (the directory containing <c>index.json</c>); <c>index.json</c> is appended automatically.
+    ///     path to the directory containing <c>index.json</c>; <c>index.json</c> is appended automatically.
+    ///     For <c>url</c> sources the location is the base HTTP(S) URL (the directory containing
+    ///     <c>index.json</c>); <c>index.json</c> is appended automatically.
     ///     An <see cref="HttpClient" /> with optional pre-emptive Basic-auth credentials read from the
     ///     environment variables named by <see cref="EvidenceSource.UsernameEnv" /> and
     ///     <see cref="EvidenceSource.PasswordEnv" /> is created internally.
@@ -177,7 +178,7 @@ internal sealed class ReviewIndex
         // Short-circuit for fileshare sources — no HttpClient needed
         if (evidenceSource.Type.Equals("fileshare", StringComparison.OrdinalIgnoreCase))
         {
-            return LoadFromFile(evidenceSource.Location);
+            return LoadFromFile(PathHelpers.SafePathCombine(evidenceSource.Location, "index.json"));
         }
 
         // For all other types, create a configured HttpClient and delegate to the testable overload
@@ -189,8 +190,10 @@ internal sealed class ReviewIndex
     ///     Loads a <see cref="ReviewIndex" /> from an <see cref="EvidenceSource" /> using the
     ///     specified <see cref="HttpClient" />. This overload is exposed internally to allow
     ///     unit tests to inject a fake <see cref="HttpMessageHandler" /> when testing URL-based
-    ///     evidence sources. For <c>url</c> sources the location is the base HTTP(S) URL (the
-    ///     directory containing <c>index.json</c>); <c>index.json</c> is appended automatically.
+    ///     evidence sources. For <c>fileshare</c> sources the location is treated as a directory;
+    ///     <c>index.json</c> is appended automatically. For <c>url</c> sources the location is
+    ///     the base HTTP(S) URL (the directory containing <c>index.json</c>); <c>index.json</c>
+    ///     is appended automatically.
     /// </summary>
     /// <param name="evidenceSource">The evidence source to load the index from.</param>
     /// <param name="httpClient">The HTTP client to use for <c>url</c>-type evidence sources.</param>
@@ -209,7 +212,7 @@ internal sealed class ReviewIndex
         // Dispatch to the appropriate loader based on the evidence-source type
         return evidenceSource.Type.ToLowerInvariant() switch
         {
-            "fileshare" => LoadFromFile(evidenceSource.Location),
+            "fileshare" => LoadFromFile(PathHelpers.SafePathCombine(evidenceSource.Location, "index.json")),
             "url" => LoadFromUrl(GetIndexUrl(evidenceSource.Location), httpClient),
             _ => throw new InvalidOperationException(
                 $"Unsupported evidence source type '{evidenceSource.Type}'.")
@@ -317,24 +320,15 @@ internal sealed class ReviewIndex
     }
 
     /// <summary>
-    ///     Computes the full <c>index.json</c> URL from a base URL, appending
-    ///     <c>/index.json</c> when necessary.  If the base URL already ends with
-    ///     <c>/index.json</c> (case-insensitive) it is returned unchanged, preserving
-    ///     backward compatibility for callers that still include the filename.
+    ///     Computes the full <c>index.json</c> URL from a base URL by appending
+    ///     <c>/index.json</c> with proper trailing-slash handling.
     /// </summary>
     /// <param name="baseUrl">
-    ///     The base HTTP(S) URL of the evidence-source directory, with or without
-    ///     a trailing slash and with or without an existing <c>index.json</c> suffix.
+    ///     The base HTTP(S) URL of the evidence-source directory, with or without a trailing slash.
     /// </param>
     /// <returns>The full URL pointing directly at the <c>index.json</c> file.</returns>
     private static string GetIndexUrl(string baseUrl)
     {
-        // If the URL already ends with /index.json, use it as-is for backward compatibility
-        if (baseUrl.EndsWith("/index.json", StringComparison.OrdinalIgnoreCase))
-        {
-            return baseUrl;
-        }
-
         // Append /index.json with proper trailing-slash handling
         return baseUrl.TrimEnd('/') + "/index.json";
     }

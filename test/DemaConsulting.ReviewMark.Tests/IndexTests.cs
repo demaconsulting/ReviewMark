@@ -62,17 +62,18 @@ public class IndexTests
     // -------------------------------------------------------------------------
 
     /// <summary>
-    ///     Writes <paramref name="json" /> to a unique file inside the test temp directory
-    ///     and loads it as a <see cref="ReviewIndex" /> via
+    ///     Writes <paramref name="json" /> to <c>index.json</c> inside a unique subdirectory of
+    ///     the test temp directory and loads it as a <see cref="ReviewIndex" /> via
     ///     <see cref="ReviewIndex.Load(EvidenceSource)" />.
     /// </summary>
     /// <param name="json">The JSON content for the index file.</param>
     /// <returns>The loaded <see cref="ReviewIndex" />.</returns>
     private ReviewIndex LoadIndexFromJson(string json)
     {
-        var path = PathHelpers.SafePathCombine(_testDirectory, $"index-{Guid.NewGuid():N}.json");
-        File.WriteAllText(path, json);
-        return ReviewIndex.Load(new EvidenceSource("fileshare", path, null, null));
+        var dir = PathHelpers.SafePathCombine(_testDirectory, $"index-{Guid.NewGuid():N}");
+        Directory.CreateDirectory(dir);
+        File.WriteAllText(PathHelpers.SafePathCombine(dir, "index.json"), json);
+        return ReviewIndex.Load(new EvidenceSource("fileshare", dir, null, null));
     }
 
     /// <summary>
@@ -250,10 +251,11 @@ public class IndexTests
     [TestMethod]
     public void ReviewIndex_Load_EvidenceSource_Fileshare_InvalidJson_ThrowsInvalidOperationException()
     {
-        // Arrange — write non-JSON content to a temp file
-        var path = PathHelpers.SafePathCombine(_testDirectory, "invalid.json");
-        File.WriteAllText(path, "this is not json {{{");
-        var source = new EvidenceSource("fileshare", path, null, null);
+        // Arrange — write non-JSON content to index.json inside a temp subdirectory
+        var dir = PathHelpers.SafePathCombine(_testDirectory, "invalid-json-dir");
+        Directory.CreateDirectory(dir);
+        File.WriteAllText(PathHelpers.SafePathCombine(dir, "index.json"), "this is not json {{{");
+        var source = new EvidenceSource("fileshare", dir, null, null);
 
         // Act & Assert — invalid JSON content should cause an InvalidOperationException
         Assert.Throws<InvalidOperationException>(() =>
@@ -379,7 +381,7 @@ public class IndexTests
 
     /// <summary>
     ///     Test that <see cref="ReviewIndex.Load(EvidenceSource)" /> with a <c>fileshare</c>
-    ///     source loads the index from the path given in
+    ///     source loads <c>index.json</c> from the directory given in
     ///     <see cref="EvidenceSource.Location" />.
     /// </summary>
     [TestMethod]
@@ -404,7 +406,7 @@ public class IndexTests
 
         var source = new EvidenceSource(
             Type: "fileshare",
-            Location: indexPath,
+            Location: _testDirectory,   // directory — index.json is appended automatically
             UsernameEnv: null,
             PasswordEnv: null);
 
@@ -420,23 +422,66 @@ public class IndexTests
 
     /// <summary>
     ///     Test that <see cref="ReviewIndex.Load(EvidenceSource)" /> with a <c>fileshare</c>
-    ///     source pointing at a non-existent file throws
+    ///     source pointing at a directory whose <c>index.json</c> does not exist throws
     ///     <see cref="InvalidOperationException" />.
     /// </summary>
     [TestMethod]
     public void ReviewIndex_Load_EvidenceSource_Fileshare_NonExistentFile_ThrowsInvalidOperationException()
     {
-        // Arrange — a path to a file that does not exist
-        var missingPath = PathHelpers.SafePathCombine(_testDirectory, "missing-index.json");
+        // Arrange — a non-existent subdirectory whose index.json will therefore also be missing
+        var missingDir = PathHelpers.SafePathCombine(_testDirectory, "nonexistent-dir");
+        // Do NOT create the directory — index.json inside it should be missing
         var source = new EvidenceSource(
             Type: "fileshare",
-            Location: missingPath,
+            Location: missingDir,
             UsernameEnv: null,
             PasswordEnv: null);
 
         // Act & Assert
         Assert.Throws<InvalidOperationException>(() =>
             ReviewIndex.Load(source));
+    }
+
+    /// <summary>
+    ///     Test that <see cref="ReviewIndex.Load(EvidenceSource)" /> with a <c>fileshare</c>
+    ///     source automatically appends <c>index.json</c> to the directory location.
+    /// </summary>
+    [TestMethod]
+    public void ReviewIndex_Load_EvidenceSource_Fileshare_AppendsIndexJson_ToDirectory()
+    {
+        // Arrange — write index.json in a subdirectory; pass only the directory as the location
+        const string json = """
+            {
+              "reviews": [
+                {
+                  "id": "Test-Review",
+                  "fingerprint": "fp-test",
+                  "date": "2026-03-01",
+                  "result": "pass",
+                  "file": "test-review.pdf"
+                }
+              ]
+            }
+            """;
+
+        var subDir = PathHelpers.SafePathCombine(_testDirectory, "evidence-store");
+        Directory.CreateDirectory(subDir);
+        File.WriteAllText(PathHelpers.SafePathCombine(subDir, "index.json"), json);
+
+        var source = new EvidenceSource(
+            Type: "fileshare",
+            Location: subDir,
+            UsernameEnv: null,
+            PasswordEnv: null);
+
+        // Act
+        var index = ReviewIndex.Load(source);
+
+        // Assert — entry is present, proving index.json was found in the directory
+        var evidence = index.GetEvidence("Test-Review", "fp-test");
+        Assert.IsNotNull(evidence, "Evidence loaded from directory-based fileshare should be present.");
+        Assert.AreEqual("Test-Review", evidence.Id);
+        Assert.AreEqual("fp-test", evidence.Fingerprint);
     }
 
     /// <summary>
@@ -666,9 +711,11 @@ public class IndexTests
         var original = LoadIndexFromJson(json);
 
         // Act — save the index to a temp file, then reload it via an EvidenceSource
-        var savedPath = PathHelpers.SafePathCombine(_testDirectory, "saved-index.json");
+        var roundTripDir = PathHelpers.SafePathCombine(_testDirectory, "round-trip-dir");
+        Directory.CreateDirectory(roundTripDir);
+        var savedPath = PathHelpers.SafePathCombine(roundTripDir, "index.json");
         original.Save(savedPath);
-        var reloaded = ReviewIndex.Load(new EvidenceSource("fileshare", savedPath, null, null));
+        var reloaded = ReviewIndex.Load(new EvidenceSource("fileshare", roundTripDir, null, null));
 
         // Assert — every original entry is present in the reloaded index with identical field values
         var alpha = reloaded.GetEvidence("Alpha", "fp-alpha");
