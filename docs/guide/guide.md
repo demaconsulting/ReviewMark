@@ -245,9 +245,10 @@ The same `!`-prefix syntax applies to the top-level `needs-review` list.
 
 ### Fingerprinting
 
-ReviewMark computes a cryptographic fingerprint for each review set by hashing the contents of
-every matched file. The fingerprint changes only when **file contents change** — renaming or
-moving files without changing their contents does not invalidate a review.
+ReviewMark computes a cryptographic fingerprint for each review set from the hashes of all
+matched files. The fingerprint changes whenever files are **added, removed, or modified**, but is
+stable across renames or moves that keep the same set of file contents, so those do not
+invalidate a review.
 
 When a reviewer creates evidence, they record the current fingerprint in the PDF Keywords field.
 ReviewMark matches that recorded fingerprint against the current fingerprint to determine whether
