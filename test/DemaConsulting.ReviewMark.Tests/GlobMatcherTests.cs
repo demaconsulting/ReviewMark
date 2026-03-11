@@ -222,8 +222,8 @@ public class GlobMatcherTests
 
         // Assert — src/Real.cs and Generated/Special.cs are present; Generated/Other.cs is not
         Assert.HasCount(2, result);
-        Assert.IsTrue(result.Contains("src/Real.cs"));
-        Assert.IsTrue(result.Contains("Generated/Special.cs"));
-        Assert.IsFalse(result.Contains("Generated/Other.cs"));
+        Assert.Contains("src/Real.cs", result);
+        Assert.Contains("Generated/Special.cs", result);
+        Assert.DoesNotContain("Generated/Other.cs", result);
     }
 }
