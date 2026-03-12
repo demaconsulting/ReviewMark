@@ -273,6 +273,7 @@ console. It provides the information the reviewer needs when preparing review do
 | Field | Value |
 | :--- | :--- |
 | ID | Core-Logic |
+| Title | Review of core business logic |
 | Fingerprint | `a3f9c2d1e4b5e2f8d7c6b9a3f0e2d5c8a1b4e7f0a3d6c9b2e5f8a1d4c7b0e3` |
 
 ## Files
