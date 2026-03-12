@@ -631,10 +631,11 @@ public class ReviewMarkConfigurationTests
         // Act
         var result = config.ElaborateReviewSet("Core-Logic", _testDirectory);
 
-        // Assert — result contains the review ID, a Fingerprint field, and the file listing
+        // Assert — result contains the review ID, title, a Fingerprint field, and the file listing
         Assert.IsNotNull(result);
         Assert.Contains("# Core-Logic", result.Markdown);
         Assert.Contains("| ID | Core-Logic |", result.Markdown);
+        Assert.Contains("| Title | Review of core business logic |", result.Markdown);
         Assert.Contains("| Fingerprint |", result.Markdown);
         Assert.Contains("## Files", result.Markdown);
         Assert.Contains("`src/A.cs`", result.Markdown);

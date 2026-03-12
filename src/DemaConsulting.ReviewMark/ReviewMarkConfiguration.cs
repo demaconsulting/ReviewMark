@@ -681,6 +681,7 @@ internal sealed class ReviewMarkConfiguration
         sb.AppendLine("| Field | Value |");
         sb.AppendLine("| :--- | :--- |");
         sb.AppendLine($"| ID | {review.Id} |");
+        sb.AppendLine($"| Title | {review.Title} |");
         sb.AppendLine($"| Fingerprint | `{fingerprint}` |");
         sb.AppendLine();
 
