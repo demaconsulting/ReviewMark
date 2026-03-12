@@ -356,10 +356,10 @@ internal static partial class Validation
                 return "Elaborate output does not contain review set ID 'Core-Logic'";
             }
 
-            // Verify that the Title row is present
-            if (!logContent.Contains("Review of core business logic"))
+            // Verify that the Title row is present as a Markdown table row
+            if (!logContent.Contains("| Title | Review of core business logic |"))
             {
-                return "Elaborate output does not contain review set title 'Review of core business logic'";
+                return "Elaborate output does not contain Title table row '| Title | Review of core business logic |'";
             }
 
             // Verify that a Fingerprint row with an actual hex fingerprint value is present
