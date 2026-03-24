@@ -187,7 +187,10 @@ All markdown files must follow these rules (enforced by markdownlint):
 
 ### Spell Checking
 
-All files are spell-checked using cspell. Add project-specific terms to `.cspell.json`:
+All files are spell-checked using cspell. **Never** add a word to the `.cspell.yaml` word list in order to silence a spell-checking failure. Doing so defeats the purpose of spell-checking.
+
+- If cspell flags a word that is **misspelled**, fix the spelling in the source file.
+- If cspell flags a word that is a **genuine technical term** (tool name, project identifier, etc.) and is spelled correctly, raise a **proposal** explaining why the word should be added.
 
 ```json
 {

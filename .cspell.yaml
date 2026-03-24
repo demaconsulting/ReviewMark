@@ -1,0 +1,101 @@
+---
+# Spell-Checking
+#
+# PURPOSE:
+# - Maintain professional documentation and code quality
+# - Catch spelling errors before publication
+# - Support consistent technical terminology usage
+# - Misspelled words should be fixed in the source
+# - NEVER add a misspelled word to the 'words' list
+# - PROPOSE only genuine technical terms/names as needed
+
+version: "0.2"
+language: en
+
+# Project-specific technical terms and tool names
+words:
+  - Anson
+  - Blockquotes
+  - buildmark
+  - BuildMark
+  - buildnotes
+  - camelcase
+  - Checkmarx
+  - CodeQL
+  - copilot
+  - cspell
+  - csproj
+  - dbproj
+  - dcterms
+  - Dema
+  - demaconsulting
+  - DEMACONSULTINGNUGETKEY
+  - Dependabot
+  - dependabot
+  - doctitle
+  - dotnet
+  - editorconfig
+  - empira
+  - filepart
+  - fileshare
+  - fsproj
+  - Gidget
+  - gitattributes
+  - ibiqlik
+  - LINQ
+  - maintainer
+  - markdownlint
+  - mermaid
+  - mstest
+  - myterm
+  - ncipollo
+  - nuget
+  - nupkg
+  - opencover
+  - pagetitle
+  - pandoc
+  - Pdfs
+  - PdfSharp
+  - Propagatable
+  - Pylint
+  - Qube
+  - reindex
+  - reqstream
+  - ReqStream
+  - reviewmark
+  - ReviewMark
+  - Sarif
+  - SarifMark
+  - SBOM
+  - Semgrep
+  - semver
+  - slnx
+  - snupkg
+  - sonarmark
+  - SonarMark
+  - SonarQube
+  - spdx
+  - streetsidesoftware
+  - testname
+  - tracematrix
+  - triaging
+  - Trivy
+  - trx
+  - vbproj
+  - vcxproj
+  - versionmark
+  - Weasyprint
+  - yamllint
+
+# Exclude common build artifacts, dependencies, and vendored third-party code
+ignorePaths:
+  - "**/.git/**"
+  - "**/node_modules/**"
+  - "**/.venv/**"
+  - "**/thirdparty/**"
+  - "**/third-party/**"
+  - "**/3rd-party/**"
+  - "**/AGENT_REPORT_*.md"
+  - "**/bin/**"
+  - "**/obj/**"
+  - package-lock.json
