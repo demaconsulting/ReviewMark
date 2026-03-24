@@ -306,4 +306,243 @@ public class ProgramTests
             }
         }
     }
+
+    /// <summary>
+    ///     Test that Run with --help flag includes --lint in the usage information.
+    /// </summary>
+    [TestMethod]
+    public void Program_Run_WithHelpFlag_IncludesLintOption()
+    {
+        // Arrange
+        var originalOut = Console.Out;
+        try
+        {
+            using var outWriter = new StringWriter();
+            Console.SetOut(outWriter);
+            using var context = Context.Create(["--help"]);
+
+            // Act
+            Program.Run(context);
+
+            // Assert — help text includes the --lint option
+            var output = outWriter.ToString();
+            Assert.Contains("--lint", output);
+        }
+        finally
+        {
+            Console.SetOut(originalOut);
+        }
+    }
+
+    /// <summary>
+    ///     Test that Run with --lint flag on a valid definition file reports success.
+    /// </summary>
+    [TestMethod]
+    public void Program_Run_WithLintFlag_ValidConfig_ReportsSuccess()
+    {
+        // Arrange — create temp directory with a valid definition file
+        var testDirectory = PathHelpers.SafePathCombine(
+            Path.GetTempPath(), $"ProgramTests_Lint_{Guid.NewGuid()}");
+        try
+        {
+            Directory.CreateDirectory(testDirectory);
+            var indexFile = PathHelpers.SafePathCombine(testDirectory, "index.json");
+            File.WriteAllText(indexFile, """{"reviews":[]}""");
+
+            var definitionFile = PathHelpers.SafePathCombine(testDirectory, "definition.yaml");
+            File.WriteAllText(definitionFile, $"""
+                needs-review:
+                  - "src/**/*.cs"
+                evidence-source:
+                  type: fileshare
+                  location: {indexFile}
+                reviews:
+                  - id: Core-Logic
+                    title: Review of core business logic
+                    paths:
+                      - "src/**/*.cs"
+                """);
+
+            var originalOut = Console.Out;
+            try
+            {
+                using var outWriter = new StringWriter();
+                Console.SetOut(outWriter);
+                using var context = Context.Create(["--lint", "--definition", definitionFile]);
+
+                // Act
+                Program.Run(context);
+
+                // Assert — exit code is zero and output contains success message
+                var output = outWriter.ToString();
+                Assert.AreEqual(0, context.ExitCode);
+                Assert.Contains("is valid", output);
+            }
+            finally
+            {
+                Console.SetOut(originalOut);
+            }
+        }
+        finally
+        {
+            if (Directory.Exists(testDirectory))
+            {
+                Directory.Delete(testDirectory, recursive: true);
+            }
+        }
+    }
+
+    /// <summary>
+    ///     Test that Run with --lint flag on a missing definition file reports an error.
+    /// </summary>
+    [TestMethod]
+    public void Program_Run_WithLintFlag_MissingConfig_ReportsError()
+    {
+        // Arrange — use a non-existent definition file
+        var testDirectory = PathHelpers.SafePathCombine(
+            Path.GetTempPath(), $"ProgramTests_LintMissing_{Guid.NewGuid()}");
+        Directory.CreateDirectory(testDirectory);
+        try
+        {
+            var nonExistentFile = PathHelpers.SafePathCombine(testDirectory, "nonexistent.yaml");
+
+            var originalError = Console.Error;
+            try
+            {
+                using var errWriter = new StringWriter();
+                Console.SetError(errWriter);
+                using var context = Context.Create(["--silent", "--lint", "--definition", nonExistentFile]);
+
+                // Act
+                Program.Run(context);
+
+                // Assert — non-zero exit code when the definition file does not exist
+                Assert.AreEqual(1, context.ExitCode);
+            }
+            finally
+            {
+                Console.SetError(originalError);
+            }
+        }
+        finally
+        {
+            if (Directory.Exists(testDirectory))
+            {
+                Directory.Delete(testDirectory, recursive: true);
+            }
+        }
+    }
+
+    /// <summary>
+    ///     Test that Run with --lint flag detects duplicate review set IDs and reports an error.
+    /// </summary>
+    [TestMethod]
+    public void Program_Run_WithLintFlag_DuplicateIds_ReportsError()
+    {
+        // Arrange — create temp directory with a definition file containing duplicate IDs
+        var testDirectory = PathHelpers.SafePathCombine(
+            Path.GetTempPath(), $"ProgramTests_LintDuplicate_{Guid.NewGuid()}");
+        try
+        {
+            Directory.CreateDirectory(testDirectory);
+            var indexFile = PathHelpers.SafePathCombine(testDirectory, "index.json");
+            File.WriteAllText(indexFile, """{"reviews":[]}""");
+
+            var definitionFile = PathHelpers.SafePathCombine(testDirectory, "definition.yaml");
+            File.WriteAllText(definitionFile, $"""
+                needs-review:
+                  - "src/**/*.cs"
+                evidence-source:
+                  type: fileshare
+                  location: {indexFile}
+                reviews:
+                  - id: Core-Logic
+                    title: Review of core business logic
+                    paths:
+                      - "src/**/*.cs"
+                  - id: Core-Logic
+                    title: Duplicate review set
+                    paths:
+                      - "src/**/*.cs"
+                """);
+
+            var originalError = Console.Error;
+            try
+            {
+                using var errWriter = new StringWriter();
+                Console.SetError(errWriter);
+                using var context = Context.Create(["--silent", "--lint", "--definition", definitionFile]);
+
+                // Act
+                Program.Run(context);
+
+                // Assert — non-zero exit code when duplicate IDs are found
+                Assert.AreEqual(1, context.ExitCode);
+            }
+            finally
+            {
+                Console.SetError(originalError);
+            }
+        }
+        finally
+        {
+            if (Directory.Exists(testDirectory))
+            {
+                Directory.Delete(testDirectory, recursive: true);
+            }
+        }
+    }
+
+    /// <summary>
+    ///     Test that Run with --lint flag detects unknown evidence-source type and reports an error.
+    /// </summary>
+    [TestMethod]
+    public void Program_Run_WithLintFlag_UnknownSourceType_ReportsError()
+    {
+        // Arrange — create temp directory with a definition file having an unknown source type
+        var testDirectory = PathHelpers.SafePathCombine(
+            Path.GetTempPath(), $"ProgramTests_LintUnknownType_{Guid.NewGuid()}");
+        try
+        {
+            Directory.CreateDirectory(testDirectory);
+            var definitionFile = PathHelpers.SafePathCombine(testDirectory, "definition.yaml");
+            File.WriteAllText(definitionFile, """
+                needs-review:
+                  - "src/**/*.cs"
+                evidence-source:
+                  type: ftp
+                  location: ftp://example.com/index.json
+                reviews:
+                  - id: Core-Logic
+                    title: Review of core business logic
+                    paths:
+                      - "src/**/*.cs"
+                """);
+
+            var originalError = Console.Error;
+            try
+            {
+                using var errWriter = new StringWriter();
+                Console.SetError(errWriter);
+                using var context = Context.Create(["--silent", "--lint", "--definition", definitionFile]);
+
+                // Act
+                Program.Run(context);
+
+                // Assert — non-zero exit code when source type is unknown
+                Assert.AreEqual(1, context.ExitCode);
+            }
+            finally
+            {
+                Console.SetError(originalError);
+            }
+        }
+        finally
+        {
+            if (Directory.Exists(testDirectory))
+            {
+                Directory.Delete(testDirectory, recursive: true);
+            }
+        }
+    }
 }

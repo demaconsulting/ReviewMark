@@ -56,6 +56,7 @@ internal static partial class Validation
         RunDirTest(context, testResults);
         RunEnforceTest(context, testResults);
         RunElaborateTest(context, testResults);
+        RunLintTest(context, testResults);
 
         // Calculate totals
         var totalTests = testResults.Results.Count;
@@ -375,6 +376,38 @@ internal static partial class Validation
             }
 
             return logContent.Contains("foo.cs") ? null : "Elaborate output does not list expected file 'foo.cs'";
+        });
+    }
+
+    /// <summary>
+    ///     Runs a test for lint functionality.
+    /// </summary>
+    /// <param name="context">The context for output.</param>
+    /// <param name="testResults">The test results collection.</param>
+    private static void RunLintTest(Context context, DemaConsulting.TestResults.TestResults testResults)
+    {
+        RunValidationTest(context, testResults, "ReviewMark_Lint", () =>
+        {
+            using var tempDir = new TemporaryDirectory();
+            var (definitionFile, _) = CreateTestDefinitionFixtures(tempDir.DirectoryPath);
+            var logFile = PathHelpers.SafePathCombine(tempDir.DirectoryPath, "lint-test.log");
+
+            // Run the program to lint the definition file
+            int exitCode;
+            using (var testContext = Context.Create(["--silent", "--log", logFile, "--lint", "--definition", definitionFile]))
+            {
+                Program.Run(testContext);
+                exitCode = testContext.ExitCode;
+            }
+
+            if (exitCode != 0)
+            {
+                return $"Program exited with code {exitCode}";
+            }
+
+            // Verify the log contains a success message
+            var logContent = File.ReadAllText(logFile);
+            return logContent.Contains("is valid") ? null : "Lint output does not contain 'is valid'";
         });
     }
 

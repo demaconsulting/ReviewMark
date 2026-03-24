@@ -244,6 +244,22 @@ sections:
               - Program_Run_WithElaborateFlag_UnknownId_ReportsError
               - ReviewMark_Elaborate
 
+          - id: ReviewMark-Cmd-Lint
+            title: The tool shall support --lint flag to validate the definition file and report issues.
+            justification: |
+              Users need a way to verify that the .reviewmark.yaml configuration file is valid
+              before running the main tool, providing clear error messages about the cause and
+              location of any issues.
+            tests:
+              - Context_Create_LintFlag_SetsLintTrue
+              - Context_Create_NoArguments_LintIsFalse
+              - Program_Run_WithHelpFlag_IncludesLintOption
+              - Program_Run_WithLintFlag_ValidConfig_ReportsSuccess
+              - Program_Run_WithLintFlag_MissingConfig_ReportsError
+              - Program_Run_WithLintFlag_DuplicateIds_ReportsError
+              - Program_Run_WithLintFlag_UnknownSourceType_ReportsError
+              - ReviewMark_Lint
+
       - title: Configuration Reading
         requirements:
           - id: ReviewMark-Config-Reading
@@ -321,6 +337,7 @@ sections:
               - "windows@ReviewMark_Enforce"
               - "windows@ReviewMark_WorkingDirectoryOverride"
               - "windows@ReviewMark_Elaborate"
+              - "windows@ReviewMark_Lint"
 
           - id: ReviewMark-Platform-Linux
             title: The tool shall build and run on Linux platforms.
@@ -336,6 +353,7 @@ sections:
               - "ubuntu@ReviewMark_Enforce"
               - "ubuntu@ReviewMark_WorkingDirectoryOverride"
               - "ubuntu@ReviewMark_Elaborate"
+              - "ubuntu@ReviewMark_Lint"
 
           - id: ReviewMark-Platform-MacOS
             title: The tool shall build and run on macOS platforms.
@@ -351,6 +369,7 @@ sections:
               - "macos@ReviewMark_Enforce"
               - "macos@ReviewMark_WorkingDirectoryOverride"
               - "macos@ReviewMark_Elaborate"
+              - "macos@ReviewMark_Lint"
 
           - id: ReviewMark-Platform-Net8
             title: The tool shall support .NET 8 runtime.
@@ -365,6 +384,7 @@ sections:
               - "dotnet8.x@ReviewMark_Enforce"
               - "dotnet8.x@ReviewMark_WorkingDirectoryOverride"
               - "dotnet8.x@ReviewMark_Elaborate"
+              - "dotnet8.x@ReviewMark_Lint"
 
           - id: ReviewMark-Platform-Net9
             title: The tool shall support .NET 9 runtime.
@@ -379,6 +399,7 @@ sections:
               - "dotnet9.x@ReviewMark_Enforce"
               - "dotnet9.x@ReviewMark_WorkingDirectoryOverride"
               - "dotnet9.x@ReviewMark_Elaborate"
+              - "dotnet9.x@ReviewMark_Lint"
 
           - id: ReviewMark-Platform-Net10
             title: The tool shall support .NET 10 runtime.
@@ -393,6 +414,7 @@ sections:
               - "dotnet10.x@ReviewMark_Enforce"
               - "dotnet10.x@ReviewMark_WorkingDirectoryOverride"
               - "dotnet10.x@ReviewMark_Elaborate"
+              - "dotnet10.x@ReviewMark_Lint"
 
       - title: OTS Software
         requirements:

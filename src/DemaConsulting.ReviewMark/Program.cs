@@ -112,7 +112,14 @@ internal static class Program
             return;
         }
 
-        // Priority 4: Main tool functionality
+        // Priority 4: Lint
+        if (context.Lint)
+        {
+            RunLintLogic(context);
+            return;
+        }
+
+        // Priority 5: Main tool functionality
         RunToolLogic(context);
     }
 
@@ -140,6 +147,7 @@ internal static class Program
         context.WriteLine("  -?, -h, --help             Display this help message");
         context.WriteLine("  --silent                   Suppress console output");
         context.WriteLine("  --validate                 Run self-validation");
+        context.WriteLine("  --lint                     Lint the definition file and report issues");
         context.WriteLine("  --results <file>           Write validation results to file (.trx or .xml)");
         context.WriteLine("  --log <file>               Write output to log file");
         context.WriteLine("  --definition <file>        Specify the definition YAML file (default: .reviewmark.yaml)");
@@ -152,6 +160,69 @@ internal static class Program
         context.WriteLine("                             Note: explicit paths given to --definition/--plan/--report are used as-is");
         context.WriteLine("  --enforce                  Exit with non-zero code if there are review issues");
         context.WriteLine("  --elaborate <id>           Print a Markdown elaboration of the specified review set");
+    }
+
+    /// <summary>
+    ///     Runs the lint logic to validate the definition file.
+    /// </summary>
+    /// <param name="context">The context containing command line arguments and program state.</param>
+    private static void RunLintLogic(Context context)
+    {
+        // Determine the definition file path (explicit or default)
+        var directory = context.WorkingDirectory ?? Directory.GetCurrentDirectory();
+        var definitionFile = context.DefinitionFile ?? PathHelpers.SafePathCombine(directory, ".reviewmark.yaml");
+
+        context.WriteLine($"Linting '{definitionFile}'...");
+
+        // Try to load the configuration file
+        ReviewMarkConfiguration config;
+        try
+        {
+            config = ReviewMarkConfiguration.Load(definitionFile);
+        }
+        catch (InvalidOperationException ex)
+        {
+            context.WriteError($"Error: {ex.Message}");
+            return;
+        }
+        catch (ArgumentException ex)
+        {
+            context.WriteError($"Error: {ex.Message}");
+            return;
+        }
+
+        // Perform semantic validation: check for unknown evidence-source type
+        var hasErrors = false;
+        if (!string.Equals(config.EvidenceSource.Type, "url", StringComparison.OrdinalIgnoreCase) &&
+            !string.Equals(config.EvidenceSource.Type, "fileshare", StringComparison.OrdinalIgnoreCase))
+        {
+            context.WriteError(
+                $"Error: evidence-source type '{config.EvidenceSource.Type}' is not supported (must be 'url' or 'fileshare').");
+            hasErrors = true;
+        }
+
+        // Perform semantic validation: check for duplicate review set IDs
+        var seenIds = new Dictionary<string, int>(StringComparer.Ordinal);
+        for (var i = 0; i < config.Reviews.Count; i++)
+        {
+            var review = config.Reviews[i];
+            if (seenIds.TryGetValue(review.Id, out var firstIndex))
+            {
+                context.WriteError(
+                    $"Error: reviews[{i}] has duplicate ID '{review.Id}' (first defined at reviews[{firstIndex}]).");
+                hasErrors = true;
+            }
+            else
+            {
+                seenIds[review.Id] = i;
+            }
+        }
+
+        // Report overall result
+        if (!hasErrors)
+        {
+            context.WriteLine($"'{definitionFile}' is valid.");
+        }
     }
 
     /// <summary>
