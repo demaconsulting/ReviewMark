@@ -74,18 +74,15 @@
     "yamllint"
   ],
   "ignorePaths": [
-    "node_modules",
-    ".git",
-    "bin",
-    "obj",
-    "*.nupkg",
-    "*.snupkg",
-    "*.dll",
-    "*.exe",
-    "*.trx",
-    "*.spdx.json",
-    "package-lock.json",
-    "yarn.lock",
-    "AGENT_REPORT_*.md"
+    "**/.git/**",
+    "**/node_modules/**",
+    "**/.venv/**",
+    "**/thirdparty/**",
+    "**/third-party/**",
+    "**/3rd-party/**",
+    "**/AGENT_REPORT_*.md",
+    "**/bin/**",
+    "**/obj/**",
+    "package-lock.json"
   ]
 }

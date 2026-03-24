@@ -11,6 +11,7 @@ file-review evidence management in regulated environments.
 - **Test Developer** - Creates unit and integration tests following AAA pattern
 - **Code Quality Agent** - Enforces linting, static analysis, and security standards
 - **Repo Consistency Agent** - Ensures downstream repositories remain consistent with template patterns
+- **Code Review Agent** - Assists in performing formal file reviews
 
 ## Agent Selection Guide
 
@@ -23,6 +24,7 @@ file-review evidence management in regulated environments.
 - Ensure test coverage linkage in `requirements.yaml` → **Requirements Agent**
 - Run security scanning or address CodeQL alerts → **Code Quality Agent**
 - Propagate template changes → **Repo Consistency Agent**
+- Perform file reviews → **Code Review Agent**
 
 ## Tech Stack
 
