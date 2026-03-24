@@ -43,7 +43,7 @@ Invoke the technical-writer for:
 #### Linting Requirements
 
 - **markdownlint**: Style and structure compliance
-- **cspell**: Spelling (add technical terms to `.cspell.json`)
+- **cspell**: Spelling (add technical terms to `.cspell.yaml`)
 - **yamllint**: YAML file validation
 
 ### Regulatory Documentation

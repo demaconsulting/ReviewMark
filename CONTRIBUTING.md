@@ -195,6 +195,12 @@ spell-checking failure. Doing so defeats the purpose of spell-checking and reduc
   correctly, raise a **proposal** (e.g. comment in a pull request) explaining why the word should be added. The
   proposal must be reviewed and approved before the word is added to the list.
 
+```yaml
+# .cspell.yaml
+words:
+  - myterm
+```
+
 ## Quality Checks
 
 Before submitting a pull request, ensure all quality checks pass:
