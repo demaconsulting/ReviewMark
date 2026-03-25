@@ -27,7 +27,7 @@ needs-review:
   - "!src/Generated/**"    # exclude auto-generated files
 
 evidence-source:
-  type: url                # 'url' or 'fileshare'
+  type: url                # 'none', 'url', or 'fileshare'
   location: https://reviews.example.com/evidence/index.json
 
 reviews:
@@ -66,10 +66,11 @@ expiry due to refactoring or directory restructuring.
 
 ### Evidence Source
 
-ReviewMark queries the configured evidence source for review PDFs. Two source types are supported:
+ReviewMark queries the configured evidence source for review PDFs. Three source types are supported:
 
 | Type | Description |
 | :--- | :---------- |
+| `none` | No evidence source; always returns an empty index (useful during initial project setup) |
 | `url` | Full HTTP/HTTPS URL to `index.json`; credentials supplied via environment variables |
 | `fileshare` | Full UNC or local file-system path to `index.json`; access uses OS/share permissions |
 

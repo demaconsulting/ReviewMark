@@ -362,10 +362,20 @@ completed review PDFs.
 
 ### Source Types
 
-| Type         | Description                                             |
-| :----------- | :------------------------------------------------------ |
-| `fileshare`  | Full UNC or local file-system path to `index.json`      |
-| `url`        | Full HTTP or HTTPS URL to `index.json`                  |
+| Type         | Description                                                                          |
+| :----------- | :----------------------------------------------------------------------------------- |
+| `none`       | No evidence source; always returns an empty index (for initial project setup)        |
+| `fileshare`  | Full UNC or local file-system path to `index.json`                                   |
+| `url`        | Full HTTP or HTTPS URL to `index.json`                                               |
+
+#### None
+
+Use `none` when an evidence source has not yet been provisioned:
+
+```yaml
+evidence-source:
+  type: none
+```
 
 #### File Share
 

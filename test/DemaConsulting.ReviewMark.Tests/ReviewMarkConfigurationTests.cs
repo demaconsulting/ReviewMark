@@ -406,6 +406,76 @@ public class ReviewMarkConfigurationTests
         Assert.AreEqual(PathHelpers.SafePathCombine(_testDirectory, "index.json"), config.EvidenceSource.Location);
     }
 
+    /// <summary>
+    ///     Test that an evidence-source with type <c>none</c> is parsed correctly
+    ///     and produces an empty <see cref="EvidenceSource.Location" />.
+    /// </summary>
+    [TestMethod]
+    public void ReviewMarkConfiguration_Parse_NoneEvidenceSource_ParsedCorrectly()
+    {
+        // Arrange
+        var yaml = """
+            evidence-source:
+              type: none
+            reviews:
+              - id: Core-Logic
+                title: Review of core business logic
+                paths:
+                  - "src/**/*.cs"
+            """;
+
+        // Act
+        var config = ReviewMarkConfiguration.Parse(yaml);
+
+        // Assert — type is 'none' and location is empty
+        Assert.AreEqual("none", config.EvidenceSource.Type);
+        Assert.AreEqual(string.Empty, config.EvidenceSource.Location);
+    }
+
+    /// <summary>
+    ///     Test that an evidence-source with type <c>none</c> does not require a
+    ///     <c>location</c> field.
+    /// </summary>
+    [TestMethod]
+    public void ReviewMarkConfiguration_Parse_NoneEvidenceSource_NoLocationRequired()
+    {
+        // Arrange — YAML with a none source and no location field
+        var yaml = """
+            evidence-source:
+              type: none
+            """;
+
+        // Act & Assert — parsing must succeed without throwing
+        var config = ReviewMarkConfiguration.Parse(yaml);
+        Assert.AreEqual("none", config.EvidenceSource.Type);
+    }
+
+    /// <summary>
+    ///     Test that Lint does not report an error when the evidence-source type is <c>none</c>
+    ///     and no <c>location</c> field is present.
+    /// </summary>
+    [TestMethod]
+    public void ReviewMarkConfiguration_Lint_NoneEvidenceSource_NoErrors()
+    {
+        // Arrange — write a valid config with a none evidence source
+        var configPath = PathHelpers.SafePathCombine(_testDirectory, ".reviewmark.yaml");
+        File.WriteAllText(configPath, """
+            evidence-source:
+              type: none
+            reviews:
+              - id: Core-Logic
+                title: Review of core business logic
+                paths:
+                  - "src/**/*.cs"
+            """);
+
+        // Act
+        var errors = ReviewMarkConfiguration.Lint(configPath);
+
+        // Assert — no errors for a valid none source
+        Assert.HasCount(0, errors);
+    }
+
     // -------------------------------------------------------------------------
     // PublishReviewPlan tests
     // -------------------------------------------------------------------------

@@ -502,6 +502,52 @@ public class IndexTests
 #pragma warning restore CS8604
     }
 
+    /// <summary>
+    ///     Test that <see cref="ReviewIndex.Load(EvidenceSource)" /> with a <c>none</c>
+    ///     source returns an empty <see cref="ReviewIndex" /> without accessing any file
+    ///     or network resource.
+    /// </summary>
+    [TestMethod]
+    public void ReviewIndex_Load_EvidenceSource_None_ReturnsEmptyIndex()
+    {
+        // Arrange
+        var source = new EvidenceSource(
+            Type: "none",
+            Location: string.Empty,
+            UsernameEnv: null,
+            PasswordEnv: null);
+
+        // Act
+        var index = ReviewIndex.Load(source);
+
+        // Assert — a none source always returns an empty index
+        Assert.IsNull(index.GetEvidence("any-id", "any-fingerprint"));
+    }
+
+    /// <summary>
+    ///     Test that <see cref="ReviewIndex.Load(EvidenceSource, HttpClient)" /> with a <c>none</c>
+    ///     source returns an empty <see cref="ReviewIndex" /> without making any HTTP request.
+    /// </summary>
+    [TestMethod]
+    public void ReviewIndex_Load_EvidenceSource_None_HttpClientOverload_ReturnsEmptyIndex()
+    {
+        // Arrange — use a fake handler that fails if actually called
+        using var handler = new FakeHttpMessageHandler(new HttpResponseMessage(System.Net.HttpStatusCode.InternalServerError));
+        using var httpClient = new HttpClient(handler);
+
+        var source = new EvidenceSource(
+            Type: "none",
+            Location: string.Empty,
+            UsernameEnv: null,
+            PasswordEnv: null);
+
+        // Act
+        var index = ReviewIndex.Load(source, httpClient);
+
+        // Assert — a none source always returns an empty index without touching the handler
+        Assert.IsNull(index.GetEvidence("any-id", "any-fingerprint"));
+    }
+
     // -------------------------------------------------------------------------
     // Save tests
     // -------------------------------------------------------------------------
