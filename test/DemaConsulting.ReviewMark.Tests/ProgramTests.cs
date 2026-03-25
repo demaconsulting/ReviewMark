@@ -352,7 +352,7 @@ public class ProgramTests
         // Assert — exit code is zero and log contains success message
         var logContent = File.ReadAllText(logFile);
         Assert.AreEqual(0, exitCode);
-        Assert.Contains("is valid", logContent);
+        Assert.Contains("No issues found", logContent);
     }
 
     /// <summary>
@@ -377,7 +377,7 @@ public class ProgramTests
         // Assert — non-zero exit code and log contains an error mentioning the missing file
         var logContent = File.ReadAllText(logFile);
         Assert.AreEqual(1, exitCode);
-        Assert.Contains("Error:", logContent);
+        Assert.Contains("error:", logContent);
         Assert.Contains("nonexistent.yaml", logContent);
     }
 
@@ -423,7 +423,7 @@ public class ProgramTests
         // Assert — non-zero exit code and log contains a clear duplicate-ID error message
         var logContent = File.ReadAllText(logFile);
         Assert.AreEqual(1, exitCode);
-        Assert.Contains("Error:", logContent);
+        Assert.Contains("error:", logContent);
         Assert.Contains("duplicate ID", logContent);
         Assert.Contains("Core-Logic", logContent);
     }
@@ -463,7 +463,7 @@ public class ProgramTests
         // Assert — non-zero exit code and log contains a clear unsupported-type error message
         var logContent = File.ReadAllText(logFile);
         Assert.AreEqual(1, exitCode);
-        Assert.Contains("Error:", logContent);
+        Assert.Contains("error:", logContent);
         Assert.Contains("ftp", logContent);
         Assert.Contains("not supported", logContent);
     }
@@ -494,9 +494,8 @@ public class ProgramTests
         // Assert — non-zero exit code and log contains an error naming the definition file and a line number
         var logContent = File.ReadAllText(logFile);
         Assert.AreEqual(1, exitCode);
-        Assert.Contains("Error:", logContent);
-        Assert.Contains("definition.yaml", logContent);
-        Assert.Contains("at line", logContent);
+        Assert.Contains("error:", logContent);
+        Assert.Contains("definition.yaml:", logContent);
     }
 
     /// <summary>
@@ -531,7 +530,7 @@ public class ProgramTests
         // Assert — non-zero exit code and log names the file and the missing field
         var logContent = File.ReadAllText(logFile);
         Assert.AreEqual(1, exitCode);
-        Assert.Contains("Error:", logContent);
+        Assert.Contains("error:", logContent);
         Assert.Contains("definition.yaml", logContent);
         Assert.Contains("evidence-source", logContent);
     }

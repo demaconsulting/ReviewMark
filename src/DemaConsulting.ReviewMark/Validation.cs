@@ -407,7 +407,7 @@ internal static partial class Validation
 
             // Verify the log contains a success message
             var logContent = File.ReadAllText(logFile);
-            return logContent.Contains("is valid") ? null : "Lint output does not contain 'is valid'";
+            return logContent.Contains("No issues found") ? null : "Lint output does not contain 'No issues found'";
         });
     }
 

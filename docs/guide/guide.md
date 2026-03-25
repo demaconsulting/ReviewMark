@@ -161,13 +161,19 @@ All detected issues are reported together so you can fix multiple problems in on
 
 ### Lint Error Messages
 
-Lint errors always include the filename. For YAML syntax errors, the line and column number
-are also included:
+Lint errors follow the standard `[location]: [severity]: [issue]` format. For YAML syntax
+errors the location includes the line and column number:
 
 ```text
-Error: Failed to parse 'definition.yaml' at line 3, column 5: (yaml parse details)
-Error: Invalid configuration in 'definition.yaml': Configuration is missing required 'evidence-source' block.
-Error: Invalid configuration in 'definition.yaml': reviews[1] has duplicate ID 'core-module' (first defined at reviews[0]).
+definition.yaml:3:5: error: (yaml parse details)
+definition.yaml: error: Configuration is missing required 'evidence-source' block.
+definition.yaml: error: reviews[1] has duplicate ID 'core-module' (first defined at reviews[0]).
+```
+
+When no issues are found:
+
+```text
+definition.yaml: No issues found
 ```
 
 ## Silent Mode

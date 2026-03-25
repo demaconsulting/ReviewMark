@@ -535,19 +535,26 @@ internal sealed class ReviewMarkConfiguration
         }
         catch (Exception ex) when (ex is not InvalidOperationException)
         {
-            errors.Add($"Failed to read configuration file '{filePath}': {ex.Message}");
+            errors.Add($"{filePath}: error: {ex.Message}");
             return errors;
         }
 
         // Try to parse the raw YAML model; if this fails we cannot do semantic checks.
+        // When the inner exception is a YamlException, format the location as "file:line:col"
+        // to match the standard linting output convention.
         ReviewMarkYaml raw;
         try
         {
             raw = ReviewMarkConfigurationHelpers.DeserializeRaw(yaml, filePath);
         }
+        catch (InvalidOperationException ex) when (ex.InnerException is YamlException yamlEx)
+        {
+            errors.Add($"{filePath}:{yamlEx.Start.Line}:{yamlEx.Start.Column}: error: {yamlEx.Message}");
+            return errors;
+        }
         catch (InvalidOperationException ex)
         {
-            errors.Add(ex.Message);
+            errors.Add($"{filePath}: error: {ex.Message}");
             return errors;
         }
 
@@ -556,25 +563,25 @@ internal sealed class ReviewMarkConfiguration
         if (es == null)
         {
             errors.Add(
-                $"Invalid configuration in '{filePath}': Configuration is missing required 'evidence-source' block.");
+                $"{filePath}: error: Configuration is missing required 'evidence-source' block.");
         }
         else
         {
             if (string.IsNullOrWhiteSpace(es.Type))
             {
                 errors.Add(
-                    $"Invalid configuration in '{filePath}': 'evidence-source' is missing a required 'type' field.");
+                    $"{filePath}: error: 'evidence-source' is missing a required 'type' field.");
             }
             else if (!ReviewMarkConfigurationHelpers.IsSupportedEvidenceSourceType(es.Type))
             {
                 errors.Add(
-                    $"Invalid configuration in '{filePath}': 'evidence-source' type '{es.Type}' is not supported (must be 'url' or 'fileshare').");
+                    $"{filePath}: error: 'evidence-source' type '{es.Type}' is not supported (must be 'url' or 'fileshare').");
             }
 
             if (string.IsNullOrWhiteSpace(es.Location))
             {
                 errors.Add(
-                    $"Invalid configuration in '{filePath}': 'evidence-source' is missing a required 'location' field.");
+                    $"{filePath}: error: 'evidence-source' is missing a required 'location' field.");
             }
         }
 
@@ -591,12 +598,12 @@ internal sealed class ReviewMarkConfiguration
             if (string.IsNullOrWhiteSpace(r.Id))
             {
                 errors.Add(
-                    $"Invalid configuration in '{filePath}': Review set at index {i} is missing a required 'id' field.");
+                    $"{filePath}: error: Review set at index {i} is missing a required 'id' field.");
             }
             else if (seenIds.TryGetValue(r.Id, out var firstIndex))
             {
                 errors.Add(
-                    $"Invalid configuration in '{filePath}': reviews[{i}] has duplicate ID '{r.Id}' (first defined at reviews[{firstIndex}]).");
+                    $"{filePath}: error: reviews[{i}] has duplicate ID '{r.Id}' (first defined at reviews[{firstIndex}]).");
             }
             else
             {
@@ -606,13 +613,13 @@ internal sealed class ReviewMarkConfiguration
             if (string.IsNullOrWhiteSpace(r.Title))
             {
                 errors.Add(
-                    $"Invalid configuration in '{filePath}': Review set at index {i} is missing a required 'title' field.");
+                    $"{filePath}: error: Review set at index {i} is missing a required 'title' field.");
             }
 
             if (r.Paths == null || !r.Paths.Any(p => !string.IsNullOrWhiteSpace(p)))
             {
                 errors.Add(
-                    $"Invalid configuration in '{filePath}': Review set at index {i} is missing required 'paths' entries.");
+                    $"{filePath}: error: Review set at index {i} is missing required 'paths' entries.");
             }
         }
 

@@ -172,19 +172,17 @@ internal static class Program
         var directory = context.WorkingDirectory ?? Directory.GetCurrentDirectory();
         var definitionFile = context.DefinitionFile ?? PathHelpers.SafePathCombine(directory, ".reviewmark.yaml");
 
-        context.WriteLine($"Linting '{definitionFile}'...");
-
         // Lint the file, collecting all detectable errors in one pass.
         var errors = ReviewMarkConfiguration.Lint(definitionFile);
         foreach (var error in errors)
         {
-            context.WriteError($"Error: {error}");
+            context.WriteError(error);
         }
 
         // Report overall result
         if (errors.Count == 0)
         {
-            context.WriteLine($"'{definitionFile}' is valid.");
+            context.WriteLine($"{definitionFile}: No issues found");
         }
     }
 
