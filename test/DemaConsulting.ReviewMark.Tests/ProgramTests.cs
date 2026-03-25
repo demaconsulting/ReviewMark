@@ -511,4 +511,43 @@ public class ProgramTests
         Assert.Contains("definition.yaml", logContent);
         Assert.Contains("evidence-source", logContent);
     }
+
+    /// <summary>
+    ///     Test that Run with --lint flag reports ALL errors in one pass when the file has
+    ///     multiple detectable issues (missing evidence-source AND duplicate review IDs).
+    /// </summary>
+    [TestMethod]
+    public void Program_Run_WithLintFlag_MultipleErrors_ReportsAll()
+    {
+        // Arrange — create a definition file that is missing evidence-source AND has duplicate IDs
+        using var tempDir = new TestDirectory();
+        var definitionFile = PathHelpers.SafePathCombine(tempDir.DirectoryPath, "definition.yaml");
+        File.WriteAllText(definitionFile, """
+            needs-review:
+              - "src/**/*.cs"
+            reviews:
+              - id: Core-Logic
+                title: Review of core business logic
+                paths:
+                  - "src/**/*.cs"
+              - id: Core-Logic
+                title: Duplicate review set
+                paths:
+                  - "src/**/*.cs"
+            """);
+
+        var logFile = PathHelpers.SafePathCombine(tempDir.DirectoryPath, LintLogFile);
+        using var context = Context.Create(["--silent", "--log", logFile, "--lint", "--definition", definitionFile]);
+
+        // Act
+        Program.Run(context);
+
+        // Assert — non-zero exit code and log contains BOTH the missing evidence-source error
+        // AND the duplicate ID error, proving all errors are accumulated in one pass.
+        var logContent = File.ReadAllText(logFile);
+        Assert.AreEqual(1, context.ExitCode);
+        Assert.Contains("evidence-source", logContent);
+        Assert.Contains("duplicate ID", logContent);
+        Assert.Contains("Core-Logic", logContent);
+    }
 }

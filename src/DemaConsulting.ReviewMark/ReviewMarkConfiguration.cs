@@ -490,6 +490,118 @@ internal sealed class ReviewMarkConfiguration
     }
 
     /// <summary>
+    ///     Lints a <c>.reviewmark.yaml</c> file and returns all detected issues.
+    ///     Unlike <see cref="Load" />, this method does not stop at the first error;
+    ///     it accumulates every detectable problem and returns them all so the caller
+    ///     can report a complete list in a single pass.
+    /// </summary>
+    /// <param name="filePath">Absolute or relative path to the configuration file.</param>
+    /// <returns>
+    ///     A read-only list of error messages.  The list is empty when the file is
+    ///     structurally and semantically valid.
+    /// </returns>
+    /// <exception cref="ArgumentException">Thrown when <paramref name="filePath" /> is null or empty.</exception>
+    internal static IReadOnlyList<string> Lint(string filePath)
+    {
+        // Validate the file path argument
+        if (string.IsNullOrWhiteSpace(filePath))
+        {
+            throw new ArgumentException("File path must not be null or empty.", nameof(filePath));
+        }
+
+        var errors = new List<string>();
+
+        // Try to read the file; if this fails we cannot continue.
+        string yaml;
+        try
+        {
+            yaml = File.ReadAllText(filePath);
+        }
+        catch (Exception ex) when (ex is not InvalidOperationException)
+        {
+            errors.Add($"Failed to read configuration file '{filePath}': {ex.Message}");
+            return errors;
+        }
+
+        // Try to parse the raw YAML model; if this fails we cannot do semantic checks.
+        ReviewMarkYaml raw;
+        try
+        {
+            raw = ReviewMarkConfigurationHelpers.DeserializeRaw(yaml, filePath);
+        }
+        catch (InvalidOperationException ex)
+        {
+            errors.Add(ex.Message);
+            return errors;
+        }
+
+        // Validate the evidence-source block, collecting all field-level errors.
+        var es = raw.EvidenceSource;
+        if (es == null)
+        {
+            errors.Add(
+                $"Invalid configuration in '{filePath}': Configuration is missing required 'evidence-source' block.");
+        }
+        else
+        {
+            if (string.IsNullOrWhiteSpace(es.Type))
+            {
+                errors.Add(
+                    $"Invalid configuration in '{filePath}': 'evidence-source' is missing a required 'type' field.");
+            }
+            else if (!string.Equals(es.Type, "url", StringComparison.OrdinalIgnoreCase) &&
+                     !string.Equals(es.Type, "fileshare", StringComparison.OrdinalIgnoreCase))
+            {
+                errors.Add(
+                    $"evidence-source type '{es.Type}' is not supported (must be 'url' or 'fileshare').");
+            }
+
+            if (string.IsNullOrWhiteSpace(es.Location))
+            {
+                errors.Add(
+                    $"Invalid configuration in '{filePath}': 'evidence-source' is missing a required 'location' field.");
+            }
+        }
+
+        // Validate each review set, accumulating all structural and uniqueness errors.
+        var seenIds = new Dictionary<string, int>(StringComparer.Ordinal);
+        var reviews = raw.Reviews ?? [];
+        for (var i = 0; i < reviews.Count; i++)
+        {
+            var r = reviews[i];
+
+            if (string.IsNullOrWhiteSpace(r.Id))
+            {
+                errors.Add(
+                    $"Invalid configuration in '{filePath}': Review set at index {i} is missing a required 'id' field.");
+            }
+            else if (seenIds.TryGetValue(r.Id, out var firstIndex))
+            {
+                errors.Add(
+                    $"reviews[{i}] has duplicate ID '{r.Id}' (first defined at reviews[{firstIndex}]).");
+            }
+            else
+            {
+                seenIds[r.Id] = i;
+            }
+
+            if (string.IsNullOrWhiteSpace(r.Title))
+            {
+                errors.Add(
+                    $"Invalid configuration in '{filePath}': Review set at index {i} is missing a required 'title' field.");
+            }
+
+            if (r.Paths == null || !r.Paths.Any(p => !string.IsNullOrWhiteSpace(p)))
+            {
+                errors.Add(
+                    $"Invalid configuration in '{filePath}': Review set at index {i} is missing required 'paths' entries.");
+            }
+        }
+
+        return errors;
+    }
+
+    /// <summary>
     ///     Parses a YAML string into a <see cref="ReviewMarkConfiguration" />.
     /// </summary>
     /// <param name="yaml">The YAML content to parse.</param>

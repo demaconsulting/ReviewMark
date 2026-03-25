@@ -174,47 +174,15 @@ internal static class Program
 
         context.WriteLine($"Linting '{definitionFile}'...");
 
-        // Try to load the configuration file
-        ReviewMarkConfiguration config;
-        try
+        // Lint the file, collecting all detectable errors in one pass.
+        var errors = ReviewMarkConfiguration.Lint(definitionFile);
+        foreach (var error in errors)
         {
-            config = ReviewMarkConfiguration.Load(definitionFile);
-        }
-        catch (InvalidOperationException ex)
-        {
-            context.WriteError($"Error: {ex.Message}");
-            return;
-        }
-
-        // Perform semantic validation: check for unknown evidence-source type
-        var hasErrors = false;
-        if (!string.Equals(config.EvidenceSource.Type, "url", StringComparison.OrdinalIgnoreCase) &&
-            !string.Equals(config.EvidenceSource.Type, "fileshare", StringComparison.OrdinalIgnoreCase))
-        {
-            context.WriteError(
-                $"Error: evidence-source type '{config.EvidenceSource.Type}' is not supported (must be 'url' or 'fileshare').");
-            hasErrors = true;
-        }
-
-        // Perform semantic validation: check for duplicate review set IDs
-        var seenIds = new Dictionary<string, int>(StringComparer.Ordinal);
-        for (var i = 0; i < config.Reviews.Count; i++)
-        {
-            var review = config.Reviews[i];
-            if (seenIds.TryGetValue(review.Id, out var firstIndex))
-            {
-                context.WriteError(
-                    $"Error: reviews[{i}] has duplicate ID '{review.Id}' (first defined at reviews[{firstIndex}]).");
-                hasErrors = true;
-            }
-            else
-            {
-                seenIds[review.Id] = i;
-            }
+            context.WriteError($"Error: {error}");
         }
 
         // Report overall result
-        if (!hasErrors)
+        if (errors.Count == 0)
         {
             context.WriteLine($"'{definitionFile}' is valid.");
         }

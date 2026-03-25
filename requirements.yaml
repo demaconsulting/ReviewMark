@@ -260,8 +260,10 @@ sections:
               - Program_Run_WithLintFlag_UnknownSourceType_ReportsError
               - Program_Run_WithLintFlag_CorruptedYaml_ReportsError
               - Program_Run_WithLintFlag_MissingEvidenceSource_ReportsError
+              - Program_Run_WithLintFlag_MultipleErrors_ReportsAll
               - ReviewMarkConfiguration_Load_InvalidYaml_ErrorIncludesFilenameAndLine
               - ReviewMarkConfiguration_Load_MissingEvidenceSource_ErrorIncludesFilename
+              - ReviewMarkConfiguration_Lint_MultipleErrors_ReturnsAll
               - ReviewMark_Lint
 
       - title: Configuration Reading
