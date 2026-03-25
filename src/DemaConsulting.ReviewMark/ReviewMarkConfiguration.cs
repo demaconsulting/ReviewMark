@@ -564,6 +564,9 @@ internal sealed class ReviewMarkConfiguration
         }
 
         // Validate each review set, accumulating all structural and uniqueness errors.
+        // Review IDs are treated as case-sensitive identifiers (Ordinal), which is intentional:
+        // "Core-Logic" and "core-logic" are distinct IDs. Evidence-source type uses OrdinalIgnoreCase
+        // because YAML convention allows any casing for keyword values like "url" or "fileshare".
         var seenIds = new Dictionary<string, int>(StringComparer.Ordinal);
         var reviews = raw.Reviews ?? [];
         for (var i = 0; i < reviews.Count; i++)

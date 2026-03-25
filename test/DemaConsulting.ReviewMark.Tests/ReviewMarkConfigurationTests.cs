@@ -370,7 +370,7 @@ public class ReviewMarkConfigurationTests
         var errors = ReviewMarkConfiguration.Lint(configPath);
 
         // Assert — both the missing evidence-source error and the duplicate ID error are returned
-        Assert.IsTrue(errors.Count >= 2, $"Expected at least 2 errors, got {errors.Count}.");
+        Assert.AreEqual(2, errors.Count);
         Assert.IsTrue(errors.Any(e => e.Contains("evidence-source")),
             "Expected an error about missing evidence-source.");
         Assert.IsTrue(errors.Any(e => e.Contains("duplicate ID") && e.Contains("Core-Logic")),
