@@ -136,6 +136,16 @@ file sealed class ReviewSetYaml
 file static class ReviewMarkConfigurationHelpers
 {
     /// <summary>
+    ///     Returns <c>true</c> when <paramref name="type" /> is a recognised evidence-source
+    ///     type (<c>url</c> or <c>fileshare</c>, case-insensitive).
+    /// </summary>
+    /// <param name="type">The type string to test.</param>
+    /// <returns><c>true</c> if the type is supported; <c>false</c> otherwise.</returns>
+    public static bool IsSupportedEvidenceSourceType(string type) =>
+        string.Equals(type, "url", StringComparison.OrdinalIgnoreCase) ||
+        string.Equals(type, "fileshare", StringComparison.OrdinalIgnoreCase);
+
+    /// <summary>
     ///     Deserializes a YAML string into the raw <see cref="ReviewMarkYaml" /> model.
     /// </summary>
     /// <param name="yaml">YAML content to parse.</param>
@@ -208,6 +218,12 @@ file static class ReviewMarkConfigurationHelpers
         if (string.IsNullOrWhiteSpace(es.Type))
         {
             throw new ArgumentException("Configuration 'evidence-source' is missing a required 'type' field.");
+        }
+
+        if (!IsSupportedEvidenceSourceType(es.Type))
+        {
+            throw new ArgumentException(
+                $"Configuration 'evidence-source' type '{es.Type}' is not supported (must be 'url' or 'fileshare').");
         }
 
         if (string.IsNullOrWhiteSpace(es.Location))
@@ -549,11 +565,10 @@ internal sealed class ReviewMarkConfiguration
                 errors.Add(
                     $"Invalid configuration in '{filePath}': 'evidence-source' is missing a required 'type' field.");
             }
-            else if (!string.Equals(es.Type, "url", StringComparison.OrdinalIgnoreCase) &&
-                     !string.Equals(es.Type, "fileshare", StringComparison.OrdinalIgnoreCase))
+            else if (!ReviewMarkConfigurationHelpers.IsSupportedEvidenceSourceType(es.Type))
             {
                 errors.Add(
-                    $"evidence-source type '{es.Type}' is not supported (must be 'url' or 'fileshare').");
+                    $"Invalid configuration in '{filePath}': 'evidence-source' type '{es.Type}' is not supported (must be 'url' or 'fileshare').");
             }
 
             if (string.IsNullOrWhiteSpace(es.Location))
@@ -581,7 +596,7 @@ internal sealed class ReviewMarkConfiguration
             else if (seenIds.TryGetValue(r.Id, out var firstIndex))
             {
                 errors.Add(
-                    $"reviews[{i}] has duplicate ID '{r.Id}' (first defined at reviews[{firstIndex}]).");
+                    $"Invalid configuration in '{filePath}': reviews[{i}] has duplicate ID '{r.Id}' (first defined at reviews[{firstIndex}]).");
             }
             else
             {

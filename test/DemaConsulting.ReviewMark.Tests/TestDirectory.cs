@@ -44,9 +44,22 @@ internal sealed class TestDirectory : IDisposable
     /// </summary>
     public void Dispose()
     {
-        if (Directory.Exists(DirectoryPath))
+        if (!Directory.Exists(DirectoryPath))
+        {
+            return;
+        }
+
+        try
         {
             Directory.Delete(DirectoryPath, recursive: true);
+        }
+        catch (IOException)
+        {
+            // Ignore cleanup failures in tests (e.g., transient file locks on Windows).
+        }
+        catch (UnauthorizedAccessException)
+        {
+            // Ignore cleanup failures in tests (e.g., transient access issues on Windows).
         }
     }
 }

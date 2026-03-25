@@ -340,14 +340,18 @@ public class ProgramTests
             """);
 
         var logFile = PathHelpers.SafePathCombine(tempDir.DirectoryPath, LintLogFile);
-        using var context = Context.Create(["--silent", "--log", logFile, "--lint", "--definition", definitionFile]);
 
-        // Act
-        Program.Run(context);
+        // Act — dispose the context before reading the log to release the file handle on Windows
+        int exitCode;
+        using (var context = Context.Create(["--silent", "--log", logFile, "--lint", "--definition", definitionFile]))
+        {
+            Program.Run(context);
+            exitCode = context.ExitCode;
+        }
 
         // Assert — exit code is zero and log contains success message
         var logContent = File.ReadAllText(logFile);
-        Assert.AreEqual(0, context.ExitCode);
+        Assert.AreEqual(0, exitCode);
         Assert.Contains("is valid", logContent);
     }
 
@@ -361,14 +365,18 @@ public class ProgramTests
         using var tempDir = new TestDirectory();
         var nonExistentFile = PathHelpers.SafePathCombine(tempDir.DirectoryPath, "nonexistent.yaml");
         var logFile = PathHelpers.SafePathCombine(tempDir.DirectoryPath, LintLogFile);
-        using var context = Context.Create(["--silent", "--log", logFile, "--lint", "--definition", nonExistentFile]);
 
-        // Act
-        Program.Run(context);
+        // Act — dispose the context before reading the log to release the file handle on Windows
+        int exitCode;
+        using (var context = Context.Create(["--silent", "--log", logFile, "--lint", "--definition", nonExistentFile]))
+        {
+            Program.Run(context);
+            exitCode = context.ExitCode;
+        }
 
         // Assert — non-zero exit code and log contains an error mentioning the missing file
         var logContent = File.ReadAllText(logFile);
-        Assert.AreEqual(1, context.ExitCode);
+        Assert.AreEqual(1, exitCode);
         Assert.Contains("Error:", logContent);
         Assert.Contains("nonexistent.yaml", logContent);
     }
@@ -403,14 +411,18 @@ public class ProgramTests
             """);
 
         var logFile = PathHelpers.SafePathCombine(tempDir.DirectoryPath, LintLogFile);
-        using var context = Context.Create(["--silent", "--log", logFile, "--lint", "--definition", definitionFile]);
 
-        // Act
-        Program.Run(context);
+        // Act — dispose the context before reading the log to release the file handle on Windows
+        int exitCode;
+        using (var context = Context.Create(["--silent", "--log", logFile, "--lint", "--definition", definitionFile]))
+        {
+            Program.Run(context);
+            exitCode = context.ExitCode;
+        }
 
         // Assert — non-zero exit code and log contains a clear duplicate-ID error message
         var logContent = File.ReadAllText(logFile);
-        Assert.AreEqual(1, context.ExitCode);
+        Assert.AreEqual(1, exitCode);
         Assert.Contains("Error:", logContent);
         Assert.Contains("duplicate ID", logContent);
         Assert.Contains("Core-Logic", logContent);
@@ -439,14 +451,18 @@ public class ProgramTests
             """);
 
         var logFile = PathHelpers.SafePathCombine(tempDir.DirectoryPath, LintLogFile);
-        using var context = Context.Create(["--silent", "--log", logFile, "--lint", "--definition", definitionFile]);
 
-        // Act
-        Program.Run(context);
+        // Act — dispose the context before reading the log to release the file handle on Windows
+        int exitCode;
+        using (var context = Context.Create(["--silent", "--log", logFile, "--lint", "--definition", definitionFile]))
+        {
+            Program.Run(context);
+            exitCode = context.ExitCode;
+        }
 
         // Assert — non-zero exit code and log contains a clear unsupported-type error message
         var logContent = File.ReadAllText(logFile);
-        Assert.AreEqual(1, context.ExitCode);
+        Assert.AreEqual(1, exitCode);
         Assert.Contains("Error:", logContent);
         Assert.Contains("ftp", logContent);
         Assert.Contains("not supported", logContent);
@@ -466,14 +482,18 @@ public class ProgramTests
             """);
 
         var logFile = PathHelpers.SafePathCombine(tempDir.DirectoryPath, LintLogFile);
-        using var context = Context.Create(["--silent", "--log", logFile, "--lint", "--definition", definitionFile]);
 
-        // Act
-        Program.Run(context);
+        // Act — dispose the context before reading the log to release the file handle on Windows
+        int exitCode;
+        using (var context = Context.Create(["--silent", "--log", logFile, "--lint", "--definition", definitionFile]))
+        {
+            Program.Run(context);
+            exitCode = context.ExitCode;
+        }
 
         // Assert — non-zero exit code and log contains an error naming the definition file and a line number
         var logContent = File.ReadAllText(logFile);
-        Assert.AreEqual(1, context.ExitCode);
+        Assert.AreEqual(1, exitCode);
         Assert.Contains("Error:", logContent);
         Assert.Contains("definition.yaml", logContent);
         Assert.Contains("at line", logContent);
@@ -499,14 +519,18 @@ public class ProgramTests
             """);
 
         var logFile = PathHelpers.SafePathCombine(tempDir.DirectoryPath, LintLogFile);
-        using var context = Context.Create(["--silent", "--log", logFile, "--lint", "--definition", definitionFile]);
 
-        // Act
-        Program.Run(context);
+        // Act — dispose the context before reading the log to release the file handle on Windows
+        int exitCode;
+        using (var context = Context.Create(["--silent", "--log", logFile, "--lint", "--definition", definitionFile]))
+        {
+            Program.Run(context);
+            exitCode = context.ExitCode;
+        }
 
         // Assert — non-zero exit code and log names the file and the missing field
         var logContent = File.ReadAllText(logFile);
-        Assert.AreEqual(1, context.ExitCode);
+        Assert.AreEqual(1, exitCode);
         Assert.Contains("Error:", logContent);
         Assert.Contains("definition.yaml", logContent);
         Assert.Contains("evidence-source", logContent);
@@ -537,15 +561,19 @@ public class ProgramTests
             """);
 
         var logFile = PathHelpers.SafePathCombine(tempDir.DirectoryPath, LintLogFile);
-        using var context = Context.Create(["--silent", "--log", logFile, "--lint", "--definition", definitionFile]);
 
-        // Act
-        Program.Run(context);
+        // Act — dispose the context before reading the log to release the file handle on Windows
+        int exitCode;
+        using (var context = Context.Create(["--silent", "--log", logFile, "--lint", "--definition", definitionFile]))
+        {
+            Program.Run(context);
+            exitCode = context.ExitCode;
+        }
 
         // Assert — non-zero exit code and log contains BOTH the missing evidence-source error
         // AND the duplicate ID error, proving all errors are accumulated in one pass.
         var logContent = File.ReadAllText(logFile);
-        Assert.AreEqual(1, context.ExitCode);
+        Assert.AreEqual(1, exitCode);
         Assert.Contains("evidence-source", logContent);
         Assert.Contains("duplicate ID", logContent);
         Assert.Contains("Core-Logic", logContent);
