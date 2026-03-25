@@ -50,12 +50,6 @@ file sealed class ReviewMarkYaml
     public EvidenceSourceYaml? EvidenceSource { get; set; }
 
     /// <summary>
-    ///     Gets or sets the list of relative paths to included fragment files.
-    /// </summary>
-    [YamlMember(Alias = "includes")]
-    public List<string>? Includes { get; set; }
-
-    /// <summary>
     ///     Gets or sets the list of review set definitions.
     /// </summary>
     [YamlMember(Alias = "reviews")]
@@ -434,9 +428,9 @@ internal sealed class ReviewMarkConfiguration
     /// <returns>A populated <see cref="ReviewMarkConfiguration" /> instance.</returns>
     /// <exception cref="ArgumentException">Thrown when <paramref name="filePath" /> is null or empty.</exception>
     /// <exception cref="InvalidOperationException">
-    ///     Thrown when the file cannot be read, the YAML is invalid, an included file cannot be read or
-    ///     parsed, or required configuration fields are missing.  The exception message always identifies
-    ///     the problematic file and, for YAML syntax errors, the line and column number.
+    ///     Thrown when the file cannot be read, the YAML is invalid, or required configuration fields are
+    ///     missing.  The exception message always identifies the problematic file and, for YAML syntax
+    ///     errors, the line and column number.
     /// </exception>
     internal static ReviewMarkConfiguration Load(string filePath)
     {
@@ -464,50 +458,11 @@ internal sealed class ReviewMarkConfiguration
         // Deserialize the raw YAML model, embedding the file path and line number in any parse error.
         var raw = ReviewMarkConfigurationHelpers.DeserializeRaw(yaml, filePath);
 
-        // Determine the base directory for resolving included file paths.
+        // Determine the base directory for resolving relative fileshare locations.
         var baseDirectory = Path.GetDirectoryName(Path.GetFullPath(filePath))
             ?? throw new InvalidOperationException($"Cannot determine base directory for configuration file '{filePath}'.");
 
-        // Process includes: load each referenced fragment and merge its content.
-        foreach (var include in raw.Includes ?? [])
-        {
-            if (string.IsNullOrWhiteSpace(include))
-            {
-                continue;
-            }
-
-            var includePath = Path.GetFullPath(include, baseDirectory);
-
-            // Read the included file, embedding the included path in any file-system error.
-            string includeYaml;
-            try
-            {
-                includeYaml = File.ReadAllText(includePath);
-            }
-            catch (Exception ex) when (ex is not InvalidOperationException)
-            {
-                throw new InvalidOperationException(
-                    $"Failed to read included file '{includePath}': {ex.Message}", ex);
-            }
-
-            // Parse the included fragment; parse errors will name the included file and line.
-            var includeRaw = ReviewMarkConfigurationHelpers.DeserializeRaw(includeYaml, includePath);
-
-            // Merge fragment's needs-review patterns and reviews into the parent raw model.
-            if (includeRaw.NeedsReview?.Count > 0)
-            {
-                raw.NeedsReview ??= [];
-                raw.NeedsReview.AddRange(includeRaw.NeedsReview);
-            }
-
-            if (includeRaw.Reviews?.Count > 0)
-            {
-                raw.Reviews ??= [];
-                raw.Reviews.AddRange(includeRaw.Reviews);
-            }
-        }
-
-        // Validate the merged raw model, embedding the file path in any semantic error.
+        // Validate the raw model, embedding the file path in any semantic error.
         ReviewMarkConfiguration config;
         try
         {
