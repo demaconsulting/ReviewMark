@@ -185,11 +185,6 @@ internal static class Program
             context.WriteError($"Error: {ex.Message}");
             return;
         }
-        catch (ArgumentException ex)
-        {
-            context.WriteError($"Error: {ex.Message}");
-            return;
-        }
 
         // Perform semantic validation: check for unknown evidence-source type
         var hasErrors = false;

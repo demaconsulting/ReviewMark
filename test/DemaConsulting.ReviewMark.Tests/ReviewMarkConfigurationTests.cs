@@ -302,6 +302,151 @@ public class ReviewMarkConfigurationTests
     }
 
     /// <summary>
+    ///     Test that Load includes the file name in the error message when YAML is invalid.
+    /// </summary>
+    [TestMethod]
+    public void ReviewMarkConfiguration_Load_InvalidYaml_ErrorIncludesFilenameAndLine()
+    {
+        // Arrange — write a configuration file with invalid YAML syntax
+        var configPath = PathHelpers.SafePathCombine(_testDirectory, ".reviewmark.yaml");
+        File.WriteAllText(configPath, "{{{invalid yaml");
+
+        // Act & Assert
+        var ex = Assert.Throws<InvalidOperationException>(() =>
+            ReviewMarkConfiguration.Load(configPath));
+        Assert.Contains(".reviewmark.yaml", ex.Message);
+        Assert.Contains("at line", ex.Message);
+    }
+
+    /// <summary>
+    ///     Test that Load includes the file name in the error message when required fields are missing.
+    /// </summary>
+    [TestMethod]
+    public void ReviewMarkConfiguration_Load_MissingEvidenceSource_ErrorIncludesFilename()
+    {
+        // Arrange — write a valid YAML file that is missing the required evidence-source block
+        var configPath = PathHelpers.SafePathCombine(_testDirectory, ".reviewmark.yaml");
+        File.WriteAllText(configPath, """
+            needs-review:
+              - "src/**/*.cs"
+            reviews:
+              - id: Core-Logic
+                title: Review of core business logic
+                paths:
+                  - "src/**/*.cs"
+            """);
+
+        // Act & Assert
+        var ex = Assert.Throws<InvalidOperationException>(() =>
+            ReviewMarkConfiguration.Load(configPath));
+        Assert.Contains(".reviewmark.yaml", ex.Message);
+        Assert.Contains("evidence-source", ex.Message);
+    }
+
+    /// <summary>
+    ///     Test that Load with includes merges reviews from the included file.
+    /// </summary>
+    [TestMethod]
+    public void ReviewMarkConfiguration_Load_WithIncludes_MergesReviews()
+    {
+        // Arrange — parent file references a child file
+        var childPath = PathHelpers.SafePathCombine(_testDirectory, "extra.yaml");
+        File.WriteAllText(childPath, """
+            reviews:
+              - id: Extra-Logic
+                title: Extra review set
+                paths:
+                  - "extra/**/*.cs"
+            """);
+
+        var configPath = PathHelpers.SafePathCombine(_testDirectory, ".reviewmark.yaml");
+        File.WriteAllText(configPath, """
+            needs-review:
+              - "src/**/*.cs"
+            evidence-source:
+              type: fileshare
+              location: index.json
+            includes:
+              - extra.yaml
+            reviews:
+              - id: Core-Logic
+                title: Review of core business logic
+                paths:
+                  - "src/**/*.cs"
+            """);
+
+        // Act
+        var config = ReviewMarkConfiguration.Load(configPath);
+
+        // Assert — both review sets are present
+        Assert.AreEqual(2, config.Reviews.Count);
+        Assert.AreEqual("Core-Logic", config.Reviews[0].Id);
+        Assert.AreEqual("Extra-Logic", config.Reviews[1].Id);
+    }
+
+    /// <summary>
+    ///     Test that Load reports an error that names the missing included file.
+    /// </summary>
+    [TestMethod]
+    public void ReviewMarkConfiguration_Load_MissingIncludedFile_ErrorNamesIncludedFile()
+    {
+        // Arrange — parent file references a non-existent child file
+        var configPath = PathHelpers.SafePathCombine(_testDirectory, ".reviewmark.yaml");
+        File.WriteAllText(configPath, """
+            needs-review:
+              - "src/**/*.cs"
+            evidence-source:
+              type: fileshare
+              location: index.json
+            includes:
+              - nonexistent.yaml
+            reviews:
+              - id: Core-Logic
+                title: Review of core business logic
+                paths:
+                  - "src/**/*.cs"
+            """);
+
+        // Act & Assert
+        var ex = Assert.Throws<InvalidOperationException>(() =>
+            ReviewMarkConfiguration.Load(configPath));
+        Assert.Contains("nonexistent.yaml", ex.Message);
+    }
+
+    /// <summary>
+    ///     Test that Load reports a parse error that names the corrupted included file and its line number.
+    /// </summary>
+    [TestMethod]
+    public void ReviewMarkConfiguration_Load_CorruptedIncludedFile_ErrorNamesIncludedFileAndLine()
+    {
+        // Arrange — parent file references a child file with invalid YAML
+        var childPath = PathHelpers.SafePathCombine(_testDirectory, "extra.yaml");
+        File.WriteAllText(childPath, "{{{invalid yaml content");
+
+        var configPath = PathHelpers.SafePathCombine(_testDirectory, ".reviewmark.yaml");
+        File.WriteAllText(configPath, """
+            needs-review:
+              - "src/**/*.cs"
+            evidence-source:
+              type: fileshare
+              location: index.json
+            includes:
+              - extra.yaml
+            reviews:
+              - id: Core-Logic
+                title: Review of core business logic
+                paths:
+                  - "src/**/*.cs"
+            """);
+
+        // Act & Assert — error names the child file (not just the parent) and includes a line number
+        var ex = Assert.Throws<InvalidOperationException>(() =>
+            ReviewMarkConfiguration.Load(configPath));
+        Assert.Contains("extra.yaml", ex.Message);
+        Assert.Contains("at line", ex.Message);
+    }
+
+    /// <summary>
     ///     Test that Load resolves a relative fileshare location against the config file's directory.
     /// </summary>
     [TestMethod]

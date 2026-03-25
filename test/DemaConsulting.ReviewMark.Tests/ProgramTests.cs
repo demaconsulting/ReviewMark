@@ -471,10 +471,12 @@ public class ProgramTests
         // Act
         Program.Run(context);
 
-        // Assert — non-zero exit code and log contains an error about invalid content
+        // Assert — non-zero exit code and log contains an error naming the definition file and a line number
         var logContent = File.ReadAllText(logFile);
         Assert.AreEqual(1, context.ExitCode);
         Assert.Contains("Error:", logContent);
+        Assert.Contains("definition.yaml", logContent);
+        Assert.Contains("at line", logContent);
     }
 
     /// <summary>
@@ -502,10 +504,58 @@ public class ProgramTests
         // Act
         Program.Run(context);
 
-        // Assert — non-zero exit code and log contains an error about the missing field
+        // Assert — non-zero exit code and log names the file and the missing field
         var logContent = File.ReadAllText(logFile);
         Assert.AreEqual(1, context.ExitCode);
         Assert.Contains("Error:", logContent);
+        Assert.Contains("definition.yaml", logContent);
         Assert.Contains("evidence-source", logContent);
+    }
+
+    /// <summary>
+    ///     Test that Run with --lint flag on a parent that includes a corrupted child file
+    ///     reports an error naming the child file and its line number.
+    /// </summary>
+    [TestMethod]
+    public void Program_Run_WithLintFlag_IncludedFileCorrupted_ReportsChildFilename()
+    {
+        // Arrange — create a valid parent definition and a corrupted child file
+        using var tempDir = new TestDirectory();
+        var indexFile = PathHelpers.SafePathCombine(tempDir.DirectoryPath, "index.json");
+        File.WriteAllText(indexFile, """{"reviews":[]}""");
+
+        var childFile = PathHelpers.SafePathCombine(tempDir.DirectoryPath, "extra-reviews.yaml");
+        File.WriteAllText(childFile, """
+            {{{this is not valid yaml
+            """);
+
+        var definitionFile = PathHelpers.SafePathCombine(tempDir.DirectoryPath, "definition.yaml");
+        File.WriteAllText(definitionFile, $"""
+            needs-review:
+              - "src/**/*.cs"
+            evidence-source:
+              type: fileshare
+              location: {indexFile}
+            includes:
+              - extra-reviews.yaml
+            reviews:
+              - id: Core-Logic
+                title: Review of core business logic
+                paths:
+                  - "src/**/*.cs"
+            """);
+
+        var logFile = PathHelpers.SafePathCombine(tempDir.DirectoryPath, LintLogFile);
+        using var context = Context.Create(["--silent", "--log", logFile, "--lint", "--definition", definitionFile]);
+
+        // Act
+        Program.Run(context);
+
+        // Assert — non-zero exit code and error names the child file (not just the parent)
+        var logContent = File.ReadAllText(logFile);
+        Assert.AreEqual(1, context.ExitCode);
+        Assert.Contains("Error:", logContent);
+        Assert.Contains("extra-reviews.yaml", logContent);
+        Assert.Contains("at line", logContent);
     }
 }
