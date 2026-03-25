@@ -136,7 +136,7 @@ file sealed class ReviewSetYaml
 file static class ReviewMarkConfigurationHelpers
 {
     /// <summary>
-    ///     Returns <c>true</c> when <paramref name="type" /> is a recognised evidence-source
+    ///     Returns <c>true</c> when <paramref name="type" /> is a recognized evidence-source
     ///     type (<c>url</c> or <c>fileshare</c>, case-insensitive).
     /// </summary>
     /// <param name="type">The type string to test.</param>
