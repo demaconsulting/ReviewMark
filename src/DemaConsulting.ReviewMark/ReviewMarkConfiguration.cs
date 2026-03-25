@@ -137,11 +137,12 @@ file static class ReviewMarkConfigurationHelpers
 {
     /// <summary>
     ///     Returns <c>true</c> when <paramref name="type" /> is a recognized evidence-source
-    ///     type (<c>url</c> or <c>fileshare</c>, case-insensitive).
+    ///     type (<c>none</c>, <c>url</c>, or <c>fileshare</c>, case-insensitive).
     /// </summary>
     /// <param name="type">The type string to test.</param>
     /// <returns><c>true</c> if the type is supported; <c>false</c> otherwise.</returns>
     public static bool IsSupportedEvidenceSourceType(string type) =>
+        string.Equals(type, "none", StringComparison.OrdinalIgnoreCase) ||
         string.Equals(type, "url", StringComparison.OrdinalIgnoreCase) ||
         string.Equals(type, "fileshare", StringComparison.OrdinalIgnoreCase);
 
@@ -223,17 +224,17 @@ file static class ReviewMarkConfigurationHelpers
         if (!IsSupportedEvidenceSourceType(es.Type))
         {
             throw new ArgumentException(
-                $"Configuration 'evidence-source' type '{es.Type}' is not supported (must be 'url' or 'fileshare').");
+                $"Configuration 'evidence-source' type '{es.Type}' is not supported (must be 'none', 'url', or 'fileshare').");
         }
 
-        if (string.IsNullOrWhiteSpace(es.Location))
+        if (string.IsNullOrWhiteSpace(es.Location) && !string.Equals(es.Type, "none", StringComparison.OrdinalIgnoreCase))
         {
             throw new ArgumentException("Configuration 'evidence-source' is missing a required 'location' field.");
         }
 
         var evidenceSource = new EvidenceSource(
             Type: es.Type,
-            Location: es.Location,
+            Location: es.Location ?? string.Empty,
             UsernameEnv: es.Credentials?.UsernameEnv,
             PasswordEnv: es.Credentials?.PasswordEnv);
 
@@ -276,7 +277,7 @@ file static class ReviewMarkConfigurationHelpers
 /// <summary>
 ///     Represents the evidence-source configuration from <c>.reviewmark.yaml</c>.
 /// </summary>
-/// <param name="Type">The source type, e.g. <c>url</c> or <c>fileshare</c>.</param>
+/// <param name="Type">The source type, e.g. <c>none</c>, <c>url</c>, or <c>fileshare</c>.</param>
 /// <param name="Location">The URL or path for the evidence source.</param>
 /// <param name="UsernameEnv">Optional environment-variable name that holds the username credential.</param>
 /// <param name="PasswordEnv">Optional environment-variable name that holds the password credential.</param>
@@ -575,10 +576,10 @@ internal sealed class ReviewMarkConfiguration
             else if (!ReviewMarkConfigurationHelpers.IsSupportedEvidenceSourceType(es.Type))
             {
                 errors.Add(
-                    $"{filePath}: error: 'evidence-source' type '{es.Type}' is not supported (must be 'url' or 'fileshare').");
+                    $"{filePath}: error: 'evidence-source' type '{es.Type}' is not supported (must be 'none', 'url', or 'fileshare').");
             }
 
-            if (string.IsNullOrWhiteSpace(es.Location))
+            if (string.IsNullOrWhiteSpace(es.Location) && !string.Equals(es.Type, "none", StringComparison.OrdinalIgnoreCase))
             {
                 errors.Add(
                     $"{filePath}: error: 'evidence-source' is missing a required 'location' field.");
