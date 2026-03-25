@@ -27,6 +27,10 @@ namespace DemaConsulting.ReviewMark.Tests;
 public class ProgramTests
 {
     /// <summary>
+    ///     Log file name used across lint tests.
+    /// </summary>
+    private const string LintLogFile = "lint.log";
+    /// <summary>
     ///     Test that Run with version flag displays version only.
     /// </summary>
     [TestMethod]
@@ -187,63 +191,51 @@ public class ProgramTests
     public void Program_Run_WithElaborateFlag_OutputsElaboration()
     {
         // Arrange — create temp directory with a definition file and source file
-        var testDirectory = PathHelpers.SafePathCombine(
-            Path.GetTempPath(), $"ProgramTests_Elaborate_{Guid.NewGuid()}");
+        using var tempDir = new TestDirectory();
+        var srcDir = PathHelpers.SafePathCombine(tempDir.DirectoryPath, "src");
+        Directory.CreateDirectory(srcDir);
+        File.WriteAllText(PathHelpers.SafePathCombine(srcDir, "A.cs"), "class A {}");
+
+        var indexFile = PathHelpers.SafePathCombine(tempDir.DirectoryPath, "index.json");
+        File.WriteAllText(indexFile, """{"reviews":[]}""");
+
+        var definitionFile = PathHelpers.SafePathCombine(tempDir.DirectoryPath, "definition.yaml");
+        File.WriteAllText(definitionFile, $"""
+            needs-review:
+              - "src/**/*.cs"
+            evidence-source:
+              type: fileshare
+              location: {indexFile}
+            reviews:
+              - id: Core-Logic
+                title: Review of core business logic
+                paths:
+                  - "src/**/*.cs"
+            """);
+
+        var originalOut = Console.Out;
         try
         {
-            Directory.CreateDirectory(testDirectory);
-            var srcDir = PathHelpers.SafePathCombine(testDirectory, "src");
-            Directory.CreateDirectory(srcDir);
-            File.WriteAllText(PathHelpers.SafePathCombine(srcDir, "A.cs"), "class A {}");
+            using var outWriter = new StringWriter();
+            Console.SetOut(outWriter);
+            using var context = Context.Create([
+                "--definition", definitionFile,
+                "--dir", tempDir.DirectoryPath,
+                "--elaborate", "Core-Logic"]);
 
-            var indexFile = PathHelpers.SafePathCombine(testDirectory, "index.json");
-            File.WriteAllText(indexFile, """{"reviews":[]}""");
+            // Act
+            Program.Run(context);
 
-            var definitionFile = PathHelpers.SafePathCombine(testDirectory, "definition.yaml");
-            File.WriteAllText(definitionFile, $"""
-                needs-review:
-                  - "src/**/*.cs"
-                evidence-source:
-                  type: fileshare
-                  location: {indexFile}
-                reviews:
-                  - id: Core-Logic
-                    title: Review of core business logic
-                    paths:
-                      - "src/**/*.cs"
-                """);
-
-            var originalOut = Console.Out;
-            try
-            {
-                using var outWriter = new StringWriter();
-                Console.SetOut(outWriter);
-                using var context = Context.Create([
-                    "--definition", definitionFile,
-                    "--dir", testDirectory,
-                    "--elaborate", "Core-Logic"]);
-
-                // Act
-                Program.Run(context);
-
-                // Assert — output contains the review set ID and fingerprint heading
-                var output = outWriter.ToString();
-                Assert.Contains("Core-Logic", output);
-                Assert.Contains("Fingerprint", output);
-                Assert.Contains("Files", output);
-                Assert.AreEqual(0, context.ExitCode);
-            }
-            finally
-            {
-                Console.SetOut(originalOut);
-            }
+            // Assert — output contains the review set ID and fingerprint heading
+            var output = outWriter.ToString();
+            Assert.Contains("Core-Logic", output);
+            Assert.Contains("Fingerprint", output);
+            Assert.Contains("Files", output);
+            Assert.AreEqual(0, context.ExitCode);
         }
         finally
         {
-            if (Directory.Exists(testDirectory))
-            {
-                Directory.Delete(testDirectory, recursive: true);
-            }
+            Console.SetOut(originalOut);
         }
     }
 
@@ -254,56 +246,44 @@ public class ProgramTests
     public void Program_Run_WithElaborateFlag_UnknownId_ReportsError()
     {
         // Arrange — create temp directory with a definition file
-        var testDirectory = PathHelpers.SafePathCombine(
-            Path.GetTempPath(), $"ProgramTests_ElaborateUnknown_{Guid.NewGuid()}");
+        using var tempDir = new TestDirectory();
+
+        var indexFile = PathHelpers.SafePathCombine(tempDir.DirectoryPath, "index.json");
+        File.WriteAllText(indexFile, """{"reviews":[]}""");
+
+        var definitionFile = PathHelpers.SafePathCombine(tempDir.DirectoryPath, "definition.yaml");
+        File.WriteAllText(definitionFile, $"""
+            needs-review:
+              - "src/**/*.cs"
+            evidence-source:
+              type: fileshare
+              location: {indexFile}
+            reviews:
+              - id: Core-Logic
+                title: Review of core business logic
+                paths:
+                  - "src/**/*.cs"
+            """);
+
+        var originalError = Console.Error;
         try
         {
-            Directory.CreateDirectory(testDirectory);
+            using var errWriter = new StringWriter();
+            Console.SetError(errWriter);
+            using var context = Context.Create([
+                "--silent",
+                "--definition", definitionFile,
+                "--elaborate", "Unknown-Id"]);
 
-            var indexFile = PathHelpers.SafePathCombine(testDirectory, "index.json");
-            File.WriteAllText(indexFile, """{"reviews":[]}""");
+            // Act
+            Program.Run(context);
 
-            var definitionFile = PathHelpers.SafePathCombine(testDirectory, "definition.yaml");
-            File.WriteAllText(definitionFile, $"""
-                needs-review:
-                  - "src/**/*.cs"
-                evidence-source:
-                  type: fileshare
-                  location: {indexFile}
-                reviews:
-                  - id: Core-Logic
-                    title: Review of core business logic
-                    paths:
-                      - "src/**/*.cs"
-                """);
-
-            var originalError = Console.Error;
-            try
-            {
-                using var errWriter = new StringWriter();
-                Console.SetError(errWriter);
-                using var context = Context.Create([
-                    "--silent",
-                    "--definition", definitionFile,
-                    "--elaborate", "Unknown-Id"]);
-
-                // Act
-                Program.Run(context);
-
-                // Assert — non-zero exit code when the review-set ID is not found
-                Assert.AreEqual(1, context.ExitCode);
-            }
-            finally
-            {
-                Console.SetError(originalError);
-            }
+            // Assert — non-zero exit code when the review-set ID is not found
+            Assert.AreEqual(1, context.ExitCode);
         }
         finally
         {
-            if (Directory.Exists(testDirectory))
-            {
-                Directory.Delete(testDirectory, recursive: true);
-            }
+            Console.SetError(originalError);
         }
     }
 
@@ -341,55 +321,34 @@ public class ProgramTests
     public void Program_Run_WithLintFlag_ValidConfig_ReportsSuccess()
     {
         // Arrange — create temp directory with a valid definition file
-        var testDirectory = PathHelpers.SafePathCombine(
-            Path.GetTempPath(), $"ProgramTests_Lint_{Guid.NewGuid()}");
-        try
-        {
-            Directory.CreateDirectory(testDirectory);
-            var indexFile = PathHelpers.SafePathCombine(testDirectory, "index.json");
-            File.WriteAllText(indexFile, """{"reviews":[]}""");
+        using var tempDir = new TestDirectory();
+        var indexFile = PathHelpers.SafePathCombine(tempDir.DirectoryPath, "index.json");
+        File.WriteAllText(indexFile, """{"reviews":[]}""");
 
-            var definitionFile = PathHelpers.SafePathCombine(testDirectory, "definition.yaml");
-            File.WriteAllText(definitionFile, $"""
-                needs-review:
+        var definitionFile = PathHelpers.SafePathCombine(tempDir.DirectoryPath, "definition.yaml");
+        File.WriteAllText(definitionFile, $"""
+            needs-review:
+              - "src/**/*.cs"
+            evidence-source:
+              type: fileshare
+              location: {indexFile}
+            reviews:
+              - id: Core-Logic
+                title: Review of core business logic
+                paths:
                   - "src/**/*.cs"
-                evidence-source:
-                  type: fileshare
-                  location: {indexFile}
-                reviews:
-                  - id: Core-Logic
-                    title: Review of core business logic
-                    paths:
-                      - "src/**/*.cs"
-                """);
+            """);
 
-            var originalOut = Console.Out;
-            try
-            {
-                using var outWriter = new StringWriter();
-                Console.SetOut(outWriter);
-                using var context = Context.Create(["--lint", "--definition", definitionFile]);
+        var logFile = PathHelpers.SafePathCombine(tempDir.DirectoryPath, LintLogFile);
+        using var context = Context.Create(["--silent", "--log", logFile, "--lint", "--definition", definitionFile]);
 
-                // Act
-                Program.Run(context);
+        // Act
+        Program.Run(context);
 
-                // Assert — exit code is zero and output contains success message
-                var output = outWriter.ToString();
-                Assert.AreEqual(0, context.ExitCode);
-                Assert.Contains("is valid", output);
-            }
-            finally
-            {
-                Console.SetOut(originalOut);
-            }
-        }
-        finally
-        {
-            if (Directory.Exists(testDirectory))
-            {
-                Directory.Delete(testDirectory, recursive: true);
-            }
-        }
+        // Assert — exit code is zero and log contains success message
+        var logContent = File.ReadAllText(logFile);
+        Assert.AreEqual(0, context.ExitCode);
+        Assert.Contains("is valid", logContent);
     }
 
     /// <summary>
@@ -399,38 +358,19 @@ public class ProgramTests
     public void Program_Run_WithLintFlag_MissingConfig_ReportsError()
     {
         // Arrange — use a non-existent definition file
-        var testDirectory = PathHelpers.SafePathCombine(
-            Path.GetTempPath(), $"ProgramTests_LintMissing_{Guid.NewGuid()}");
-        Directory.CreateDirectory(testDirectory);
-        try
-        {
-            var nonExistentFile = PathHelpers.SafePathCombine(testDirectory, "nonexistent.yaml");
+        using var tempDir = new TestDirectory();
+        var nonExistentFile = PathHelpers.SafePathCombine(tempDir.DirectoryPath, "nonexistent.yaml");
+        var logFile = PathHelpers.SafePathCombine(tempDir.DirectoryPath, LintLogFile);
+        using var context = Context.Create(["--silent", "--log", logFile, "--lint", "--definition", nonExistentFile]);
 
-            var originalError = Console.Error;
-            try
-            {
-                using var errWriter = new StringWriter();
-                Console.SetError(errWriter);
-                using var context = Context.Create(["--silent", "--lint", "--definition", nonExistentFile]);
+        // Act
+        Program.Run(context);
 
-                // Act
-                Program.Run(context);
-
-                // Assert — non-zero exit code when the definition file does not exist
-                Assert.AreEqual(1, context.ExitCode);
-            }
-            finally
-            {
-                Console.SetError(originalError);
-            }
-        }
-        finally
-        {
-            if (Directory.Exists(testDirectory))
-            {
-                Directory.Delete(testDirectory, recursive: true);
-            }
-        }
+        // Assert — non-zero exit code and log contains an error mentioning the missing file
+        var logContent = File.ReadAllText(logFile);
+        Assert.AreEqual(1, context.ExitCode);
+        Assert.Contains("Error:", logContent);
+        Assert.Contains("nonexistent.yaml", logContent);
     }
 
     /// <summary>
@@ -440,57 +380,40 @@ public class ProgramTests
     public void Program_Run_WithLintFlag_DuplicateIds_ReportsError()
     {
         // Arrange — create temp directory with a definition file containing duplicate IDs
-        var testDirectory = PathHelpers.SafePathCombine(
-            Path.GetTempPath(), $"ProgramTests_LintDuplicate_{Guid.NewGuid()}");
-        try
-        {
-            Directory.CreateDirectory(testDirectory);
-            var indexFile = PathHelpers.SafePathCombine(testDirectory, "index.json");
-            File.WriteAllText(indexFile, """{"reviews":[]}""");
+        using var tempDir = new TestDirectory();
+        var indexFile = PathHelpers.SafePathCombine(tempDir.DirectoryPath, "index.json");
+        File.WriteAllText(indexFile, """{"reviews":[]}""");
 
-            var definitionFile = PathHelpers.SafePathCombine(testDirectory, "definition.yaml");
-            File.WriteAllText(definitionFile, $"""
-                needs-review:
+        var definitionFile = PathHelpers.SafePathCombine(tempDir.DirectoryPath, "definition.yaml");
+        File.WriteAllText(definitionFile, $"""
+            needs-review:
+              - "src/**/*.cs"
+            evidence-source:
+              type: fileshare
+              location: {indexFile}
+            reviews:
+              - id: Core-Logic
+                title: Review of core business logic
+                paths:
                   - "src/**/*.cs"
-                evidence-source:
-                  type: fileshare
-                  location: {indexFile}
-                reviews:
-                  - id: Core-Logic
-                    title: Review of core business logic
-                    paths:
-                      - "src/**/*.cs"
-                  - id: Core-Logic
-                    title: Duplicate review set
-                    paths:
-                      - "src/**/*.cs"
-                """);
+              - id: Core-Logic
+                title: Duplicate review set
+                paths:
+                  - "src/**/*.cs"
+            """);
 
-            var originalError = Console.Error;
-            try
-            {
-                using var errWriter = new StringWriter();
-                Console.SetError(errWriter);
-                using var context = Context.Create(["--silent", "--lint", "--definition", definitionFile]);
+        var logFile = PathHelpers.SafePathCombine(tempDir.DirectoryPath, LintLogFile);
+        using var context = Context.Create(["--silent", "--log", logFile, "--lint", "--definition", definitionFile]);
 
-                // Act
-                Program.Run(context);
+        // Act
+        Program.Run(context);
 
-                // Assert — non-zero exit code when duplicate IDs are found
-                Assert.AreEqual(1, context.ExitCode);
-            }
-            finally
-            {
-                Console.SetError(originalError);
-            }
-        }
-        finally
-        {
-            if (Directory.Exists(testDirectory))
-            {
-                Directory.Delete(testDirectory, recursive: true);
-            }
-        }
+        // Assert — non-zero exit code and log contains a clear duplicate-ID error message
+        var logContent = File.ReadAllText(logFile);
+        Assert.AreEqual(1, context.ExitCode);
+        Assert.Contains("Error:", logContent);
+        Assert.Contains("duplicate ID", logContent);
+        Assert.Contains("Core-Logic", logContent);
     }
 
     /// <summary>
@@ -500,49 +423,89 @@ public class ProgramTests
     public void Program_Run_WithLintFlag_UnknownSourceType_ReportsError()
     {
         // Arrange — create temp directory with a definition file having an unknown source type
-        var testDirectory = PathHelpers.SafePathCombine(
-            Path.GetTempPath(), $"ProgramTests_LintUnknownType_{Guid.NewGuid()}");
-        try
-        {
-            Directory.CreateDirectory(testDirectory);
-            var definitionFile = PathHelpers.SafePathCombine(testDirectory, "definition.yaml");
-            File.WriteAllText(definitionFile, """
-                needs-review:
+        using var tempDir = new TestDirectory();
+        var definitionFile = PathHelpers.SafePathCombine(tempDir.DirectoryPath, "definition.yaml");
+        File.WriteAllText(definitionFile, """
+            needs-review:
+              - "src/**/*.cs"
+            evidence-source:
+              type: ftp
+              location: ftp://example.com/index.json
+            reviews:
+              - id: Core-Logic
+                title: Review of core business logic
+                paths:
                   - "src/**/*.cs"
-                evidence-source:
-                  type: ftp
-                  location: ftp://example.com/index.json
-                reviews:
-                  - id: Core-Logic
-                    title: Review of core business logic
-                    paths:
-                      - "src/**/*.cs"
-                """);
+            """);
 
-            var originalError = Console.Error;
-            try
-            {
-                using var errWriter = new StringWriter();
-                Console.SetError(errWriter);
-                using var context = Context.Create(["--silent", "--lint", "--definition", definitionFile]);
+        var logFile = PathHelpers.SafePathCombine(tempDir.DirectoryPath, LintLogFile);
+        using var context = Context.Create(["--silent", "--log", logFile, "--lint", "--definition", definitionFile]);
 
-                // Act
-                Program.Run(context);
+        // Act
+        Program.Run(context);
 
-                // Assert — non-zero exit code when source type is unknown
-                Assert.AreEqual(1, context.ExitCode);
-            }
-            finally
-            {
-                Console.SetError(originalError);
-            }
-        }
-        finally
-        {
-            if (Directory.Exists(testDirectory))
-            {
-                Directory.Delete(testDirectory, recursive: true);
-            }
-        }
+        // Assert — non-zero exit code and log contains a clear unsupported-type error message
+        var logContent = File.ReadAllText(logFile);
+        Assert.AreEqual(1, context.ExitCode);
+        Assert.Contains("Error:", logContent);
+        Assert.Contains("ftp", logContent);
+        Assert.Contains("not supported", logContent);
+    }
+
+    /// <summary>
+    ///     Test that Run with --lint flag reports a clear error for corrupted (invalid) YAML.
+    /// </summary>
+    [TestMethod]
+    public void Program_Run_WithLintFlag_CorruptedYaml_ReportsError()
+    {
+        // Arrange — create a definition file with invalid YAML syntax
+        using var tempDir = new TestDirectory();
+        var definitionFile = PathHelpers.SafePathCombine(tempDir.DirectoryPath, "definition.yaml");
+        File.WriteAllText(definitionFile, """
+            {{{this is not valid yaml
+            """);
+
+        var logFile = PathHelpers.SafePathCombine(tempDir.DirectoryPath, LintLogFile);
+        using var context = Context.Create(["--silent", "--log", logFile, "--lint", "--definition", definitionFile]);
+
+        // Act
+        Program.Run(context);
+
+        // Assert — non-zero exit code and log contains an error about invalid content
+        var logContent = File.ReadAllText(logFile);
+        Assert.AreEqual(1, context.ExitCode);
+        Assert.Contains("Error:", logContent);
+    }
+
+    /// <summary>
+    ///     Test that Run with --lint flag reports a clear error when required fields are missing.
+    /// </summary>
+    [TestMethod]
+    public void Program_Run_WithLintFlag_MissingEvidenceSource_ReportsError()
+    {
+        // Arrange — create a definition file with no evidence-source block
+        using var tempDir = new TestDirectory();
+        var definitionFile = PathHelpers.SafePathCombine(tempDir.DirectoryPath, "definition.yaml");
+        File.WriteAllText(definitionFile, """
+            needs-review:
+              - "src/**/*.cs"
+            reviews:
+              - id: Core-Logic
+                title: Review of core business logic
+                paths:
+                  - "src/**/*.cs"
+            """);
+
+        var logFile = PathHelpers.SafePathCombine(tempDir.DirectoryPath, LintLogFile);
+        using var context = Context.Create(["--silent", "--log", logFile, "--lint", "--definition", definitionFile]);
+
+        // Act
+        Program.Run(context);
+
+        // Assert — non-zero exit code and log contains an error about the missing field
+        var logContent = File.ReadAllText(logFile);
+        Assert.AreEqual(1, context.ExitCode);
+        Assert.Contains("Error:", logContent);
+        Assert.Contains("evidence-source", logContent);
     }
 }

@@ -258,6 +258,8 @@ sections:
               - Program_Run_WithLintFlag_MissingConfig_ReportsError
               - Program_Run_WithLintFlag_DuplicateIds_ReportsError
               - Program_Run_WithLintFlag_UnknownSourceType_ReportsError
+              - Program_Run_WithLintFlag_CorruptedYaml_ReportsError
+              - Program_Run_WithLintFlag_MissingEvidenceSource_ReportsError
               - ReviewMark_Lint
 
       - title: Configuration Reading
