@@ -302,6 +302,82 @@ public class ReviewMarkConfigurationTests
     }
 
     /// <summary>
+    ///     Test that Load includes the file name in the error message when YAML is invalid.
+    /// </summary>
+    [TestMethod]
+    public void ReviewMarkConfiguration_Load_InvalidYaml_ErrorIncludesFilenameAndLine()
+    {
+        // Arrange — write a configuration file with invalid YAML syntax
+        var configPath = PathHelpers.SafePathCombine(_testDirectory, ".reviewmark.yaml");
+        File.WriteAllText(configPath, "{{{invalid yaml");
+
+        // Act & Assert
+        var ex = Assert.Throws<InvalidOperationException>(() =>
+            ReviewMarkConfiguration.Load(configPath));
+        Assert.Contains(".reviewmark.yaml", ex.Message);
+        Assert.Contains("at line", ex.Message);
+    }
+
+    /// <summary>
+    ///     Test that Load includes the file name in the error message when required fields are missing.
+    /// </summary>
+    [TestMethod]
+    public void ReviewMarkConfiguration_Load_MissingEvidenceSource_ErrorIncludesFilename()
+    {
+        // Arrange — write a valid YAML file that is missing the required evidence-source block
+        var configPath = PathHelpers.SafePathCombine(_testDirectory, ".reviewmark.yaml");
+        File.WriteAllText(configPath, """
+            needs-review:
+              - "src/**/*.cs"
+            reviews:
+              - id: Core-Logic
+                title: Review of core business logic
+                paths:
+                  - "src/**/*.cs"
+            """);
+
+        // Act & Assert
+        var ex = Assert.Throws<InvalidOperationException>(() =>
+            ReviewMarkConfiguration.Load(configPath));
+        Assert.Contains(".reviewmark.yaml", ex.Message);
+        Assert.Contains("evidence-source", ex.Message);
+    }
+
+    /// <summary>
+    ///     Test that Lint returns all errors from a file with multiple detectable issues
+    ///     (missing evidence-source AND duplicate review IDs) without stopping at the first.
+    /// </summary>
+    [TestMethod]
+    public void ReviewMarkConfiguration_Lint_MultipleErrors_ReturnsAll()
+    {
+        // Arrange — write a YAML file missing evidence-source and containing duplicate IDs
+        var configPath = PathHelpers.SafePathCombine(_testDirectory, ".reviewmark.yaml");
+        File.WriteAllText(configPath, """
+            needs-review:
+              - "src/**/*.cs"
+            reviews:
+              - id: Core-Logic
+                title: Review of core business logic
+                paths:
+                  - "src/**/*.cs"
+              - id: Core-Logic
+                title: Duplicate review set
+                paths:
+                  - "src/**/*.cs"
+            """);
+
+        // Act
+        var errors = ReviewMarkConfiguration.Lint(configPath);
+
+        // Assert — both the missing evidence-source error and the duplicate ID error are returned
+        Assert.AreEqual(2, errors.Count);
+        Assert.IsTrue(errors.Any(e => e.Contains("evidence-source")),
+            "Expected an error about missing evidence-source.");
+        Assert.IsTrue(errors.Any(e => e.Contains("duplicate ID") && e.Contains("Core-Logic")),
+            "Expected an error about duplicate ID 'Core-Logic'.");
+    }
+
+    /// <summary>
     ///     Test that Load resolves a relative fileshare location against the config file's directory.
     /// </summary>
     [TestMethod]

@@ -103,9 +103,10 @@ Example validation report:
 ✓ ReviewMark_WorkingDirectoryOverride - Passed
 ✓ ReviewMark_Enforce - Passed
 ✓ ReviewMark_Elaborate - Passed
+✓ ReviewMark_Lint - Passed
 
-Total Tests: 8
-Passed: 8
+Total Tests: 9
+Passed: 9
 Failed: 0
 ```
 
@@ -121,6 +122,59 @@ Each test proves specific functionality works correctly:
 - **`ReviewMark_WorkingDirectoryOverride`** - `--dir` overrides the working directory for file operations.
 - **`ReviewMark_Enforce`** - `--enforce` exits with non-zero code when reviews have issues.
 - **`ReviewMark_Elaborate`** - `--elaborate` prints a Markdown elaboration of a review set.
+- **`ReviewMark_Lint`** - `--lint` validates a definition file and reports issues.
+
+## Lint Definition File
+
+The `--lint` command validates the definition file (`.reviewmark.yaml`) and reports all
+structural and semantic issues in a single pass. Unlike running the full tool, `--lint` never
+queries the evidence store — it only checks the definition file itself.
+
+A successful lint exits with code 0; any issue causes a non-zero exit code.
+
+### Running Lint
+
+Lint the default definition file (`.reviewmark.yaml` in the working directory):
+
+```bash
+reviewmark --lint
+```
+
+Lint a specific definition file:
+
+```bash
+reviewmark --lint --definition path/to/definition.yaml
+```
+
+### What Lint Checks
+
+Lint checks the following:
+
+- **File readability** — the definition file exists and can be read.
+- **YAML syntax** — the file is valid YAML; syntax errors include the filename and line number.
+- **`evidence-source` block** — the block is present, has a `type` field (`url` or `fileshare`),
+  and has a `location` field.
+- **Review sets** — each set has an `id`, a `title`, and at least one `paths` entry.
+- **Duplicate IDs** — no two review sets share the same `id`.
+
+All detected issues are reported together so you can fix multiple problems in one pass.
+
+### Lint Error Messages
+
+Lint errors follow the standard `[location]: [severity]: [issue]` format. For YAML syntax
+errors the location includes the line and column number:
+
+```text
+definition.yaml:3:5: error: (yaml parse details)
+definition.yaml: error: Configuration is missing required 'evidence-source' block.
+definition.yaml: error: reviews[1] has duplicate ID 'core-module' (first defined at reviews[0]).
+```
+
+When no issues are found:
+
+```text
+definition.yaml: No issues found
+```
 
 ## Silent Mode
 
@@ -163,6 +217,7 @@ The following command-line options are supported:
 | `-?`, `-h`, `--help`      | Display help message                                         |
 | `--silent`                | Suppress console output                                      |
 | `--validate`              | Run self-validation                                          |
+| `--lint`                  | Validate the definition file and report issues               |
 | `--results <file>`        | Write validation results to file (TRX or JUnit format)       |
 | `--log <file>`            | Write output to log file                                     |
 | `--definition <file>`     | Specify the definition YAML file (default: .reviewmark.yaml) |
@@ -561,13 +616,34 @@ reviews:
       - "!src/Data/Generated/**" # exclude auto-generated entity classes
 ```
 
-## Example 4: Self-Validation with Results
+## Example 4: Lint a Definition File
+
+Lint the default definition file (`.reviewmark.yaml`) to catch all configuration errors before
+running the full tool:
+
+```bash
+reviewmark --lint
+```
+
+Lint a specific definition file:
+
+```bash
+reviewmark --lint --definition path/to/.reviewmark.yaml
+```
+
+With silent mode and logging (useful in CI pipelines):
+
+```bash
+reviewmark --silent --log lint.log --lint
+```
+
+## Example 5: Self-Validation with Results
 
 ```bash
 reviewmark --validate --results validation-results.trx
 ```
 
-## Example 5: Silent Mode with Logging
+## Example 6: Silent Mode with Logging
 
 ```bash
 reviewmark --silent --log tool-output.log

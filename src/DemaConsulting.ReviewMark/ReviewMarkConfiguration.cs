@@ -124,6 +124,152 @@ file sealed class ReviewSetYaml
 }
 
 // ---------------------------------------------------------------------------
+// File-local helpers — use file-local YAML types
+// ---------------------------------------------------------------------------
+
+/// <summary>
+///     File-local static helper that encapsulates YAML deserialization and model validation
+///     on behalf of <see cref="ReviewMarkConfiguration" />.  Because both this class and
+///     <see cref="ReviewMarkYaml" /> are file-local, C# allows them to appear in the
+///     method signatures here.
+/// </summary>
+file static class ReviewMarkConfigurationHelpers
+{
+    /// <summary>
+    ///     Returns <c>true</c> when <paramref name="type" /> is a recognized evidence-source
+    ///     type (<c>url</c> or <c>fileshare</c>, case-insensitive).
+    /// </summary>
+    /// <param name="type">The type string to test.</param>
+    /// <returns><c>true</c> if the type is supported; <c>false</c> otherwise.</returns>
+    public static bool IsSupportedEvidenceSourceType(string type) =>
+        string.Equals(type, "url", StringComparison.OrdinalIgnoreCase) ||
+        string.Equals(type, "fileshare", StringComparison.OrdinalIgnoreCase);
+
+    /// <summary>
+    ///     Deserializes a YAML string into the raw <see cref="ReviewMarkYaml" /> model.
+    /// </summary>
+    /// <param name="yaml">YAML content to parse.</param>
+    /// <param name="filePath">
+    ///     Optional file path used to produce actionable error messages.  When <c>null</c>,
+    ///     YAML errors are thrown as <see cref="ArgumentException" /> (preserving the
+    ///     <see cref="ReviewMarkConfiguration.Parse" /> contract).  When non-<c>null</c>,
+    ///     they are thrown as <see cref="InvalidOperationException" /> and include the
+    ///     file name, line, and column.
+    /// </param>
+    /// <returns>The deserialized <see cref="ReviewMarkYaml" />.</returns>
+    /// <exception cref="ArgumentException">
+    ///     Thrown when <paramref name="filePath" /> is <c>null</c> and the YAML is invalid.
+    /// </exception>
+    /// <exception cref="InvalidOperationException">
+    ///     Thrown when <paramref name="filePath" /> is set and the YAML is invalid.
+    /// </exception>
+    public static ReviewMarkYaml DeserializeRaw(string yaml, string? filePath)
+    {
+        var deserializer = new DeserializerBuilder()
+            .WithNamingConvention(NullNamingConvention.Instance)
+            .IgnoreUnmatchedProperties()
+            .Build();
+
+        try
+        {
+            if (filePath != null)
+            {
+                return deserializer.Deserialize<ReviewMarkYaml>(yaml)
+                       ?? throw new InvalidOperationException(
+                           $"Configuration file '{filePath}' is empty or null.");
+            }
+
+            return deserializer.Deserialize<ReviewMarkYaml>(yaml)
+                   ?? throw new ArgumentException("YAML content is empty or invalid.", nameof(yaml));
+        }
+        catch (YamlException ex)
+        {
+            if (filePath != null)
+            {
+                throw new InvalidOperationException(
+                    $"Failed to parse '{filePath}' at line {ex.Start.Line}, column {ex.Start.Column}: {ex.Message}",
+                    ex);
+            }
+
+            throw new ArgumentException($"Invalid YAML content: {ex.Message}", nameof(yaml), ex);
+        }
+    }
+
+    /// <summary>
+    ///     Validates a raw <see cref="ReviewMarkYaml" /> model and builds a
+    ///     <see cref="ReviewMarkConfiguration" /> from it.
+    /// </summary>
+    /// <param name="raw">The deserialized raw model to validate.</param>
+    /// <returns>A validated <see cref="ReviewMarkConfiguration" />.</returns>
+    /// <exception cref="ArgumentException">
+    ///     Thrown when required fields are absent or malformed.
+    /// </exception>
+    public static ReviewMarkConfiguration BuildConfiguration(ReviewMarkYaml raw)
+    {
+        // Map needs-review patterns (default to empty list if absent)
+        var needsReviewPatterns = (IReadOnlyList<string>)(raw.NeedsReview ?? []);
+
+        // Map evidence-source (required: evidence-source block, type, and location)
+        if (raw.EvidenceSource is not { } es)
+        {
+            throw new ArgumentException("Configuration is missing required 'evidence-source' block.");
+        }
+
+        if (string.IsNullOrWhiteSpace(es.Type))
+        {
+            throw new ArgumentException("Configuration 'evidence-source' is missing a required 'type' field.");
+        }
+
+        if (!IsSupportedEvidenceSourceType(es.Type))
+        {
+            throw new ArgumentException(
+                $"Configuration 'evidence-source' type '{es.Type}' is not supported (must be 'url' or 'fileshare').");
+        }
+
+        if (string.IsNullOrWhiteSpace(es.Location))
+        {
+            throw new ArgumentException("Configuration 'evidence-source' is missing a required 'location' field.");
+        }
+
+        var evidenceSource = new EvidenceSource(
+            Type: es.Type,
+            Location: es.Location,
+            UsernameEnv: es.Credentials?.UsernameEnv,
+            PasswordEnv: es.Credentials?.PasswordEnv);
+
+        // Map review sets, requiring id, title, and paths for each entry
+        var reviews = (raw.Reviews ?? [])
+            .Select((r, i) =>
+            {
+                // Each review set must have an id
+                if (string.IsNullOrWhiteSpace(r.Id))
+                {
+                    throw new ArgumentException($"Review set at index {i} is missing a required 'id' field.");
+                }
+
+                // Each review set must have a title
+                if (string.IsNullOrWhiteSpace(r.Title))
+                {
+                    throw new ArgumentException($"Review set '{r.Id}' is missing a required 'title' field.");
+                }
+
+                // Each review set must have at least one non-empty path pattern
+                var paths = r.Paths;
+                if (paths is null || !paths.Any(p => !string.IsNullOrWhiteSpace(p)))
+                {
+                    throw new ArgumentException(
+                        $"Review set '{r.Id}' at index {i} is missing required 'paths' entries.");
+                }
+
+                return new ReviewSet(r.Id, r.Title, paths);
+            })
+            .ToList();
+
+        return new ReviewMarkConfiguration(needsReviewPatterns, evidenceSource, reviews);
+    }
+}
+
+// ---------------------------------------------------------------------------
 // Public API — internal to the assembly
 // ---------------------------------------------------------------------------
 
@@ -281,7 +427,7 @@ internal sealed class ReviewMarkConfiguration
     /// <param name="needsReviewPatterns">Glob patterns for files requiring review.</param>
     /// <param name="evidenceSource">Evidence-source configuration.</param>
     /// <param name="reviews">Review set definitions.</param>
-    private ReviewMarkConfiguration(
+    internal ReviewMarkConfiguration(
         IReadOnlyList<string> needsReviewPatterns,
         EvidenceSource evidenceSource,
         IReadOnlyList<ReviewSet> reviews)
@@ -297,7 +443,11 @@ internal sealed class ReviewMarkConfiguration
     /// <param name="filePath">Absolute or relative path to the configuration file.</param>
     /// <returns>A populated <see cref="ReviewMarkConfiguration" /> instance.</returns>
     /// <exception cref="ArgumentException">Thrown when <paramref name="filePath" /> is null or empty.</exception>
-    /// <exception cref="InvalidOperationException">Thrown when the file cannot be read.</exception>
+    /// <exception cref="InvalidOperationException">
+    ///     Thrown when the file cannot be read, the YAML is invalid, or required configuration fields are
+    ///     missing.  The exception message always identifies the problematic file and, for YAML syntax
+    ///     errors, the line and column number.
+    /// </exception>
     internal static ReviewMarkConfiguration Load(string filePath)
     {
         // Validate the file path argument
@@ -321,8 +471,23 @@ internal sealed class ReviewMarkConfiguration
             throw new InvalidOperationException($"Failed to read configuration file '{filePath}': {ex.Message}", ex);
         }
 
-        // Delegate to Parse for deserialization and apply path resolution
-        var config = Parse(yaml);
+        // Deserialize the raw YAML model, embedding the file path and line number in any parse error.
+        var raw = ReviewMarkConfigurationHelpers.DeserializeRaw(yaml, filePath);
+
+        // Determine the base directory for resolving relative fileshare locations.
+        var baseDirectory = Path.GetDirectoryName(Path.GetFullPath(filePath))
+            ?? throw new InvalidOperationException($"Cannot determine base directory for configuration file '{filePath}'.");
+
+        // Validate the raw model, embedding the file path in any semantic error.
+        ReviewMarkConfiguration config;
+        try
+        {
+            config = ReviewMarkConfigurationHelpers.BuildConfiguration(raw);
+        }
+        catch (ArgumentException ex)
+        {
+            throw new InvalidOperationException($"Invalid configuration in '{filePath}': {ex.Message}", ex);
+        }
 
         // Resolve relative fileshare locations against the config file's directory so that
         // a relative location (e.g., "index.json") works correctly regardless of the process
@@ -330,8 +495,6 @@ internal sealed class ReviewMarkConfiguration
         if (string.Equals(config.EvidenceSource.Type, "fileshare", StringComparison.OrdinalIgnoreCase) &&
             !Path.IsPathRooted(config.EvidenceSource.Location))
         {
-            var baseDirectory = Path.GetDirectoryName(Path.GetFullPath(filePath))
-                ?? throw new InvalidOperationException($"Cannot determine base directory for configuration file '{filePath}'.");
             var absoluteLocation = Path.GetFullPath(config.EvidenceSource.Location, baseDirectory);
             return new ReviewMarkConfiguration(
                 config.NeedsReviewPatterns,
@@ -340,6 +503,127 @@ internal sealed class ReviewMarkConfiguration
         }
 
         return config;
+    }
+
+    /// <summary>
+    ///     Lints a <c>.reviewmark.yaml</c> file and returns all detected issues.
+    ///     Unlike <see cref="Load" />, this method does not stop at the first error;
+    ///     it accumulates every detectable problem and returns them all so the caller
+    ///     can report a complete list in a single pass.
+    /// </summary>
+    /// <param name="filePath">Absolute or relative path to the configuration file.</param>
+    /// <returns>
+    ///     A read-only list of error messages.  The list is empty when the file is
+    ///     structurally and semantically valid.
+    /// </returns>
+    /// <exception cref="ArgumentException">Thrown when <paramref name="filePath" /> is null or empty.</exception>
+    internal static IReadOnlyList<string> Lint(string filePath)
+    {
+        // Validate the file path argument
+        if (string.IsNullOrWhiteSpace(filePath))
+        {
+            throw new ArgumentException("File path must not be null or empty.", nameof(filePath));
+        }
+
+        var errors = new List<string>();
+
+        // Try to read the file; if this fails we cannot continue.
+        string yaml;
+        try
+        {
+            yaml = File.ReadAllText(filePath);
+        }
+        catch (Exception ex) when (ex is not InvalidOperationException)
+        {
+            errors.Add($"{filePath}: error: {ex.Message}");
+            return errors;
+        }
+
+        // Try to parse the raw YAML model; if this fails we cannot do semantic checks.
+        // When the inner exception is a YamlException, format the location as "file:line:col"
+        // to match the standard linting output convention.
+        ReviewMarkYaml raw;
+        try
+        {
+            raw = ReviewMarkConfigurationHelpers.DeserializeRaw(yaml, filePath);
+        }
+        catch (InvalidOperationException ex) when (ex.InnerException is YamlException yamlEx)
+        {
+            errors.Add($"{filePath}:{yamlEx.Start.Line}:{yamlEx.Start.Column}: error: {yamlEx.Message}");
+            return errors;
+        }
+        catch (InvalidOperationException ex)
+        {
+            errors.Add($"{filePath}: error: {ex.Message}");
+            return errors;
+        }
+
+        // Validate the evidence-source block, collecting all field-level errors.
+        var es = raw.EvidenceSource;
+        if (es == null)
+        {
+            errors.Add(
+                $"{filePath}: error: Configuration is missing required 'evidence-source' block.");
+        }
+        else
+        {
+            if (string.IsNullOrWhiteSpace(es.Type))
+            {
+                errors.Add(
+                    $"{filePath}: error: 'evidence-source' is missing a required 'type' field.");
+            }
+            else if (!ReviewMarkConfigurationHelpers.IsSupportedEvidenceSourceType(es.Type))
+            {
+                errors.Add(
+                    $"{filePath}: error: 'evidence-source' type '{es.Type}' is not supported (must be 'url' or 'fileshare').");
+            }
+
+            if (string.IsNullOrWhiteSpace(es.Location))
+            {
+                errors.Add(
+                    $"{filePath}: error: 'evidence-source' is missing a required 'location' field.");
+            }
+        }
+
+        // Validate each review set, accumulating all structural and uniqueness errors.
+        // Review IDs are treated as case-sensitive identifiers (Ordinal), which is intentional:
+        // "Core-Logic" and "core-logic" are distinct IDs. Evidence-source type uses OrdinalIgnoreCase
+        // because YAML convention allows any casing for keyword values like "url" or "fileshare".
+        var seenIds = new Dictionary<string, int>(StringComparer.Ordinal);
+        var reviews = raw.Reviews ?? [];
+        for (var i = 0; i < reviews.Count; i++)
+        {
+            var r = reviews[i];
+
+            if (string.IsNullOrWhiteSpace(r.Id))
+            {
+                errors.Add(
+                    $"{filePath}: error: Review set at index {i} is missing a required 'id' field.");
+            }
+            else if (seenIds.TryGetValue(r.Id, out var firstIndex))
+            {
+                errors.Add(
+                    $"{filePath}: error: reviews[{i}] has duplicate ID '{r.Id}' (first defined at reviews[{firstIndex}]).");
+            }
+            else
+            {
+                seenIds[r.Id] = i;
+            }
+
+            if (string.IsNullOrWhiteSpace(r.Title))
+            {
+                errors.Add(
+                    $"{filePath}: error: Review set at index {i} is missing a required 'title' field.");
+            }
+
+            if (r.Paths == null || !r.Paths.Any(p => !string.IsNullOrWhiteSpace(p)))
+            {
+                errors.Add(
+                    $"{filePath}: error: Review set at index {i} is missing required 'paths' entries.");
+            }
+        }
+
+        return errors;
     }
 
     /// <summary>
@@ -354,77 +638,11 @@ internal sealed class ReviewMarkConfiguration
         // Validate the yaml input
         ArgumentNullException.ThrowIfNull(yaml);
 
-        // Build a YamlDotNet deserializer that ignores unmatched fields
-        var deserializer = new DeserializerBuilder()
-            .WithNamingConvention(NullNamingConvention.Instance)
-            .IgnoreUnmatchedProperties()
-            .Build();
+        // Deserialize without a file path so YAML errors are wrapped as ArgumentException (not
+        // InvalidOperationException) which is what callers of Parse (unit tests) expect.
+        var raw = ReviewMarkConfigurationHelpers.DeserializeRaw(yaml, filePath: null);
 
-        // Deserialize the raw YAML into the internal model
-        ReviewMarkYaml raw;
-        try
-        {
-            raw = deserializer.Deserialize<ReviewMarkYaml>(yaml)
-                  ?? throw new ArgumentException("YAML content is empty or invalid.", nameof(yaml));
-        }
-        catch (YamlException ex)
-        {
-            throw new ArgumentException($"Invalid YAML content: {ex.Message}", nameof(yaml), ex);
-        }
-
-        // Map needs-review patterns (default to empty list if absent)
-        var needsReviewPatterns = (IReadOnlyList<string>)(raw.NeedsReview ?? []);
-
-        // Map evidence-source (required: evidence-source block, type, and location)
-        if (raw.EvidenceSource is not { } es)
-        {
-            throw new ArgumentException("Configuration is missing required 'evidence-source' block.", nameof(yaml));
-        }
-
-        if (string.IsNullOrWhiteSpace(es.Type))
-        {
-            throw new ArgumentException("Configuration 'evidence-source' is missing a required 'type' field.", nameof(yaml));
-        }
-
-        if (string.IsNullOrWhiteSpace(es.Location))
-        {
-            throw new ArgumentException("Configuration 'evidence-source' is missing a required 'location' field.", nameof(yaml));
-        }
-
-        var evidenceSource = new EvidenceSource(
-            Type: es.Type,
-            Location: es.Location,
-            UsernameEnv: es.Credentials?.UsernameEnv,
-            PasswordEnv: es.Credentials?.PasswordEnv);
-        // Map review sets, requiring id, title, and paths for each entry
-        var reviews = (raw.Reviews ?? [])
-            .Select((r, i) =>
-            {
-                // Each review set must have an id
-                if (string.IsNullOrWhiteSpace(r.Id))
-                {
-                    throw new ArgumentException($"Review set at index {i} is missing a required 'id' field.");
-                }
-
-                // Each review set must have a title
-                if (string.IsNullOrWhiteSpace(r.Title))
-                {
-                    throw new ArgumentException($"Review set '{r.Id}' is missing a required 'title' field.");
-                }
-
-                // Each review set must have at least one non-empty path pattern
-                var paths = r.Paths;
-                if (paths is null || !paths.Any(p => !string.IsNullOrWhiteSpace(p)))
-                {
-                    throw new ArgumentException(
-                        $"Review set '{r.Id}' at index {i} is missing required 'paths' entries.");
-                }
-
-                return new ReviewSet(r.Id, r.Title, paths);
-            })
-            .ToList();
-
-        return new ReviewMarkConfiguration(needsReviewPatterns, evidenceSource, reviews);
+        return ReviewMarkConfigurationHelpers.BuildConfiguration(raw);
     }
 
     /// <summary>

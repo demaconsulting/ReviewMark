@@ -18,6 +18,7 @@ DEMA Consulting tool for automated file-review evidence management in regulated 
 - 📋 **Coverage Reporting** - Review plan shows which files are covered and flags uncovered files
 - 📊 **Status Reporting** - Review report shows whether each review-set is Current, Stale, Missing, or Failed
 - 🔍 **Review Elaboration** - `--elaborate` prints the ID, fingerprint, and file list for a review set
+- 🔎 **Configuration Linting** - `--lint` validates the definition file and reports all structural and semantic issues
 - 🚦 **Enforcement** - `--enforce` exits non-zero if any review-set is stale or missing, or any file is uncovered
 - 🔄 **Re-indexing** - `--index` scans PDF evidence files and writes an up-to-date `index.json`
 - ✅ **Self-Validation** - Built-in validation tests with TRX and JUnit output
@@ -100,6 +101,12 @@ reviewmark --validate
 # Save validation results
 reviewmark --validate --results results.trx
 
+# Validate definition file
+reviewmark --lint
+
+# Validate a specific definition file
+reviewmark --lint --definition path/to/definition.yaml
+
 # Silent mode with logging
 reviewmark --silent --log output.log
 ```
@@ -112,6 +119,7 @@ reviewmark --silent --log output.log
 | `-?`, `-h`, `--help`      | Display help message                                         |
 | `--silent`                | Suppress console output                                      |
 | `--validate`              | Run self-validation                                          |
+| `--lint`                  | Validate the definition file and report issues               |
 | `--results <file>`        | Write validation results to file (TRX or JUnit format)       |
 | `--log <file>`            | Write output to log file                                     |
 | `--definition <file>`     | Specify the definition YAML file (default: .reviewmark.yaml) |
@@ -147,9 +155,10 @@ Running self-validation produces a report containing the following information:
 ✓ ReviewMark_WorkingDirectoryOverride - Passed
 ✓ ReviewMark_Enforce - Passed
 ✓ ReviewMark_Elaborate - Passed
+✓ ReviewMark_Lint - Passed
 
-Total Tests: 8
-Passed: 8
+Total Tests: 9
+Passed: 9
 Failed: 0
 ```
 
@@ -163,6 +172,7 @@ Each test in the report proves:
 - **`ReviewMark_WorkingDirectoryOverride`** - `--dir` overrides the working directory for file operations.
 - **`ReviewMark_Enforce`** - `--enforce` exits with non-zero code when reviews have issues.
 - **`ReviewMark_Elaborate`** - `--elaborate` prints a Markdown elaboration of a review set.
+- **`ReviewMark_Lint`** - `--lint` validates a definition file and reports issues.
 
 See the [User Guide][link-guide] for more details on the self-validation tests.
 

@@ -712,5 +712,34 @@ public class ContextTests
         // Act & Assert - --elaborate without an ID argument should throw
         Assert.Throws<ArgumentException>(() => Context.Create(["--elaborate"]));
     }
+
+    /// <summary>
+    ///     Test that --lint flag sets Lint to true.
+    /// </summary>
+    [TestMethod]
+    public void Context_Create_LintFlag_SetsLintTrue()
+    {
+        // Act
+        using var context = Context.Create(["--lint"]);
+
+        // Assert — Lint is true, other flags remain false, and exit code is zero
+        Assert.IsTrue(context.Lint);
+        Assert.IsFalse(context.Version);
+        Assert.IsFalse(context.Help);
+        Assert.AreEqual(0, context.ExitCode);
+    }
+
+    /// <summary>
+    ///     Test that Lint is false when --lint is not specified.
+    /// </summary>
+    [TestMethod]
+    public void Context_Create_NoArguments_LintIsFalse()
+    {
+        // Act
+        using var context = Context.Create([]);
+
+        // Assert — Lint is false when --lint is not specified
+        Assert.IsFalse(context.Lint);
+    }
 }
 

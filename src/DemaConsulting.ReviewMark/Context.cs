@@ -61,6 +61,11 @@ internal sealed class Context : IDisposable
     public bool Validate { get; private init; }
 
     /// <summary>
+    ///     Gets a value indicating whether the lint flag was specified.
+    /// </summary>
+    public bool Lint { get; private init; }
+
+    /// <summary>
     ///     Gets the validation results file path.
     /// </summary>
     public string? ResultsFile { get; private init; }
@@ -159,6 +164,7 @@ internal sealed class Context : IDisposable
             Help = parser.Help,
             Silent = parser.Silent,
             Validate = parser.Validate,
+            Lint = parser.Lint,
             ResultsFile = parser.ResultsFile,
             DefinitionFile = parser.DefinitionFile,
             PlanFile = parser.PlanFile,
@@ -225,6 +231,11 @@ internal sealed class Context : IDisposable
         ///     Gets a value indicating whether the validate flag was specified.
         /// </summary>
         public bool Validate { get; private set; }
+
+        /// <summary>
+        ///     Gets a value indicating whether the lint flag was specified.
+        /// </summary>
+        public bool Lint { get; private set; }
 
         /// <summary>
         ///     Gets the log file path.
@@ -326,6 +337,10 @@ internal sealed class Context : IDisposable
 
                 case "--validate":
                     Validate = true;
+                    return index;
+
+                case "--lint":
+                    Lint = true;
                     return index;
 
                 case "--log":
