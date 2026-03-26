@@ -155,6 +155,7 @@ internal sealed class ReviewIndex
 
     /// <summary>
     ///     Loads a <see cref="ReviewIndex" /> from an <see cref="EvidenceSource" />.
+    ///     For <c>none</c> sources an empty index is returned immediately.
     ///     For <c>fileshare</c> sources the <see cref="EvidenceSource.Location" /> is treated as the
     ///     path to the <c>index.json</c> file. For <c>url</c> sources the location is the HTTP(S) URL
     ///     of the <c>index.json</c> file; an <see cref="HttpClient" /> with optional pre-emptive
@@ -173,6 +174,12 @@ internal sealed class ReviewIndex
     internal static ReviewIndex Load(EvidenceSource evidenceSource)
     {
         ArgumentNullException.ThrowIfNull(evidenceSource);
+
+        // Short-circuit for none sources — return an empty index
+        if (evidenceSource.Type.Equals("none", StringComparison.OrdinalIgnoreCase))
+        {
+            return Empty();
+        }
 
         // Short-circuit for fileshare sources — no HttpClient needed
         if (evidenceSource.Type.Equals("fileshare", StringComparison.OrdinalIgnoreCase))
@@ -208,6 +215,7 @@ internal sealed class ReviewIndex
         // Dispatch to the appropriate loader based on the evidence-source type
         return evidenceSource.Type.ToLowerInvariant() switch
         {
+            "none" => Empty(),
             "fileshare" => LoadFromFile(evidenceSource.Location),
             "url" => LoadFromUrl(evidenceSource.Location, httpClient),
             _ => throw new InvalidOperationException(
