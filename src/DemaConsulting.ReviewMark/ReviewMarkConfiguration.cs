@@ -278,7 +278,10 @@ file static class ReviewMarkConfigurationHelpers
 ///     Represents the evidence-source configuration from <c>.reviewmark.yaml</c>.
 /// </summary>
 /// <param name="Type">The source type, e.g. <c>none</c>, <c>url</c>, or <c>fileshare</c>.</param>
-/// <param name="Location">The URL or path for the evidence source.</param>
+/// <param name="Location">
+///     The URL or path for the evidence source; required for <c>url</c> and <c>fileshare</c> types,
+///     and optional/ignored when <paramref name="Type"/> is <c>none</c>.
+/// </param>
 /// <param name="UsernameEnv">Optional environment-variable name that holds the username credential.</param>
 /// <param name="PasswordEnv">Optional environment-variable name that holds the password credential.</param>
 internal sealed record EvidenceSource(
