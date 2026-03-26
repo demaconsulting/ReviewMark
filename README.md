@@ -59,7 +59,7 @@ needs-review:
   - "!src/Generated/**"    # exclude auto-generated files
 
 evidence-source:
-  type: url                # 'url' or 'fileshare'
+  type: url                # 'none', 'url', or 'fileshare'
   location: https://reviews.example.com/evidence/index.json
 
 reviews:

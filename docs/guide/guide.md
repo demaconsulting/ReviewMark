@@ -357,8 +357,10 @@ reviews:
 
 ## Evidence Source
 
-The `evidence-source` block tells ReviewMark where to find `index.json` — the catalogue of
-completed review PDFs.
+The `evidence-source` block configures how ReviewMark obtains review evidence. For `url` and
+`fileshare` sources it points to `index.json` — the catalogue of completed review PDFs. The
+`none` source skips loading any index and always returns empty evidence (useful during initial
+project setup before an evidence store is provisioned).
 
 ### Source Types
 
