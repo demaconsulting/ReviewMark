@@ -1,0 +1,41 @@
+---
+# Context Software Unit Requirements
+#
+# PURPOSE:
+# - Define requirements for the Context software unit
+# - This unit parses command-line arguments into an in-memory context object
+# - It also provides unified output and logging across the tool
+
+sections:
+  - title: Context Unit Requirements
+    requirements:
+      - id: ReviewMark-Context-Parsing
+        title: The Context unit shall parse command-line arguments into a strongly-typed Context object.
+        justification: |
+          All downstream processing reads options from the Context object rather than
+          directly from the raw argument array. The Context.Create factory method processes
+          arguments sequentially, recognizing flag and value arguments, and returns a fully
+          initialized Context. Unknown arguments must raise an ArgumentException so the
+          caller can report a clear error message.
+        tests:
+          - Context_Create_NoArguments_ReturnsDefaultContext
+          - Context_Create_VersionFlag_SetsVersionTrue
+          - Context_Create_HelpFlag_SetsHelpTrue
+          - Context_Create_SilentFlag_SetsSilentTrue
+          - Context_Create_ValidateFlag_SetsValidateTrue
+          - Context_Create_ResultsFlag_SetsResultsFile
+          - Context_Create_LogFlag_OpensLogFile
+          - Context_Create_UnknownArgument_ThrowsArgumentException
+          - Context_Create_ShortVersionFlag_SetsVersionTrue
+
+      - id: ReviewMark-Context-Output
+        title: The Context unit shall provide WriteLine and WriteError methods for unified output and logging.
+        justification: |
+          All output goes through Context so that the --silent flag is honoured and
+          optionally duplicated to a log file opened by the --log flag. WriteError must
+          additionally set the error exit code so that the process exits with a non-zero
+          status when any error is reported.
+        tests:
+          - Context_WriteError_NotSilent_WritesToConsole
+          - Context_WriteError_SetsErrorExitCode
+          - Context_WriteLine_Silent_DoesNotWriteToConsole

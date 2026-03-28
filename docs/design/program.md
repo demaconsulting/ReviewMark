@@ -28,21 +28,12 @@ via `Context.WriteError()`, and causes a non-zero exit code to be returned.
 `Program.Run(Context)` evaluates the parsed flags in the following priority order,
 executing the first matching action and returning:
 
-```mermaid
-graph TD
-    A[Start] --> B{--version flag?}
-    B -->|yes| C[Print version and return]
-    B -->|no| D{--help flag?}
-    D -->|yes| E[Print banner and return]
-    D -->|no| F{--validate flag?}
-    F -->|yes| G[Run self-validation and return]
-    F -->|no| H{--lint flag?}
-    H -->|yes| I[Run configuration lint and return]
-    H -->|no| J{--index paths provided?}
-    J -->|yes| K[Scan and write evidence index, then return]
-    J -->|no| L[Generate Review Plan and/or Review Report]
-    L --> M[Return]
-```
+1. If `--version` — print version and return
+2. If `--help` — print banner and return
+3. If `--validate` — run self-validation and return
+4. If `--lint` — run configuration lint and return
+5. If `--index` paths provided — scan and write evidence index, then return
+6. Otherwise — generate Review Plan and/or Review Report and return
 
 Only one top-level action is performed per invocation. Actions later in the priority
 order are not reached if an earlier flag is set.

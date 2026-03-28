@@ -12,27 +12,20 @@ documents: a Review Plan and a Review Report.
 
 ## Main Workflow
 
-The following diagram illustrates the end-to-end processing flow.
+The following steps describe the end-to-end processing flow.
 
-```mermaid
-graph TD
-    A[Parse CLI arguments] --> B[Load .reviewmark.yaml]
-    B --> C[Resolve file lists via glob patterns]
-    C --> D[Compute SHA-256 fingerprints]
-    D --> E[Load evidence index]
-    E --> F{Evidence source type?}
-    F -->|none| G[Use empty index]
-    F -->|fileshare| H[Load index.json from file path]
-    F -->|url| I[Load index.json from HTTP URL]
-    G --> J[Generate Review Plan / Review Report]
-    H --> J
-    I --> J
-    J --> K{Enforce flag set?}
-    K -->|yes| L{All sets Current?}
-    L -->|no| M[Return non-zero exit code]
-    L -->|yes| N[Return success]
-    K -->|no| N
-```
+1. Parse CLI arguments
+2. Load `.reviewmark.yaml`
+3. Resolve file lists via glob patterns
+4. Compute SHA-256 fingerprints
+5. Load evidence index
+   - `none` — use an empty index (no evidence store configured)
+   - `fileshare` — load `index.json` from a local or network file path
+   - `url` — download `index.json` from an HTTP or HTTPS URL
+6. Generate Review Plan and/or Review Report
+7. If `--enforce` flag is set:
+   - If all review-sets are Current — return success
+   - Otherwise — return a non-zero exit code
 
 ## Evidence Source Types
 

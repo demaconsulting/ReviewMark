@@ -33,37 +33,18 @@ This document does not cover:
 The following diagram shows the decomposition of the ReviewMark software system into
 subsystems and software units.
 
-```mermaid
-graph LR
-    System["ReviewMark (Software System)"]
-
-    CLI["CLI Subsystem"]
-    Program["Program (Software Unit)"]
-    Context["Context (Software Unit)"]
-
-    Config["Configuration Subsystem"]
-    RMConfig["ReviewMarkConfiguration (Software Unit)"]
-    Glob["GlobMatcher (Software Unit)"]
-
-    IndexSub["Index Subsystem"]
-    Index["Index (Software Unit)"]
-    PathHelpers["PathHelpers (Software Unit)"]
-
-    Validation["Validation (Software Unit)"]
-
-    System --> CLI
-    System --> Config
-    System --> IndexSub
-    System --> Validation
-
-    CLI --> Program
-    CLI --> Context
-
-    Config --> RMConfig
-    Config --> Glob
-
-    IndexSub --> Index
-    IndexSub --> PathHelpers
+```text
+ReviewMark (Software System)
+├── CLI Subsystem
+│   ├── Program (Software Unit)
+│   └── Context (Software Unit)
+├── Configuration Subsystem
+│   ├── ReviewMarkConfiguration (Software Unit)
+│   └── GlobMatcher (Software Unit)
+├── Index Subsystem
+│   ├── ReviewIndex (Software Unit)
+│   └── PathHelpers (Software Unit)
+└── Validation (Software Unit)
 ```
 
 ## Audience

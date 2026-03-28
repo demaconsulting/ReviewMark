@@ -32,7 +32,7 @@ reviews:
   - id: ReviewMark-Context
     title: Review of Context software unit (command-line argument handling)
     paths:
-      - "docs/reqstream/subsystem-cli.yaml"             # requirements
+      - "docs/reqstream/unit-context.yaml"              # requirements
       - "docs/design/context.md"                        # design
       - "src/**/Context.cs"                             # implementation
       - "test/**/ContextTests.cs"                       # tests
@@ -45,12 +45,12 @@ reviews:
       - "src/**/GlobMatcher.cs"                          # implementation
       - "test/**/GlobMatcherTests.cs"                    # tests
 
-  - id: ReviewMark-Index
-    title: Review of Index software unit (review evidence indexing)
+  - id: ReviewMark-ReviewIndex
+    title: Review of ReviewIndex software unit (review evidence indexing)
     paths:
-      - "docs/reqstream/subsystem-index.yaml"           # requirements
-      - "docs/design/index.md"                          # design
-      - "src/**/Index.cs"                               # implementation
+      - "docs/reqstream/unit-review-index.yaml"         # requirements
+      - "docs/design/review-index.md"                   # design
+      - "src/**/ReviewIndex.cs"                         # implementation
       - "test/**/IndexTests.cs"                         # tests
 
   - id: ReviewMark-PathHelpers
@@ -64,8 +64,7 @@ reviews:
   - id: ReviewMark-Program
     title: Review of Program software unit (main entry point and tool orchestration)
     paths:
-      - "docs/reqstream/subsystem-cli.yaml"             # requirements
-      - "docs/reqstream/platform-requirements.yaml"     # platform requirements
+      - "docs/reqstream/unit-program.yaml"              # requirements
       - "docs/design/program.md"                        # design
       - "docs/guide/guide.md"                           # user guide
       - "src/**/Program.cs"                             # implementation
@@ -108,7 +107,7 @@ reviews:
       - "docs/design/system.md"                         # system design
       - "docs/design/context.md"                        # Context design
       - "docs/design/glob-matcher.md"                   # GlobMatcher design
-      - "docs/design/index.md"                          # Index design
+      - "docs/design/review-index.md"                   # ReviewIndex design
       - "docs/design/path-helpers.md"                   # PathHelpers design
       - "docs/design/program.md"                        # Program design
       - "docs/design/review-mark-configuration.md"      # ReviewMarkConfiguration design
@@ -121,7 +120,9 @@ reviews:
       - "docs/reqstream/reviewmark-system.yaml"         # system-level requirements
       - "docs/reqstream/subsystem-cli.yaml"             # CLI subsystem requirements
       - "docs/reqstream/subsystem-configuration.yaml"   # Configuration subsystem requirements
-      - "docs/reqstream/subsystem-index.yaml"           # Index subsystem requirements
+      - "docs/reqstream/unit-context.yaml"              # Context unit requirements
+      - "docs/reqstream/unit-program.yaml"              # Program unit requirements
+      - "docs/reqstream/unit-review-index.yaml"         # ReviewIndex unit requirements
       - "docs/reqstream/unit-glob-matcher.yaml"         # GlobMatcher unit requirements
       - "docs/reqstream/unit-path-helpers.yaml"         # PathHelpers unit requirements
       - "docs/reqstream/unit-validation.yaml"           # Validation unit requirements

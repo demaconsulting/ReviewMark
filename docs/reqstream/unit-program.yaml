@@ -1,0 +1,44 @@
+---
+# Program Software Unit Requirements
+#
+# PURPOSE:
+# - Define requirements for the Program software unit
+# - This unit is the main entry point and top-level orchestrator of the tool
+# - It dispatches to processing logic based on parsed CLI flags
+
+sections:
+  - title: Program Unit Requirements
+    requirements:
+      - id: ReviewMark-Program-EntryPoint
+        title: >-
+          The Program unit shall construct a Context, dispatch to the appropriate operation,
+          and return the Context exit code as the process exit code.
+        justification: |
+          Program.Main is the process entry point. It must create the execution context,
+          call Program.Run to perform the requested operation, and return the exit code
+          from the context so that callers can detect success or failure programmatically.
+          Any unhandled exception must be caught, written to error output, and cause a
+          non-zero exit code rather than an unhandled process crash.
+        tests:
+          - Program_Run_WithVersionFlag_DisplaysVersionOnly
+          - Program_Version_ReturnsNonEmptyString
+          - Program_Run_WithHelpFlag_DisplaysUsageInformation
+
+      - id: ReviewMark-Program-Dispatch
+        title: >-
+          The Program unit shall dispatch to exactly one operation per invocation based on
+          the priority order of CLI flags.
+        justification: |
+          --version, --help, --validate, --lint, --index, and plan/report operations must
+          be evaluated in a fixed priority order so that the behavior is predictable and
+          documented. Only the first matching flag action is executed; later flags are
+          not reached.
+        tests:
+          - Program_Run_WithVersionFlag_DisplaysVersionOnly
+          - Program_Run_WithHelpFlag_DisplaysUsageInformation
+          - Program_Run_WithValidateFlag_RunsValidation
+          - Program_Run_WithLintFlag_ValidConfig_ReportsSuccess
+          - Program_Run_WithHelpFlag_IncludesElaborateOption
+          - Program_Run_WithHelpFlag_IncludesLintOption
+          - Program_Run_WithElaborateFlag_OutputsElaboration
+          - Program_Run_WithElaborateFlag_UnknownId_ReportsError

@@ -1,8 +1,8 @@
-# Index
+# ReviewIndex
 
 ## Purpose
 
-The `Index` software unit manages the loading, querying, and creation of the review
+The `ReviewIndex` software unit manages the loading, querying, and creation of the review
 evidence index. It abstracts the evidence store behind a uniform interface so that
 the rest of the tool does not need to know whether evidence is stored on a fileshare,
 served over HTTP, or absent entirely.
@@ -48,14 +48,11 @@ source type is `none`, resulting in all review-sets being reported as Missing.
 `ReviewIndex.GetStatus(id, fingerprint)` determines the review status of a
 review-set by looking up the `id` in the loaded index:
 
-```mermaid
-graph TD
-    A[Look up id in index] --> B{id found?}
-    B -->|no| C[Return Missing]
-    B -->|yes| D{fingerprint matches AND result is pass?}
-    D -->|yes| E[Return Current]
-    D -->|no| F[Return Stale]
-```
+1. Look up `id` in the index
+   - If not found — return `Missing`
+2. Check if `fingerprint` matches AND result is `pass`
+   - If yes — return `Current`
+   - If no — return `Stale`
 
 | Status | Meaning |
 | ------ | ------- |
