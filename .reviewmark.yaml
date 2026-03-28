@@ -32,7 +32,7 @@ reviews:
   - id: ReviewMark-Context
     title: Review of Context software unit (command-line argument handling)
     paths:
-      - "docs/reqstream/cli-requirements.yaml"          # requirements
+      - "docs/reqstream/subsystem-cli.yaml"             # requirements
       - "docs/design/context.md"                        # design
       - "src/**/Context.cs"                             # implementation
       - "test/**/ContextTests.cs"                       # tests
@@ -40,7 +40,7 @@ reviews:
   - id: ReviewMark-GlobMatcher
     title: Review of GlobMatcher software unit (file pattern matching)
     paths:
-      - "docs/reqstream/glob-matcher-requirements.yaml"  # requirements
+      - "docs/reqstream/unit-glob-matcher.yaml"          # requirements
       - "docs/design/glob-matcher.md"                    # design
       - "src/**/GlobMatcher.cs"                          # implementation
       - "test/**/GlobMatcherTests.cs"                    # tests
@@ -48,7 +48,7 @@ reviews:
   - id: ReviewMark-Index
     title: Review of Index software unit (review evidence indexing)
     paths:
-      - "docs/reqstream/index-requirements.yaml"        # requirements
+      - "docs/reqstream/subsystem-index.yaml"           # requirements
       - "docs/design/index.md"                          # design
       - "src/**/Index.cs"                               # implementation
       - "test/**/IndexTests.cs"                         # tests
@@ -56,7 +56,7 @@ reviews:
   - id: ReviewMark-PathHelpers
     title: Review of PathHelpers software unit (file path utilities)
     paths:
-      - "docs/reqstream/path-helpers-requirements.yaml"  # requirements
+      - "docs/reqstream/unit-path-helpers.yaml"          # requirements
       - "docs/design/path-helpers.md"                    # design
       - "src/**/PathHelpers.cs"                          # implementation
       - "test/**/PathHelpersTests.cs"                    # tests
@@ -64,7 +64,7 @@ reviews:
   - id: ReviewMark-Program
     title: Review of Program software unit (main entry point and tool orchestration)
     paths:
-      - "docs/reqstream/cli-requirements.yaml"          # requirements
+      - "docs/reqstream/subsystem-cli.yaml"             # requirements
       - "docs/reqstream/platform-requirements.yaml"     # platform requirements
       - "docs/design/program.md"                        # design
       - "docs/guide/guide.md"                           # user guide
@@ -75,15 +75,15 @@ reviews:
   - id: ReviewMark-Configuration
     title: Review of ReviewMarkConfiguration software unit (configuration parsing and processing)
     paths:
-      - "docs/reqstream/configuration-requirements.yaml"    # requirements
-      - "docs/design/review-mark-configuration.md"          # design
-      - "src/**/ReviewMarkConfiguration.cs"                 # implementation
-      - "test/**/ReviewMarkConfigurationTests.cs"           # tests
+      - "docs/reqstream/subsystem-configuration.yaml"   # requirements
+      - "docs/design/review-mark-configuration.md"      # design
+      - "src/**/ReviewMarkConfiguration.cs"             # implementation
+      - "test/**/ReviewMarkConfigurationTests.cs"       # tests
 
   - id: ReviewMark-Validation
     title: Review of Validation software unit (self-validation test execution)
     paths:
-      - "docs/reqstream/validation-requirements.yaml"   # requirements
+      - "docs/reqstream/unit-validation.yaml"           # requirements
       - "docs/design/validation.md"                     # design
       - "src/**/Validation.cs"                          # implementation
       - "test/**/ValidationTests.cs"                    # tests
@@ -92,13 +92,13 @@ reviews:
   - id: ReviewMark-System
     title: Review of ReviewMark system-level behavior, platform support, and integration
     paths:
-      - "docs/reqstream/reviewmark-system-requirements.yaml"    # system requirements
-      - "docs/reqstream/platform-requirements.yaml"             # platform requirements
-      - "docs/design/introduction.md"                           # design introduction and architecture
-      - "docs/design/system.md"                                 # system design
-      - "test/**/IntegrationTests.cs"                           # integration tests
-      - "test/**/Runner.cs"                                     # test infrastructure
-      - "test/**/AssemblyInfo.cs"                               # test infrastructure
+      - "docs/reqstream/reviewmark-system.yaml"         # system requirements
+      - "docs/reqstream/platform-requirements.yaml"     # platform requirements
+      - "docs/design/introduction.md"                   # design introduction and architecture
+      - "docs/design/system.md"                         # system design
+      - "test/**/IntegrationTests.cs"                   # integration tests
+      - "test/**/Runner.cs"                             # test infrastructure
+      - "test/**/AssemblyInfo.cs"                       # test infrastructure
 
   - id: ReviewMark-Design
     title: Review of all ReviewMark design documentation
@@ -117,13 +117,18 @@ reviews:
   - id: ReviewMark-AllRequirements
     title: Review of all ReviewMark requirements files
     paths:
-      - "requirements.yaml"                                     # root requirements file
-      - "docs/reqstream/reviewmark-system-requirements.yaml"    # system-level requirements
-      - "docs/reqstream/cli-requirements.yaml"                  # CLI subsystem requirements
-      - "docs/reqstream/configuration-requirements.yaml"        # Configuration subsystem requirements
-      - "docs/reqstream/glob-matcher-requirements.yaml"         # GlobMatcher unit requirements
-      - "docs/reqstream/index-requirements.yaml"                # Index subsystem requirements
-      - "docs/reqstream/path-helpers-requirements.yaml"         # PathHelpers unit requirements
-      - "docs/reqstream/platform-requirements.yaml"             # Platform support requirements
-      - "docs/reqstream/validation-requirements.yaml"           # Validation unit requirements
-      - "docs/reqstream/ots-requirements.yaml"                  # OTS component requirements
+      - "requirements.yaml"                             # root requirements file
+      - "docs/reqstream/reviewmark-system.yaml"         # system-level requirements
+      - "docs/reqstream/subsystem-cli.yaml"             # CLI subsystem requirements
+      - "docs/reqstream/subsystem-configuration.yaml"   # Configuration subsystem requirements
+      - "docs/reqstream/subsystem-index.yaml"           # Index subsystem requirements
+      - "docs/reqstream/unit-glob-matcher.yaml"         # GlobMatcher unit requirements
+      - "docs/reqstream/unit-path-helpers.yaml"         # PathHelpers unit requirements
+      - "docs/reqstream/unit-validation.yaml"           # Validation unit requirements
+      - "docs/reqstream/platform-requirements.yaml"     # Platform support requirements
+      - "docs/reqstream/ots-mstest.yaml"                # MSTest OTS requirements
+      - "docs/reqstream/ots-reqstream.yaml"             # ReqStream OTS requirements
+      - "docs/reqstream/ots-buildmark.yaml"             # BuildMark OTS requirements
+      - "docs/reqstream/ots-versionmark.yaml"           # VersionMark OTS requirements
+      - "docs/reqstream/ots-sarifmark.yaml"             # SarifMark OTS requirements
+      - "docs/reqstream/ots-sonarmark.yaml"             # SonarMark OTS requirements
