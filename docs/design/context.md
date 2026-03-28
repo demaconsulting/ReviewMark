@@ -34,8 +34,10 @@ arguments:
 
 `Context.Create(string[] args)` is a factory method that processes the argument
 array sequentially, recognizing both flag arguments (e.g., `--validate`) and
-value arguments (e.g., `--plan <path>`). Unrecognized arguments are silently
-ignored. The resulting `Context` instance holds the fully parsed state.
+value arguments (e.g., `--plan <path>`). Unrecognized or unsupported arguments
+cause `Context.ParseArgument` to throw an `ArgumentException`, which callers of
+`Context.Create` are expected to handle and surface as a CLI error. The resulting
+`Context` instance holds the fully parsed state when argument parsing succeeds.
 
 ## Output Methods
 
