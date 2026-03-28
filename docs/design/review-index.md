@@ -69,12 +69,15 @@ review-set by looking up the `id` in the loaded index:
 
 1. Look up `id` in the index
    - If not found — return `Missing`
-2. Check if `fingerprint` matches AND result is `pass`
-   - If yes — return `Current`
-   - If no — return `Stale`
+2. Check if there is a record whose `Fingerprint` matches the supplied `fingerprint`
+   - If no matching fingerprint exists — return `Stale`
+   - If a matching fingerprint exists:
+     - If the `Result` is `pass` — return `Current`
+     - If the `Result` is not `pass` — return `Failed`
 
 | Status | Meaning |
 | ------ | ------- |
 | `Current` | The review record matches the current fingerprint and has a passing result |
-| `Stale` | A review record exists for the id but the fingerprint does not match (files have changed since review) |
+| `Failed` | The review record matches the current fingerprint but the result is not passing |
+| `Stale` | A review record exists for the id but the fingerprint does not match (files have changed since review or a different revision was reviewed) |
 | `Missing` | No review record exists for the id |
