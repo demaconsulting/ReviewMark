@@ -1,0 +1,13 @@
+---
+title: ReviewMark Design
+subtitle: Software Design Document for ReviewMark
+author: DEMA Consulting
+description: Software Design Document for ReviewMark
+lang: en-US
+keywords:
+  - ReviewMark
+  - Design
+  - Software Architecture
+  - .NET
+  - Command-Line Tool
+---

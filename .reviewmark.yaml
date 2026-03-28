@@ -7,7 +7,9 @@
 # Processed in order; prefix a pattern with '!' to exclude.
 needs-review:
   - "**/*.cs"                       # All C# source and test files
+  - "requirements.yaml"             # Root requirements file
   - "docs/reqstream/*.yaml"         # Per-software-item requirements files
+  - "docs/design/*.md"              # Software design documents
   - "!**/obj/**"                    # Exclude build output
   - "!**/bin/**"                    # Exclude build output
 
@@ -31,12 +33,14 @@ reviews:
     title: Review of Context software unit (command-line argument handling)
     paths:
       - "docs/reqstream/cli-requirements.yaml"          # requirements
+      - "docs/design/context.md"                        # design
       - "src/**/Context.cs"                             # implementation
       - "test/**/ContextTests.cs"                       # tests
 
   - id: ReviewMark-GlobMatcher
     title: Review of GlobMatcher software unit (file pattern matching)
     paths:
+      - "docs/design/glob-matcher.md"                   # design
       - "src/**/GlobMatcher.cs"                         # implementation
       - "test/**/GlobMatcherTests.cs"                   # tests
 
@@ -44,12 +48,14 @@ reviews:
     title: Review of Index software unit (review evidence indexing)
     paths:
       - "docs/reqstream/index-requirements.yaml"        # requirements
+      - "docs/design/index.md"                          # design
       - "src/**/Index.cs"                               # implementation
       - "test/**/IndexTests.cs"                         # tests
 
   - id: ReviewMark-PathHelpers
     title: Review of PathHelpers software unit (file path utilities)
     paths:
+      - "docs/design/path-helpers.md"                   # design
       - "src/**/PathHelpers.cs"                         # implementation
       - "test/**/PathHelpersTests.cs"                   # tests
 
@@ -58,6 +64,7 @@ reviews:
     paths:
       - "docs/reqstream/cli-requirements.yaml"          # requirements
       - "docs/reqstream/platform-requirements.yaml"     # platform requirements
+      - "docs/design/program.md"                        # design
       - "docs/guide/guide.md"                           # user guide
       - "src/**/Program.cs"                             # implementation
       - "test/**/ProgramTests.cs"                       # unit tests
@@ -70,6 +77,7 @@ reviews:
     title: Review of ReviewMarkConfiguration software unit (configuration parsing and processing)
     paths:
       - "docs/reqstream/configuration-requirements.yaml"    # requirements
+      - "docs/design/review-mark-configuration.md"          # design
       - "src/**/ReviewMarkConfiguration.cs"                 # implementation
       - "test/**/ReviewMarkConfigurationTests.cs"           # tests
 
@@ -77,4 +85,40 @@ reviews:
     title: Review of Validation software unit (self-validation test execution)
     paths:
       - "docs/reqstream/ots-requirements.yaml"          # OTS requirements verified by self-validation
+      - "docs/design/validation.md"                     # design
       - "src/**/Validation.cs"                          # implementation
+
+  # Special review-sets
+  - id: ReviewMark-System
+    title: Review of ReviewMark system-level behavior, platform support, and integration
+    paths:
+      - "requirements.yaml"                             # system requirements (root)
+      - "docs/reqstream/platform-requirements.yaml"     # platform requirements
+      - "docs/design/introduction.md"                   # design introduction and architecture
+      - "docs/design/system.md"                         # system design
+      - "test/**/IntegrationTests.cs"                   # integration tests
+
+  - id: ReviewMark-Design
+    title: Review of all ReviewMark design documentation
+    paths:
+      - "requirements.yaml"                             # system requirements (root)
+      - "docs/reqstream/platform-requirements.yaml"     # platform requirements
+      - "docs/design/introduction.md"                   # design introduction and architecture
+      - "docs/design/system.md"                         # system design
+      - "docs/design/context.md"                        # Context design
+      - "docs/design/glob-matcher.md"                   # GlobMatcher design
+      - "docs/design/index.md"                          # Index design
+      - "docs/design/path-helpers.md"                   # PathHelpers design
+      - "docs/design/program.md"                        # Program design
+      - "docs/design/review-mark-configuration.md"      # ReviewMarkConfiguration design
+      - "docs/design/validation.md"                     # Validation design
+
+  - id: ReviewMark-AllRequirements
+    title: Review of all ReviewMark requirements files
+    paths:
+      - "requirements.yaml"                             # root requirements file
+      - "docs/reqstream/cli-requirements.yaml"          # CLI subsystem requirements
+      - "docs/reqstream/configuration-requirements.yaml"    # Configuration subsystem requirements
+      - "docs/reqstream/index-requirements.yaml"        # Index subsystem requirements
+      - "docs/reqstream/platform-requirements.yaml"     # Platform support requirements
+      - "docs/reqstream/ots-requirements.yaml"          # OTS component requirements
