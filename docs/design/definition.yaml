@@ -8,7 +8,7 @@ input-files:
   - docs/design/system.md
   - docs/design/context.md
   - docs/design/glob-matcher.md
-  - docs/design/index.md
+  - docs/design/review-index.md
   - docs/design/path-helpers.md
   - docs/design/program.md
   - docs/design/review-mark-configuration.md
