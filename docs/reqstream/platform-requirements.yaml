@@ -1,0 +1,104 @@
+---
+# Platform Support Requirements
+#
+# PURPOSE:
+# - Define requirements for cross-platform support
+# - These requirements verify the tool builds and runs on all supported operating systems
+#   and .NET runtime versions
+# - Tests are linked with source filters to ensure results come from specific platforms
+
+sections:
+  - title: Platform Support Requirements
+    requirements:
+      - id: ReviewMark-Platform-Windows
+        title: The tool shall build and run on Windows platforms.
+        justification: |
+          DEMA Consulting tools must support Windows as a major development platform.
+        tests:
+          # Tests link to "windows" to ensure results come from Windows platform
+          - "windows@ReviewMark_VersionDisplay"
+          - "windows@ReviewMark_HelpDisplay"
+          - "windows@ReviewMark_ReviewPlanGeneration"
+          - "windows@ReviewMark_ReviewReportGeneration"
+          - "windows@ReviewMark_IndexScan"
+          - "windows@ReviewMark_Enforce"
+          - "windows@ReviewMark_WorkingDirectoryOverride"
+          - "windows@ReviewMark_Elaborate"
+          - "windows@ReviewMark_Lint"
+
+      - id: ReviewMark-Platform-Linux
+        title: The tool shall build and run on Linux platforms.
+        justification: |
+          DEMA Consulting tools must support Linux for CI/CD and containerized environments.
+        tests:
+          # Tests link to "ubuntu" to ensure results come from Linux platform
+          - "ubuntu@ReviewMark_VersionDisplay"
+          - "ubuntu@ReviewMark_HelpDisplay"
+          - "ubuntu@ReviewMark_ReviewPlanGeneration"
+          - "ubuntu@ReviewMark_ReviewReportGeneration"
+          - "ubuntu@ReviewMark_IndexScan"
+          - "ubuntu@ReviewMark_Enforce"
+          - "ubuntu@ReviewMark_WorkingDirectoryOverride"
+          - "ubuntu@ReviewMark_Elaborate"
+          - "ubuntu@ReviewMark_Lint"
+
+      - id: ReviewMark-Platform-MacOS
+        title: The tool shall build and run on macOS platforms.
+        justification: |
+          DEMA Consulting tools must support macOS for developers using Apple platforms.
+        tests:
+          # Tests link to "macos" to ensure results come from macOS platform
+          - "macos@ReviewMark_VersionDisplay"
+          - "macos@ReviewMark_HelpDisplay"
+          - "macos@ReviewMark_ReviewPlanGeneration"
+          - "macos@ReviewMark_ReviewReportGeneration"
+          - "macos@ReviewMark_IndexScan"
+          - "macos@ReviewMark_Enforce"
+          - "macos@ReviewMark_WorkingDirectoryOverride"
+          - "macos@ReviewMark_Elaborate"
+          - "macos@ReviewMark_Lint"
+
+      - id: ReviewMark-Platform-Net8
+        title: The tool shall support .NET 8 runtime.
+        justification: |
+          .NET 8 is an LTS release providing long-term stability for enterprise users.
+        tests:
+          - "dotnet8.x@ReviewMark_VersionDisplay"
+          - "dotnet8.x@ReviewMark_HelpDisplay"
+          - "dotnet8.x@ReviewMark_ReviewPlanGeneration"
+          - "dotnet8.x@ReviewMark_ReviewReportGeneration"
+          - "dotnet8.x@ReviewMark_IndexScan"
+          - "dotnet8.x@ReviewMark_Enforce"
+          - "dotnet8.x@ReviewMark_WorkingDirectoryOverride"
+          - "dotnet8.x@ReviewMark_Elaborate"
+          - "dotnet8.x@ReviewMark_Lint"
+
+      - id: ReviewMark-Platform-Net9
+        title: The tool shall support .NET 9 runtime.
+        justification: |
+          .NET 9 support enables users to leverage the latest .NET features.
+        tests:
+          - "dotnet9.x@ReviewMark_VersionDisplay"
+          - "dotnet9.x@ReviewMark_HelpDisplay"
+          - "dotnet9.x@ReviewMark_ReviewPlanGeneration"
+          - "dotnet9.x@ReviewMark_ReviewReportGeneration"
+          - "dotnet9.x@ReviewMark_IndexScan"
+          - "dotnet9.x@ReviewMark_Enforce"
+          - "dotnet9.x@ReviewMark_WorkingDirectoryOverride"
+          - "dotnet9.x@ReviewMark_Elaborate"
+          - "dotnet9.x@ReviewMark_Lint"
+
+      - id: ReviewMark-Platform-Net10
+        title: The tool shall support .NET 10 runtime.
+        justification: |
+          .NET 10 support ensures the tool remains compatible with the latest .NET ecosystem.
+        tests:
+          - "dotnet10.x@ReviewMark_VersionDisplay"
+          - "dotnet10.x@ReviewMark_HelpDisplay"
+          - "dotnet10.x@ReviewMark_ReviewPlanGeneration"
+          - "dotnet10.x@ReviewMark_ReviewReportGeneration"
+          - "dotnet10.x@ReviewMark_IndexScan"
+          - "dotnet10.x@ReviewMark_Enforce"
+          - "dotnet10.x@ReviewMark_WorkingDirectoryOverride"
+          - "dotnet10.x@ReviewMark_Elaborate"
+          - "dotnet10.x@ReviewMark_Lint"

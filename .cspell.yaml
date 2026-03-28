@@ -16,11 +16,14 @@ language: en
 words:
   - Anson
   - Blockquotes
+  - build_notes
   - buildmark
   - BuildMark
-  - buildnotes
   - camelcase
   - Checkmarx
+  - code_quality
+  - code_review_plan
+  - code_review_report
   - CodeQL
   - copilot
   - cspell
@@ -62,6 +65,8 @@ words:
   - reindex
   - reqstream
   - ReqStream
+  - requirements_doc
+  - requirements_report
   - reviewmark
   - ReviewMark
   - Sarif
@@ -77,7 +82,7 @@ words:
   - spdx
   - streetsidesoftware
   - testname
-  - tracematrix
+  - trace_matrix
   - triaging
   - Trivy
   - trx

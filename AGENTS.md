@@ -1,30 +1,53 @@
 # Agent Quick Reference
 
-Project-specific guidance for agents working on ReviewMark - a tool for automated
+Comprehensive guidance for AI agents working on ReviewMark - a tool for automated
 file-review evidence management in regulated environments.
 
 ## Available Specialized Agents
 
-- **Requirements Agent** - Develops requirements and ensures test coverage linkage
-- **Technical Writer** - Creates accurate documentation following regulatory best practices
-- **Software Developer** - Writes production code and self-validation tests in literate style
-- **Test Developer** - Creates unit and integration tests following AAA pattern
-- **Code Quality Agent** - Enforces linting, static analysis, and security standards
-- **Repo Consistency Agent** - Ensures downstream repositories remain consistent with template patterns
-- **Code Review Agent** - Assists in performing formal file reviews
+- **requirements** - Develops requirements and ensures test coverage linkage
+- **technical-writer** - Creates accurate documentation following regulatory best practices
+- **software-developer** - Writes production code and self-validation tests in literate style
+- **test-developer** - Creates unit and integration tests following AAA pattern
+- **code-quality** - Enforces linting, static analysis, and security standards
+- **code-review** - Assists in performing formal file reviews
+- **repo-consistency** - Ensures downstream repositories remain consistent with template patterns
 
-## Agent Selection Guide
+## Agent Selection
 
-- Fix a bug → **Software Developer**
-- Add a new feature → **Requirements Agent** → **Software Developer** → **Test Developer**
-- Write a test → **Test Developer**
-- Fix linting or static analysis issues → **Code Quality Agent**
-- Update documentation → **Technical Writer**
-- Add or update requirements → **Requirements Agent**
-- Ensure test coverage linkage in `requirements.yaml` → **Requirements Agent**
-- Run security scanning or address CodeQL alerts → **Code Quality Agent**
-- Propagate template changes → **Repo Consistency Agent**
-- Perform file reviews → **Code Review Agent**
+- To fix a bug, call the @software-developer agent with the **context** of the bug details and **goal** of resolving
+  the issue while maintaining code quality.
+- To add a new feature, call the @requirements agent with the **request** to define feature requirements and **context**
+  of business needs and **goal** of comprehensive requirement specification.
+- To write or fix tests, call the @test-developer agent with the **context** of the functionality to be tested and
+  **goal** of achieving comprehensive test coverage.
+- To update documentation, call the @technical-writer agent with the **context** of changes requiring documentation and
+  **goal** of maintaining current and accurate documentation.
+- To manage requirements and traceability, call the @requirements agent with the **context** of requirement changes and
+  **goal** of maintaining compliance traceability.
+- To resolve quality or linting issues, call the @code-quality agent with the **context** of quality gate failures and
+  **goal** of achieving compliance standards.
+- To update linting tools or scripts, call the @code-quality agent with the **context** of tool requirements and
+  **goal** of maintaining quality infrastructure.
+- To address security alerts or scanning issues, call the @code-quality agent with the **context** of security findings
+  and **goal** of resolving vulnerabilities.
+- To perform file reviews, call the @code-review agent with the **context** of files requiring review and **goal** of
+  compliance verification.
+- To ensure template consistency, call the @repo-consistency agent with the **context** of downstream repository
+  and **goal** of maintaining template alignment.
+
+## Quality Gate Enforcement (ALL Agents Must Verify)
+
+Configuration files and scripts are self-documenting with their design intent and
+modification policies in header comments.
+
+1. **Linting Standards**: `./lint.sh` (Unix) or `lint.bat` (Windows) - comprehensive linting suite
+2. **Build Quality**: Zero warnings (`TreatWarningsAsErrors=true`)
+3. **Static Analysis**: SonarQube/CodeQL passing with no blockers
+4. **Requirements Traceability**: `dotnet reqstream --enforce` passing
+5. **Test Coverage**: All requirements linked to passing tests
+6. **Documentation Currency**: All docs current and generated
+7. **File Review Status**: All reviewable files have current reviews
 
 ## Tech Stack
 

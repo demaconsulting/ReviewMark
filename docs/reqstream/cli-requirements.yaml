@@ -1,0 +1,243 @@
+---
+# Command-Line Interface Subsystem Requirements
+#
+# PURPOSE:
+# - Define requirements for the ReviewMark command-line interface subsystem
+# - The CLI subsystem spans Context.cs (argument parsing) and Program.cs (orchestration)
+# - Subsystem requirements describe the externally visible CLI behavior
+
+sections:
+  - title: Command-Line Interface Subsystem Requirements
+    requirements:
+      - id: ReviewMark-Cmd-Context
+        title: The tool shall implement a Context class for command-line argument handling.
+        justification: |
+          Provides a standardized approach to command-line argument parsing and output
+          handling across all DEMA Consulting DotNet Tools.
+        tests:
+          - Context_Create_NoArguments_ReturnsDefaultContext
+          - Context_Create_VersionFlag_SetsVersionTrue
+          - Context_Create_HelpFlag_SetsHelpTrue
+          - Context_Create_SilentFlag_SetsSilentTrue
+          - Context_Create_ValidateFlag_SetsValidateTrue
+          - Context_Create_ResultsFlag_SetsResultsFile
+          - Context_Create_LogFlag_OpensLogFile
+
+      - id: ReviewMark-Cmd-Version
+        title: The tool shall support -v and --version flags to display version information.
+        justification: |
+          Users need to quickly identify the version of the tool they are using for
+          troubleshooting and compatibility verification.
+        tests:
+          - Context_Create_VersionFlag_SetsVersionTrue
+          - Context_Create_ShortVersionFlag_SetsVersionTrue
+          - Program_Run_WithVersionFlag_DisplaysVersionOnly
+          - Program_Version_ReturnsNonEmptyString
+          - IntegrationTest_VersionFlag_OutputsVersion
+
+      - id: ReviewMark-Cmd-Help
+        title: The tool shall support -?, -h, and --help flags to display usage information.
+        justification: |
+          Users need access to command-line usage documentation without requiring
+          external resources.
+        tests:
+          - Context_Create_HelpFlag_SetsHelpTrue
+          - Context_Create_ShortHelpFlag_H_SetsHelpTrue
+          - Context_Create_ShortHelpFlag_Question_SetsHelpTrue
+          - Program_Run_WithHelpFlag_DisplaysUsageInformation
+          - IntegrationTest_HelpFlag_OutputsUsageInformation
+
+      - id: ReviewMark-Cmd-Silent
+        title: The tool shall support --silent flag to suppress console output.
+        justification: |
+          Enables automated scripts and CI/CD pipelines to run the tool without
+          cluttering output logs.
+        tests:
+          - Context_Create_SilentFlag_SetsSilentTrue
+          - Context_WriteLine_Silent_DoesNotWriteToConsole
+          - IntegrationTest_SilentFlag_SuppressesOutput
+
+      - id: ReviewMark-Cmd-Validate
+        title: The tool shall support --validate flag to run self-validation tests.
+        justification: |
+          Provides a built-in mechanism to verify the tool is functioning correctly
+          in the deployment environment.
+        tests:
+          - Context_Create_ValidateFlag_SetsValidateTrue
+          - Program_Run_WithValidateFlag_RunsValidation
+          - IntegrationTest_ValidateFlag_RunsValidation
+
+      - id: ReviewMark-Cmd-Results
+        title: The tool shall support --results flag to write validation results in TRX or JUnit format.
+        justification: |
+          Enables integration with CI/CD systems that expect standard test result formats.
+        tests:
+          - Context_Create_ResultsFlag_SetsResultsFile
+          - IntegrationTest_ValidateWithResults_GeneratesTrxFile
+          - IntegrationTest_ValidateWithResults_GeneratesJUnitFile
+
+      - id: ReviewMark-Cmd-Log
+        title: The tool shall support --log flag to write output to a log file.
+        justification: |
+          Provides persistent logging for debugging and audit trails.
+        tests:
+          - Context_Create_LogFlag_OpensLogFile
+          - IntegrationTest_LogFlag_WritesOutputToFile
+
+      - id: ReviewMark-Cmd-ErrorOutput
+        title: The tool shall write error messages to stderr.
+        justification: |
+          Error messages must be written to stderr so they remain visible to the user
+          without polluting stdout, which consumers may pipe or redirect for data capture.
+        tests:
+          - Context_WriteError_NotSilent_WritesToConsole
+          - IntegrationTest_UnknownArgument_ReturnsError
+
+      - id: ReviewMark-Cmd-InvalidArgs
+        title: The tool shall reject unknown or malformed command-line arguments with a descriptive error.
+        justification: |
+          Providing clear feedback for invalid arguments helps users quickly correct
+          mistakes and prevents silent misconfiguration.
+        tests:
+          - Context_Create_UnknownArgument_ThrowsArgumentException
+          - Context_Create_LogFlag_WithoutValue_ThrowsArgumentException
+          - Context_Create_ResultsFlag_WithoutValue_ThrowsArgumentException
+          - IntegrationTest_UnknownArgument_ReturnsError
+
+      - id: ReviewMark-Cmd-ExitCode
+        title: The tool shall return a non-zero exit code on failure.
+        justification: |
+          Callers (scripts, CI/CD pipelines) must be able to detect failure conditions
+          programmatically via the process exit code.
+        tests:
+          - Context_WriteError_SetsErrorExitCode
+          - IntegrationTest_UnknownArgument_ReturnsError
+
+      - id: ReviewMark-Cmd-Definition
+        title: The tool shall support --definition flag to specify the definition YAML file.
+        justification: |
+          Users must be able to specify the path to the .reviewmark.yaml definition file,
+          which configures needs-review patterns, evidence source, and review set definitions.
+        tests:
+          - Context_Create_DefinitionFlag_SetsDefinitionFile
+          - Context_Create_DefinitionFlag_WithoutValue_ThrowsArgumentException
+          - ReviewMark_ReviewPlanGeneration
+          - ReviewMark_ReviewReportGeneration
+
+      - id: ReviewMark-Cmd-Plan
+        title: The tool shall support --plan flag to write the review plan to a Markdown file.
+        justification: |
+          Enables automated generation of a review plan document that lists all review sets
+          and coverage status, suitable for inclusion in release documentation.
+        tests:
+          - Context_Create_PlanFlag_SetsPlanFile
+          - ReviewMark_ReviewPlanGeneration
+
+      - id: ReviewMark-Cmd-PlanDepth
+        title: The tool shall support --plan-depth flag to set the Markdown heading depth for the review plan.
+        justification: |
+          Allows the review plan to be embedded at any heading level within a larger
+          Markdown document, with a default depth of 1 when not specified.
+        tests:
+          - Context_Create_PlanDepthFlag_SetsPlanDepth
+          - Context_Create_PlanDepthFlag_WithInvalidValue_ThrowsArgumentException
+          - Context_Create_PlanDepthFlag_WithZeroValue_ThrowsArgumentException
+          - Context_Create_NoArguments_PlanDepthDefaultsToOne
+
+      - id: ReviewMark-Cmd-Report
+        title: The tool shall support --report flag to write the review report to a Markdown file.
+        justification: |
+          Enables automated generation of a review report document showing the current
+          status of each review set against the evidence index, suitable for release documentation.
+        tests:
+          - Context_Create_ReportFlag_SetsReportFile
+          - ReviewMark_ReviewReportGeneration
+
+      - id: ReviewMark-Cmd-ReportDepth
+        title: The tool shall support --report-depth flag to set the Markdown heading depth for the review report.
+        justification: |
+          Allows the review report to be embedded at any heading level within a larger
+          Markdown document, with a default depth of 1 when not specified.
+        tests:
+          - Context_Create_ReportDepthFlag_SetsReportDepth
+          - Context_Create_NoArguments_ReportDepthDefaultsToOne
+
+      - id: ReviewMark-Cmd-Index
+        title: The tool shall support --index flag to scan PDF evidence files matching a glob path and write
+          index.json.
+        justification: |
+          Provides a mechanism to regenerate the review evidence index from scanned PDF
+          files, reading embedded metadata from each PDF's Keywords field to populate
+          the index with review IDs, fingerprints, dates, results, and file names.
+        tests:
+          - Context_Create_IndexFlag_AddsIndexPath
+          - Context_Create_IndexFlag_MultipleTimes_AddsAllPaths
+          - Context_Create_NoArguments_IndexPathsEmpty
+          - ReviewMark_IndexScan
+
+      - id: ReviewMark-Cmd-Enforce
+        title: The tool shall support --enforce flag to exit with a non-zero code when there are review issues.
+        justification: |
+          Enables CI/CD pipelines to block downstream stages when review sets are failed,
+          stale, or missing, or when files requiring review are not covered by any review-set.
+          Without --enforce the tool generates the plan and report but exits with code 0.
+        tests:
+          - Context_Create_EnforceFlag_SetsEnforceTrue
+          - Context_Create_NoArguments_EnforceFalse
+          - ReviewMark_Enforce
+
+      - id: ReviewMark-Cmd-Dir
+        title: The tool shall support --dir flag to set the working directory for file operations.
+        justification: |
+          Allows users to target an evidence store or project directory without changing
+          the process working directory, enabling consistent scripting and CI/CD usage
+          without requiring a cd command before invoking the tool.
+        tests:
+          - Context_Create_DirFlag_SetsWorkingDirectory
+          - Context_Create_NoArguments_WorkingDirectoryIsNull
+          - Context_Create_DirFlag_MissingValue_ThrowsArgumentException
+          - ReviewMark_WorkingDirectoryOverride
+
+      - id: ReviewMark-Cmd-Elaborate
+        title: The tool shall support --elaborate <id> flag to print a Markdown elaboration of a review set.
+        justification: |
+          When preparing for a review, the reviewer needs the review set ID, its current
+          fingerprint, and the full sorted list of files to be reviewed. The --elaborate
+          command provides this information formatted as Markdown so it can be copied
+          directly into review documentation.
+        tests:
+          - Context_Create_ElaborateFlag_SetsElaborateId
+          - Context_Create_NoArguments_ElaborateIdIsNull
+          - Context_Create_ElaborateFlag_WithoutValue_ThrowsArgumentException
+          - ReviewMarkConfiguration_ElaborateReviewSet_ValidId_ReturnsElaboration
+          - ReviewMarkConfiguration_ElaborateReviewSet_UnknownId_ThrowsArgumentException
+          - ReviewMarkConfiguration_ElaborateReviewSet_NullId_ThrowsArgumentException
+          - ReviewMarkConfiguration_ElaborateReviewSet_MarkdownDepth_UsedForHeadings
+          - ReviewMarkConfiguration_ElaborateReviewSet_MarkdownDepthAbove5_Throws
+          - ReviewMarkConfiguration_ElaborateReviewSet_ContainsFullFingerprint
+          - Program_Run_WithHelpFlag_IncludesElaborateOption
+          - Program_Run_WithElaborateFlag_OutputsElaboration
+          - Program_Run_WithElaborateFlag_UnknownId_ReportsError
+          - ReviewMark_Elaborate
+
+      - id: ReviewMark-Cmd-Lint
+        title: The tool shall support --lint flag to validate the definition file and report issues.
+        justification: |
+          Users need a way to verify that the .reviewmark.yaml configuration file is valid
+          before running the main tool, providing clear error messages about the cause and
+          location of any issues.
+        tests:
+          - Context_Create_LintFlag_SetsLintTrue
+          - Context_Create_NoArguments_LintIsFalse
+          - Program_Run_WithHelpFlag_IncludesLintOption
+          - Program_Run_WithLintFlag_ValidConfig_ReportsSuccess
+          - Program_Run_WithLintFlag_MissingConfig_ReportsError
+          - Program_Run_WithLintFlag_DuplicateIds_ReportsError
+          - Program_Run_WithLintFlag_UnknownSourceType_ReportsError
+          - Program_Run_WithLintFlag_CorruptedYaml_ReportsError
+          - Program_Run_WithLintFlag_MissingEvidenceSource_ReportsError
+          - Program_Run_WithLintFlag_MultipleErrors_ReportsAll
+          - ReviewMarkConfiguration_Load_InvalidYaml_ErrorIncludesFilenameAndLine
+          - ReviewMarkConfiguration_Load_MissingEvidenceSource_ErrorIncludesFilename
+          - ReviewMarkConfiguration_Lint_MultipleErrors_ReturnsAll
+          - ReviewMark_Lint
