@@ -1,0 +1,29 @@
+---
+# GlobMatcher Software Unit Requirements
+#
+# PURPOSE:
+# - Define requirements for the GlobMatcher software unit
+# - This unit resolves ordered include/exclude glob patterns to a list of files
+# - It is used by ReviewMarkConfiguration to resolve needs-review and review-set file lists
+
+sections:
+  - title: GlobMatcher Unit Requirements
+    requirements:
+      - id: ReviewMark-GlobMatcher-IncludeExclude
+        title: >-
+          The GlobMatcher shall resolve ordered include and exclude glob patterns to a sorted list of
+          relative file paths.
+        justification: |
+          Review-set and needs-review configurations specify files using ordered glob patterns,
+          where patterns prefixed with '!' are exclusions. The GlobMatcher must apply these
+          patterns in declaration order so that a later include can re-add files removed by an
+          earlier exclude, and vice versa. The result must be sorted to ensure deterministic
+          fingerprinting regardless of filesystem iteration order.
+        tests:
+          - GlobMatcher_GetMatchingFiles_SingleIncludePattern_ReturnsMatchingFiles
+          - GlobMatcher_GetMatchingFiles_ExcludePattern_ExcludesMatchingFiles
+          - GlobMatcher_GetMatchingFiles_ReIncludeAfterExclude_ReturnsReIncludedFiles
+          - GlobMatcher_GetMatchingFiles_IncludeAndExclude_ReturnsFilteredFiles
+          - GlobMatcher_GetMatchingFiles_NullBaseDirectory_ThrowsArgumentNullException
+          - GlobMatcher_GetMatchingFiles_NullPatterns_ThrowsArgumentNullException
+          - GlobMatcher_GetMatchingFiles_NoMatchingFiles_ReturnsEmptyList

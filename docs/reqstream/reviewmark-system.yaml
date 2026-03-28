@@ -1,0 +1,67 @@
+---
+# ReviewMark System-Level Requirements
+#
+# PURPOSE:
+# - Define system-level requirements describing what end-users need the ReviewMark tool to provide
+# - These requirements capture the externally visible behavior of the complete ReviewMark system
+# - Unit-level requirements (per-class behavior) are in the individual *-requirements.yaml files
+
+sections:
+  - title: System-Level Requirements
+    requirements:
+      - id: ReviewMark-System-ReviewPlan
+        title: >-
+          The tool shall generate a Review Plan document listing all files requiring review and their
+          review-set coverage.
+        justification: |
+          In regulated environments, auditors require evidence that every file subject to review
+          is covered by at least one named review-set. The Review Plan document provides this
+          evidence automatically on each CI/CD run, replacing manual tracking spreadsheets.
+        tests:
+          - ReviewMark_ReviewPlanGeneration
+
+      - id: ReviewMark-System-ReviewReport
+        title: The tool shall generate a Review Report document listing every review-set and its current review status.
+        justification: |
+          Auditors need evidence that the review evidence for each review-set is current —
+          that the reviewed files have not changed since the review was conducted. The Review
+          Report provides this evidence automatically, showing Current, Stale, or Missing
+          status for each review-set.
+        tests:
+          - ReviewMark_ReviewReportGeneration
+
+      - id: ReviewMark-System-Enforce
+        title: The tool shall return a non-zero exit code when enforcement is enabled and any review-set is not current.
+        justification: |
+          CI/CD pipelines must be able to gate releases on review coverage. The --enforce flag
+          enables this by causing the tool to exit with a non-zero code when any review-set has
+          Stale or Missing status, making incomplete review coverage a build-breaking condition.
+        tests:
+          - ReviewMark_Enforce
+
+      - id: ReviewMark-System-IndexScan
+        title: The tool shall scan PDF evidence files and write an index.json when the --index flag is provided.
+        justification: |
+          Review evidence PDFs contain embedded metadata (id, fingerprint, date, result) in their
+          Keywords field. The --index command scans a directory of such PDFs and writes an
+          index.json, enabling the evidence store to be refreshed after new review PDFs are added
+          without manual maintenance of the index file.
+        tests:
+          - ReviewMark_IndexScan
+
+      - id: ReviewMark-System-Validate
+        title: The tool shall execute self-validation tests when the --validate flag is provided.
+        justification: |
+          Regulated environments require tool qualification evidence to demonstrate that the tool
+          functions correctly in its specific deployment environment. The --validate flag triggers
+          a built-in test suite that exercises core tool behaviors and produces a pass/fail report.
+        tests:
+          - ReviewMark_VersionDisplay
+          - ReviewMark_HelpDisplay
+          - ReviewMark_ReviewPlanGeneration
+          - ReviewMark_ReviewReportGeneration
+          - ReviewMark_IndexScan
+          - ReviewMark_Enforce
+          - ReviewMark_WorkingDirectoryOverride
+          - ReviewMark_Elaborate
+          - ReviewMark_Lint
