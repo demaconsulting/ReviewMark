@@ -79,5 +79,5 @@ review-set by looking up the `id` in the loaded index:
 | ------ | ------- |
 | `Current` | The review record matches the current fingerprint and has a passing result |
 | `Failed` | The review record matches the current fingerprint but the result is not passing |
-| `Stale` | A review record exists for the id but the fingerprint does not match (files have changed since review or a different revision was reviewed) |
+| `Stale` | A record exists for the id but the fingerprint does not match the current one |
 | `Missing` | No review record exists for the id |

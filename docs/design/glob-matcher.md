@@ -10,23 +10,13 @@ file enumeration primitive used by the Configuration subsystem to expand the
 ## Algorithm
 
 `GlobMatcher.GetMatchingFiles(baseDirectory, patterns)` processes patterns in the
-order they are declared. Each pattern is evaluated as follows:
-
-```mermaid
-graph TD
-    A[For each pattern in order] --> B{Starts with '!'?}
-    B -->|yes| C[Remove '!' prefix → exclusion pattern]
-    B -->|no| D[Inclusion pattern]
-    C --> E[Remove matching paths from result set]
-    D --> F[Add matching paths to result set]
-    F --> A
-    E --> A
-    A --> G[Sort result set]
-    G --> H[Return as relative paths with forward slashes]
-```
-
-Patterns are evaluated against the base directory using standard glob semantics.
-The `**` wildcard matches any number of path segments (recursive matching).
+order they are declared. Patterns prefixed with `!` are exclusion patterns; all
+others are inclusion patterns. Each inclusion pattern adds matching paths to the
+result set; each exclusion pattern removes matching paths from the result set.
+Because patterns are applied in declaration order, a later pattern can re-include
+files excluded by an earlier one, or exclude files included by an earlier one. The
+`**` wildcard matches any number of path segments, enabling recursive matching.
+After all patterns are processed, the result set is sorted and returned.
 
 ## Return Value
 

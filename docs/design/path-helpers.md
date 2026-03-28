@@ -12,19 +12,15 @@ file system paths to evidence PDF files referenced in the evidence index.
 with an untrusted relative path from the evidence index, validating that the result
 does not escape the base directory.
 
-The algorithm is:
+The validation steps are:
 
-```mermaid
-graph TD
-    A[Receive basePath and relativePath] --> B{relativePath contains '..' segments?}
-    B -->|yes| C[Throw exception: path traversal rejected]
-    B -->|no| D{relativePath is rooted?}
-    D -->|yes| E[Throw exception: absolute path rejected]
-    D -->|no| F[Combine basePath and relativePath]
-    F --> G{Combined path starts with basePath?}
-    G -->|no| H[Throw exception: traversal detected after combination]
-    G -->|yes| I[Return combined path]
-```
+1. Reject any relative path that contains `..` segments (explicit traversal attempt).
+2. Reject any relative path that is rooted (absolute path supplied where a relative one is required).
+3. Combine the base path and relative path.
+4. Verify that the combined path still begins with the base path (catches edge cases
+   such as platform-specific path normalization that might otherwise bypass the
+   earlier checks).
+5. Return the combined path.
 
 The double-check strategy (pre-validation of segments plus post-combination
 verification) defends against edge cases such as URL-encoded separators or

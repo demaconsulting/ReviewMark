@@ -57,9 +57,3 @@ a non-zero value when an error is detected. The value of `ExitCode` is returned 
 When a log file path is provided via the relevant CLI argument, `Context` opens and
 holds the log file handle for the duration of the tool run. All output written through
 `WriteLine` and `WriteError` is duplicated to the log file.
-
-## Resource Cleanup
-
-`Context` implements `IDisposable`. Disposal closes the log file handle if one is
-open. `Program.Main()` constructs `Context` inside a `using` statement to guarantee
-timely disposal regardless of how the tool exits.

@@ -23,27 +23,19 @@ Results are written using the `DemaConsulting.TestResults` library, which suppor
 both TRX (Visual Studio Test Results) and JUnit XML output formats. The output format
 is inferred from the file extension of `ResultsFile`.
 
-## Test Naming Convention
-
-All test names follow the pattern `ReviewMark_MethodOrScenario`, where
-`MethodOrScenario` identifies the behavior under test. This convention ensures
-test results are identifiable in test dashboards and traceability matrices.
-
 ## Test Coverage
 
 The self-validation suite covers the following scenarios:
 
-| Test Name | Scenario |
-| --------- | -------- |
-| `ReviewMark_Version` | Tool correctly reports its version |
-| `ReviewMark_Help` | Tool correctly displays help text |
-| `ReviewMark_Plan` | Review Plan is generated correctly for a known configuration |
-| `ReviewMark_Report` | Review Report is generated correctly for a known configuration |
-| `ReviewMark_IndexScan` | Evidence index is created correctly by scanning a directory |
-| `ReviewMark_Enforce` | Tool returns non-zero exit code when enforce mode detects uncovered sets |
-| `ReviewMark_WorkingDirectory` | Working directory override resolves paths correctly |
-| `ReviewMark_Elaborate` | Elaborate mode expands file lists in generated documents |
-| `ReviewMark_Lint` | Lint mode detects configuration errors correctly |
+- **Version display**: Tool correctly reports its version
+- **Help display**: Tool correctly displays help text
+- **Plan generation**: Review Plan is generated correctly for a known configuration
+- **Report generation**: Review Report is generated correctly for a known configuration
+- **Index scanning**: Evidence index is created correctly by scanning a directory
+- **Enforce mode**: Tool returns non-zero exit code when enforce mode detects uncovered review sets
+- **Working directory override**: Relative paths are resolved correctly when the working directory is overridden
+- **Elaborate mode**: File lists are expanded in generated documents when elaborate mode is active
+- **Lint mode**: Configuration errors are detected correctly
 
 ## Console Output
 
