@@ -533,8 +533,7 @@ jobs:
         shell: bash
         # TODO: Add --enforce once reviews branch is populated with review evidence PDFs and index.json
         run: >
-          dotnet run --project src/DemaConsulting.ReviewMark
-          --configuration Release --framework net10.0 --no-build --
+          reviewmark
           --definition .reviewmark.yaml
           --plan docs/code_review_plan/plan.md
           --plan-depth 1
