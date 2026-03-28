@@ -62,9 +62,9 @@ For each review-set the report includes:
 
 - The review-set `id` and `title`
 - The current fingerprint of the file-set
-- The review status: `Current`, `Stale`, or `Missing`
+- The review status: `Current`, `Stale`, `Missing`, or `Failed`
 
-Status is determined by querying the loaded `ReviewIndex` via `GetStatus()`.
+Status is computed by `ReviewMarkConfiguration.PublishReviewReport(...)`, which uses the loaded evidence index to determine whether the current fingerprint has a passing, failing, stale, or missing review result.
 
 - The `--report-depth` argument controls the heading level used for sections
 - The `--elaborate` flag expands the list of files covered by each review-set
