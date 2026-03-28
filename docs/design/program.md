@@ -20,8 +20,10 @@ time from the assembly metadata and follows semantic versioning conventions.
 2. Calls `Program.Run(Context)` to perform the requested operation
 3. Returns `Context.ExitCode` as the process exit code
 
-Any unhandled exception that escapes `Run()` is caught, written to the error output
-via `Context.WriteError()`, and causes a non-zero exit code to be returned.
+Any unexpected exception that escapes `Run()` is logged to the standard error stream
+via `Console.Error` and then rethrown. As a result, the process terminates due to the
+unhandled exception and the final exit code is determined by the .NET runtime rather
+than by `Program.Main` explicitly returning a non-zero value.
 
 ## Run() Dispatch Logic
 
