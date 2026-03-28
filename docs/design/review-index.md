@@ -52,8 +52,10 @@ source type:
 
 `ReviewIndex.Scan(directory, patterns)` scans a directory for PDF files matching
 the given glob patterns. For each PDF file found, it reads embedded metadata to
-extract the review record fields and writes the resulting records to `index.json`
-in the scanned directory. This supports the `--index` workflow.
+extract the review record fields and returns a populated in-memory `ReviewIndex`.
+The caller (e.g., `Program`) is responsible for choosing an output path and calling
+`Save(...)` on the returned index to produce `index.json` as part of the `--index`
+workflow.
 
 ## ReviewIndex.Empty()
 
