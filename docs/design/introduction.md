@@ -34,7 +34,7 @@ The following diagram shows the decomposition of the ReviewMark software system 
 subsystems and software units.
 
 ```mermaid
-graph TD
+graph LR
     System["ReviewMark (Software System)"]
 
     CLI["CLI Subsystem"]

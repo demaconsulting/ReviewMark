@@ -24,8 +24,12 @@
 #
 ---
 includes:
+  - docs/reqstream/reviewmark-system-requirements.yaml
   - docs/reqstream/cli-requirements.yaml
   - docs/reqstream/configuration-requirements.yaml
+  - docs/reqstream/glob-matcher-requirements.yaml
   - docs/reqstream/index-requirements.yaml
+  - docs/reqstream/path-helpers-requirements.yaml
   - docs/reqstream/platform-requirements.yaml
+  - docs/reqstream/validation-requirements.yaml
   - docs/reqstream/ots-requirements.yaml

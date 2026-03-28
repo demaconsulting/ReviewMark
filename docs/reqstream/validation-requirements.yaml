@@ -1,0 +1,34 @@
+---
+# Validation Software Unit Requirements
+#
+# PURPOSE:
+# - Define requirements for the Validation software unit
+# - This unit provides self-validation test execution for regulated environments
+# - Self-validation proves the tool is functioning correctly in its deployment environment
+
+sections:
+  - title: Validation Unit Requirements
+    requirements:
+      - id: ReviewMark-Validation-Run
+        title: The tool shall execute self-validation tests and report results when the --validate flag is provided.
+        justification: |
+          In regulated environments, tool qualification evidence is required to demonstrate
+          that the tool functions correctly in its deployment environment. Self-validation
+          runs a suite of functional tests covering core behaviors and reports pass/fail
+          results with a summary count, giving quality assurance teams the evidence they need.
+        tests:
+          - Validation_Run_NullContext_ThrowsArgumentNullException
+          - Validation_Run_WritesValidationHeader
+          - Validation_Run_WritesSummaryWithTotalTests
+          - Validation_Run_AllTestsPass_ExitCodeIsZero
+
+      - id: ReviewMark-Validation-ResultsFile
+        title: The tool shall write self-validation results to a TRX or JUnit XML file when --results is provided.
+        justification: |
+          CI/CD pipelines and requirements traceability tools (such as ReqStream) consume
+          test result files in standard formats. By supporting both TRX (MSTest) and JUnit
+          XML output, the self-validation results can be fed directly into pipeline tooling
+          without additional conversion steps.
+        tests:
+          - Validation_Run_WithTrxResultsFile_WritesFile
+          - Validation_Run_WithXmlResultsFile_WritesFile
