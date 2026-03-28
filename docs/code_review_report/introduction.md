@@ -12,7 +12,7 @@ conducted for ReviewMark remain valid for the current state of the reviewed file
 
 This review report covers:
 
-- Current review-set status (current, stale, or missing)
+- Current review-set status (current, stale, failed, or missing)
 - File fingerprints and review evidence matching
 - Review coverage verification
 
