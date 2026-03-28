@@ -6,10 +6,10 @@
 # Patterns identifying all files that require review.
 # Processed in order; prefix a pattern with '!' to exclude.
 needs-review:
-  - "**/*.cs"                    # All C# source and test files
-  - "requirements.yaml"          # Requirements document
-  - "!**/obj/**"                 # Exclude build output
-  - "!**/bin/**"                 # Exclude build output
+  - "**/*.cs"                       # All C# source and test files
+  - "docs/reqstream/*.yaml"         # Per-software-item requirements files
+  - "!**/obj/**"                    # Exclude build output
+  - "!**/bin/**"                    # Exclude build output
 
 # Evidence source: review data and index.json are located in the 'reviews' branch
 # of this repository, accessed through the GitHub public HTTPS raw content access.
@@ -30,52 +30,51 @@ reviews:
   - id: ReviewMark-Context
     title: Review of Context software unit (command-line argument handling)
     paths:
-      - "requirements.yaml"                        # requirements
-      - "src/**/Context.cs"                        # implementation
-      - "test/**/ContextTests.cs"                  # tests
+      - "docs/reqstream/cli-requirements.yaml"          # requirements
+      - "src/**/Context.cs"                             # implementation
+      - "test/**/ContextTests.cs"                       # tests
 
   - id: ReviewMark-GlobMatcher
     title: Review of GlobMatcher software unit (file pattern matching)
     paths:
-      - "requirements.yaml"                        # requirements
-      - "src/**/GlobMatcher.cs"                    # implementation
-      - "test/**/GlobMatcherTests.cs"              # tests
+      - "src/**/GlobMatcher.cs"                         # implementation
+      - "test/**/GlobMatcherTests.cs"                   # tests
 
   - id: ReviewMark-Index
     title: Review of Index software unit (review evidence indexing)
     paths:
-      - "requirements.yaml"                        # requirements
-      - "src/**/Index.cs"                          # implementation
-      - "test/**/IndexTests.cs"                    # tests
+      - "docs/reqstream/index-requirements.yaml"        # requirements
+      - "src/**/Index.cs"                               # implementation
+      - "test/**/IndexTests.cs"                         # tests
 
   - id: ReviewMark-PathHelpers
     title: Review of PathHelpers software unit (file path utilities)
     paths:
-      - "requirements.yaml"                        # requirements
-      - "src/**/PathHelpers.cs"                    # implementation
-      - "test/**/PathHelpersTests.cs"              # tests
+      - "src/**/PathHelpers.cs"                         # implementation
+      - "test/**/PathHelpersTests.cs"                   # tests
 
   - id: ReviewMark-Program
     title: Review of Program software unit (main entry point and tool orchestration)
     paths:
-      - "requirements.yaml"                        # requirements
-      - "docs/guide/guide.md"                      # user guide
-      - "src/**/Program.cs"                        # implementation
-      - "test/**/ProgramTests.cs"                  # unit tests
-      - "test/**/IntegrationTests.cs"              # integration tests
-      - "test/**/Runner.cs"                        # test infrastructure
-      - "test/**/TestDirectory.cs"                 # test infrastructure
-      - "test/**/AssemblyInfo.cs"                  # test infrastructure
+      - "docs/reqstream/cli-requirements.yaml"          # requirements
+      - "docs/reqstream/platform-requirements.yaml"     # platform requirements
+      - "docs/guide/guide.md"                           # user guide
+      - "src/**/Program.cs"                             # implementation
+      - "test/**/ProgramTests.cs"                       # unit tests
+      - "test/**/IntegrationTests.cs"                   # integration tests
+      - "test/**/Runner.cs"                             # test infrastructure
+      - "test/**/TestDirectory.cs"                      # test infrastructure
+      - "test/**/AssemblyInfo.cs"                       # test infrastructure
 
   - id: ReviewMark-Configuration
     title: Review of ReviewMarkConfiguration software unit (configuration parsing and processing)
     paths:
-      - "requirements.yaml"                        # requirements
-      - "src/**/ReviewMarkConfiguration.cs"        # implementation
-      - "test/**/ReviewMarkConfigurationTests.cs"  # tests
+      - "docs/reqstream/configuration-requirements.yaml"    # requirements
+      - "src/**/ReviewMarkConfiguration.cs"                 # implementation
+      - "test/**/ReviewMarkConfigurationTests.cs"           # tests
 
   - id: ReviewMark-Validation
     title: Review of Validation software unit (self-validation test execution)
     paths:
-      - "requirements.yaml"                        # requirements
-      - "src/**/Validation.cs"                     # implementation
+      - "docs/reqstream/ots-requirements.yaml"          # OTS requirements verified by self-validation
+      - "src/**/Validation.cs"                          # implementation

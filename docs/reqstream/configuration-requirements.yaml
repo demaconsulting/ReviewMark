@@ -1,0 +1,30 @@
+---
+# ReviewMarkConfiguration Software Unit Requirements
+#
+# PURPOSE:
+# - Define requirements for the ReviewMarkConfiguration software unit
+# - This unit parses the .reviewmark.yaml definition file into an in-memory model
+# - It computes SHA256 fingerprints for review-sets and generates plan/report Markdown
+
+sections:
+  - title: ReviewMarkConfiguration Unit Requirements
+    requirements:
+      - id: ReviewMark-Config-Reading
+        title: The tool shall read and parse the .reviewmark.yaml file into an in-memory configuration model.
+        justification: |
+          Enables the tool to read its configuration from the standard `.reviewmark.yaml` file,
+          exposing needs-review patterns, evidence source, and review set definitions. Review sets
+          support SHA256 content-based fingerprinting to detect changes to covered files.
+        tests:
+          - ReviewMarkConfiguration_Parse_NullYaml_ThrowsArgumentNullException
+          - ReviewMarkConfiguration_Parse_ValidYaml_ReturnsConfiguration
+          - ReviewMarkConfiguration_Parse_NeedsReviewPatterns_ParsedCorrectly
+          - ReviewMarkConfiguration_Parse_EvidenceSource_ParsedCorrectly
+          - ReviewMarkConfiguration_Parse_Reviews_ParsedCorrectly
+          - ReviewMarkConfiguration_Parse_EvidenceSourceWithCredentials_ParsedCorrectly
+          - ReviewMarkConfiguration_GetNeedsReviewFiles_ReturnsMatchingFiles
+          - ReviewSet_GetFingerprint_SameContent_ReturnsSameFingerprint
+          - ReviewSet_GetFingerprint_DifferentContent_ReturnsDifferentFingerprint
+          - ReviewSet_GetFingerprint_RenameFile_ReturnsSameFingerprint
+          - ReviewMarkConfiguration_Load_NonExistentFile_ThrowsException
+          - ReviewMarkConfiguration_Load_FileshareRelativeLocation_ResolvesToAbsolutePath
