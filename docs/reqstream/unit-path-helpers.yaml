@@ -4,7 +4,7 @@
 # PURPOSE:
 # - Define requirements for the PathHelpers software unit
 # - This unit provides safe path operations that prevent path traversal attacks
-# - It is used by Index.cs and Validation.cs when constructing file paths
+# - It is used by ReviewIndex.cs and Validation.cs when constructing file paths
 
 sections:
   - title: PathHelpers Unit Requirements
