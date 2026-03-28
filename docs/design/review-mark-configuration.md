@@ -14,7 +14,7 @@ The `.reviewmark.yaml` file is deserialized into the following model:
 | Class | Description |
 | ----- | ----------- |
 | `ReviewMarkYaml` | Root configuration object containing the evidence source and review list |
-| `EvidenceSourceYaml` | Describes how to locate the evidence index (`type`, `path` or `url`) |
+| `EvidenceSourceYaml` | Describes how to locate the evidence index (`type`, `location`, optional `credentials`) |
 | `ReviewYaml` | Describes a single review-set (`id`, `title`, file patterns) |
 
 ## ReviewMarkConfiguration.Load()
