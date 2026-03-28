@@ -1,0 +1,69 @@
+---
+# ReviewMark Configuration File
+# This file defines which files require review, where the evidence store is located,
+# and how files are grouped into named review-sets following software unit boundaries.
+
+# Patterns identifying all files that require review.
+# Processed in order; prefix a pattern with '!' to exclude.
+needs-review:
+  - "**/*.cs"                    # All C# source and test files
+  - "!**/obj/**"                 # Exclude build output
+  - "!**/bin/**"                 # Exclude build output
+
+# Evidence source: review data and index.json are located in the 'reviews' branch
+# of this repository, accessed through the GitHub public HTTPS raw content access.
+# Note: The 'reviews' branch must be created and populated with review evidence PDFs
+# and an index.json before enforcement (--enforce flag) can be enabled in the pipeline.
+evidence-source:
+  type: url
+  location: https://raw.githubusercontent.com/demaconsulting/ReviewMark/reviews/index.json
+
+# Review sets grouping files by logical unit of review.
+# Each review-set groups requirements, source, and tests for a coherent software unit
+# so that an AI-assisted review can verify consistency across the full evidence chain.
+reviews:
+  # Software unit reviews - one per class
+  - id: ReviewMark-Context
+    title: Review of ReviewMark Context Unit
+    paths:
+      - "src/**/Context.cs"
+      - "test/**/ContextTests.cs"
+
+  - id: ReviewMark-GlobMatcher
+    title: Review of ReviewMark GlobMatcher Unit
+    paths:
+      - "src/**/GlobMatcher.cs"
+      - "test/**/GlobMatcherTests.cs"
+
+  - id: ReviewMark-Index
+    title: Review of ReviewMark Index Unit
+    paths:
+      - "src/**/Index.cs"
+      - "test/**/IndexTests.cs"
+
+  - id: ReviewMark-PathHelpers
+    title: Review of ReviewMark PathHelpers Unit
+    paths:
+      - "src/**/PathHelpers.cs"
+      - "test/**/PathHelpersTests.cs"
+
+  - id: ReviewMark-Program
+    title: Review of ReviewMark Program Unit
+    paths:
+      - "src/**/Program.cs"
+      - "test/**/ProgramTests.cs"
+      - "test/**/IntegrationTests.cs"
+      - "test/**/Runner.cs"
+      - "test/**/TestDirectory.cs"
+      - "test/**/AssemblyInfo.cs"
+
+  - id: ReviewMark-Configuration
+    title: Review of ReviewMark Configuration Unit
+    paths:
+      - "src/**/ReviewMarkConfiguration.cs"
+      - "test/**/ReviewMarkConfigurationTests.cs"
+
+  - id: ReviewMark-Validation
+    title: Review of ReviewMark Validation Unit
+    paths:
+      - "src/**/Validation.cs"
