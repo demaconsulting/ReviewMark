@@ -7,6 +7,23 @@ evidence index. It abstracts the evidence store behind a uniform interface so th
 the rest of the tool does not need to know whether evidence is stored on a fileshare,
 served over HTTP, or absent entirely.
 
+## ReviewEvidence Record
+
+`ReviewEvidence` is an immutable record that holds the in-memory representation of a
+single review record once the index has been loaded or scanned.
+
+| Property | Type | Description |
+| -------- | ---- | ----------- |
+| `Id` | string | The review-set identifier |
+| `Fingerprint` | string | The SHA-256 fingerprint of the reviewed files |
+| `Date` | string | The date of the review (e.g. `2026-02-14`) |
+| `Result` | string | The review outcome (`pass` or `fail`) |
+| `File` | string | The file name of the review evidence PDF |
+
+The `ReviewIndex` holds these records in a two-level
+`Dictionary<string, Dictionary<string, ReviewEvidence>>` keyed first by `Id` and
+then by `Fingerprint`, which enables O(1) lookup by both fields simultaneously.
+
 ## Evidence Index Format
 
 The evidence index is a JSON file (`index.json`) containing an array of review records.
