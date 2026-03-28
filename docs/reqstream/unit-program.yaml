@@ -17,8 +17,9 @@ sections:
           Program.Main is the process entry point. It must create the execution context,
           call Program.Run to perform the requested operation, and return the exit code
           from the context so that callers can detect success or failure programmatically.
-          Any unhandled exception must be caught, written to error output, and cause a
-          non-zero exit code rather than an unhandled process crash.
+          Unexpected exceptions are written to error output and then rethrown, so callers
+          may observe either a normal exit code or a process termination due to an
+          unhandled exception.
         tests:
           - Program_Run_WithVersionFlag_DisplaysVersionOnly
           - Program_Version_ReturnsNonEmptyString
