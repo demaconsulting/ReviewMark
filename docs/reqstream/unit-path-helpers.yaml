@@ -18,9 +18,7 @@ sections:
           contain '..' sequences or absolute path components, and performs a defense-in-depth
           check that the resolved combined path remains under the base directory.
         tests:
-          - PathHelpers_SafePathCombine_ValidPaths_ReturnsCombinedPath
-          - PathHelpers_SafePathCombine_NullBasePath_ThrowsArgumentNullException
-          - PathHelpers_SafePathCombine_NullRelativePath_ThrowsArgumentNullException
-          - PathHelpers_SafePathCombine_PathTraversal_ThrowsArgumentException
-          - PathHelpers_SafePathCombine_AbsoluteRelativePath_ThrowsArgumentException
-          - PathHelpers_SafePathCombine_NestedPath_ReturnsCombinedPath
+          - PathHelpers_SafePathCombine_ValidPaths_CombinesCorrectly
+          - PathHelpers_SafePathCombine_PathTraversalWithDoubleDots_ThrowsArgumentException
+          - PathHelpers_SafePathCombine_AbsolutePath_ThrowsArgumentException
+          - PathHelpers_SafePathCombine_NestedPaths_CombinesCorrectly

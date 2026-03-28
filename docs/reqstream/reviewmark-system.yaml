@@ -19,7 +19,6 @@ sections:
           evidence automatically on each CI/CD run, replacing manual tracking spreadsheets.
         tests:
           - ReviewMark_ReviewPlanGeneration
-          - IntegrationTest_PlanFlag_GeneratesReviewPlan
 
       - id: ReviewMark-System-ReviewReport
         title: The tool shall generate a Review Report document listing every review-set and its current review status.
@@ -30,7 +29,6 @@ sections:
           status for each review-set.
         tests:
           - ReviewMark_ReviewReportGeneration
-          - IntegrationTest_ReportFlag_GeneratesReviewReport
 
       - id: ReviewMark-System-Enforce
         title: The tool shall return a non-zero exit code when enforcement is enabled and any review-set is not current.
@@ -40,7 +38,6 @@ sections:
           Stale or Missing status, making incomplete review coverage a build-breaking condition.
         tests:
           - ReviewMark_Enforce
-          - IntegrationTest_EnforceFlag_FailsWhenReviewStale
 
       - id: ReviewMark-System-IndexScan
         title: The tool shall scan PDF evidence files and write an index.json when the --index flag is provided.
@@ -51,7 +48,6 @@ sections:
           without manual maintenance of the index file.
         tests:
           - ReviewMark_IndexScan
-          - IntegrationTest_IndexFlag_ScansEvidence
 
       - id: ReviewMark-System-Validate
         title: The tool shall execute self-validation tests when the --validate flag is provided.

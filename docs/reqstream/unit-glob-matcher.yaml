@@ -21,11 +21,9 @@ sections:
           fingerprinting regardless of filesystem iteration order.
         tests:
           - GlobMatcher_GetMatchingFiles_SingleIncludePattern_ReturnsMatchingFiles
-          - GlobMatcher_GetMatchingFiles_ExcludePattern_RemovesMatchingFiles
-          - GlobMatcher_GetMatchingFiles_MultiplePatterns_AppliesInOrder
+          - GlobMatcher_GetMatchingFiles_ExcludePattern_ExcludesMatchingFiles
+          - GlobMatcher_GetMatchingFiles_ReIncludeAfterExclude_ReturnsReIncludedFiles
+          - GlobMatcher_GetMatchingFiles_IncludeAndExclude_ReturnsFilteredFiles
           - GlobMatcher_GetMatchingFiles_NullBaseDirectory_ThrowsArgumentNullException
-          - GlobMatcher_GetMatchingFiles_EmptyBaseDirectory_ThrowsArgumentException
           - GlobMatcher_GetMatchingFiles_NullPatterns_ThrowsArgumentNullException
           - GlobMatcher_GetMatchingFiles_NoMatchingFiles_ReturnsEmptyList
-          - GlobMatcher_GetMatchingFiles_ResultsAreSorted
-          - GlobMatcher_GetMatchingFiles_ResultsUseForwardSlashes
