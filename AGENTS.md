@@ -140,7 +140,7 @@ build.bat     # Windows
 
 ## Documentation
 
-- **User Guide**: `docs/guide/guide.md`
+- **User Guide**: `docs/user_guide/introduction.md`
 - **Requirements**: `requirements.yaml` -> auto-generated docs
 - **Build Notes**: Auto-generated via BuildMark
 - **Code Quality**: Auto-generated via CodeQL and SonarMark
