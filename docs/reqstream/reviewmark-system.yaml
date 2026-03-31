@@ -34,9 +34,11 @@ sections:
         title: The tool shall return a non-zero exit code when enforcement is enabled and any review-set is not current.
         justification: |
           CI/CD pipelines must be able to gate releases on review coverage. The --enforce flag
-          enables this by causing the tool to exit with a non-zero code when any review-set has
-          Stale, Missing, or Failed status, making incomplete or failed review coverage a
-          build-breaking condition.
+          enables this by causing the tool to exit with a non-zero code in two situations: when
+          the Review Plan shows that files matching needs-review are not covered by any
+          review-set, or when the Review Report shows that any review-set has Stale, Missing, or
+          Failed status. This makes incomplete file coverage, out-of-date reviews, and failed
+          reviews all build-breaking conditions.
         tests:
           - ReviewMark_Enforce
 
