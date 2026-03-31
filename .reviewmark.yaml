@@ -50,7 +50,7 @@ reviews:
   - id: ReviewMark-ReviewMarkConfiguration
     title: Review of ReviewMarkConfiguration software unit (configuration parsing and processing)
     paths:
-      - "docs/reqstream/configuration/subsystem-configuration.yaml"   # requirements
+      - "docs/reqstream/configuration/unit-review-mark-configuration.yaml"   # requirements
       - "docs/design/configuration/review-mark-configuration.md"  # design
       - "src/**/Configuration/ReviewMarkConfiguration.cs"          # implementation
       - "test/**/Configuration/ReviewMarkConfigurationTests.cs"    # tests
