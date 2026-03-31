@@ -20,9 +20,9 @@
 
 using System.Net.Http;
 using System.Text;
-using PdfSharp.Pdf;
 using DemaConsulting.ReviewMark.Configuration;
 using DemaConsulting.ReviewMark.Indexing;
+using PdfSharp.Pdf;
 
 namespace DemaConsulting.ReviewMark.Tests.Indexing;
 

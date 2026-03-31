@@ -20,9 +20,9 @@
 
 using System.Runtime.InteropServices;
 using System.Text.RegularExpressions;
-using DemaConsulting.TestResults.IO;
 using DemaConsulting.ReviewMark.Cli;
 using DemaConsulting.ReviewMark.Indexing;
+using DemaConsulting.TestResults.IO;
 
 namespace DemaConsulting.ReviewMark.SelfTest;
 

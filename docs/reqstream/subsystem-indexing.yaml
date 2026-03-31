@@ -10,7 +10,9 @@ sections:
   - title: Indexing Subsystem Requirements
     requirements:
       - id: ReviewMark-Indexing-LoadEvidence
-        title: The tool shall load review evidence from a configured EvidenceSource supporting none, fileshare, and url types.
+        title: >-
+          The tool shall load review evidence from a configured EvidenceSource
+          supporting none, fileshare, and url types.
         justification: |
           The Indexing subsystem must support multiple evidence source types to accommodate
           different deployment environments. The 'none' type allows the tool to operate

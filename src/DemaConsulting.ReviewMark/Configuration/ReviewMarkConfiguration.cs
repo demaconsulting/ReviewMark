@@ -20,10 +20,10 @@
 
 using System.Security.Cryptography;
 using System.Text;
+using DemaConsulting.ReviewMark.Indexing;
 using YamlDotNet.Core;
 using YamlDotNet.Serialization;
 using YamlDotNet.Serialization.NamingConventions;
-using DemaConsulting.ReviewMark.Indexing;
 
 namespace DemaConsulting.ReviewMark.Configuration;
 
