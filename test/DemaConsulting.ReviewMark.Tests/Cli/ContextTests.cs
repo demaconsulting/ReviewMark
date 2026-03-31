@@ -200,7 +200,7 @@ public class ContextTests
     public void Context_Create_UnknownArgument_ThrowsArgumentException()
     {
         // Act & Assert
-        var exception = Assert.Throws<ArgumentException>(() => Context.Create(["--unknown"]));
+        var exception = Assert.ThrowsExactly<ArgumentException>(() => Context.Create(["--unknown"]));
         Assert.Contains("Unsupported argument", exception.Message);
     }
 
@@ -211,7 +211,7 @@ public class ContextTests
     public void Context_Create_LogFlag_WithoutValue_ThrowsArgumentException()
     {
         // Act & Assert
-        var exception = Assert.Throws<ArgumentException>(() => Context.Create(["--log"]));
+        var exception = Assert.ThrowsExactly<ArgumentException>(() => Context.Create(["--log"]));
         Assert.Contains("--log", exception.Message);
     }
 
@@ -222,7 +222,7 @@ public class ContextTests
     public void Context_Create_ResultsFlag_WithoutValue_ThrowsArgumentException()
     {
         // Act & Assert
-        var exception = Assert.Throws<ArgumentException>(() => Context.Create(["--results"]));
+        var exception = Assert.ThrowsExactly<ArgumentException>(() => Context.Create(["--results"]));
         Assert.Contains("--results", exception.Message);
     }
 
@@ -412,7 +412,7 @@ public class ContextTests
     public void Context_Create_DefinitionFlag_WithoutValue_ThrowsArgumentException()
     {
         // Act & Assert - --definition with no following value should throw and include the flag name in the message
-        var exception = Assert.Throws<ArgumentException>(() => Context.Create(["--definition"]));
+        var exception = Assert.ThrowsExactly<ArgumentException>(() => Context.Create(["--definition"]));
         Assert.Contains("--definition", exception.Message);
     }
 
@@ -452,7 +452,7 @@ public class ContextTests
     public void Context_Create_PlanDepthFlag_WithInvalidValue_ThrowsArgumentException()
     {
         // Act & Assert - --plan-depth with a non-numeric value should throw
-        Assert.Throws<ArgumentException>(() => Context.Create(["--plan-depth", "not-a-number"]));
+        Assert.ThrowsExactly<ArgumentException>(() => Context.Create(["--plan-depth", "not-a-number"]));
     }
 
     /// <summary>
@@ -463,7 +463,7 @@ public class ContextTests
     public void Context_Create_PlanDepthFlag_WithZeroValue_ThrowsArgumentException()
     {
         // Act & Assert - --plan-depth requires a positive integer; zero is not valid
-        Assert.Throws<ArgumentException>(() => Context.Create(["--plan-depth", "0"]));
+        Assert.ThrowsExactly<ArgumentException>(() => Context.Create(["--plan-depth", "0"]));
     }
 
     /// <summary>
@@ -501,7 +501,7 @@ public class ContextTests
     public void Context_Create_ReportDepthFlag_NonNumeric_ThrowsArgumentException()
     {
         // Act & Assert - creating a context with a non-numeric report depth should fail validation
-        Assert.Throws<ArgumentException>(() => Context.Create(["--report-depth", "abc"]));
+        Assert.ThrowsExactly<ArgumentException>(() => Context.Create(["--report-depth", "abc"]));
     }
 
     /// <summary>
@@ -511,7 +511,7 @@ public class ContextTests
     public void Context_Create_ReportDepthFlag_Zero_ThrowsArgumentException()
     {
         // Act & Assert - creating a context with a report depth of 0 should fail validation
-        Assert.Throws<ArgumentException>(() => Context.Create(["--report-depth", "0"]));
+        Assert.ThrowsExactly<ArgumentException>(() => Context.Create(["--report-depth", "0"]));
     }
 
     /// <summary>
@@ -521,7 +521,7 @@ public class ContextTests
     public void Context_Create_ReportDepthFlag_MissingValue_ThrowsArgumentException()
     {
         // Act & Assert - creating a context with --report-depth but no value should fail validation
-        Assert.Throws<ArgumentException>(() => Context.Create(["--report-depth"]));
+        Assert.ThrowsExactly<ArgumentException>(() => Context.Create(["--report-depth"]));
     }
 
     /// <summary>
@@ -628,7 +628,7 @@ public class ContextTests
     public void Context_Create_PlanDepthFlag_WithValueGreaterThanFive_ThrowsArgumentException()
     {
         // Act & Assert - --plan-depth cannot exceed 5 (max heading depth supported)
-        Assert.Throws<ArgumentException>(() => Context.Create(["--plan-depth", "6"]));
+        Assert.ThrowsExactly<ArgumentException>(() => Context.Create(["--plan-depth", "6"]));
     }
 
     /// <summary>
@@ -638,7 +638,7 @@ public class ContextTests
     public void Context_Create_ReportDepthFlag_WithValueGreaterThanFive_ThrowsArgumentException()
     {
         // Act & Assert - --report-depth cannot exceed 5 (max heading depth supported)
-        Assert.Throws<ArgumentException>(() => Context.Create(["--report-depth", "6"]));
+        Assert.ThrowsExactly<ArgumentException>(() => Context.Create(["--report-depth", "6"]));
     }
 
     /// <summary>
@@ -675,7 +675,7 @@ public class ContextTests
     public void Context_Create_DirFlag_MissingValue_ThrowsArgumentException()
     {
         // Act & Assert - --dir without a path value should throw
-        Assert.Throws<ArgumentException>(() => Context.Create(["--dir"]));
+        Assert.ThrowsExactly<ArgumentException>(() => Context.Create(["--dir"]));
     }
 
     /// <summary>
@@ -712,7 +712,7 @@ public class ContextTests
     public void Context_Create_ElaborateFlag_WithoutValue_ThrowsArgumentException()
     {
         // Act & Assert - --elaborate without an ID argument should throw
-        Assert.Throws<ArgumentException>(() => Context.Create(["--elaborate"]));
+        Assert.ThrowsExactly<ArgumentException>(() => Context.Create(["--elaborate"]));
     }
 
     /// <summary>

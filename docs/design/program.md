@@ -31,17 +31,24 @@ than by `Program.Main` explicitly returning a non-zero value.
 executing the first matching action and returning:
 
 1. If `--version` — print version and return
-2. If `--help` — print banner and return
-3. If `--validate` — run self-validation and return
-4. If `--lint` — run configuration lint and return
-5. If `--index` paths provided — scan and write evidence index, then return
-6. Otherwise — generate Review Plan and/or Review Report and return
+2. Print application banner
+3. If `--help` — print help and return
+4. If `--validate` — run self-validation and return
+5. If `--lint` — run configuration lint and return
+6. Otherwise — run main tool logic (index scanning and/or Review Plan/Report/Elaborate)
 
+The application banner (step 2) is always printed unless `--version` is specified.
 Only one top-level action is performed per invocation. Actions later in the priority
 order are not reached if an earlier flag is set.
 
 ## PrintBanner()
 
-`Program.PrintBanner(Context)` writes the help text to the console via
-`Context.WriteLine()`. The banner lists all supported flags and arguments with brief
+`Program.PrintBanner(Context)` writes the application name, version, and copyright
+notice to the console via `Context.WriteLine()`. The banner is printed for every
+invocation except `--version`.
+
+## PrintHelp()
+
+`Program.PrintHelp(Context)` writes usage information to the console via
+`Context.WriteLine()`. The help text lists all supported flags and arguments with brief
 descriptions.
