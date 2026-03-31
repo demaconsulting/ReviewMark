@@ -25,8 +25,8 @@ sections:
         justification: |
           Auditors need evidence that the review evidence for each review-set is current —
           that the reviewed files have not changed since the review was conducted. The Review
-          Report provides this evidence automatically, showing Current, Stale, or Missing
-          status for each review-set.
+          Report provides this evidence automatically, showing Current, Stale, Missing, or
+          Failed status for each review-set.
         tests:
           - ReviewMark_ReviewReportGeneration
 
@@ -35,7 +35,8 @@ sections:
         justification: |
           CI/CD pipelines must be able to gate releases on review coverage. The --enforce flag
           enables this by causing the tool to exit with a non-zero code when any review-set has
-          Stale or Missing status, making incomplete review coverage a build-breaking condition.
+          Stale, Missing, or Failed status, making incomplete or failed review coverage a
+          build-breaking condition.
         tests:
           - ReviewMark_Enforce
 
