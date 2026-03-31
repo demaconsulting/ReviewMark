@@ -124,15 +124,7 @@ reviews:
     title: Review of all ReviewMark design documentation
     paths:
       - "docs/reqstream/platform-requirements.yaml"     # platform requirements
-      - "docs/design/introduction.md"                   # design introduction and architecture
-      - "docs/design/system.md"                         # system design
-      - "docs/design/program.md"                        # Program design
-      - "docs/design/cli/context.md"                    # Context design
-      - "docs/design/configuration/glob-matcher.md"     # GlobMatcher design
-      - "docs/design/configuration/review-mark-configuration.md"  # ReviewMarkConfiguration design
-      - "docs/design/indexing/review-index.md"          # ReviewIndex design
-      - "docs/design/indexing/path-helpers.md"          # PathHelpers design
-      - "docs/design/self-test/validation.md"           # Validation design
+      - "docs/design/**/*.md"                           # all design documents
 
   - id: ReviewMark-AllRequirements
     title: Review of all ReviewMark requirements files
