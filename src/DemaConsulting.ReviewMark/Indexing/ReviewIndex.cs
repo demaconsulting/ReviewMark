@@ -23,10 +23,11 @@ using System.Net.Http.Headers;
 using System.Text;
 using System.Text.Json;
 using System.Text.Json.Serialization;
+using DemaConsulting.ReviewMark.Configuration;
 using PdfSharp.Pdf;
 using PdfSharp.Pdf.IO;
 
-namespace DemaConsulting.ReviewMark;
+namespace DemaConsulting.ReviewMark.Indexing;
 
 // ---------------------------------------------------------------------------
 // Internal JSON deserialization models

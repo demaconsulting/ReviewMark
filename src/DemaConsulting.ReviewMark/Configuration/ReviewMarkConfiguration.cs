@@ -20,11 +20,12 @@
 
 using System.Security.Cryptography;
 using System.Text;
+using DemaConsulting.ReviewMark.Indexing;
 using YamlDotNet.Core;
 using YamlDotNet.Serialization;
 using YamlDotNet.Serialization.NamingConventions;
 
-namespace DemaConsulting.ReviewMark;
+namespace DemaConsulting.ReviewMark.Configuration;
 
 // ---------------------------------------------------------------------------
 // Internal YAML deserialization models

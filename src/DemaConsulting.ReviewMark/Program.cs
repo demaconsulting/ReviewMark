@@ -19,6 +19,10 @@
 // SOFTWARE.
 
 using System.Reflection;
+using DemaConsulting.ReviewMark.Cli;
+using DemaConsulting.ReviewMark.Configuration;
+using DemaConsulting.ReviewMark.Indexing;
+using DemaConsulting.ReviewMark.SelfTest;
 
 namespace DemaConsulting.ReviewMark;
 

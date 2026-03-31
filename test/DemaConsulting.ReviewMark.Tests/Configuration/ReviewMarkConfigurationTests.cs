@@ -18,7 +18,10 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
-namespace DemaConsulting.ReviewMark.Tests;
+using DemaConsulting.ReviewMark.Configuration;
+using DemaConsulting.ReviewMark.Indexing;
+
+namespace DemaConsulting.ReviewMark.Tests.Configuration;
 
 /// <summary>
 ///     Unit tests for <see cref="ReviewMarkConfiguration" />, <see cref="EvidenceSource" />,
