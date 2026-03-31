@@ -152,8 +152,9 @@ Lint checks the following:
 
 - **File readability** — the definition file exists and can be read.
 - **YAML syntax** — the file is valid YAML; syntax errors include the filename and line number.
-- **`evidence-source` block** — the block is present, has a `type` field (`url` or `fileshare`),
-  and has a `location` field.
+- **`evidence-source` block** — the block is present and has a `type` field (`none`, `url`, or
+  `fileshare`); when `type` is `url` or `fileshare`, it must also include a `location` field
+  (no `location` field is used with `type: none`).
 - **Review sets** — each set has an `id`, a `title`, and at least one `paths` entry.
 - **Duplicate IDs** — no two review sets share the same `id`.
 

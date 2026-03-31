@@ -26,9 +26,9 @@ arguments:
 | `ReportFile` | string? | Output path for the Review Report document |
 | `ReportDepth` | int | Heading depth for the Review Report |
 | `IndexPaths` | string[]? | Paths to scan when building an evidence index |
-| `WorkingDirectory` | string | Base directory for resolving relative paths |
+| `WorkingDirectory` | string? | Base directory for resolving relative paths |
 | `Enforce` | bool | Fail if any review-set is not Current |
-| `Elaborate` | bool | Expand file lists in generated documents |
+| `ElaborateId` | string? | Review-set ID to elaborate, or null if `--elaborate` was not specified |
 
 ## Argument Parsing
 
