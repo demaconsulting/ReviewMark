@@ -18,7 +18,9 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
-namespace DemaConsulting.ReviewMark.Tests;
+using DemaConsulting.ReviewMark.Cli;
+
+namespace DemaConsulting.ReviewMark.Tests.Cli;
 
 /// <summary>
 ///     Unit tests for the Context class.

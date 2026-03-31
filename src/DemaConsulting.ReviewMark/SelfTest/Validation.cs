@@ -21,8 +21,10 @@
 using System.Runtime.InteropServices;
 using System.Text.RegularExpressions;
 using DemaConsulting.TestResults.IO;
+using DemaConsulting.ReviewMark.Cli;
+using DemaConsulting.ReviewMark.Indexing;
 
-namespace DemaConsulting.ReviewMark;
+namespace DemaConsulting.ReviewMark.SelfTest;
 
 /// <summary>
 ///     Provides self-validation functionality for ReviewMark.

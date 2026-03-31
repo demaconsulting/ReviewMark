@@ -18,7 +18,9 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
-namespace DemaConsulting.ReviewMark.Tests;
+using DemaConsulting.ReviewMark.Indexing;
+
+namespace DemaConsulting.ReviewMark.Tests.Indexing;
 
 /// <summary>
 ///     Tests for the PathHelpers class.

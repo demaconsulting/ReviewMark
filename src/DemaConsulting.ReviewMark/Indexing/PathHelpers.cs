@@ -18,7 +18,7 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
-namespace DemaConsulting.ReviewMark;
+namespace DemaConsulting.ReviewMark.Indexing;
 
 /// <summary>
 ///     Helper utilities for safe path operations.

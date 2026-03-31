@@ -18,6 +18,9 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
+using DemaConsulting.ReviewMark.Cli;
+using DemaConsulting.ReviewMark.Indexing;
+
 namespace DemaConsulting.ReviewMark.Tests;
 
 /// <summary>

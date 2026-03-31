@@ -21,8 +21,10 @@
 using System.Net.Http;
 using System.Text;
 using PdfSharp.Pdf;
+using DemaConsulting.ReviewMark.Configuration;
+using DemaConsulting.ReviewMark.Indexing;
 
-namespace DemaConsulting.ReviewMark.Tests;
+namespace DemaConsulting.ReviewMark.Tests.Indexing;
 
 /// <summary>
 ///     Unit tests for the <see cref="ReviewIndex" /> class and <see cref="ReviewEvidence" /> record.

@@ -20,7 +20,7 @@
 
 using Microsoft.Extensions.FileSystemGlobbing;
 
-namespace DemaConsulting.ReviewMark;
+namespace DemaConsulting.ReviewMark.Configuration;
 
 /// <summary>
 ///     Provides glob-based file matching utilities.

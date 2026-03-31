@@ -1,0 +1,55 @@
+---
+# Indexing Subsystem Requirements
+#
+# PURPOSE:
+# - Define requirements for the ReviewMark Indexing subsystem
+# - The Indexing subsystem spans ReviewIndex.cs (evidence loading) and PathHelpers.cs (path utilities)
+# - Subsystem requirements describe the externally visible evidence-loading behavior
+
+sections:
+  - title: Indexing Subsystem Requirements
+    requirements:
+      - id: ReviewMark-Indexing-LoadEvidence
+        title: The tool shall load review evidence from a configured EvidenceSource supporting none, fileshare, and url types.
+        justification: |
+          The Indexing subsystem must support multiple evidence source types to accommodate
+          different deployment environments. The 'none' type allows the tool to operate
+          during initial project setup without an evidence store. The 'fileshare' type
+          supports loading from a local or network file path. The 'url' type supports
+          downloading evidence over HTTP(S), enabling centralized evidence stores accessible
+          from any CI/CD environment.
+        tests:
+          - ReviewIndex_Load_EvidenceSource_None_ReturnsEmptyIndex
+          - ReviewIndex_Load_EvidenceSource_None_HttpClientOverload_ReturnsEmptyIndex
+          - ReviewIndex_Load_EvidenceSource_Fileshare_LoadsFromFile
+          - ReviewIndex_Load_EvidenceSource_Fileshare_ValidJson_ReturnsPopulatedIndex
+          - ReviewIndex_Load_EvidenceSource_Url_SuccessResponse_LoadsIndex
+
+      - id: ReviewMark-Indexing-ScanPdfEvidence
+        title: The tool shall scan PDF evidence files and extract embedded review metadata to build an index.
+        justification: |
+          Review evidence is stored as PDF files with metadata embedded in the Keywords
+          field. The Indexing subsystem must be able to scan directories for PDF files
+          and extract the review ID, fingerprint, date, and result from each file to
+          populate the evidence index used for report generation.
+        tests:
+          - ReviewIndex_Scan_PdfWithValidMetadata_PopulatesIndex
+          - ReviewIndex_Scan_MultiplePdfs_PopulatesAllEntries
+          - ReviewIndex_Scan_NoMatchingFiles_LeavesIndexEmpty
+          - ReviewIndex_Scan_ClearsExistingEntries
+
+      - id: ReviewMark-Indexing-SafePathCombine
+        title: The tool shall combine file paths safely, rejecting path traversal sequences.
+        justification: |
+          Path traversal sequences (such as '..') in file paths could allow access to
+          files outside the intended directory. The Indexing subsystem must reject such
+          sequences to prevent unintended file system access in both evidence scanning
+          and index file operations.
+        tests:
+          - PathHelpers_SafePathCombine_ValidPaths_CombinesCorrectly
+          - PathHelpers_SafePathCombine_PathTraversalWithDoubleDots_ThrowsArgumentException
+          - PathHelpers_SafePathCombine_DoubleDotsInMiddle_ThrowsArgumentException
+          - PathHelpers_SafePathCombine_AbsolutePath_ThrowsArgumentException
+          - PathHelpers_SafePathCombine_CurrentDirectoryReference_CombinesCorrectly
+          - PathHelpers_SafePathCombine_NestedPaths_CombinesCorrectly
+          - PathHelpers_SafePathCombine_EmptyRelativePath_ReturnsBasePath

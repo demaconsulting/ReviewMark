@@ -25,8 +25,9 @@ using System.Text.Json;
 using System.Text.Json.Serialization;
 using PdfSharp.Pdf;
 using PdfSharp.Pdf.IO;
+using DemaConsulting.ReviewMark.Configuration;
 
-namespace DemaConsulting.ReviewMark;
+namespace DemaConsulting.ReviewMark.Indexing;
 
 // ---------------------------------------------------------------------------
 // Internal JSON deserialization models

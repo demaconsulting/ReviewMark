@@ -23,8 +23,9 @@ using System.Text;
 using YamlDotNet.Core;
 using YamlDotNet.Serialization;
 using YamlDotNet.Serialization.NamingConventions;
+using DemaConsulting.ReviewMark.Indexing;
 
-namespace DemaConsulting.ReviewMark;
+namespace DemaConsulting.ReviewMark.Configuration;
 
 // ---------------------------------------------------------------------------
 // Internal YAML deserialization models

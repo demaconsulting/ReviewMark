@@ -27,6 +27,8 @@ includes:
   - docs/reqstream/reviewmark-system.yaml
   - docs/reqstream/subsystem-cli.yaml
   - docs/reqstream/subsystem-configuration.yaml
+  - docs/reqstream/subsystem-indexing.yaml
+  - docs/reqstream/subsystem-self-test.yaml
   - docs/reqstream/unit-context.yaml
   - docs/reqstream/unit-program.yaml
   - docs/reqstream/unit-review-index.yaml
