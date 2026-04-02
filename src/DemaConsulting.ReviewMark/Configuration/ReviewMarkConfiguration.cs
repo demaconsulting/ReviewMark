@@ -534,7 +534,7 @@ internal sealed class ReviewMarkConfiguration
         catch (Exception ex) when (ex is not InvalidOperationException)
         {
             issues.Add(new LintIssue(filePath, LintSeverity.Error, ex.Message));
-            return new ReviewMarkLoadResult(null, issues);
+            return new ReviewMarkLoadResult(null, issues.ToArray());
         }
 
         // Try to parse the raw YAML model; if this fails we cannot do semantic checks.
@@ -551,12 +551,12 @@ internal sealed class ReviewMarkConfiguration
                 $"{filePath}:{yamlEx.Start.Line}:{yamlEx.Start.Column}",
                 LintSeverity.Error,
                 $"at line {yamlEx.Start.Line}, column {yamlEx.Start.Column}: {yamlEx.Message}"));
-            return new ReviewMarkLoadResult(null, issues);
+            return new ReviewMarkLoadResult(null, issues.ToArray());
         }
         catch (InvalidOperationException ex)
         {
             issues.Add(new LintIssue(filePath, LintSeverity.Error, ex.Message));
-            return new ReviewMarkLoadResult(null, issues);
+            return new ReviewMarkLoadResult(null, issues.ToArray());
         }
 
         // Validate the evidence-source block, collecting all field-level errors.
@@ -604,6 +604,15 @@ internal sealed class ReviewMarkConfiguration
         {
             var r = reviews[i];
 
+            if (r is null)
+            {
+                issues.Add(new LintIssue(
+                    filePath,
+                    LintSeverity.Error,
+                    $"Review set at index {i} is null (for example, from an empty '-' entry in 'reviews') and will be ignored."));
+                continue;
+            }
+
             if (string.IsNullOrWhiteSpace(r.Id))
             {
                 issues.Add(new LintIssue(
@@ -643,7 +652,7 @@ internal sealed class ReviewMarkConfiguration
         // If any error-level issues were found, return null configuration
         if (issues.Any(i => i.Severity == LintSeverity.Error))
         {
-            return new ReviewMarkLoadResult(null, issues);
+            return new ReviewMarkLoadResult(null, issues.ToArray());
         }
 
         // Build configuration from the validated raw model
@@ -657,7 +666,7 @@ internal sealed class ReviewMarkConfiguration
                 filePath,
                 LintSeverity.Error,
                 $"Cannot determine base directory for configuration file '{filePath}'."));
-            return new ReviewMarkLoadResult(null, issues);
+            return new ReviewMarkLoadResult(null, issues.ToArray());
         }
 
         // Resolve relative fileshare locations against the config file's directory so that
@@ -673,7 +682,7 @@ internal sealed class ReviewMarkConfiguration
                 config.Reviews);
         }
 
-        return new ReviewMarkLoadResult(config, issues);
+        return new ReviewMarkLoadResult(config, issues.ToArray());
     }
 
     /// <summary>

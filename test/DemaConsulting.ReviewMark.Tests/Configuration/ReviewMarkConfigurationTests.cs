@@ -397,6 +397,39 @@ public class ReviewMarkConfigurationTests
     }
 
     /// <summary>
+    ///     Test that Load emits an error and continues when a review entry is null
+    ///     (e.g., an empty <c>-</c> in the YAML <c>reviews</c> list).
+    /// </summary>
+    [TestMethod]
+    public void ReviewMarkConfiguration_Load_NullReviewEntry_EmitsErrorAndContinues()
+    {
+        // Arrange — write a YAML file with a null review entry followed by a valid one
+        var configPath = PathHelpers.SafePathCombine(_testDirectory, ".reviewmark.yaml");
+        File.WriteAllText(configPath, """
+            needs-review:
+              - "src/**/*.cs"
+            evidence-source:
+              type: none
+            reviews:
+              -
+              - id: Core-Logic
+                title: Review of core business logic
+                paths:
+                  - "src/**/*.cs"
+            """);
+
+        // Act
+        var result = ReviewMarkConfiguration.Load(configPath);
+
+        // Assert — configuration is null (error-level issue), one error about the null entry
+        Assert.IsNull(result.Configuration);
+        Assert.AreEqual(1, result.Issues.Count);
+        Assert.AreEqual(LintSeverity.Error, result.Issues[0].Severity);
+        Assert.Contains("index 0", result.Issues[0].Description);
+        Assert.Contains("null", result.Issues[0].Description);
+    }
+
+    /// <summary>
     ///     Test that Load resolves a relative fileshare location against the config file's directory.
     /// </summary>
     [TestMethod]
