@@ -26,5 +26,21 @@ sections:
           - ReviewSet_GetFingerprint_SameContent_ReturnsSameFingerprint
           - ReviewSet_GetFingerprint_DifferentContent_ReturnsDifferentFingerprint
           - ReviewSet_GetFingerprint_RenameFile_ReturnsSameFingerprint
-          - ReviewMarkConfiguration_Load_NonExistentFile_ThrowsException
+          - ReviewMarkConfiguration_Load_NonExistentFile_ReturnsNullConfigWithErrorIssue
           - ReviewMarkConfiguration_Load_FileshareRelativeLocation_ResolvesToAbsolutePath
+      - id: ReviewMark-Config-Loading
+        title: The Load mechanism shall perform linting and return both the configuration and lint issues.
+        justification: |
+          Enables a single-pass loading mechanism that combines configuration parsing and linting,
+          returning a ReviewMarkLoadResult with both the configuration (or null on error) and
+          all detected LintIssue records. This allows callers to receive comprehensive diagnostics
+          without performing two separate operations.
+        tests:
+          - ReviewMarkConfiguration_Load_ValidFile_ReturnsConfigurationAndNoIssues
+          - ReviewMarkConfiguration_Load_NonExistentFile_ReturnsNullConfigWithErrorIssue
+          - ReviewMarkConfiguration_Load_InvalidYaml_ReturnsNullConfigWithErrorIssue
+          - ReviewMarkConfiguration_Load_MissingEvidenceSource_ReturnsNullConfigWithErrorIssue
+          - ReviewMarkConfiguration_Load_MultipleErrors_ReturnsAllIssues
+          - ReviewMarkConfiguration_Load_NoneEvidenceSource_NoIssues
+          - ReviewMarkLoadResult_ReportIssues_RoutesIssuesToContext
+          - Program_Run_WithDefinitionFlag_InvalidConfig_ReportsLintError

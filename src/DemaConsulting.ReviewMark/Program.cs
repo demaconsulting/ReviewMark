@@ -176,15 +176,12 @@ internal static class Program
         var directory = context.WorkingDirectory ?? Directory.GetCurrentDirectory();
         var definitionFile = context.DefinitionFile ?? PathHelpers.SafePathCombine(directory, ".reviewmark.yaml");
 
-        // Lint the file, collecting all detectable errors in one pass.
-        var errors = ReviewMarkConfiguration.Lint(definitionFile);
-        foreach (var error in errors)
-        {
-            context.WriteError(error);
-        }
+        // Load and lint the file in one pass, collecting all detectable issues.
+        var result = ReviewMarkConfiguration.Load(definitionFile);
+        result.ReportIssues(context);
 
         // Report overall result
-        if (errors.Count == 0)
+        if (result.Issues.Count == 0)
         {
             context.WriteLine($"{definitionFile}: No issues found");
         }
@@ -259,8 +256,19 @@ internal static class Program
     /// <param name="definitionFile">The path to the definition YAML file.</param>
     private static void RunDefinitionLogic(Context context, string directory, string definitionFile)
     {
-        // Load the configuration from the definition file
-        var config = ReviewMarkConfiguration.Load(definitionFile);
+        // Load the configuration with integrated linting
+        var loadResult = ReviewMarkConfiguration.Load(definitionFile);
+
+        // Always report any lint issues found during loading
+        loadResult.ReportIssues(context);
+
+        // If the configuration could not be loaded, stop here
+        if (loadResult.Configuration == null)
+        {
+            return;
+        }
+
+        var config = loadResult.Configuration;
 
         // Handle --plan: generate and write the review plan
         if (context.PlanFile != null)
@@ -281,7 +289,7 @@ internal static class Program
             HandleIssues(context, reportResult.HasIssues, "Review report has review issues.");
         }
 
-        // Handle --elaborate: generate and print the review set elaboration
+        // Handle --elaborate
         if (context.ElaborateId != null)
         {
             try
