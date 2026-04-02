@@ -237,7 +237,7 @@ sections:
           - Program_Run_WithLintFlag_CorruptedYaml_ReportsError
           - Program_Run_WithLintFlag_MissingEvidenceSource_ReportsError
           - Program_Run_WithLintFlag_MultipleErrors_ReportsAll
-          - ReviewMarkConfiguration_Load_InvalidYaml_ErrorIncludesFilenameAndLine
-          - ReviewMarkConfiguration_Load_MissingEvidenceSource_ErrorIncludesFilename
-          - ReviewMarkConfiguration_Lint_MultipleErrors_ReturnsAll
+          - ReviewMarkConfiguration_Load_InvalidYaml_ReturnsNullConfigWithErrorIssue
+          - ReviewMarkConfiguration_Load_MissingEvidenceSource_ReturnsNullConfigWithErrorIssue
+          - ReviewMarkConfiguration_Load_MultipleErrors_ReturnsAllIssues
           - ReviewMark_Lint

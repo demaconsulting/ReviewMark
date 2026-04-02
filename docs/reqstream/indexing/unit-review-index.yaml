@@ -47,7 +47,7 @@ sections:
           - ReviewIndex_Load_EvidenceSource_None_HttpClientOverload_ReturnsEmptyIndex
           - ReviewMarkConfiguration_Parse_NoneEvidenceSource_ParsedCorrectly
           - ReviewMarkConfiguration_Parse_NoneEvidenceSource_NoLocationRequired
-          - ReviewMarkConfiguration_Lint_NoneEvidenceSource_NoErrors
+          - ReviewMarkConfiguration_Load_NoneEvidenceSource_NoIssues
 
       - id: ReviewMark-Index-PdfParsing
         title: The tool shall parse PDF metadata from the Keywords field when indexing evidence files.
