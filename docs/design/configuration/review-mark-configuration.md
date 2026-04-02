@@ -19,10 +19,18 @@ The `.reviewmark.yaml` file is deserialized into the following model:
 
 ## ReviewMarkConfiguration.Load()
 
-`ReviewMarkConfiguration.Load(definitionFile, workingDirectory)` reads and
-deserializes the YAML file, resolves all glob patterns relative to the working
-directory, computes fingerprints for each review-set, loads the evidence index,
-and returns a fully initialized configuration object ready for plan/report generation.
+`ReviewMarkConfiguration.Load(filePath)` is the unified loading mechanism that performs
+both configuration parsing and linting in a single pass. It returns a `ReviewMarkLoadResult`
+containing:
+
+- `Configuration`: the loaded `ReviewMarkConfiguration`, or `null` if any error-level issues
+  were detected.
+- `Issues`: a read-only list of `LintIssue` records, each with a `Location`, `Severity`
+  (`LintSeverity.Error` or `LintSeverity.Warning`), and `Description`.
+
+Errors result in a `null` configuration so callers can distinguish between a completely
+invalid file and a file with only warnings. `LintIssue.ToString()` formats each issue as
+`{location}: {severity}: {description}`, matching standard linting tool output conventions.
 
 ## Fingerprinting Algorithm
 
@@ -64,29 +72,11 @@ index to establish whether a passing, failing, stale, or missing review result e
 - The `--report-depth` argument controls the heading level used for sections
 - The `--elaborate` flag expands the list of files covered by each review-set
 
-## LoadWithLinting
-
-`ReviewMarkConfiguration.LoadWithLinting(filePath)` is the unified loading mechanism that
-performs both configuration parsing and linting in a single pass. It returns a
-`ReviewMarkLoadResult` containing:
-
-- `Configuration`: the loaded `ReviewMarkConfiguration`, or `null` if any error-level issues
-  were detected.
-- `Issues`: a read-only list of `LintIssue` records, each with a `Location`, `Severity`
-  (`LintSeverity.Error` or `LintSeverity.Warning`), and `Description`.
-
-`Load` and `Lint` are thin wrappers that delegate to `LoadWithLinting`:
-
-- `Load` throws `InvalidOperationException` if the configuration could not be loaded (i.e.,
-  if any error-level issues exist), using the first error's `ToString()` as the message.
-- `Lint` returns all issue strings (`issue.ToString()` for each issue).
-
 ## Linting
 
-`ReviewMarkConfiguration.Lint(filePath)` delegates to `LoadWithLinting` and returns all
-detected issue strings. Lint checks include:
+`ReviewMarkConfiguration.Load(filePath)` accumulates all detectable issues in a single pass
+without stopping at the first error. Lint checks include:
 
+- Missing or invalid `evidence-source` block and fields
 - All review-set `id` values are unique
-- All glob patterns resolve to at least one file
-- The `needs-review` file-set is non-empty
-- All files in the `needs-review` set are covered by at least one review-set
+- Each review-set has required `id`, `title`, and `paths` fields

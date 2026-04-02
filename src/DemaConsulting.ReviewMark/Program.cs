@@ -177,18 +177,8 @@ internal static class Program
         var definitionFile = context.DefinitionFile ?? PathHelpers.SafePathCombine(directory, ".reviewmark.yaml");
 
         // Load and lint the file in one pass, collecting all detectable issues.
-        var result = ReviewMarkConfiguration.LoadWithLinting(definitionFile);
-        foreach (var issue in result.Issues)
-        {
-            if (issue.Severity == LintSeverity.Error)
-            {
-                context.WriteError(issue.ToString());
-            }
-            else
-            {
-                context.WriteLine(issue.ToString());
-            }
-        }
+        var result = ReviewMarkConfiguration.Load(definitionFile);
+        result.ReportIssues(context);
 
         // Report overall result
         if (result.Issues.Count == 0)
@@ -267,20 +257,10 @@ internal static class Program
     private static void RunDefinitionLogic(Context context, string directory, string definitionFile)
     {
         // Load the configuration with integrated linting
-        var loadResult = ReviewMarkConfiguration.LoadWithLinting(definitionFile);
+        var loadResult = ReviewMarkConfiguration.Load(definitionFile);
 
         // Always report any lint issues found during loading
-        foreach (var issue in loadResult.Issues)
-        {
-            if (issue.Severity == LintSeverity.Error)
-            {
-                context.WriteError(issue.ToString());
-            }
-            else
-            {
-                context.WriteLine(issue.ToString());
-            }
-        }
+        loadResult.ReportIssues(context);
 
         // If the configuration could not be loaded, stop here
         if (loadResult.Configuration == null)

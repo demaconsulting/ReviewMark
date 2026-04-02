@@ -20,6 +20,7 @@
 
 using System.Security.Cryptography;
 using System.Text;
+using DemaConsulting.ReviewMark.Cli;
 using DemaConsulting.ReviewMark.Indexing;
 using YamlDotNet.Core;
 using YamlDotNet.Serialization;
@@ -434,7 +435,7 @@ internal sealed record LintIssue(string Location, LintSeverity Severity, string 
 }
 
 /// <summary>
-///     The result of <see cref="ReviewMarkConfiguration.LoadWithLinting" />.
+///     The result of <see cref="ReviewMarkConfiguration.Load" />.
 /// </summary>
 /// <param name="Configuration">
 ///     The loaded configuration, or <c>null</c> if any error-level lint issues were detected.
@@ -445,7 +446,28 @@ internal sealed record LintIssue(string Location, LintSeverity Severity, string 
 /// </param>
 internal sealed record ReviewMarkLoadResult(
     ReviewMarkConfiguration? Configuration,
-    IReadOnlyList<LintIssue> Issues);
+    IReadOnlyList<LintIssue> Issues)
+{
+    /// <summary>
+    ///     Reports all lint issues to the supplied <paramref name="context" />, routing errors
+    ///     to <see cref="Context.WriteError" /> and warnings to <see cref="Context.WriteLine" />.
+    /// </summary>
+    /// <param name="context">The context to report issues to.</param>
+    internal void ReportIssues(Context context)
+    {
+        foreach (var issue in Issues)
+        {
+            if (issue.Severity == LintSeverity.Error)
+            {
+                context.WriteError(issue.ToString());
+            }
+            else
+            {
+                context.WriteLine(issue.ToString());
+            }
+        }
+    }
+}
 
 /// <summary>
 ///     Represents the parsed contents of a <c>.reviewmark.yaml</c> configuration file.
@@ -493,7 +515,7 @@ internal sealed class ReviewMarkConfiguration
     ///     any error-level issues were detected) and the complete list of lint issues.
     /// </returns>
     /// <exception cref="ArgumentException">Thrown when <paramref name="filePath" /> is null or empty.</exception>
-    internal static ReviewMarkLoadResult LoadWithLinting(string filePath)
+    internal static ReviewMarkLoadResult Load(string filePath)
     {
         // Validate the file path argument
         if (string.IsNullOrWhiteSpace(filePath))
@@ -652,60 +674,6 @@ internal sealed class ReviewMarkConfiguration
         }
 
         return new ReviewMarkLoadResult(config, issues);
-    }
-
-    /// <summary>
-    ///     Loads and parses a <c>.reviewmark.yaml</c> file from disk.
-    /// </summary>
-    /// <param name="filePath">Absolute or relative path to the configuration file.</param>
-    /// <returns>A populated <see cref="ReviewMarkConfiguration" /> instance.</returns>
-    /// <exception cref="ArgumentException">Thrown when <paramref name="filePath" /> is null or empty.</exception>
-    /// <exception cref="InvalidOperationException">
-    ///     Thrown when the file cannot be read, the YAML is invalid, or required configuration fields are
-    ///     missing.  The exception message always identifies the problematic file and, for YAML syntax
-    ///     errors, the line and column number.
-    /// </exception>
-    internal static ReviewMarkConfiguration Load(string filePath)
-    {
-        // Validate the file path argument
-        if (string.IsNullOrWhiteSpace(filePath))
-        {
-            throw new ArgumentException("File path must not be null or empty.", nameof(filePath));
-        }
-
-        var result = LoadWithLinting(filePath);
-
-        if (result.Configuration != null)
-        {
-            return result.Configuration;
-        }
-
-        var firstError = result.Issues.First(i => i.Severity == LintSeverity.Error);
-        throw new InvalidOperationException(firstError.ToString());
-    }
-
-    /// <summary>
-    ///     Lints a <c>.reviewmark.yaml</c> file and returns all detected issues.
-    ///     Unlike <see cref="Load" />, this method does not stop at the first error;
-    ///     it accumulates every detectable problem and returns them all so the caller
-    ///     can report a complete list in a single pass.
-    /// </summary>
-    /// <param name="filePath">Absolute or relative path to the configuration file.</param>
-    /// <returns>
-    ///     A read-only list of error messages.  The list is empty when the file is
-    ///     structurally and semantically valid.
-    /// </returns>
-    /// <exception cref="ArgumentException">Thrown when <paramref name="filePath" /> is null or empty.</exception>
-    internal static IReadOnlyList<string> Lint(string filePath)
-    {
-        // Validate the file path argument
-        if (string.IsNullOrWhiteSpace(filePath))
-        {
-            throw new ArgumentException("File path must not be null or empty.", nameof(filePath));
-        }
-
-        var result = LoadWithLinting(filePath);
-        return result.Issues.Select(i => i.ToString()).ToList();
     }
 
     /// <summary>
