@@ -580,4 +580,41 @@ public class ProgramTests
         Assert.Contains("duplicate ID", logContent);
         Assert.Contains("Core-Logic", logContent);
     }
+
+    /// <summary>
+    ///     Test that Run with --definition flag pointing to an invalid config reports lint errors and exits with code 1.
+    /// </summary>
+    [TestMethod]
+    public void Program_Run_WithDefinitionFlag_InvalidConfig_ReportsLintError()
+    {
+        // Arrange — create a definition file with no evidence-source block
+        using var tempDir = new TestDirectory();
+        var definitionFile = PathHelpers.SafePathCombine(tempDir.DirectoryPath, "definition.yaml");
+        File.WriteAllText(definitionFile, """
+            needs-review:
+              - "src/**/*.cs"
+            reviews:
+              - id: Core-Logic
+                title: Review of core business logic
+                paths:
+                  - "src/**/*.cs"
+            """);
+
+        var planFile = PathHelpers.SafePathCombine(tempDir.DirectoryPath, "plan.md");
+        var logFile = PathHelpers.SafePathCombine(tempDir.DirectoryPath, "test.log");
+
+        // Act — dispose the context before reading the log to release the file handle on Windows
+        int exitCode;
+        using (var context = Context.Create(["--silent", "--log", logFile, "--definition", definitionFile, "--plan", planFile]))
+        {
+            Program.Run(context);
+            exitCode = context.ExitCode;
+        }
+
+        // Assert — non-zero exit code and log contains error mentioning evidence-source
+        var logContent = File.ReadAllText(logFile);
+        Assert.AreEqual(1, exitCode);
+        Assert.Contains("error:", logContent);
+        Assert.Contains("evidence-source", logContent);
+    }
 }

@@ -407,6 +407,47 @@ internal sealed record ReviewReportResult(string Markdown, bool HasIssues);
 internal sealed record ElaborateResult(string Markdown);
 
 /// <summary>
+///     Severity level of a lint issue.
+/// </summary>
+internal enum LintSeverity
+{
+    /// <summary>Informational warning — does not prevent configuration use.</summary>
+    Warning,
+
+    /// <summary>Fatal error — prevents configuration use.</summary>
+    Error
+}
+
+/// <summary>
+///     A single lint issue detected when loading or validating a <c>.reviewmark.yaml</c> file.
+/// </summary>
+/// <param name="Location">
+///     The file path (and optionally <c>:line:column</c>) where the issue was detected.
+/// </param>
+/// <param name="Severity">The severity of the issue.</param>
+/// <param name="Description">A human-readable description of the issue.</param>
+internal sealed record LintIssue(string Location, LintSeverity Severity, string Description)
+{
+    /// <inheritdoc />
+    public override string ToString() =>
+        $"{Location}: {Severity.ToString().ToLowerInvariant()}: {Description}";
+}
+
+/// <summary>
+///     The result of <see cref="ReviewMarkConfiguration.LoadWithLinting" />.
+/// </summary>
+/// <param name="Configuration">
+///     The loaded configuration, or <c>null</c> if any error-level lint issues were detected.
+/// </param>
+/// <param name="Issues">
+///     All lint issues (errors and warnings) detected during loading. May be empty when the
+///     file is valid.
+/// </param>
+internal sealed record ReviewMarkLoadResult(
+    ReviewMarkConfiguration? Configuration,
+    IReadOnlyList<LintIssue> Issues);
+
+/// <summary>
 ///     Represents the parsed contents of a <c>.reviewmark.yaml</c> configuration file.
 /// </summary>
 internal sealed class ReviewMarkConfiguration
@@ -443,6 +484,177 @@ internal sealed class ReviewMarkConfiguration
     }
 
     /// <summary>
+    ///     Loads and lints a <c>.reviewmark.yaml</c> file, returning both the parsed
+    ///     configuration and all detected issues in a single pass.
+    /// </summary>
+    /// <param name="filePath">Absolute or relative path to the configuration file.</param>
+    /// <returns>
+    ///     A <see cref="ReviewMarkLoadResult" /> containing the configuration (or <c>null</c> if
+    ///     any error-level issues were detected) and the complete list of lint issues.
+    /// </returns>
+    /// <exception cref="ArgumentException">Thrown when <paramref name="filePath" /> is null or empty.</exception>
+    internal static ReviewMarkLoadResult LoadWithLinting(string filePath)
+    {
+        // Validate the file path argument
+        if (string.IsNullOrWhiteSpace(filePath))
+        {
+            throw new ArgumentException("File path must not be null or empty.", nameof(filePath));
+        }
+
+        var issues = new List<LintIssue>();
+
+        // Try to read the file; if this fails we cannot continue.
+        string yaml;
+        try
+        {
+            yaml = File.ReadAllText(filePath);
+        }
+        catch (Exception ex) when (ex is not InvalidOperationException)
+        {
+            issues.Add(new LintIssue(filePath, LintSeverity.Error, ex.Message));
+            return new ReviewMarkLoadResult(null, issues);
+        }
+
+        // Try to parse the raw YAML model; if this fails we cannot do semantic checks.
+        // When the inner exception is a YamlException, format the location as "file:line:col"
+        // to match the standard linting output convention.
+        ReviewMarkYaml raw;
+        try
+        {
+            raw = ReviewMarkConfigurationHelpers.DeserializeRaw(yaml, filePath);
+        }
+        catch (InvalidOperationException ex) when (ex.InnerException is YamlException yamlEx)
+        {
+            issues.Add(new LintIssue(
+                $"{filePath}:{yamlEx.Start.Line}:{yamlEx.Start.Column}",
+                LintSeverity.Error,
+                $"at line {yamlEx.Start.Line}, column {yamlEx.Start.Column}: {yamlEx.Message}"));
+            return new ReviewMarkLoadResult(null, issues);
+        }
+        catch (InvalidOperationException ex)
+        {
+            issues.Add(new LintIssue(filePath, LintSeverity.Error, ex.Message));
+            return new ReviewMarkLoadResult(null, issues);
+        }
+
+        // Validate the evidence-source block, collecting all field-level errors.
+        var es = raw.EvidenceSource;
+        if (es == null)
+        {
+            issues.Add(new LintIssue(
+                filePath,
+                LintSeverity.Error,
+                "Configuration is missing required 'evidence-source' block."));
+        }
+        else
+        {
+            if (string.IsNullOrWhiteSpace(es.Type))
+            {
+                issues.Add(new LintIssue(
+                    filePath,
+                    LintSeverity.Error,
+                    "'evidence-source' is missing a required 'type' field."));
+            }
+            else if (!ReviewMarkConfigurationHelpers.IsSupportedEvidenceSourceType(es.Type))
+            {
+                issues.Add(new LintIssue(
+                    filePath,
+                    LintSeverity.Error,
+                    $"'evidence-source' type '{es.Type}' is not supported (must be 'none', 'url', or 'fileshare')."));
+            }
+
+            if (string.IsNullOrWhiteSpace(es.Location) && !string.Equals(es.Type, "none", StringComparison.OrdinalIgnoreCase))
+            {
+                issues.Add(new LintIssue(
+                    filePath,
+                    LintSeverity.Error,
+                    "'evidence-source' is missing a required 'location' field."));
+            }
+        }
+
+        // Validate each review set, accumulating all structural and uniqueness errors.
+        // Review IDs are treated as case-sensitive identifiers (Ordinal), which is intentional:
+        // "Core-Logic" and "core-logic" are distinct IDs. Evidence-source type uses OrdinalIgnoreCase
+        // because YAML convention allows any casing for keyword values like "url" or "fileshare".
+        var seenIds = new Dictionary<string, int>(StringComparer.Ordinal);
+        var reviews = raw.Reviews ?? [];
+        for (var i = 0; i < reviews.Count; i++)
+        {
+            var r = reviews[i];
+
+            if (string.IsNullOrWhiteSpace(r.Id))
+            {
+                issues.Add(new LintIssue(
+                    filePath,
+                    LintSeverity.Error,
+                    $"Review set at index {i} is missing a required 'id' field."));
+            }
+            else if (seenIds.TryGetValue(r.Id, out var firstIndex))
+            {
+                issues.Add(new LintIssue(
+                    filePath,
+                    LintSeverity.Error,
+                    $"reviews[{i}] has duplicate ID '{r.Id}' (first defined at reviews[{firstIndex}])."));
+            }
+            else
+            {
+                seenIds[r.Id] = i;
+            }
+
+            if (string.IsNullOrWhiteSpace(r.Title))
+            {
+                issues.Add(new LintIssue(
+                    filePath,
+                    LintSeverity.Error,
+                    $"Review set at index {i} is missing a required 'title' field."));
+            }
+
+            if (r.Paths == null || !r.Paths.Any(p => !string.IsNullOrWhiteSpace(p)))
+            {
+                issues.Add(new LintIssue(
+                    filePath,
+                    LintSeverity.Error,
+                    $"Review set at index {i} is missing required 'paths' entries."));
+            }
+        }
+
+        // If any error-level issues were found, return null configuration
+        if (issues.Any(i => i.Severity == LintSeverity.Error))
+        {
+            return new ReviewMarkLoadResult(null, issues);
+        }
+
+        // Build configuration from the validated raw model
+        var config = ReviewMarkConfigurationHelpers.BuildConfiguration(raw);
+
+        // Determine the base directory for resolving relative fileshare locations.
+        var baseDirectory = Path.GetDirectoryName(Path.GetFullPath(filePath));
+        if (baseDirectory == null)
+        {
+            issues.Add(new LintIssue(
+                filePath,
+                LintSeverity.Error,
+                $"Cannot determine base directory for configuration file '{filePath}'."));
+            return new ReviewMarkLoadResult(null, issues);
+        }
+
+        // Resolve relative fileshare locations against the config file's directory so that
+        // a relative location (e.g., "index.json") works correctly regardless of the process
+        // working directory.
+        if (string.Equals(config.EvidenceSource.Type, "fileshare", StringComparison.OrdinalIgnoreCase) &&
+            !Path.IsPathRooted(config.EvidenceSource.Location))
+        {
+            var absoluteLocation = Path.GetFullPath(config.EvidenceSource.Location, baseDirectory);
+            config = new ReviewMarkConfiguration(
+                config.NeedsReviewPatterns,
+                config.EvidenceSource with { Location = absoluteLocation },
+                config.Reviews);
+        }
+
+        return new ReviewMarkLoadResult(config, issues);
+    }
+
+    /// <summary>
     ///     Loads and parses a <c>.reviewmark.yaml</c> file from disk.
     /// </summary>
     /// <param name="filePath">Absolute or relative path to the configuration file.</param>
@@ -461,53 +673,15 @@ internal sealed class ReviewMarkConfiguration
             throw new ArgumentException("File path must not be null or empty.", nameof(filePath));
         }
 
-        // Read the file contents and wrap any file-system exception with useful context.
-        // Generic catch is justified here: Expected exceptions include IOException (and its subtypes
-        // such as FileNotFoundException, DirectoryNotFoundException, PathTooLongException),
-        // UnauthorizedAccessException, ArgumentException (invalid path characters),
-        // NotSupportedException, and other file-system exceptions.
-        string yaml;
-        try
+        var result = LoadWithLinting(filePath);
+
+        if (result.Configuration != null)
         {
-            yaml = File.ReadAllText(filePath);
-        }
-        catch (Exception ex) when (ex is not InvalidOperationException)
-        {
-            throw new InvalidOperationException($"Failed to read configuration file '{filePath}': {ex.Message}", ex);
+            return result.Configuration;
         }
 
-        // Deserialize the raw YAML model, embedding the file path and line number in any parse error.
-        var raw = ReviewMarkConfigurationHelpers.DeserializeRaw(yaml, filePath);
-
-        // Determine the base directory for resolving relative fileshare locations.
-        var baseDirectory = Path.GetDirectoryName(Path.GetFullPath(filePath))
-            ?? throw new InvalidOperationException($"Cannot determine base directory for configuration file '{filePath}'.");
-
-        // Validate the raw model, embedding the file path in any semantic error.
-        ReviewMarkConfiguration config;
-        try
-        {
-            config = ReviewMarkConfigurationHelpers.BuildConfiguration(raw);
-        }
-        catch (ArgumentException ex)
-        {
-            throw new InvalidOperationException($"Invalid configuration in '{filePath}': {ex.Message}", ex);
-        }
-
-        // Resolve relative fileshare locations against the config file's directory so that
-        // a relative location (e.g., "index.json") works correctly regardless of the process
-        // working directory.
-        if (string.Equals(config.EvidenceSource.Type, "fileshare", StringComparison.OrdinalIgnoreCase) &&
-            !Path.IsPathRooted(config.EvidenceSource.Location))
-        {
-            var absoluteLocation = Path.GetFullPath(config.EvidenceSource.Location, baseDirectory);
-            return new ReviewMarkConfiguration(
-                config.NeedsReviewPatterns,
-                config.EvidenceSource with { Location = absoluteLocation },
-                config.Reviews);
-        }
-
-        return config;
+        var firstError = result.Issues.First(i => i.Severity == LintSeverity.Error);
+        throw new InvalidOperationException(firstError.ToString());
     }
 
     /// <summary>
@@ -530,105 +704,8 @@ internal sealed class ReviewMarkConfiguration
             throw new ArgumentException("File path must not be null or empty.", nameof(filePath));
         }
 
-        var errors = new List<string>();
-
-        // Try to read the file; if this fails we cannot continue.
-        string yaml;
-        try
-        {
-            yaml = File.ReadAllText(filePath);
-        }
-        catch (Exception ex) when (ex is not InvalidOperationException)
-        {
-            errors.Add($"{filePath}: error: {ex.Message}");
-            return errors;
-        }
-
-        // Try to parse the raw YAML model; if this fails we cannot do semantic checks.
-        // When the inner exception is a YamlException, format the location as "file:line:col"
-        // to match the standard linting output convention.
-        ReviewMarkYaml raw;
-        try
-        {
-            raw = ReviewMarkConfigurationHelpers.DeserializeRaw(yaml, filePath);
-        }
-        catch (InvalidOperationException ex) when (ex.InnerException is YamlException yamlEx)
-        {
-            errors.Add($"{filePath}:{yamlEx.Start.Line}:{yamlEx.Start.Column}: error: {yamlEx.Message}");
-            return errors;
-        }
-        catch (InvalidOperationException ex)
-        {
-            errors.Add($"{filePath}: error: {ex.Message}");
-            return errors;
-        }
-
-        // Validate the evidence-source block, collecting all field-level errors.
-        var es = raw.EvidenceSource;
-        if (es == null)
-        {
-            errors.Add(
-                $"{filePath}: error: Configuration is missing required 'evidence-source' block.");
-        }
-        else
-        {
-            if (string.IsNullOrWhiteSpace(es.Type))
-            {
-                errors.Add(
-                    $"{filePath}: error: 'evidence-source' is missing a required 'type' field.");
-            }
-            else if (!ReviewMarkConfigurationHelpers.IsSupportedEvidenceSourceType(es.Type))
-            {
-                errors.Add(
-                    $"{filePath}: error: 'evidence-source' type '{es.Type}' is not supported (must be 'none', 'url', or 'fileshare').");
-            }
-
-            if (string.IsNullOrWhiteSpace(es.Location) && !string.Equals(es.Type, "none", StringComparison.OrdinalIgnoreCase))
-            {
-                errors.Add(
-                    $"{filePath}: error: 'evidence-source' is missing a required 'location' field.");
-            }
-        }
-
-        // Validate each review set, accumulating all structural and uniqueness errors.
-        // Review IDs are treated as case-sensitive identifiers (Ordinal), which is intentional:
-        // "Core-Logic" and "core-logic" are distinct IDs. Evidence-source type uses OrdinalIgnoreCase
-        // because YAML convention allows any casing for keyword values like "url" or "fileshare".
-        var seenIds = new Dictionary<string, int>(StringComparer.Ordinal);
-        var reviews = raw.Reviews ?? [];
-        for (var i = 0; i < reviews.Count; i++)
-        {
-            var r = reviews[i];
-
-            if (string.IsNullOrWhiteSpace(r.Id))
-            {
-                errors.Add(
-                    $"{filePath}: error: Review set at index {i} is missing a required 'id' field.");
-            }
-            else if (seenIds.TryGetValue(r.Id, out var firstIndex))
-            {
-                errors.Add(
-                    $"{filePath}: error: reviews[{i}] has duplicate ID '{r.Id}' (first defined at reviews[{firstIndex}]).");
-            }
-            else
-            {
-                seenIds[r.Id] = i;
-            }
-
-            if (string.IsNullOrWhiteSpace(r.Title))
-            {
-                errors.Add(
-                    $"{filePath}: error: Review set at index {i} is missing a required 'title' field.");
-            }
-
-            if (r.Paths == null || !r.Paths.Any(p => !string.IsNullOrWhiteSpace(p)))
-            {
-                errors.Add(
-                    $"{filePath}: error: Review set at index {i} is missing required 'paths' entries.");
-            }
-        }
-
-        return errors;
+        var result = LoadWithLinting(filePath);
+        return result.Issues.Select(i => i.ToString()).ToList();
     }
 
     /// <summary>

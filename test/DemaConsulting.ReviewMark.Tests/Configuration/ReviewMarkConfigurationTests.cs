@@ -885,4 +885,125 @@ public class ReviewMarkConfigurationTests
         Assert.Contains(expectedFingerprint, result.Markdown);
         Assert.AreEqual(64, expectedFingerprint.Length);
     }
+
+    /// <summary>
+    ///     Test that LoadWithLinting on a valid file returns configuration and no issues.
+    /// </summary>
+    [TestMethod]
+    public void ReviewMarkConfiguration_LoadWithLinting_ValidFile_ReturnsConfigurationAndNoIssues()
+    {
+        // Arrange — write a valid configuration file
+        var configPath = PathHelpers.SafePathCombine(_testDirectory, ".reviewmark.yaml");
+        File.WriteAllText(configPath, MinimalYaml);
+
+        // Act
+        var result = ReviewMarkConfiguration.LoadWithLinting(configPath);
+
+        // Assert — configuration is non-null and no issues are reported
+        Assert.IsNotNull(result.Configuration);
+        Assert.HasCount(0, result.Issues);
+    }
+
+    /// <summary>
+    ///     Test that LoadWithLinting on a non-existent file returns null configuration with an error issue.
+    /// </summary>
+    [TestMethod]
+    public void ReviewMarkConfiguration_LoadWithLinting_NonExistentFile_ReturnsNullConfigWithErrorIssue()
+    {
+        // Arrange — a path within the test directory that does not exist
+        var nonExistentPath = PathHelpers.SafePathCombine(_testDirectory, ".reviewmark.yaml");
+
+        // Act
+        var result = ReviewMarkConfiguration.LoadWithLinting(nonExistentPath);
+
+        // Assert — configuration is null and one error issue is reported
+        Assert.IsNull(result.Configuration);
+        Assert.AreEqual(1, result.Issues.Count);
+        Assert.AreEqual(LintSeverity.Error, result.Issues[0].Severity);
+    }
+
+    /// <summary>
+    ///     Test that LoadWithLinting on a file with invalid YAML returns null configuration with an error issue.
+    /// </summary>
+    [TestMethod]
+    public void ReviewMarkConfiguration_LoadWithLinting_InvalidYaml_ReturnsNullConfigWithErrorIssue()
+    {
+        // Arrange — write a configuration file with invalid YAML syntax
+        var configPath = PathHelpers.SafePathCombine(_testDirectory, ".reviewmark.yaml");
+        File.WriteAllText(configPath, "{{{invalid yaml");
+
+        // Act
+        var result = ReviewMarkConfiguration.LoadWithLinting(configPath);
+
+        // Assert — configuration is null, one error issue naming file and line
+        Assert.IsNull(result.Configuration);
+        Assert.AreEqual(1, result.Issues.Count);
+        Assert.AreEqual(LintSeverity.Error, result.Issues[0].Severity);
+        Assert.Contains(".reviewmark.yaml", result.Issues[0].Location);
+        Assert.Contains("at line", result.Issues[0].Description);
+    }
+
+    /// <summary>
+    ///     Test that LoadWithLinting on a file missing the evidence-source block returns null configuration with an error issue.
+    /// </summary>
+    [TestMethod]
+    public void ReviewMarkConfiguration_LoadWithLinting_MissingEvidenceSource_ReturnsNullConfigWithErrorIssue()
+    {
+        // Arrange — write a valid YAML file that is missing the required evidence-source block
+        var configPath = PathHelpers.SafePathCombine(_testDirectory, ".reviewmark.yaml");
+        File.WriteAllText(configPath, """
+            needs-review:
+              - "src/**/*.cs"
+            reviews:
+              - id: Core-Logic
+                title: Review of core business logic
+                paths:
+                  - "src/**/*.cs"
+            """);
+
+        // Act
+        var result = ReviewMarkConfiguration.LoadWithLinting(configPath);
+
+        // Assert — configuration is null and error mentions evidence-source
+        Assert.IsNull(result.Configuration);
+        Assert.AreEqual(1, result.Issues.Count);
+        Assert.AreEqual(LintSeverity.Error, result.Issues[0].Severity);
+        Assert.Contains("evidence-source", result.Issues[0].Description);
+    }
+
+    /// <summary>
+    ///     Test that LoadWithLinting accumulates all issues from a file with multiple errors.
+    /// </summary>
+    [TestMethod]
+    public void ReviewMarkConfiguration_LoadWithLinting_MultipleErrors_ReturnsAllIssues()
+    {
+        // Arrange — write a YAML file missing evidence-source and containing duplicate IDs
+        var configPath = PathHelpers.SafePathCombine(_testDirectory, ".reviewmark.yaml");
+        File.WriteAllText(configPath, """
+            needs-review:
+              - "src/**/*.cs"
+            reviews:
+              - id: Core-Logic
+                title: Review of core business logic
+                paths:
+                  - "src/**/*.cs"
+              - id: Core-Logic
+                title: Duplicate review set
+                paths:
+                  - "src/**/*.cs"
+            """);
+
+        // Act
+        var result = ReviewMarkConfiguration.LoadWithLinting(configPath);
+
+        // Assert — configuration is null and both errors are reported
+        Assert.IsNull(result.Configuration);
+        Assert.AreEqual(2, result.Issues.Count);
+        Assert.IsTrue(result.Issues.All(i => i.Severity == LintSeverity.Error),
+            "Expected all issues to have error severity.");
+        Assert.IsTrue(result.Issues.Any(i => i.Description.Contains("evidence-source")),
+            "Expected an error about missing evidence-source.");
+        Assert.IsTrue(result.Issues.Any(i => i.Description.Contains("duplicate ID") && i.Description.Contains("Core-Logic")),
+            "Expected an error about duplicate ID 'Core-Logic'.");
+    }
 }
