@@ -1,7 +1,6 @@
 # Agent Quick Reference
 
-Comprehensive guidance for AI agents working on ReviewMark - a tool for automated
-file-review evidence management in regulated environments.
+Comprehensive guidance for AI agents working on repositories following Continuous Compliance practices.
 
 ## Standards Application (ALL Agents Must Follow)
 
@@ -9,6 +8,7 @@ Before performing any work, agents must read and apply the relevant standards fr
 
 - **`csharp-language.md`** - For C# code development (literate programming, XML docs, dependency injection)
 - **`csharp-testing.md`** - For C# test development (AAA pattern, naming, MSTest anti-patterns)
+- **`design-documentation.md`** - For design documentation (software structure diagrams, system.md, subsystem organization)
 - **`reqstream-usage.md`** - For requirements management (traceability, semantic IDs, source filters)
 - **`reviewmark-usage.md`** - For file review management (review-sets, file patterns, enforcement)
 - **`software-items.md`** - For software categorization (system/subsystem/unit/OTS classification)
@@ -22,12 +22,12 @@ quality checks and guidelines throughout your work.
 The default agent should handle simple, straightforward tasks directly.
 Delegate to specialized agents only for specific scenarios:
 
-- **Light development work** (small fixes, simple features) → Call @developer agent
-- **Light quality checking** (linting, basic validation) → Call @quality agent
-- **Formal feature implementation** (complex, multi-step) → Call the `@implementation` agent
-- **Formal bug resolution** (complex debugging, systematic fixes) → Call the `@implementation` agent
-- **Formal reviews** (compliance verification, detailed analysis) → Call @code-review agent
-- **Template consistency** (downstream repository alignment) → Call @repo-consistency agent
+- **Light development work** (small fixes, simple features) → Call developer agent
+- **Light quality checking** (linting, basic validation) → Call quality agent
+- **Formal feature implementation** (complex, multi-step) → Call the `implementation` agent
+- **Formal bug resolution** (complex debugging, systematic fixes) → Call the `implementation` agent
+- **Formal reviews** (compliance verification, detailed analysis) → Call code-review agent
+- **Template consistency** (downstream repository alignment) → Call repo-consistency agent
 
 ## Available Specialized Agents
 
@@ -55,129 +55,113 @@ modification policies in header comments.
 6. **Documentation Currency**: All docs current and generated
 7. **File Review Status**: All reviewable files have current reviews
 
-## Tech Stack
+## Continuous Compliance Overview
 
-- C# (latest), .NET 8.0/9.0/10.0, dotnet CLI, NuGet
+This repository follows the DEMA Consulting Continuous Compliance
+<https://github.com/demaconsulting/ContinuousCompliance> approach, which enforces quality and
+compliance gates on every CI/CD run instead of as a last-mile activity.
 
-## Key Files
+### Core Principles
 
-- **`requirements.yaml`** - All requirements with test linkage (enforced via `dotnet reqstream --enforce`)
-- **`.editorconfig`** - Code style (file-scoped namespaces, 4-space indent, UTF-8, LF endings)
-- **`.cspell.yaml`, `.markdownlint-cli2.yaml`, `.yamllint.yaml`** - Linting configs
+- **Requirements Traceability**: Every requirement MUST link to passing tests
+- **Quality Gates**: All quality checks must pass before merge
+- **Documentation Currency**: All docs auto-generated and kept current
+- **Automated Evidence**: Full audit trail generated with every build
 
-### Spell check word list policy
+## Required Compliance Tools
 
-**Never** add a word to the `.cspell.yaml` word list in order to silence a spell-checking failure.
-Doing so defeats the purpose of spell-checking and reduces the quality of the repository.
+### Linting Tools (ALL Must Pass)
 
-- If cspell flags a word that is **misspelled**, fix the spelling in the source file.
-- If cspell flags a word that is a **genuine technical term** (tool name, project identifier, etc.) and is
-  spelled correctly, raise a **proposal** (e.g. comment in a pull request) explaining why the word
-  should be added. The proposal must be reviewed and approved before the word is added to the list.
+- **markdownlint-cli2**: Markdown style and formatting enforcement
+- **cspell**: Spell-checking across all text files (use `.cspell.yaml` for technical terms)
+- **yamllint**: YAML structure and formatting validation
+- **Language-specific linters**: Based on repository technology stack
 
-## Requirements
+### Quality Analysis
 
-- All requirements MUST be linked to tests (prefer `ReviewMark_*` self-validation tests)
-- Not all tests need to be linked to requirements (tests may exist for corner cases, design testing, failure-testing, etc.)
-- Enforced in CI: `dotnet reqstream --requirements requirements.yaml --tests "test-results/**/*.trx" --enforce`
-- When adding features: add requirement + link to test
+- **SonarQube/SonarCloud**: Code quality and security analysis
+- **CodeQL**: Security vulnerability scanning (produces SARIF output)
+- **Static analyzers**: Microsoft.CodeAnalysis.NetAnalyzers, SonarAnalyzer.CSharp, etc.
 
-## Test Source Filters
+### Requirements & Compliance
 
-Test links in `requirements.yaml` can include a source filter prefix to restrict which test results count as
-evidence. This is critical for platform and framework requirements - **do not remove these filters**.
+- **ReqStream**: Requirements traceability enforcement (`dotnet reqstream --enforce`)
+- **ReviewMark**: File review status enforcement
+- **BuildMark**: Tool version documentation
+- **VersionMark**: Version tracking across CI/CD jobs
 
-- `windows@TestName` - proves the test passed on a Windows platform
-- `ubuntu@TestName` - proves the test passed on a Linux (Ubuntu) platform
-- `macos@TestName` - proves the test passed on a macOS platform
-- `net8.0@TestName` - proves the test passed under the .NET 8 target framework
-- `net9.0@TestName` - proves the test passed under the .NET 9 target framework
-- `net10.0@TestName` - proves the test passed under the .NET 10 target framework
-- `dotnet8.x@TestName` - proves the self-validation test ran on a machine with .NET 8.x runtime
-- `dotnet9.x@TestName` - proves the self-validation test ran on a machine with .NET 9.x runtime
-- `dotnet10.x@TestName` - proves the self-validation test ran on a machine with .NET 10.x runtime
+## Project Structure Template
 
-Without the source filter, a test result from any platform/framework satisfies the requirement. Adding the filter
-ensures the CI evidence comes specifically from the required environment.
+- `docs/` - Documentation and compliance artifacts
+  - `design/` - Detailed design documents
+    - `introduction.md` - System/Subsystem/Unit breakdown for this repository
+  - `reqstream/` - Subsystem requirements YAML files (included by root requirements.yaml)
+  - Auto-generated reports (requirements, justifications, trace matrix)
+- `src/{ProjectName}/` - Source code projects
+- `test/{ProjectName}.Tests/` - Test projects
+- `.github/workflows/` - CI/CD pipeline definitions (build.yaml, build_on_push.yaml, release.yaml)
+- Configuration files: `.editorconfig`, `.clang-format`, `nuget.config`, `.reviewmark.yaml`, etc.
 
-## Testing
+## Key Configuration Files
 
-- **Test Naming**: `ReviewMark_MethodUnderTest_Scenario` for self-validation tests
-- **Self-Validation**: All tests run via `--validate` flag and can output TRX/JUnit format
-- **Test Framework**: Uses DemaConsulting.TestResults library for test result generation
+### Essential Files (Repository-Specific)
 
-## Code Style
+- **`lint.sh` / `lint.bat`** - Cross-platform comprehensive linting scripts
+- **`.editorconfig`** - Code formatting rules
+- **`.clang-format`** - C/C++ formatting (if applicable)
+- **`.cspell.yaml`** - Spell-check configuration and technical term dictionary
+- **`.markdownlint-cli2.yaml`** - Markdown linting rules
+- **`.yamllint.yaml`** - YAML linting configuration
+- **`nuget.config`** - NuGet package sources (if .NET)
+- **`package.json`** - Node.js dependencies for linting tools
 
-- **XML Docs**: On ALL members (public/internal/private) with spaces after `///` in summaries
-- **Errors**: `ArgumentException` for parsing, `InvalidOperationException` for runtime issues
-- **Namespace**: File-scoped namespaces only
-- **Using Statements**: Top of file only (no nested using declarations except for IDisposable)
-- **String Formatting**: Use interpolated strings ($"") for clarity
+### Compliance Files
 
-## Project Structure
+- **`requirements.yaml`** - Root requirements file with includes
+- **`.reviewmark.yaml`** - File review definitions and tracking
+- CI/CD pipeline files with quality gate enforcement
 
-- **Context.cs**: Handles command-line argument parsing, logging, and output
-- **Program.cs**: Main entry point with version/help/validation routing
-- **Validation.cs**: Self-validation tests with TRX/JUnit output support
+## Continuous Compliance Workflow
 
-## Build and Test
+### CI/CD Pipeline Stages (Standard)
 
-```bash
-# Build the project
-dotnet build --configuration Release
+1. **Lint**: `./lint.sh` or `lint.bat` - comprehensive linting suite
+2. **Build**: Compile with warnings as errors
+3. **Analyze**: SonarQube/SonarCloud, CodeQL security scanning
+4. **Test**: Execute all tests, generate coverage reports
+5. **Validate**: Tool self-validation tests
+6. **Document**: Generate requirements reports, trace matrix, build notes
+7. **Enforce**: Requirements traceability, file review status
+8. **Publish**: Generate final documentation (Pandoc → PDF)
 
-# Run unit tests
-dotnet test --configuration Release
+### Quality Gate Enforcement
 
-# Run self-validation
-dotnet run --project src/DemaConsulting.ReviewMark \
-  --configuration Release --framework net10.0 --no-build -- --validate
+All stages must pass before merge. Pipeline fails immediately on:
 
-# Use convenience scripts
-./build.sh    # Linux/macOS
-build.bat     # Windows
-```
+- Any linting errors
+- Build warnings or errors
+- Security vulnerabilities (CodeQL)
+- Requirements without test coverage
+- Outdated file reviews
+- Missing documentation
 
-## Documentation
+## Continuous Compliance Requirements
 
-- **User Guide**: `docs/user_guide/introduction.md`
-- **Requirements**: `requirements.yaml` -> auto-generated docs
-- **Build Notes**: Auto-generated via BuildMark
-- **Code Quality**: Auto-generated via CodeQL and SonarMark
-- **Trace Matrix**: Auto-generated via ReqStream
-- **CHANGELOG.md**: Not present - changes are captured in the auto-generated build notes
+This repository follows continuous compliance practices from DEMA Consulting
+Continuous Compliance <https://github.com/demaconsulting/ContinuousCompliance>.
 
-## Markdown Link Style
+### Core Requirements Traceability Rules
 
-- **AI agent markdown files** (`.github/agents/*.md`): Use inline links `[text](url)` so URLs are visible in agent context
-- **README.md**: Use absolute URLs (shipped in NuGet package)
-- **All other markdown files**: Use reference-style links `[text][ref]` with `[ref]: url` at document end
+- **ALL requirements MUST be linked to tests** - Enforced in CI via `dotnet reqstream --enforce`
+- **NOT all tests need requirement links** - Tests may exist for corner cases, design validation, failure scenarios
+- **Source filters are critical** - Platform/framework requirements need specific test evidence
 
-## CI/CD
-
-- **Quality Checks**: Markdown lint, spell check, YAML lint
-- **Build**: Multi-platform (Windows/Linux/macOS)
-- **CodeQL**: Security scanning
-- **Integration Tests**: .NET 8/9/10 on Windows/Linux/macOS
-- **Documentation**: Auto-generated via Pandoc + Weasyprint
-
-## Common Tasks
-
-```bash
-# Format code
-dotnet format
-
-# Run all linters
-./lint.sh     # Linux/macOS
-lint.bat      # Windows
-
-# Pack as NuGet tool
-dotnet pack --configuration Release
-```
+For detailed requirements format, test linkage patterns, and ReqStream
+integration, call the developer agent with requirements management context.
 
 ## Agent Report Files
 
-Upon completion, create a report file at `.agent-logs/[agent-name]-[subject]-[unique-id].md` that includes:
+Upon completion, create a report file at `.agent-logs/{agent-name}-{subject}-{unique-id}.md` that includes:
 
 - A concise summary of the work performed
 - Any important decisions made and their rationale
