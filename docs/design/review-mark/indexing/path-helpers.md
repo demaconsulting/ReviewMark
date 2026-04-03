@@ -1,4 +1,4 @@
-# PathHelpers Design
+# PathHelpers
 
 ## Overview
 

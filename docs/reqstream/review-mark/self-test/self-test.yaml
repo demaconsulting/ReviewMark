@@ -24,6 +24,8 @@ sections:
           - Validation_Run_WritesValidationHeader
           - Validation_Run_WritesSummaryWithTotalTests
           - Validation_Run_AllTestsPass_ExitCodeIsZero
+          - SelfTest_Run_AllTestsPass_ExitCodeIsZero
+        children: [ReviewMark-Validation-Run]
 
       - id: ReviewMark-SelfTest-ResultsOutput
         title: The tool shall write self-validation results to a standard test result file when --results is provided.
@@ -36,3 +38,5 @@ sections:
         tests:
           - Validation_Run_WithTrxResultsFile_WritesFile
           - Validation_Run_WithXmlResultsFile_WritesFile
+          - SelfTest_Run_GeneratesResultsFile
+        children: [ReviewMark-Validation-ResultsFile]

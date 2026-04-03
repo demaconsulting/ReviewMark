@@ -93,38 +93,28 @@ reviews:
     paths:
       - "docs/reqstream/review-mark/cli/cli.yaml"                # subsystem requirements
       - "docs/design/review-mark/cli/cli.md"                     # Cli subsystem design
-      - "docs/design/review-mark/cli/context.md"                 # Context design
-      - "docs/design/review-mark/program.md"                     # Program design
-      - "test/**/Cli/ContextTests.cs"                            # Context unit tests
-      - "test/**/ProgramTests.cs"                                # Program unit tests
+      - "test/**/Cli/CliTests.cs"                                # Cli subsystem tests
 
   - id: ReviewMark-Configuration
     title: Review of Configuration subsystem (configuration parsing and file pattern matching)
     paths:
       - "docs/reqstream/review-mark/configuration/configuration.yaml"           # subsystem requirements
       - "docs/design/review-mark/configuration/configuration.md"                # Configuration subsystem design
-      - "docs/design/review-mark/configuration/review-mark-configuration.md"    # ReviewMarkConfiguration design
-      - "docs/design/review-mark/configuration/glob-matcher.md"                 # GlobMatcher design
-      - "test/**/Configuration/ReviewMarkConfigurationTests.cs"                 # ReviewMarkConfiguration tests
-      - "test/**/Configuration/GlobMatcherTests.cs"                             # GlobMatcher tests
+      - "test/**/Configuration/ConfigurationTests.cs"                           # Configuration subsystem tests
 
   - id: ReviewMark-Indexing
     title: Review of Indexing subsystem (review evidence loading and path utilities)
     paths:
       - "docs/reqstream/review-mark/indexing/indexing.yaml"      # subsystem requirements
       - "docs/design/review-mark/indexing/indexing.md"           # Indexing subsystem design
-      - "docs/design/review-mark/indexing/review-index.md"       # ReviewIndex design
-      - "docs/design/review-mark/indexing/path-helpers.md"       # PathHelpers design
-      - "test/**/Indexing/IndexTests.cs"                         # ReviewIndex tests
-      - "test/**/Indexing/PathHelpersTests.cs"                   # PathHelpers tests
+      - "test/**/Indexing/IndexingTests.cs"                      # Indexing subsystem tests
 
   - id: ReviewMark-SelfTest
     title: Review of SelfTest subsystem (self-validation)
     paths:
       - "docs/reqstream/review-mark/self-test/self-test.yaml"    # subsystem requirements
       - "docs/design/review-mark/self-test/self-test.md"         # SelfTest subsystem design
-      - "docs/design/review-mark/self-test/validation.md"        # Validation design
-      - "test/**/SelfTest/ValidationTests.cs"                    # Validation tests
+      - "test/**/SelfTest/SelfTestTests.cs"                      # SelfTest subsystem tests
 
   # Special review-sets
   - id: ReviewMark-Architecture

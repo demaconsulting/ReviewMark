@@ -19,6 +19,8 @@ sections:
           and generate accurate review plans.
         tests:
           - ReviewMarkConfiguration_GetNeedsReviewFiles_ReturnsMatchingFiles
+          - Configuration_LoadConfig_ResolvesNeedsReviewFiles
+        children: [ReviewMark-Config-Reading, ReviewMark-GlobMatcher-IncludeExclude]
 
       - id: ReviewMark-Configuration-Fingerprinting
         title: The tool shall compute SHA-256 fingerprints for review-sets to detect file changes.
@@ -31,6 +33,8 @@ sections:
           - ReviewSet_GetFingerprint_SameContent_ReturnsSameFingerprint
           - ReviewSet_GetFingerprint_DifferentContent_ReturnsDifferentFingerprint
           - ReviewSet_GetFingerprint_RenameFile_ReturnsSameFingerprint
+          - Configuration_LoadConfig_FingerprintReflectsFileContent
+        children: [ReviewMark-Config-Reading]
 
       - id: ReviewMark-Configuration-PlanGeneration
         title: The tool shall generate a Review Plan Markdown document listing review-set coverage.
@@ -40,6 +44,8 @@ sections:
           are included in at least one review-set before reviews are conducted.
         tests:
           - ReviewMark_ReviewPlanGeneration
+          - Configuration_LoadConfig_PlanGenerationSucceeds
+        children: [ReviewMark-Config-Reading, ReviewMark-Config-Loading]
 
       - id: ReviewMark-Configuration-ReportGeneration
         title: The tool shall generate a Review Report Markdown document showing review-set status.
@@ -49,6 +55,7 @@ sections:
           confirm that all review-sets have current evidence before a release.
         tests:
           - ReviewMark_ReviewReportGeneration
+        children: [ReviewMark-Config-Reading, ReviewMark-Config-Loading]
 
       - id: ReviewMark-Configuration-Elaboration
         title: The tool shall elaborate a review-set by providing its ID, fingerprint, and file list.
@@ -59,3 +66,4 @@ sections:
           review documentation.
         tests:
           - ReviewMark_Elaborate
+        children: [ReviewMark-Config-Reading]

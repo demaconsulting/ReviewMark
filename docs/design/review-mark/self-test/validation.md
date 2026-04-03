@@ -15,7 +15,7 @@ where the tool itself is part of a qualified software chain.
 2. Executes each test case in sequence
 3. Writes results to the configured output file (TRX or JUnit format) if `ResultsFile` is set
 4. Writes a summary table and per-test results to the console via `Context.WriteLine()`
-5. Sets `Context.ExitCode` to a non-zero value if any test fails
+5. Calls `Context.WriteError()` when any test fails, which causes `Context.ExitCode` to return a non-zero value
 
 ## Test Output Format
 

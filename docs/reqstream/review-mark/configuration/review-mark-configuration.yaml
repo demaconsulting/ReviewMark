@@ -28,7 +28,6 @@ sections:
           - ReviewSet_GetFingerprint_SameContent_ReturnsSameFingerprint
           - ReviewSet_GetFingerprint_DifferentContent_ReturnsDifferentFingerprint
           - ReviewSet_GetFingerprint_RenameFile_ReturnsSameFingerprint
-          - ReviewMarkConfiguration_Load_NonExistentFile_ReturnsNullConfigWithErrorIssue
           - ReviewMarkConfiguration_Load_FileshareRelativeLocation_ResolvesToAbsolutePath
       - id: ReviewMark-Config-Loading
         title: ReviewMarkConfiguration.Load shall perform linting and return both the configuration and lint issues.

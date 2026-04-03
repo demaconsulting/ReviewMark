@@ -26,6 +26,8 @@ sections:
           - ReviewIndex_Load_EvidenceSource_Fileshare_LoadsFromFile
           - ReviewIndex_Load_EvidenceSource_Fileshare_ValidJson_ReturnsPopulatedIndex
           - ReviewIndex_Load_EvidenceSource_Url_SuccessResponse_LoadsIndex
+          - Indexing_SafePathCombine_WithIndexPath_LoadsIndex
+        children: [ReviewMark-Index-EvidenceSource, ReviewMark-EvidenceSource-None]
 
       - id: ReviewMark-Indexing-ScanPdfEvidence
         title: The tool shall scan PDF evidence files and extract embedded review metadata to build an index.
@@ -39,6 +41,13 @@ sections:
           - ReviewIndex_Scan_MultiplePdfs_PopulatesAllEntries
           - ReviewIndex_Scan_NoMatchingFiles_LeavesIndexEmpty
           - ReviewIndex_Scan_ClearsExistingEntries
+          - ReviewIndex_Scan_PdfWithMissingId_SkipsWithWarning
+          - ReviewIndex_Scan_PdfWithMissingFingerprint_SkipsWithWarning
+          - ReviewIndex_Scan_PdfWithMissingDate_SkipsWithWarning
+          - ReviewIndex_Scan_PdfWithMissingResult_SkipsWithWarning
+          - ReviewIndex_Scan_PdfWithNoKeywords_SkipsWithWarning
+          - Indexing_ReviewIndex_SaveAndLoad_RoundTrip
+        children: [ReviewMark-Index-PdfParsing]
 
       - id: ReviewMark-Indexing-SafePathCombine
         title: The tool shall combine file paths safely, rejecting path traversal sequences.
@@ -55,3 +64,4 @@ sections:
           - PathHelpers_SafePathCombine_CurrentDirectoryReference_CombinesCorrectly
           - PathHelpers_SafePathCombine_NestedPaths_CombinesCorrectly
           - PathHelpers_SafePathCombine_EmptyRelativePath_ReturnsBasePath
+        children: [ReviewMark-PathHelpers-SafeCombine]

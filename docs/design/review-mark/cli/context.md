@@ -20,7 +20,7 @@ arguments:
 | `Validate` | bool | Requests self-validation run |
 | `Lint` | bool | Requests configuration linting |
 | `ResultsFile` | string? | Path for TRX/JUnit test results output |
-| `DefinitionFile` | string | Path to the `.reviewmark.yaml` configuration |
+| `DefinitionFile` | string? | Path to the `.reviewmark.yaml` configuration |
 | `PlanFile` | string? | Output path for the Review Plan document |
 | `PlanDepth` | int | Heading depth for the Review Plan |
 | `ReportFile` | string? | Output path for the Review Report document |
