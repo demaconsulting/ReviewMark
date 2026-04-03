@@ -14,9 +14,10 @@ sections:
         justification: |
           When constructing file paths from user-supplied or externally-sourced components
           (such as relative paths read from an evidence index), the tool must prevent path
-          traversal attacks. SafePathCombine validates that the relative path does not
-          contain '..' sequences or absolute path components, and performs a defense-in-depth
-          check that the resolved combined path remains under the base directory.
+          traversal attacks. SafePathCombine combines the paths and then resolves both to
+          absolute form, using Path.GetRelativePath to verify the combined path remains
+          within the base directory. This post-combine canonical-path check handles all
+          traversal patterns without fragile pre-combine string inspection.
         tests:
           - PathHelpers_SafePathCombine_ValidPaths_CombinesCorrectly
           - PathHelpers_SafePathCombine_PathTraversalWithDoubleDots_ThrowsArgumentException
