@@ -22,6 +22,7 @@ sections:
           - Context_Create_ValidateFlag_SetsValidateTrue
           - Context_Create_ResultsFlag_SetsResultsFile
           - Context_Create_LogFlag_OpensLogFile
+        children: [ReviewMark-Context-Parsing, ReviewMark-Context-Output]
 
       - id: ReviewMark-Cmd-Version
         title: The tool shall support -v and --version flags to display version information.
@@ -34,6 +35,8 @@ sections:
           - Program_Run_WithVersionFlag_DisplaysVersionOnly
           - Program_Version_ReturnsNonEmptyString
           - IntegrationTest_VersionFlag_OutputsVersion
+          - Cli_VersionFlag_OutputsVersionOnly
+        children: [ReviewMark-Program-Dispatch]
 
       - id: ReviewMark-Cmd-Help
         title: The tool shall support -?, -h, and --help flags to display usage information.
@@ -46,6 +49,8 @@ sections:
           - Context_Create_ShortHelpFlag_Question_SetsHelpTrue
           - Program_Run_WithHelpFlag_DisplaysUsageInformation
           - IntegrationTest_HelpFlag_OutputsUsageInformation
+          - Cli_HelpFlag_OutputsUsageInformation
+        children: [ReviewMark-Program-Dispatch]
 
       - id: ReviewMark-Cmd-Silent
         title: The tool shall support --silent flag to suppress console output.
@@ -56,6 +61,8 @@ sections:
           - Context_Create_SilentFlag_SetsSilentTrue
           - Context_WriteLine_Silent_DoesNotWriteToConsole
           - IntegrationTest_SilentFlag_SuppressesOutput
+          - Cli_SilentFlag_SuppressesOutput
+        children: [ReviewMark-Context-Output]
 
       - id: ReviewMark-Cmd-Validate
         title: The tool shall support --validate flag to run self-validation tests.
@@ -66,6 +73,8 @@ sections:
           - Context_Create_ValidateFlag_SetsValidateTrue
           - Program_Run_WithValidateFlag_RunsValidation
           - IntegrationTest_ValidateFlag_RunsValidation
+          - Cli_ValidateFlag_RunsValidation
+        children: [ReviewMark-Program-Dispatch, ReviewMark-Validation-Run]
 
       - id: ReviewMark-Cmd-Results
         title: The tool shall support --results flag to write validation results in TRX or JUnit format.
@@ -75,6 +84,7 @@ sections:
           - Context_Create_ResultsFlag_SetsResultsFile
           - IntegrationTest_ValidateWithResults_GeneratesTrxFile
           - IntegrationTest_ValidateWithResults_GeneratesJUnitFile
+        children: [ReviewMark-Validation-ResultsFile]
 
       - id: ReviewMark-Cmd-Log
         title: The tool shall support --log flag to write output to a log file.
@@ -83,6 +93,7 @@ sections:
         tests:
           - Context_Create_LogFlag_OpensLogFile
           - IntegrationTest_LogFlag_WritesOutputToFile
+        children: [ReviewMark-Context-Output]
 
       - id: ReviewMark-Cmd-ErrorOutput
         title: The tool shall write error messages to stderr.
@@ -92,6 +103,7 @@ sections:
         tests:
           - Context_WriteError_NotSilent_WritesToConsole
           - IntegrationTest_UnknownArgument_ReturnsError
+        children: [ReviewMark-Context-Output]
 
       - id: ReviewMark-Cmd-InvalidArgs
         title: The tool shall reject unknown or malformed command-line arguments with a descriptive error.
@@ -103,6 +115,7 @@ sections:
           - Context_Create_LogFlag_WithoutValue_ThrowsArgumentException
           - Context_Create_ResultsFlag_WithoutValue_ThrowsArgumentException
           - IntegrationTest_UnknownArgument_ReturnsError
+        children: [ReviewMark-Context-Parsing]
 
       - id: ReviewMark-Cmd-ExitCode
         title: The tool shall return a non-zero exit code on failure.
@@ -112,6 +125,7 @@ sections:
         tests:
           - Context_WriteError_SetsErrorExitCode
           - IntegrationTest_UnknownArgument_ReturnsError
+        children: [ReviewMark-Context-Output]
 
       - id: ReviewMark-Cmd-Definition
         title: The tool shall support --definition flag to specify the definition YAML file.
@@ -123,6 +137,7 @@ sections:
           - Context_Create_DefinitionFlag_WithoutValue_ThrowsArgumentException
           - ReviewMark_ReviewPlanGeneration
           - ReviewMark_ReviewReportGeneration
+        children: [ReviewMark-Config-Loading, ReviewMark-Program-Dispatch]
 
       - id: ReviewMark-Cmd-Plan
         title: The tool shall support --plan flag to write the review plan to a Markdown file.
@@ -132,6 +147,7 @@ sections:
         tests:
           - Context_Create_PlanFlag_SetsPlanFile
           - ReviewMark_ReviewPlanGeneration
+        children: [ReviewMark-Config-Reading, ReviewMark-Program-Dispatch]
 
       - id: ReviewMark-Cmd-PlanDepth
         title: The tool shall support --plan-depth flag to set the Markdown heading depth for the review plan.
@@ -143,6 +159,7 @@ sections:
           - Context_Create_PlanDepthFlag_WithInvalidValue_ThrowsArgumentException
           - Context_Create_PlanDepthFlag_WithZeroValue_ThrowsArgumentException
           - Context_Create_NoArguments_PlanDepthDefaultsToOne
+        children: [ReviewMark-Context-Parsing]
 
       - id: ReviewMark-Cmd-Report
         title: The tool shall support --report flag to write the review report to a Markdown file.
@@ -152,6 +169,7 @@ sections:
         tests:
           - Context_Create_ReportFlag_SetsReportFile
           - ReviewMark_ReviewReportGeneration
+        children: [ReviewMark-Config-Reading, ReviewMark-Program-Dispatch]
 
       - id: ReviewMark-Cmd-ReportDepth
         title: The tool shall support --report-depth flag to set the Markdown heading depth for the review report.
@@ -161,6 +179,7 @@ sections:
         tests:
           - Context_Create_ReportDepthFlag_SetsReportDepth
           - Context_Create_NoArguments_ReportDepthDefaultsToOne
+        children: [ReviewMark-Context-Parsing]
 
       - id: ReviewMark-Cmd-Index
         title: The tool shall support --index flag to scan PDF evidence files matching a glob path and write
@@ -174,6 +193,7 @@ sections:
           - Context_Create_IndexFlag_MultipleTimes_AddsAllPaths
           - Context_Create_NoArguments_IndexPathsEmpty
           - ReviewMark_IndexScan
+        children: [ReviewMark-Index-PdfParsing, ReviewMark-Program-Dispatch]
 
       - id: ReviewMark-Cmd-Enforce
         title: The tool shall support --enforce flag to exit with a non-zero code when there are review issues.
@@ -185,6 +205,7 @@ sections:
           - Context_Create_EnforceFlag_SetsEnforceTrue
           - Context_Create_NoArguments_EnforceFalse
           - ReviewMark_Enforce
+        children: [ReviewMark-Program-Dispatch]
 
       - id: ReviewMark-Cmd-Dir
         title: The tool shall support --dir flag to set the working directory for file operations.
@@ -197,6 +218,7 @@ sections:
           - Context_Create_NoArguments_WorkingDirectoryIsNull
           - Context_Create_DirFlag_MissingValue_ThrowsArgumentException
           - ReviewMark_WorkingDirectoryOverride
+        children: [ReviewMark-Program-Dispatch]
 
       - id: ReviewMark-Cmd-Elaborate
         title: The tool shall support --elaborate <id> flag to print a Markdown elaboration of a review set.
@@ -219,6 +241,7 @@ sections:
           - Program_Run_WithElaborateFlag_OutputsElaboration
           - Program_Run_WithElaborateFlag_UnknownId_ReportsError
           - ReviewMark_Elaborate
+        children: [ReviewMark-Config-Reading, ReviewMark-Program-Dispatch]
 
       - id: ReviewMark-Cmd-Lint
         title: The tool shall support --lint flag to validate the definition file and report issues.
@@ -241,3 +264,4 @@ sections:
           - ReviewMarkConfiguration_Load_MissingEvidenceSource_ReturnsNullConfigWithErrorIssue
           - ReviewMarkConfiguration_Load_MultipleErrors_ReturnsAllIssues
           - ReviewMark_Lint
+        children: [ReviewMark-Config-Loading, ReviewMark-Program-Dispatch]
