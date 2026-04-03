@@ -82,6 +82,7 @@ words:
   - spdx
   - streetsidesoftware
   - testname
+  - selftest
   - trace_matrix
   - triaging
   - Trivy
