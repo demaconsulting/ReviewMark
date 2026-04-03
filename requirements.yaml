@@ -30,6 +30,7 @@ includes:
   - docs/reqstream/review-mark/cli/cli.yaml
   - docs/reqstream/review-mark/cli/context.yaml
   - docs/reqstream/review-mark/configuration/configuration.yaml
+  - docs/reqstream/review-mark/configuration/review-mark-configuration.yaml
   - docs/reqstream/review-mark/configuration/glob-matcher.yaml
   - docs/reqstream/review-mark/indexing/indexing.yaml
   - docs/reqstream/review-mark/indexing/review-index.yaml

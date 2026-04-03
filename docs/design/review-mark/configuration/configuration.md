@@ -8,7 +8,7 @@ file-pattern-matching capability used to resolve glob patterns into concrete fil
 
 ## Responsibilities
 
-- Deserialise `.reviewmark.yaml` into a strongly-typed configuration model
+- Deserialize `.reviewmark.yaml` into a strongly-typed configuration model
 - Lint the loaded configuration and report any structural errors or warnings
 - Resolve `needs-review` and per-review-set `paths` glob patterns into sorted file lists
 - Compute SHA-256 fingerprints across resolved file sets
@@ -16,7 +16,7 @@ file-pattern-matching capability used to resolve glob patterns into concrete fil
 
 ## Units
 
-| Unit                      | Source File                                  | Purpose                                                   |
-|---------------------------|----------------------------------------------|-----------------------------------------------------------|
-| ReviewMarkConfiguration   | `Configuration/ReviewMarkConfiguration.cs`   | YAML configuration parser and review-set processor        |
-| GlobMatcher               | `Configuration/GlobMatcher.cs`               | File pattern matching using glob syntax                   |
+| Unit | Source File | Purpose |
+| --- | --- | --- |
+| ReviewMarkConfiguration | `Configuration/ReviewMarkConfiguration.cs` | YAML parser and review-set processor |
+| GlobMatcher | `Configuration/GlobMatcher.cs` | File pattern matching using glob syntax |

@@ -50,10 +50,10 @@ reviews:
   - id: ReviewMark-Configuration-ReviewMarkConfiguration
     title: Review of ReviewMarkConfiguration software unit (configuration parsing and processing)
     paths:
-      - "docs/reqstream/review-mark/configuration/configuration.yaml"          # requirements
-      - "docs/design/review-mark/configuration/review-mark-configuration.md"   # design
-      - "src/**/Configuration/ReviewMarkConfiguration.cs"                      # implementation
-      - "test/**/Configuration/ReviewMarkConfigurationTests.cs"                # tests
+      - "docs/reqstream/review-mark/configuration/review-mark-configuration.yaml"    # requirements
+      - "docs/design/review-mark/configuration/review-mark-configuration.md"         # design
+      - "src/**/Configuration/ReviewMarkConfiguration.cs"                            # implementation
+      - "test/**/Configuration/ReviewMarkConfigurationTests.cs"                      # tests
 
   - id: ReviewMark-Configuration-GlobMatcher
     title: Review of GlobMatcher software unit (file pattern matching)
@@ -95,6 +95,8 @@ reviews:
       - "docs/design/review-mark/cli/cli.md"                     # Cli subsystem design
       - "docs/design/review-mark/cli/context.md"                 # Context design
       - "docs/design/review-mark/program.md"                     # Program design
+      - "test/**/Cli/ContextTests.cs"                            # Context unit tests
+      - "test/**/ProgramTests.cs"                                # Program unit tests
 
   - id: ReviewMark-Configuration
     title: Review of Configuration subsystem (configuration parsing and file pattern matching)
@@ -103,6 +105,8 @@ reviews:
       - "docs/design/review-mark/configuration/configuration.md"                # Configuration subsystem design
       - "docs/design/review-mark/configuration/review-mark-configuration.md"    # ReviewMarkConfiguration design
       - "docs/design/review-mark/configuration/glob-matcher.md"                 # GlobMatcher design
+      - "test/**/Configuration/ReviewMarkConfigurationTests.cs"                 # ReviewMarkConfiguration tests
+      - "test/**/Configuration/GlobMatcherTests.cs"                             # GlobMatcher tests
 
   - id: ReviewMark-Indexing
     title: Review of Indexing subsystem (review evidence loading and path utilities)
@@ -111,6 +115,8 @@ reviews:
       - "docs/design/review-mark/indexing/indexing.md"           # Indexing subsystem design
       - "docs/design/review-mark/indexing/review-index.md"       # ReviewIndex design
       - "docs/design/review-mark/indexing/path-helpers.md"       # PathHelpers design
+      - "test/**/Indexing/IndexTests.cs"                         # ReviewIndex tests
+      - "test/**/Indexing/PathHelpersTests.cs"                   # PathHelpers tests
 
   - id: ReviewMark-SelfTest
     title: Review of SelfTest subsystem (self-validation)
@@ -118,6 +124,7 @@ reviews:
       - "docs/reqstream/review-mark/self-test/self-test.yaml"    # subsystem requirements
       - "docs/design/review-mark/self-test/self-test.md"         # SelfTest subsystem design
       - "docs/design/review-mark/self-test/validation.md"        # Validation design
+      - "test/**/SelfTest/ValidationTests.cs"                    # Validation tests
 
   # Special review-sets
   - id: ReviewMark-Architecture

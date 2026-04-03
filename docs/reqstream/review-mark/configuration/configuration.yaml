@@ -1,46 +1,61 @@
 ---
-# ReviewMarkConfiguration Software Unit Requirements
+# Configuration Subsystem Requirements
 #
 # PURPOSE:
-# - Define requirements for the ReviewMarkConfiguration software unit
-# - This unit parses the .reviewmark.yaml definition file into an in-memory model
-# - It computes SHA256 fingerprints for review-sets and generates plan/report Markdown
+# - Define requirements for the ReviewMark Configuration subsystem
+# - The Configuration subsystem spans ReviewMarkConfiguration.cs (config loading and processing)
+#   and GlobMatcher.cs (file pattern matching)
+# - Subsystem requirements describe the externally visible configuration capabilities
 
 sections:
-  - title: ReviewMarkConfiguration Unit Requirements
+  - title: Configuration Subsystem Requirements
     requirements:
-      - id: ReviewMark-Config-Reading
-        title: The tool shall read and parse the .reviewmark.yaml file into an in-memory configuration model.
+      - id: ReviewMark-Configuration-NeedsReview
+        title: The tool shall identify all files requiring review by resolving needs-review glob patterns.
         justification: |
-          Enables the tool to read its configuration from the standard `.reviewmark.yaml` file,
-          exposing needs-review patterns, evidence source, and review set definitions. Review sets
-          support SHA256 content-based fingerprinting to detect changes to covered files.
+          Users configure which files require review using glob patterns. The Configuration
+          subsystem must resolve these patterns to a concrete list of files, applying includes
+          and excludes in declaration order, so that ReviewMark can detect uncovered files
+          and generate accurate review plans.
         tests:
-          - ReviewMarkConfiguration_Parse_NullYaml_ThrowsArgumentNullException
-          - ReviewMarkConfiguration_Parse_ValidYaml_ReturnsConfiguration
-          - ReviewMarkConfiguration_Parse_NeedsReviewPatterns_ParsedCorrectly
-          - ReviewMarkConfiguration_Parse_EvidenceSource_ParsedCorrectly
-          - ReviewMarkConfiguration_Parse_Reviews_ParsedCorrectly
-          - ReviewMarkConfiguration_Parse_EvidenceSourceWithCredentials_ParsedCorrectly
           - ReviewMarkConfiguration_GetNeedsReviewFiles_ReturnsMatchingFiles
+
+      - id: ReviewMark-Configuration-Fingerprinting
+        title: The tool shall compute SHA-256 fingerprints for review-sets to detect file changes.
+        justification: |
+          Review-set fingerprints are the mechanism by which ReviewMark detects that files
+          have changed since the last review. The SHA-256 fingerprint must be based on file
+          content rather than names alone, so that renamed files do not invalidate the
+          fingerprint, and changed content always produces a new fingerprint.
+        tests:
           - ReviewSet_GetFingerprint_SameContent_ReturnsSameFingerprint
           - ReviewSet_GetFingerprint_DifferentContent_ReturnsDifferentFingerprint
           - ReviewSet_GetFingerprint_RenameFile_ReturnsSameFingerprint
-          - ReviewMarkConfiguration_Load_NonExistentFile_ReturnsNullConfigWithErrorIssue
-          - ReviewMarkConfiguration_Load_FileshareRelativeLocation_ResolvesToAbsolutePath
-      - id: ReviewMark-Config-Loading
-        title: The Load mechanism shall perform linting and return both the configuration and lint issues.
+
+      - id: ReviewMark-Configuration-PlanGeneration
+        title: The tool shall generate a Review Plan Markdown document listing review-set coverage.
         justification: |
-          Enables a single-pass loading mechanism that combines configuration parsing and linting,
-          returning a ReviewMarkLoadResult with both the configuration (or null on error) and
-          all detected LintIssue records. This allows callers to receive comprehensive diagnostics
-          without performing two separate operations.
+          The Review Plan is a compliance artifact that documents which review-sets exist
+          and what files they cover. It enables auditors to verify that all relevant files
+          are included in at least one review-set before reviews are conducted.
         tests:
-          - ReviewMarkConfiguration_Load_ValidFile_ReturnsConfigurationAndNoIssues
-          - ReviewMarkConfiguration_Load_NonExistentFile_ReturnsNullConfigWithErrorIssue
-          - ReviewMarkConfiguration_Load_InvalidYaml_ReturnsNullConfigWithErrorIssue
-          - ReviewMarkConfiguration_Load_MissingEvidenceSource_ReturnsNullConfigWithErrorIssue
-          - ReviewMarkConfiguration_Load_MultipleErrors_ReturnsAllIssues
-          - ReviewMarkConfiguration_Load_NoneEvidenceSource_NoIssues
-          - ReviewMarkLoadResult_ReportIssues_RoutesIssuesToContext
-          - Program_Run_WithDefinitionFlag_InvalidConfig_ReportsLintError
+          - ReviewMark_ReviewPlanGeneration
+
+      - id: ReviewMark-Configuration-ReportGeneration
+        title: The tool shall generate a Review Report Markdown document showing review-set status.
+        justification: |
+          The Review Report is a compliance artifact that documents the current review status
+          of each review-set (Current, Stale, Missing, or Failed), enabling auditors to
+          confirm that all review-sets have current evidence before a release.
+        tests:
+          - ReviewMark_ReviewReportGeneration
+
+      - id: ReviewMark-Configuration-Elaboration
+        title: The tool shall elaborate a review-set by providing its ID, fingerprint, and file list.
+        justification: |
+          When preparing for a code review, the reviewer needs the review set ID, its current
+          fingerprint, and the full sorted list of files to be reviewed. The elaboration
+          command provides this formatted as Markdown so it can be copied directly into
+          review documentation.
+        tests:
+          - ReviewMark_Elaborate
