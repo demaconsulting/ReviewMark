@@ -10,7 +10,9 @@ sections:
   - title: ReviewMarkConfiguration Unit Requirements
     requirements:
       - id: ReviewMark-Config-Reading
-        title: The tool shall read and parse the .reviewmark.yaml file into an in-memory configuration model.
+        title: >-
+          ReviewMarkConfiguration shall read and parse the .reviewmark.yaml file into an in-memory
+          configuration model.
         justification: |
           Enables the tool to read its configuration from the standard `.reviewmark.yaml` file,
           exposing needs-review patterns, evidence source, and review set definitions. Review sets
@@ -29,7 +31,7 @@ sections:
           - ReviewMarkConfiguration_Load_NonExistentFile_ReturnsNullConfigWithErrorIssue
           - ReviewMarkConfiguration_Load_FileshareRelativeLocation_ResolvesToAbsolutePath
       - id: ReviewMark-Config-Loading
-        title: The Load mechanism shall perform linting and return both the configuration and lint issues.
+        title: ReviewMarkConfiguration.Load shall perform linting and return both the configuration and lint issues.
         justification: |
           Enables a single-pass loading mechanism that combines configuration parsing and linting,
           returning a ReviewMarkLoadResult with both the configuration (or null on error) and
