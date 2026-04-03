@@ -10,7 +10,7 @@ tool.
 ## Responsibilities
 
 - Parse all supported command-line flags and arguments into a typed `Context` object
-- Validate that no unrecognised arguments are supplied
+- Validate that no unrecognized arguments are supplied
 - Own the output channels (stdout and optional log file) and the process exit code
 - Propagate the `--silent` flag to suppress non-error output
 
