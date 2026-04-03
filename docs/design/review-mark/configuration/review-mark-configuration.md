@@ -23,7 +23,7 @@ The `type` field of `EvidenceSourceYaml` controls how the evidence index is loca
 
 | Type | Description |
 | ---- | ----------- |
-| `none` | No evidence index is available. The `location` field is optional and ignored. All review-sets are reported as Missing. |
+| `none` | No evidence index. The `location` field is optional and ignored. All review-sets are reported as Missing. |
 | `fileshare` | The evidence index is read from the file path specified in `location`. |
 | `url` | The evidence index is downloaded from the HTTP or HTTPS URL specified in `location`. |
 
