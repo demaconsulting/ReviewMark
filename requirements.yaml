@@ -24,18 +24,18 @@
 #
 ---
 includes:
-  - docs/reqstream/reviewmark-system.yaml
-  - docs/reqstream/platform-requirements.yaml
-  - docs/reqstream/unit-program.yaml
-  - docs/reqstream/cli/subsystem-cli.yaml
-  - docs/reqstream/cli/unit-context.yaml
-  - docs/reqstream/configuration/subsystem-configuration.yaml
-  - docs/reqstream/configuration/unit-glob-matcher.yaml
-  - docs/reqstream/indexing/subsystem-indexing.yaml
-  - docs/reqstream/indexing/unit-review-index.yaml
-  - docs/reqstream/indexing/unit-path-helpers.yaml
-  - docs/reqstream/self-test/subsystem-self-test.yaml
-  - docs/reqstream/self-test/unit-validation.yaml
+  - docs/reqstream/review-mark/review-mark.yaml
+  - docs/reqstream/review-mark/platform-requirements.yaml
+  - docs/reqstream/review-mark/program.yaml
+  - docs/reqstream/review-mark/cli/cli.yaml
+  - docs/reqstream/review-mark/cli/context.yaml
+  - docs/reqstream/review-mark/configuration/configuration.yaml
+  - docs/reqstream/review-mark/configuration/glob-matcher.yaml
+  - docs/reqstream/review-mark/indexing/indexing.yaml
+  - docs/reqstream/review-mark/indexing/review-index.yaml
+  - docs/reqstream/review-mark/indexing/path-helpers.yaml
+  - docs/reqstream/review-mark/self-test/self-test.yaml
+  - docs/reqstream/review-mark/self-test/validation.yaml
   - docs/reqstream/ots/ots-mstest.yaml
   - docs/reqstream/ots/ots-reqstream.yaml
   - docs/reqstream/ots/ots-buildmark.yaml

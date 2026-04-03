@@ -1,23 +1,28 @@
 ---
 resource-path:
   - docs/design
-  - docs/design/cli
-  - docs/design/configuration
-  - docs/design/indexing
-  - docs/design/self-test
+  - docs/design/review-mark
+  - docs/design/review-mark/cli
+  - docs/design/review-mark/configuration
+  - docs/design/review-mark/indexing
+  - docs/design/review-mark/self-test
   - docs/template
 
 input-files:
   - docs/design/title.txt
   - docs/design/introduction.md
-  - docs/design/system.md
-  - docs/design/program.md
-  - docs/design/cli/context.md
-  - docs/design/configuration/glob-matcher.md
-  - docs/design/configuration/review-mark-configuration.md
-  - docs/design/indexing/review-index.md
-  - docs/design/indexing/path-helpers.md
-  - docs/design/self-test/validation.md
+  - docs/design/review-mark/review-mark.md
+  - docs/design/review-mark/program.md
+  - docs/design/review-mark/cli/cli.md
+  - docs/design/review-mark/cli/context.md
+  - docs/design/review-mark/configuration/configuration.md
+  - docs/design/review-mark/configuration/glob-matcher.md
+  - docs/design/review-mark/configuration/review-mark-configuration.md
+  - docs/design/review-mark/indexing/indexing.md
+  - docs/design/review-mark/indexing/review-index.md
+  - docs/design/review-mark/indexing/path-helpers.md
+  - docs/design/review-mark/self-test/self-test.md
+  - docs/design/review-mark/self-test/validation.md
 
 template: template.html
 
