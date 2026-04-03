@@ -73,6 +73,30 @@ src/DemaConsulting.ReviewMark/
 
 The test project mirrors the same layout under `test/DemaConsulting.ReviewMark.Tests/`.
 
+The design documentation follows the same hierarchy under `docs/design/review-mark/`:
+
+```text
+docs/design/
+├── introduction.md                     — this document (software structure and folder layout)
+└── review-mark/
+    ├── review-mark.md                  — system-level design
+    ├── program.md                      — Program unit design
+    ├── cli/
+    │   ├── cli.md                      — Cli subsystem overview
+    │   └── context.md                  — Context unit design
+    ├── configuration/
+    │   ├── configuration.md            — Configuration subsystem overview
+    │   ├── review-mark-configuration.md — ReviewMarkConfiguration unit design
+    │   └── glob-matcher.md             — GlobMatcher unit design
+    ├── indexing/
+    │   ├── indexing.md                 — Indexing subsystem overview
+    │   ├── review-index.md             — ReviewIndex unit design
+    │   └── path-helpers.md             — PathHelpers unit design
+    └── self-test/
+        ├── self-test.md                — SelfTest subsystem overview
+        └── validation.md               — Validation unit design
+```
+
 ## Document Conventions
 
 Throughout this document:

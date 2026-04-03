@@ -26,39 +26,37 @@ namespace DemaConsulting.ReviewMark.Indexing;
 internal static class PathHelpers
 {
     /// <summary>
-    ///     Safely combines two paths, ensuring the second path doesn't contain path traversal sequences.
+    ///     Safely combines two paths, ensuring the resolved combined path stays within the base directory.
     /// </summary>
     /// <param name="basePath">The base path.</param>
     /// <param name="relativePath">The relative path to combine.</param>
     /// <returns>The combined path.</returns>
-    /// <exception cref="ArgumentException">Thrown when relativePath contains invalid characters or path traversal sequences.</exception>
+    /// <exception cref="ArgumentNullException">Thrown when <paramref name="basePath"/> or <paramref name="relativePath"/> is <see langword="null"/>.</exception>
+    /// <exception cref="ArgumentException">
+    ///     Thrown when the resolved combined path escapes the base directory, or when a supplied path is invalid.
+    /// </exception>
+    /// <exception cref="NotSupportedException">Thrown when a supplied path contains an unsupported format.</exception>
+    /// <exception cref="PathTooLongException">Thrown when the combined or resolved path exceeds the system-defined maximum length.</exception>
     internal static string SafePathCombine(string basePath, string relativePath)
     {
         // Validate inputs
         ArgumentNullException.ThrowIfNull(basePath);
         ArgumentNullException.ThrowIfNull(relativePath);
 
-        // Ensure the relative path doesn't contain path traversal sequences
-        if (relativePath.Contains("..") || Path.IsPathRooted(relativePath))
-        {
-            throw new ArgumentException($"Invalid path component: {relativePath}", nameof(relativePath));
-        }
-
-        // This call to Path.Combine is safe because we've validated that:
-        // 1. relativePath doesn't contain ".." (path traversal)
-        // 2. relativePath is not an absolute path (IsPathRooted check)
-        // This ensures the combined path will always be under basePath
+        // Combine the paths (preserves the caller's relative/absolute style)
         var combinedPath = Path.Combine(basePath, relativePath);
 
-        // Additional security validation: ensure the combined path is still under the base path.
-        // This defense-in-depth approach protects against edge cases that might bypass the
-        // initial validation, ensuring the final path stays within the intended directory.
-        var fullBasePath = Path.GetFullPath(basePath);
-        var fullCombinedPath = Path.GetFullPath(combinedPath);
+        // Security check: resolve both paths to absolute form and verify the combined
+        // path is still inside the base directory. Path.GetRelativePath handles root
+        // paths, platform case-sensitivity, and directory-separator normalization natively.
+        var absoluteBase = Path.GetFullPath(basePath);
+        var absoluteCombined = Path.GetFullPath(combinedPath);
+        var checkRelative = Path.GetRelativePath(absoluteBase, absoluteCombined);
 
-        // Use GetRelativePath to verify the relationship between paths
-        var relativeCheck = Path.GetRelativePath(fullBasePath, fullCombinedPath);
-        if (relativeCheck.StartsWith("..") || Path.IsPathRooted(relativeCheck))
+        if (string.Equals(checkRelative, "..", StringComparison.Ordinal)
+            || checkRelative.StartsWith(".." + Path.DirectorySeparatorChar, StringComparison.Ordinal)
+            || checkRelative.StartsWith(".." + Path.AltDirectorySeparatorChar, StringComparison.Ordinal)
+            || Path.IsPathRooted(checkRelative))
         {
             throw new ArgumentException($"Invalid path component: {relativePath}", nameof(relativePath));
         }
