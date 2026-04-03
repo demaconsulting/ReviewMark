@@ -62,22 +62,31 @@ workflow.
 `ReviewIndex.Empty()` returns an index with no records. It is used when the evidence
 source type is `none`, resulting in all review-sets being reported as Missing.
 
-## ReviewIndex.GetStatus()
+## ReviewIndex.Save()
 
-`ReviewIndex.GetStatus(id, fingerprint)` determines the review status of a
-review-set by looking up the `id` in the loaded index:
+`ReviewIndex` provides two overloads for persisting the index to `index.json` format:
 
-1. Look up `id` in the index
-   - If not found — return `Missing`
-2. Check if there is a record whose `Fingerprint` matches the supplied `fingerprint`
-   - If no matching fingerprint exists — return `Stale`
-   - If a matching fingerprint exists:
-     - If the `Result` is `pass` — return `Current`
-     - If the `Result` is not `pass` — return `Failed`
+- `Save(string filePath)` — writes the serialized index to the specified file path
+- `Save(Stream stream)` — writes the serialized index to the provided stream
 
-| Status | Meaning |
-| ------ | ------- |
-| `Current` | The review record matches the current fingerprint and has a passing result |
-| `Failed` | The review record matches the current fingerprint but the result is not passing |
-| `Stale` | A record exists for the id but the fingerprint does not match the current one |
-| `Missing` | No review record exists for the id |
+Both overloads serialize all `ReviewEvidence` records in the index to JSON format.
+The `Save(string filePath)` overload is used by the `--index` workflow in `Program`
+to write the output file after scanning.
+
+## ReviewIndex.GetEvidence()
+
+`ReviewIndex.GetEvidence(string id, string fingerprint)` returns the `ReviewEvidence`
+record whose `Id` matches `id` and whose `Fingerprint` matches `fingerprint`, or `null`
+if no such record exists.
+
+## ReviewIndex.HasId()
+
+`ReviewIndex.HasId(string id)` returns `true` if the index contains at least one record
+with the given `id`, regardless of fingerprint. Returns `false` if no record exists for
+the id.
+
+## ReviewIndex.GetAllForId()
+
+`ReviewIndex.GetAllForId(string id)` returns all `ReviewEvidence` records that have the
+given `id`, as an enumerable collection. Returns an empty collection if no records exist
+for the id.

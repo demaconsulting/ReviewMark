@@ -17,6 +17,16 @@ The `.reviewmark.yaml` file is deserialized into the following model:
 | `EvidenceSourceYaml` | Describes how to locate the evidence index (`type`, `location`, optional `credentials`) |
 | `ReviewYaml` | Describes a single review-set (`id`, `title`, file patterns) |
 
+### Evidence Source Types
+
+The `type` field of `EvidenceSourceYaml` controls how the evidence index is located:
+
+| Type | Description |
+| ---- | ----------- |
+| `none` | No evidence index is available. The `location` field is optional and ignored. All review-sets are reported as Missing. |
+| `fileshare` | The evidence index is read from the file path specified in `location`. |
+| `url` | The evidence index is downloaded from the HTTP or HTTPS URL specified in `location`. |
+
 ## ReviewMarkConfiguration.Load()
 
 `ReviewMarkConfiguration.Load(filePath)` is the unified loading mechanism that performs
@@ -38,7 +48,7 @@ The fingerprint for a review-set uniquely identifies the exact content of its fi
 The algorithm is:
 
 1. For each file in the review-set, read its contents and compute a SHA-256 hash.
-2. Collect all per-file hashes and sort them lexicographically.
+2. Convert each hash to a lowercase hex string, then collect all per-file hashes and sort them lexicographically.
 3. Concatenate the sorted hashes and compute a SHA-256 hash of the result.
 4. Return the final hash as a hex string — this is the review-set fingerprint.
 

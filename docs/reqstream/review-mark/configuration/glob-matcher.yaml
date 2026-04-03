@@ -27,3 +27,5 @@ sections:
           - GlobMatcher_GetMatchingFiles_NullBaseDirectory_ThrowsArgumentNullException
           - GlobMatcher_GetMatchingFiles_NullPatterns_ThrowsArgumentNullException
           - GlobMatcher_GetMatchingFiles_NoMatchingFiles_ReturnsEmptyList
+          - GlobMatcher_GetMatchingFiles_EmptyPatterns_ReturnsEmptyList
+          - GlobMatcher_GetMatchingFiles_MultipleIncludePatterns_ReturnsAllMatching

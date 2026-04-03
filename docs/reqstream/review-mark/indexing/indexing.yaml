@@ -39,6 +39,11 @@ sections:
           - ReviewIndex_Scan_MultiplePdfs_PopulatesAllEntries
           - ReviewIndex_Scan_NoMatchingFiles_LeavesIndexEmpty
           - ReviewIndex_Scan_ClearsExistingEntries
+          - ReviewIndex_Scan_PdfWithMissingId_SkipsWithWarning
+          - ReviewIndex_Scan_PdfWithMissingFingerprint_SkipsWithWarning
+          - ReviewIndex_Scan_PdfWithMissingDate_SkipsWithWarning
+          - ReviewIndex_Scan_PdfWithMissingResult_SkipsWithWarning
+          - ReviewIndex_Scan_PdfWithNoKeywords_SkipsWithWarning
 
       - id: ReviewMark-Indexing-SafePathCombine
         title: The tool shall combine file paths safely, rejecting path traversal sequences.
