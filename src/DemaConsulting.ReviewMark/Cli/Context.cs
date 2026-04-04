@@ -468,9 +468,15 @@ internal sealed class Context : IDisposable
         if (!Silent)
         {
             var previousColor = Console.ForegroundColor;
-            Console.ForegroundColor = ConsoleColor.Red;
-            Console.Error.WriteLine(message);
-            Console.ForegroundColor = previousColor;
+            try
+            {
+                Console.ForegroundColor = ConsoleColor.Red;
+                Console.Error.WriteLine(message);
+            }
+            finally
+            {
+                Console.ForegroundColor = previousColor;
+            }
         }
 
         // Write to log file if logging is enabled
