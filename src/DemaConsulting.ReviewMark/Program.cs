@@ -274,7 +274,15 @@ internal static class Program
         if (context.PlanFile != null)
         {
             var planResult = config.PublishReviewPlan(directory, context.PlanDepth);
-            File.WriteAllText(context.PlanFile, planResult.Markdown);
+            try
+            {
+                File.WriteAllText(context.PlanFile, planResult.Markdown);
+            }
+            catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or DirectoryNotFoundException)
+            {
+                throw new InvalidOperationException($"Failed to write review plan to '{context.PlanFile}': {ex.Message}", ex);
+            }
+
             context.WriteLine($"Review plan written to {context.PlanFile}");
             HandleIssues(context, planResult.HasIssues, "Review plan has coverage issues.");
         }
@@ -284,7 +292,15 @@ internal static class Program
         {
             var index = ReviewIndex.Load(config.EvidenceSource);
             var reportResult = config.PublishReviewReport(index, directory, context.ReportDepth);
-            File.WriteAllText(context.ReportFile, reportResult.Markdown);
+            try
+            {
+                File.WriteAllText(context.ReportFile, reportResult.Markdown);
+            }
+            catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or DirectoryNotFoundException)
+            {
+                throw new InvalidOperationException($"Failed to write review report to '{context.ReportFile}': {ex.Message}", ex);
+            }
+
             context.WriteLine($"Review report written to {context.ReportFile}");
             HandleIssues(context, reportResult.HasIssues, "Review report has review issues.");
         }

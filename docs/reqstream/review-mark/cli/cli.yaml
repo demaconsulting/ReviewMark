@@ -158,6 +158,7 @@ sections:
           - Context_Create_PlanDepthFlag_SetsPlanDepth
           - Context_Create_PlanDepthFlag_WithInvalidValue_ThrowsArgumentException
           - Context_Create_PlanDepthFlag_WithZeroValue_ThrowsArgumentException
+          - Context_Create_PlanDepthFlag_WithValueGreaterThanFive_ThrowsArgumentException
           - Context_Create_NoArguments_PlanDepthDefaultsToOne
         children: [ReviewMark-Context-Parsing]
 
@@ -178,6 +179,10 @@ sections:
           Markdown document, with a default depth of 1 when not specified.
         tests:
           - Context_Create_ReportDepthFlag_SetsReportDepth
+          - Context_Create_ReportDepthFlag_MissingValue_ThrowsArgumentException
+          - Context_Create_ReportDepthFlag_NonNumeric_ThrowsArgumentException
+          - Context_Create_ReportDepthFlag_Zero_ThrowsArgumentException
+          - Context_Create_ReportDepthFlag_WithValueGreaterThanFive_ThrowsArgumentException
           - Context_Create_NoArguments_ReportDepthDefaultsToOne
         children: [ReviewMark-Context-Parsing]
 
