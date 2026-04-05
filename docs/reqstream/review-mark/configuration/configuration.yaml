@@ -49,7 +49,7 @@ sections:
           of each review-set (Current, Stale, Missing, or Failed), enabling auditors to
           confirm that all review-sets have current evidence before a release.
         tests:
-          - Configuration_LoadConfig_PlanGenerationSucceeds
+          - Configuration_LoadConfig_ReportGenerationSucceeds
         children: [ReviewMark-Config-Reading, ReviewMark-Config-Loading]
 
       - id: ReviewMark-Configuration-Elaboration
@@ -60,5 +60,5 @@ sections:
           command provides this formatted as Markdown so it can be copied directly into
           review documentation.
         tests:
-          - Configuration_LoadConfig_PlanGenerationSucceeds
+          - Configuration_LoadConfig_ElaborationSucceeds
         children: [ReviewMark-Config-Reading]

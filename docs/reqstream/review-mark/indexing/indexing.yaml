@@ -44,4 +44,5 @@ sections:
           and index file operations.
         tests:
           - Indexing_SafePathCombine_WithIndexPath_LoadsIndex
+          - Indexing_SafePathCombine_WithTraversalInputs_Throws
         children: [ReviewMark-PathHelpers-SafeCombine]

@@ -257,10 +257,8 @@ public class IntegrationTests
     public void IntegrationTest_ReviewPlanGeneration()
     {
         // Arrange
-        var defFile = Path.GetTempFileName();
-        defFile = Path.ChangeExtension(defFile, ".yaml");
-        var planFile = Path.GetTempFileName();
-        planFile = Path.ChangeExtension(planFile, ".md");
+        var defFile = Path.Combine(Path.GetTempPath(), Path.ChangeExtension(Path.GetRandomFileName(), ".yaml"));
+        var planFile = Path.Combine(Path.GetTempPath(), Path.ChangeExtension(Path.GetRandomFileName(), ".md"));
 
         try
         {
@@ -312,10 +310,8 @@ public class IntegrationTests
     public void IntegrationTest_ReviewReportGeneration()
     {
         // Arrange
-        var defFile = Path.GetTempFileName();
-        defFile = Path.ChangeExtension(defFile, ".yaml");
-        var reportFile = Path.GetTempFileName();
-        reportFile = Path.ChangeExtension(reportFile, ".md");
+        var defFile = Path.Combine(Path.GetTempPath(), Path.ChangeExtension(Path.GetRandomFileName(), ".yaml"));
+        var reportFile = Path.Combine(Path.GetTempPath(), Path.ChangeExtension(Path.GetRandomFileName(), ".md"));
 
         try
         {
@@ -367,10 +363,8 @@ public class IntegrationTests
     public void IntegrationTest_Enforce()
     {
         // Arrange
-        var defFile = Path.GetTempFileName();
-        defFile = Path.ChangeExtension(defFile, ".yaml");
-        var reportFile = Path.GetTempFileName();
-        reportFile = Path.ChangeExtension(reportFile, ".md");
+        var defFile = Path.Combine(Path.GetTempPath(), Path.ChangeExtension(Path.GetRandomFileName(), ".yaml"));
+        var reportFile = Path.Combine(Path.GetTempPath(), Path.ChangeExtension(Path.GetRandomFileName(), ".md"));
 
         try
         {
@@ -505,8 +499,7 @@ public class IntegrationTests
     public void IntegrationTest_Elaborate()
     {
         // Arrange
-        var defFile = Path.GetTempFileName();
-        defFile = Path.ChangeExtension(defFile, ".yaml");
+        var defFile = Path.Combine(Path.GetTempPath(), Path.ChangeExtension(Path.GetRandomFileName(), ".yaml"));
 
         try
         {
@@ -552,8 +545,7 @@ public class IntegrationTests
     public void IntegrationTest_Lint()
     {
         // Arrange
-        var defFile = Path.GetTempFileName();
-        defFile = Path.ChangeExtension(defFile, ".yaml");
+        var defFile = Path.Combine(Path.GetTempPath(), Path.ChangeExtension(Path.GetRandomFileName(), ".yaml"));
 
         try
         {

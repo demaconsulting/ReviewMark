@@ -121,7 +121,7 @@ sections:
           Allows the review plan to be embedded at any heading level within a larger
           Markdown document, with a default depth of 1 when not specified.
         tests:
-          - Cli_PlanFlag_GeneratesReviewPlan
+          - Cli_PlanDepthFlag_SetsHeadingDepth
         children: [ReviewMark-Context-Parsing]
 
       - id: ReviewMark-Cmd-Report
@@ -139,7 +139,7 @@ sections:
           Allows the review report to be embedded at any heading level within a larger
           Markdown document, with a default depth of 1 when not specified.
         tests:
-          - Cli_ReportFlag_GeneratesReviewReport
+          - Cli_ReportDepthFlag_SetsHeadingDepth
         children: [ReviewMark-Context-Parsing]
 
       - id: ReviewMark-Cmd-Index

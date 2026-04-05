@@ -177,4 +177,79 @@ public class ConfigurationTests
         // Assert
         Assert.Contains("Core-Logic", planResult.Markdown);
     }
+
+    /// <summary>
+    ///     Test that generating a review report succeeds and includes the review set ID.
+    /// </summary>
+    [TestMethod]
+    public void Configuration_LoadConfig_ReportGenerationSucceeds()
+    {
+        // Arrange
+        var srcDir = PathHelpers.SafePathCombine(_testDirectory, "src");
+        Directory.CreateDirectory(srcDir);
+        File.WriteAllText(PathHelpers.SafePathCombine(srcDir, "Main.cs"), "class Main {}");
+
+        var indexFile = PathHelpers.SafePathCombine(_testDirectory, "index.json");
+        File.WriteAllText(indexFile, """{"reviews":[]}""");
+
+        var definitionFile = PathHelpers.SafePathCombine(_testDirectory, ".reviewmark.yaml");
+        File.WriteAllText(definitionFile, $"""
+            needs-review:
+              - "src/**/*.cs"
+            evidence-source:
+              type: fileshare
+              location: {indexFile}
+            reviews:
+              - id: Core-Logic
+                title: Core logic review
+                paths:
+                  - "src/**/*.cs"
+            """);
+
+        // Act
+        var result = ReviewMarkConfiguration.Load(definitionFile);
+        Assert.IsNotNull(result.Configuration);
+        var index = ReviewIndex.Load(result.Configuration.EvidenceSource);
+        var reportResult = result.Configuration.PublishReviewReport(index, _testDirectory);
+
+        // Assert
+        Assert.Contains("Core-Logic", reportResult.Markdown);
+    }
+
+    /// <summary>
+    ///     Test that elaborating a review-set succeeds and includes the review set ID and fingerprint.
+    /// </summary>
+    [TestMethod]
+    public void Configuration_LoadConfig_ElaborationSucceeds()
+    {
+        // Arrange
+        var srcDir = PathHelpers.SafePathCombine(_testDirectory, "src");
+        Directory.CreateDirectory(srcDir);
+        File.WriteAllText(PathHelpers.SafePathCombine(srcDir, "Main.cs"), "class Main {}");
+
+        var indexFile = PathHelpers.SafePathCombine(_testDirectory, "index.json");
+        File.WriteAllText(indexFile, """{"reviews":[]}""");
+
+        var definitionFile = PathHelpers.SafePathCombine(_testDirectory, ".reviewmark.yaml");
+        File.WriteAllText(definitionFile, $"""
+            needs-review:
+              - "src/**/*.cs"
+            evidence-source:
+              type: fileshare
+              location: {indexFile}
+            reviews:
+              - id: Core-Logic
+                title: Core logic review
+                paths:
+                  - "src/**/*.cs"
+            """);
+
+        // Act
+        var result = ReviewMarkConfiguration.Load(definitionFile);
+        Assert.IsNotNull(result.Configuration);
+        var elaborateResult = result.Configuration.ElaborateReviewSet("Core-Logic", _testDirectory);
+
+        // Assert
+        Assert.Contains("Core-Logic", elaborateResult.Markdown);
+    }
 }

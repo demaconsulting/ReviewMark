@@ -153,8 +153,7 @@ public class CliTests
     public void Cli_ResultsFlag_GeneratesTrxFile()
     {
         // Arrange
-        var resultsFile = Path.GetTempFileName();
-        resultsFile = Path.ChangeExtension(resultsFile, ".trx");
+        var resultsFile = Path.Combine(Path.GetTempPath(), $"{Guid.NewGuid()}.trx");
 
         try
         {
@@ -225,23 +224,25 @@ public class CliTests
             using var errWriter = new StringWriter();
             Console.SetError(errWriter);
 
-            // Act — unknown argument causes ArgumentException → error written to stderr
-            int exitCode;
-            try
-            {
-                using var context = Context.Create(["--unknown-arg-xyz"]);
-                Program.Run(context);
-                exitCode = context.ExitCode;
-            }
-            catch (ArgumentException)
-            {
-                // Expected — Context.Create throws on unknown args
-                exitCode = 1;
-            }
+            var mainMethod = typeof(Program).GetMethod(
+                "Main",
+                System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Static,
+                binder: null,
+                types: [typeof(string[])],
+                modifiers: null);
 
-            // Assert — something was written to stderr or exit code non-zero
+            Assert.IsNotNull(mainMethod, "Could not find Program.Main(string[] args).");
+
+            // Act — invoke the real CLI entrypoint so invalid args are handled exactly
+            // as they are in production, including writing parse errors to stderr.
+            var result = mainMethod.Invoke(null, [new string[] { "--unknown-arg-xyz" }]);
+            var exitCode = result is int code ? code : 0;
+
+            // Assert — invalid args should return a failure exit code and write an error to stderr
             var stderr = errWriter.ToString();
-            Assert.IsTrue(exitCode != 0 || !string.IsNullOrEmpty(stderr));
+            Assert.AreNotEqual(0, exitCode);
+            StringAssert.Contains(stderr, "Error:");
+            StringAssert.Contains(stderr, "--unknown-arg-xyz");
         }
         finally
         {
@@ -314,10 +315,8 @@ public class CliTests
     public void Cli_DefinitionFlag_LoadsSpecifiedFile()
     {
         // Arrange
-        var defFile = Path.GetTempFileName();
-        defFile = Path.ChangeExtension(defFile, ".yaml");
-        var planFile = Path.GetTempFileName();
-        planFile = Path.ChangeExtension(planFile, ".md");
+        var defFile = Path.Combine(Path.GetTempPath(), Path.ChangeExtension(Path.GetRandomFileName(), ".yaml"));
+        var planFile = Path.Combine(Path.GetTempPath(), Path.ChangeExtension(Path.GetRandomFileName(), ".md"));
 
         try
         {
@@ -372,10 +371,8 @@ public class CliTests
     public void Cli_PlanFlag_GeneratesReviewPlan()
     {
         // Arrange
-        var defFile = Path.GetTempFileName();
-        defFile = Path.ChangeExtension(defFile, ".yaml");
-        var planFile = Path.GetTempFileName();
-        planFile = Path.ChangeExtension(planFile, ".md");
+        var defFile = Path.Combine(Path.GetTempPath(), Path.ChangeExtension(Path.GetRandomFileName(), ".yaml"));
+        var planFile = Path.Combine(Path.GetTempPath(), Path.ChangeExtension(Path.GetRandomFileName(), ".md"));
 
         try
         {
@@ -432,10 +429,8 @@ public class CliTests
     public void Cli_ReportFlag_GeneratesReviewReport()
     {
         // Arrange
-        var defFile = Path.GetTempFileName();
-        defFile = Path.ChangeExtension(defFile, ".yaml");
-        var reportFile = Path.GetTempFileName();
-        reportFile = Path.ChangeExtension(reportFile, ".md");
+        var defFile = Path.Combine(Path.GetTempPath(), Path.ChangeExtension(Path.GetRandomFileName(), ".yaml"));
+        var reportFile = Path.Combine(Path.GetTempPath(), Path.ChangeExtension(Path.GetRandomFileName(), ".md"));
 
         try
         {
@@ -492,10 +487,8 @@ public class CliTests
     public void Cli_EnforceFlag_ExitsNonZeroWhenNotCurrent()
     {
         // Arrange
-        var defFile = Path.GetTempFileName();
-        defFile = Path.ChangeExtension(defFile, ".yaml");
-        var reportFile = Path.GetTempFileName();
-        reportFile = Path.ChangeExtension(reportFile, ".md");
+        var defFile = Path.Combine(Path.GetTempPath(), Path.ChangeExtension(Path.GetRandomFileName(), ".yaml"));
+        var reportFile = Path.Combine(Path.GetTempPath(), Path.ChangeExtension(Path.GetRandomFileName(), ".md"));
 
         try
         {
@@ -607,8 +600,7 @@ public class CliTests
     public void Cli_ElaborateFlag_OutputsElaboration()
     {
         // Arrange
-        var defFile = Path.GetTempFileName();
-        defFile = Path.ChangeExtension(defFile, ".yaml");
+        var defFile = Path.Combine(Path.GetTempPath(), Path.ChangeExtension(Path.GetRandomFileName(), ".yaml"));
 
         try
         {
@@ -660,8 +652,7 @@ public class CliTests
     public void Cli_LintFlag_ReportsSuccess()
     {
         // Arrange
-        var defFile = Path.GetTempFileName();
-        defFile = Path.ChangeExtension(defFile, ".yaml");
+        var defFile = Path.Combine(Path.GetTempPath(), Path.ChangeExtension(Path.GetRandomFileName(), ".yaml"));
 
         try
         {
@@ -745,6 +736,124 @@ public class CliTests
             if (Directory.Exists(tmpDir))
             {
                 Directory.Delete(tmpDir, recursive: true);
+            }
+        }
+    }
+
+    /// <summary>
+    ///     Test that --plan-depth flag sets the heading depth in the generated review plan.
+    /// </summary>
+    [TestMethod]
+    public void Cli_PlanDepthFlag_SetsHeadingDepth()
+    {
+        // Arrange
+        var defFile = Path.Combine(Path.GetTempPath(), Path.ChangeExtension(Path.GetRandomFileName(), ".yaml"));
+        var planFile = Path.Combine(Path.GetTempPath(), Path.ChangeExtension(Path.GetRandomFileName(), ".md"));
+
+        try
+        {
+            File.WriteAllText(defFile, """
+                needs-review:
+                  - "src/**/*.cs"
+                evidence-source:
+                  type: none
+                reviews:
+                  - id: Test-Review
+                    title: Test review
+                    paths:
+                      - "src/**/*.cs"
+                """);
+
+            var originalOut = Console.Out;
+            try
+            {
+                using var outWriter = new StringWriter();
+                Console.SetOut(outWriter);
+                using var context = Context.Create(["--definition", defFile, "--plan", planFile, "--plan-depth", "2"]);
+
+                // Act
+                Program.Run(context);
+
+                // Assert — plan file uses ## (depth 2) headings
+                Assert.AreEqual(0, context.ExitCode);
+                Assert.IsTrue(File.Exists(planFile), "Plan file was not created");
+                var planContent = File.ReadAllText(planFile);
+                StringAssert.Contains(planContent, "## ");
+                Assert.IsFalse(planContent.StartsWith("# ", StringComparison.Ordinal), "Depth 2 should not produce top-level # headings");
+            }
+            finally
+            {
+                Console.SetOut(originalOut);
+            }
+        }
+        finally
+        {
+            if (File.Exists(defFile))
+            {
+                File.Delete(defFile);
+            }
+            if (File.Exists(planFile))
+            {
+                File.Delete(planFile);
+            }
+        }
+    }
+
+    /// <summary>
+    ///     Test that --report-depth flag sets the heading depth in the generated review report.
+    /// </summary>
+    [TestMethod]
+    public void Cli_ReportDepthFlag_SetsHeadingDepth()
+    {
+        // Arrange
+        var defFile = Path.Combine(Path.GetTempPath(), Path.ChangeExtension(Path.GetRandomFileName(), ".yaml"));
+        var reportFile = Path.Combine(Path.GetTempPath(), Path.ChangeExtension(Path.GetRandomFileName(), ".md"));
+
+        try
+        {
+            File.WriteAllText(defFile, """
+                needs-review:
+                  - "src/**/*.cs"
+                evidence-source:
+                  type: none
+                reviews:
+                  - id: Test-Review
+                    title: Test review
+                    paths:
+                      - "src/**/*.cs"
+                """);
+
+            var originalOut = Console.Out;
+            try
+            {
+                using var outWriter = new StringWriter();
+                Console.SetOut(outWriter);
+                using var context = Context.Create(["--definition", defFile, "--report", reportFile, "--report-depth", "2"]);
+
+                // Act
+                Program.Run(context);
+
+                // Assert — report file uses ## (depth 2) headings
+                Assert.AreEqual(0, context.ExitCode);
+                Assert.IsTrue(File.Exists(reportFile), "Report file was not created");
+                var reportContent = File.ReadAllText(reportFile);
+                StringAssert.Contains(reportContent, "## ");
+                Assert.IsFalse(reportContent.StartsWith("# ", StringComparison.Ordinal), "Depth 2 should not produce top-level # headings");
+            }
+            finally
+            {
+                Console.SetOut(originalOut);
+            }
+        }
+        finally
+        {
+            if (File.Exists(defFile))
+            {
+                File.Delete(defFile);
+            }
+            if (File.Exists(reportFile))
+            {
+                File.Delete(reportFile);
             }
         }
     }
