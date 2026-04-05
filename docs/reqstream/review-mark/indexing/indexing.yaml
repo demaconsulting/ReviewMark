@@ -21,11 +21,6 @@ sections:
           downloading evidence over HTTP(S), enabling centralized evidence stores accessible
           from any CI/CD environment.
         tests:
-          - ReviewIndex_Load_EvidenceSource_None_ReturnsEmptyIndex
-          - ReviewIndex_Load_EvidenceSource_None_HttpClientOverload_ReturnsEmptyIndex
-          - ReviewIndex_Load_EvidenceSource_Fileshare_LoadsFromFile
-          - ReviewIndex_Load_EvidenceSource_Fileshare_ValidJson_ReturnsPopulatedIndex
-          - ReviewIndex_Load_EvidenceSource_Url_SuccessResponse_LoadsIndex
           - Indexing_SafePathCombine_WithIndexPath_LoadsIndex
         children: [ReviewMark-Index-EvidenceSource, ReviewMark-EvidenceSource-None]
 
@@ -37,15 +32,6 @@ sections:
           and extract the review ID, fingerprint, date, and result from each file to
           populate the evidence index used for report generation.
         tests:
-          - ReviewIndex_Scan_PdfWithValidMetadata_PopulatesIndex
-          - ReviewIndex_Scan_MultiplePdfs_PopulatesAllEntries
-          - ReviewIndex_Scan_NoMatchingFiles_LeavesIndexEmpty
-          - ReviewIndex_Scan_ClearsExistingEntries
-          - ReviewIndex_Scan_PdfWithMissingId_SkipsWithWarning
-          - ReviewIndex_Scan_PdfWithMissingFingerprint_SkipsWithWarning
-          - ReviewIndex_Scan_PdfWithMissingDate_SkipsWithWarning
-          - ReviewIndex_Scan_PdfWithMissingResult_SkipsWithWarning
-          - ReviewIndex_Scan_PdfWithNoKeywords_SkipsWithWarning
           - Indexing_ReviewIndex_SaveAndLoad_RoundTrip
         children: [ReviewMark-Index-PdfParsing]
 
@@ -57,11 +43,5 @@ sections:
           sequences to prevent unintended file system access in both evidence scanning
           and index file operations.
         tests:
-          - PathHelpers_SafePathCombine_ValidPaths_CombinesCorrectly
-          - PathHelpers_SafePathCombine_PathTraversalWithDoubleDots_ThrowsArgumentException
-          - PathHelpers_SafePathCombine_DoubleDotsInMiddle_ThrowsArgumentException
-          - PathHelpers_SafePathCombine_AbsolutePath_ThrowsArgumentException
-          - PathHelpers_SafePathCombine_CurrentDirectoryReference_CombinesCorrectly
-          - PathHelpers_SafePathCombine_NestedPaths_CombinesCorrectly
-          - PathHelpers_SafePathCombine_EmptyRelativePath_ReturnsBasePath
+          - Indexing_SafePathCombine_WithIndexPath_LoadsIndex
         children: [ReviewMark-PathHelpers-SafeCombine]

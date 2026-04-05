@@ -44,4 +44,3 @@ sections:
           - ReviewMarkConfiguration_Load_MultipleErrors_ReturnsAllIssues
           - ReviewMarkConfiguration_Load_NoneEvidenceSource_NoIssues
           - ReviewMarkLoadResult_ReportIssues_RoutesIssuesToContext
-          - Program_Run_WithDefinitionFlag_InvalidConfig_ReportsLintError

@@ -28,16 +28,24 @@ evidence-source:
 # - source: what the code actually does
 # - tests: which behaviors are verified and how
 reviews:
+  # Purpose review - proves advertised features match system design
+  - id: Purpose
+    title: Review that Advertised Features Match System Design
+    paths:
+      - "README.md"
+      - "docs/user_guide/**/*.md"
+      - "docs/reqstream/review-mark/review-mark.yaml"
+      - "docs/design/introduction.md"
+      - "docs/design/review-mark/review-mark.md"
+
   # Software unit reviews - one per unit
   - id: ReviewMark-Program
     title: Review of Program software unit (main entry point and tool orchestration)
     paths:
       - "docs/reqstream/review-mark/program.yaml"              # requirements
       - "docs/design/review-mark/program.md"                   # design
-      - "docs/user_guide/introduction.md"                      # user guide
       - "src/**/Program.cs"                                    # implementation
       - "test/**/ProgramTests.cs"                              # unit tests
-      - "test/**/TestDirectory.cs"                             # test infrastructure
 
   - id: ReviewMark-Cli-Context
     title: Review of Context software unit (command-line argument handling)
@@ -87,7 +95,7 @@ reviews:
       - "src/**/SelfTest/Validation.cs"                           # implementation
       - "test/**/SelfTest/ValidationTests.cs"                     # tests
 
-  # Subsystem reviews
+  # Subsystem reviews - one per subsystem (no unit source code)
   - id: ReviewMark-Cli
     title: Review of Cli subsystem (command-line interface)
     paths:
@@ -131,11 +139,14 @@ reviews:
   - id: ReviewMark-Design
     title: Review of all ReviewMark design documentation
     paths:
+      - "docs/reqstream/review-mark/review-mark.yaml"            # system requirements
       - "docs/reqstream/review-mark/platform-requirements.yaml"  # platform requirements
-      - "docs/design/**/*.md"                                    # all design documents
+      - "docs/design/introduction.md"                            # design introduction
+      - "docs/design/review-mark/**/*.md"                        # system design documents
 
   - id: ReviewMark-AllRequirements
     title: Review of all ReviewMark requirements files
     paths:
       - "requirements.yaml"                                      # root requirements file
-      - "docs/reqstream/**/*.yaml"                               # all requirements files
+      - "docs/reqstream/review-mark/**/*.yaml"                   # all review-mark requirements files
+      - "docs/reqstream/ots/**/*.yaml"                           # all OTS requirements files
