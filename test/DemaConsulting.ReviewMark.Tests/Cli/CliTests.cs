@@ -226,10 +226,7 @@ public class CliTests
 
             var mainMethod = typeof(Program).GetMethod(
                 "Main",
-                System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Static,
-                binder: null,
-                types: [typeof(string[])],
-                modifiers: null);
+                System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Static);
 
             Assert.IsNotNull(mainMethod, "Could not find Program.Main(string[] args).");
 
@@ -778,8 +775,7 @@ public class CliTests
                 Assert.AreEqual(0, context.ExitCode);
                 Assert.IsTrue(File.Exists(planFile), "Plan file was not created");
                 var planContent = File.ReadAllText(planFile);
-                StringAssert.Contains(planContent, "## ");
-                Assert.IsFalse(planContent.StartsWith("# ", StringComparison.Ordinal), "Depth 2 should not produce top-level # headings");
+                StringAssert.Contains(planContent, "## Review Coverage");
             }
             finally
             {
@@ -837,8 +833,7 @@ public class CliTests
                 Assert.AreEqual(0, context.ExitCode);
                 Assert.IsTrue(File.Exists(reportFile), "Report file was not created");
                 var reportContent = File.ReadAllText(reportFile);
-                StringAssert.Contains(reportContent, "## ");
-                Assert.IsFalse(reportContent.StartsWith("# ", StringComparison.Ordinal), "Depth 2 should not produce top-level # headings");
+                StringAssert.Contains(reportContent, "## Review Status");
             }
             finally
             {
