@@ -456,7 +456,7 @@ public class IntegrationTests
     public void IntegrationTest_WorkingDirectoryOverride()
     {
         // Arrange — create a temp directory with a definition file
-        var tmpDir = Path.Combine(Path.GetTempPath(), $"reviewmark_wdir_{Guid.NewGuid()}");
+        var tmpDir = Path.Combine(Path.GetTempPath(), $"reviewmark_work_{Guid.NewGuid()}");
         Directory.CreateDirectory(tmpDir);
         var defFile = Path.Combine(tmpDir, ".reviewmark.yaml");
         var planFile = Path.Combine(tmpDir, "plan.md");

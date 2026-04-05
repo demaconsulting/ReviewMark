@@ -123,3 +123,44 @@ sections:
           - IntegrationTest_Lint
         children:
           - ReviewMark-Cmd-Lint
+
+      - id: ReviewMark-System-Silent
+        title: The tool shall support --silent flag to suppress console output.
+        justification: |
+          Enables automated scripts and CI/CD pipelines to run the tool without cluttering
+          output logs when only the exit code is needed.
+        tests:
+          - IntegrationTest_SilentFlag_SuppressesOutput
+        children:
+          - ReviewMark-Cmd-Silent
+
+      - id: ReviewMark-System-Log
+        title: The tool shall support --log flag to write output to a persistent log file.
+        justification: |
+          Provides persistent logging for debugging and audit trails when running in CI/CD
+          environments where console output may not be captured.
+        tests:
+          - IntegrationTest_LogFlag_WritesOutputToFile
+        children:
+          - ReviewMark-Cmd-Log
+
+      - id: ReviewMark-System-InvalidArgs
+        title: The tool shall reject unknown command-line arguments with a non-zero exit code.
+        justification: |
+          Providing clear feedback for invalid arguments helps users quickly correct mistakes
+          and prevents silent misconfiguration in automated environments.
+        tests:
+          - IntegrationTest_UnknownArgument_ReturnsError
+        children:
+          - ReviewMark-Cmd-InvalidArgs
+
+      - id: ReviewMark-System-Results
+        title: The tool shall write validation results to a standard test result file when --results is provided.
+        justification: |
+          Enables integration with CI/CD systems and requirements traceability tools that
+          expect standard TRX or JUnit XML test result formats.
+        tests:
+          - IntegrationTest_ValidateWithResults_GeneratesTrxFile
+          - IntegrationTest_ValidateWithResults_GeneratesJUnitFile
+        children:
+          - ReviewMark-Cmd-Results
