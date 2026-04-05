@@ -142,4 +142,23 @@ public class IndexingTests
         Assert.IsNotNull(index2.GetEvidence("Review-Alpha", "fp001"));
         Assert.IsNotNull(index2.GetEvidence("Review-Beta", "fp002"));
     }
+
+    /// <summary>
+    ///     Test that SafePathCombine throws for path traversal inputs, preventing directory escapes.
+    /// </summary>
+    [TestMethod]
+    public void Indexing_SafePathCombine_WithTraversalInputs_Throws()
+    {
+        // Arrange
+        var evidenceDir = PathHelpers.SafePathCombine(_testDirectory, "evidence");
+        Directory.CreateDirectory(evidenceDir);
+
+        // Act & Assert — double-dot traversal must be rejected
+        Assert.Throws<ArgumentException>(() =>
+            PathHelpers.SafePathCombine(evidenceDir, "../../../etc/sensitive"));
+
+        // Act & Assert — absolute path must be rejected
+        Assert.Throws<ArgumentException>(() =>
+            PathHelpers.SafePathCombine(evidenceDir, Path.GetTempPath()));
+    }
 }

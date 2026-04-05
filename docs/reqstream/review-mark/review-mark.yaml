@@ -18,7 +18,10 @@ sections:
           is covered by at least one named review-set. The Review Plan document provides this
           evidence automatically on each CI/CD run, replacing manual tracking spreadsheets.
         tests:
-          - ReviewMark_ReviewPlanGeneration
+          - IntegrationTest_ReviewPlanGeneration
+        children:
+          - ReviewMark-Cmd-Plan
+          - ReviewMark-Configuration-PlanGeneration
 
       - id: ReviewMark-System-ReviewReport
         title: The tool shall generate a Review Report document listing every review-set and its current review status.
@@ -28,7 +31,10 @@ sections:
           Report provides this evidence automatically, showing Current, Stale, Missing, or
           Failed status for each review-set.
         tests:
-          - ReviewMark_ReviewReportGeneration
+          - IntegrationTest_ReviewReportGeneration
+        children:
+          - ReviewMark-Cmd-Report
+          - ReviewMark-Configuration-ReportGeneration
 
       - id: ReviewMark-System-Enforce
         title: The tool shall return a non-zero exit code when enforcement is enabled and any review-set is not current.
@@ -40,7 +46,9 @@ sections:
           Failed status. This makes incomplete file coverage, out-of-date reviews, and failed
           reviews all build-breaking conditions.
         tests:
-          - ReviewMark_Enforce
+          - IntegrationTest_Enforce
+        children:
+          - ReviewMark-Cmd-Enforce
 
       - id: ReviewMark-System-IndexScan
         title: The tool shall scan PDF evidence files and write an index.json when the --index flag is provided.
@@ -50,7 +58,10 @@ sections:
           index.json, enabling the evidence store to be refreshed after new review PDFs are added
           without manual maintenance of the index file.
         tests:
-          - ReviewMark_IndexScan
+          - IntegrationTest_IndexScan
+        children:
+          - ReviewMark-Cmd-Index
+          - ReviewMark-Indexing-ScanPdfEvidence
 
       - id: ReviewMark-System-Validate
         title: The tool shall execute self-validation tests when the --validate flag is provided.
@@ -59,12 +70,97 @@ sections:
           functions correctly in its specific deployment environment. The --validate flag triggers
           a built-in test suite that exercises core tool behaviors and produces a pass/fail report.
         tests:
-          - ReviewMark_VersionDisplay
-          - ReviewMark_HelpDisplay
-          - ReviewMark_ReviewPlanGeneration
-          - ReviewMark_ReviewReportGeneration
-          - ReviewMark_IndexScan
-          - ReviewMark_Enforce
-          - ReviewMark_WorkingDirectoryOverride
-          - ReviewMark_Elaborate
-          - ReviewMark_Lint
+          - IntegrationTest_ValidateFlag_RunsValidation
+        children:
+          - ReviewMark-Cmd-Validate
+          - ReviewMark-SelfTest-Qualification
+
+      - id: ReviewMark-System-Version
+        title: The tool shall display the version string when the --version flag is provided.
+        justification: |
+          Users need to quickly identify the version of the tool they are using for
+          troubleshooting and compatibility verification.
+        tests:
+          - IntegrationTest_VersionFlag_OutputsVersion
+        children:
+          - ReviewMark-Cmd-Version
+
+      - id: ReviewMark-System-Help
+        title: The tool shall display usage information when the --help flag is provided.
+        justification: |
+          Users need access to command-line usage documentation without requiring external resources.
+        tests:
+          - IntegrationTest_HelpFlag_OutputsUsageInformation
+        children:
+          - ReviewMark-Cmd-Help
+
+      - id: ReviewMark-System-WorkingDirectory
+        title: The tool shall support a --dir flag to set the working directory for file operations.
+        justification: |
+          Allows users to target an evidence store or project directory without changing
+          the process working directory, enabling consistent scripting and CI/CD usage.
+        tests:
+          - IntegrationTest_WorkingDirectoryOverride
+        children:
+          - ReviewMark-Cmd-Dir
+
+      - id: ReviewMark-System-Elaborate
+        title: The tool shall print a Markdown elaboration of a review set when --elaborate is provided.
+        justification: |
+          When preparing for a review, the reviewer needs the review set ID, its current
+          fingerprint, and the full sorted list of files to be reviewed.
+        tests:
+          - IntegrationTest_Elaborate
+        children:
+          - ReviewMark-Cmd-Elaborate
+
+      - id: ReviewMark-System-Lint
+        title: The tool shall validate the definition file and report issues when --lint is provided.
+        justification: |
+          Users need a way to verify that the .reviewmark.yaml configuration file is valid
+          before running the main tool.
+        tests:
+          - IntegrationTest_Lint
+        children:
+          - ReviewMark-Cmd-Lint
+
+      - id: ReviewMark-System-Silent
+        title: The tool shall support --silent flag to suppress console output.
+        justification: |
+          Enables automated scripts and CI/CD pipelines to run the tool without cluttering
+          output logs when only the exit code is needed.
+        tests:
+          - IntegrationTest_SilentFlag_SuppressesOutput
+        children:
+          - ReviewMark-Cmd-Silent
+
+      - id: ReviewMark-System-Log
+        title: The tool shall support --log flag to write output to a persistent log file.
+        justification: |
+          Provides persistent logging for debugging and audit trails when running in CI/CD
+          environments where console output may not be captured.
+        tests:
+          - IntegrationTest_LogFlag_WritesOutputToFile
+        children:
+          - ReviewMark-Cmd-Log
+
+      - id: ReviewMark-System-InvalidArgs
+        title: The tool shall reject unknown command-line arguments with a non-zero exit code.
+        justification: |
+          Providing clear feedback for invalid arguments helps users quickly correct mistakes
+          and prevents silent misconfiguration in automated environments.
+        tests:
+          - IntegrationTest_UnknownArgument_ReturnsError
+        children:
+          - ReviewMark-Cmd-InvalidArgs
+
+      - id: ReviewMark-System-Results
+        title: The tool shall write validation results to a standard test result file when --results is provided.
+        justification: |
+          Enables integration with CI/CD systems and requirements traceability tools that
+          expect standard TRX or JUnit XML test result formats.
+        tests:
+          - IntegrationTest_ValidateWithResults_GeneratesTrxFile
+          - IntegrationTest_ValidateWithResults_GeneratesJUnitFile
+        children:
+          - ReviewMark-Cmd-Results

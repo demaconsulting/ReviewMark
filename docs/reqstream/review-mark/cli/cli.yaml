@@ -15,13 +15,7 @@ sections:
           Provides a standardized approach to command-line argument parsing and output
           handling across all DEMA Consulting DotNet Tools.
         tests:
-          - Context_Create_NoArguments_ReturnsDefaultContext
-          - Context_Create_VersionFlag_SetsVersionTrue
-          - Context_Create_HelpFlag_SetsHelpTrue
-          - Context_Create_SilentFlag_SetsSilentTrue
-          - Context_Create_ValidateFlag_SetsValidateTrue
-          - Context_Create_ResultsFlag_SetsResultsFile
-          - Context_Create_LogFlag_OpensLogFile
+          - Cli_VersionFlag_OutputsVersionOnly
         children: [ReviewMark-Context-Parsing, ReviewMark-Context-Output]
 
       - id: ReviewMark-Cmd-Version
@@ -30,11 +24,6 @@ sections:
           Users need to quickly identify the version of the tool they are using for
           troubleshooting and compatibility verification.
         tests:
-          - Context_Create_VersionFlag_SetsVersionTrue
-          - Context_Create_ShortVersionFlag_SetsVersionTrue
-          - Program_Run_WithVersionFlag_DisplaysVersionOnly
-          - Program_Version_ReturnsNonEmptyString
-          - IntegrationTest_VersionFlag_OutputsVersion
           - Cli_VersionFlag_OutputsVersionOnly
         children: [ReviewMark-Program-Dispatch]
 
@@ -44,11 +33,6 @@ sections:
           Users need access to command-line usage documentation without requiring
           external resources.
         tests:
-          - Context_Create_HelpFlag_SetsHelpTrue
-          - Context_Create_ShortHelpFlag_H_SetsHelpTrue
-          - Context_Create_ShortHelpFlag_Question_SetsHelpTrue
-          - Program_Run_WithHelpFlag_DisplaysUsageInformation
-          - IntegrationTest_HelpFlag_OutputsUsageInformation
           - Cli_HelpFlag_OutputsUsageInformation
         children: [ReviewMark-Program-Dispatch]
 
@@ -58,9 +42,6 @@ sections:
           Enables automated scripts and CI/CD pipelines to run the tool without
           cluttering output logs.
         tests:
-          - Context_Create_SilentFlag_SetsSilentTrue
-          - Context_WriteLine_Silent_DoesNotWriteToConsole
-          - IntegrationTest_SilentFlag_SuppressesOutput
           - Cli_SilentFlag_SuppressesOutput
         children: [ReviewMark-Context-Output]
 
@@ -70,9 +51,6 @@ sections:
           Provides a built-in mechanism to verify the tool is functioning correctly
           in the deployment environment.
         tests:
-          - Context_Create_ValidateFlag_SetsValidateTrue
-          - Program_Run_WithValidateFlag_RunsValidation
-          - IntegrationTest_ValidateFlag_RunsValidation
           - Cli_ValidateFlag_RunsValidation
         children: [ReviewMark-Program-Dispatch, ReviewMark-Validation-Run]
 
@@ -81,9 +59,7 @@ sections:
         justification: |
           Enables integration with CI/CD systems that expect standard test result formats.
         tests:
-          - Context_Create_ResultsFlag_SetsResultsFile
-          - IntegrationTest_ValidateWithResults_GeneratesTrxFile
-          - IntegrationTest_ValidateWithResults_GeneratesJUnitFile
+          - Cli_ResultsFlag_GeneratesTrxFile
         children: [ReviewMark-Validation-ResultsFile]
 
       - id: ReviewMark-Cmd-Log
@@ -91,8 +67,7 @@ sections:
         justification: |
           Provides persistent logging for debugging and audit trails.
         tests:
-          - Context_Create_LogFlag_OpensLogFile
-          - IntegrationTest_LogFlag_WritesOutputToFile
+          - Cli_LogFlag_WritesOutputToFile
         children: [ReviewMark-Context-Output]
 
       - id: ReviewMark-Cmd-ErrorOutput
@@ -101,8 +76,7 @@ sections:
           Error messages must be written to stderr so they remain visible to the user
           without polluting stdout, which consumers may pipe or redirect for data capture.
         tests:
-          - Context_WriteError_NotSilent_WritesToConsole
-          - IntegrationTest_UnknownArgument_ReturnsError
+          - Cli_ErrorOutput_WritesToStderr
         children: [ReviewMark-Context-Output]
 
       - id: ReviewMark-Cmd-InvalidArgs
@@ -111,10 +85,7 @@ sections:
           Providing clear feedback for invalid arguments helps users quickly correct
           mistakes and prevents silent misconfiguration.
         tests:
-          - Context_Create_UnknownArgument_ThrowsArgumentException
-          - Context_Create_LogFlag_WithoutValue_ThrowsArgumentException
-          - Context_Create_ResultsFlag_WithoutValue_ThrowsArgumentException
-          - IntegrationTest_UnknownArgument_ReturnsError
+          - Cli_InvalidArgs_ReturnsNonZeroExitCode
         children: [ReviewMark-Context-Parsing]
 
       - id: ReviewMark-Cmd-ExitCode
@@ -123,8 +94,7 @@ sections:
           Callers (scripts, CI/CD pipelines) must be able to detect failure conditions
           programmatically via the process exit code.
         tests:
-          - Context_WriteError_SetsErrorExitCode
-          - IntegrationTest_UnknownArgument_ReturnsError
+          - Cli_ExitCode_ReturnsNonZeroOnError
         children: [ReviewMark-Context-Output]
 
       - id: ReviewMark-Cmd-Definition
@@ -133,8 +103,7 @@ sections:
           Users must be able to specify the path to the .reviewmark.yaml definition file,
           which configures needs-review patterns, evidence source, and review set definitions.
         tests:
-          - Context_Create_DefinitionFlag_SetsDefinitionFile
-          - Context_Create_DefinitionFlag_WithoutValue_ThrowsArgumentException
+          - Cli_DefinitionFlag_LoadsSpecifiedFile
         children: [ReviewMark-Config-Loading, ReviewMark-Program-Dispatch]
 
       - id: ReviewMark-Cmd-Plan
@@ -143,7 +112,7 @@ sections:
           Enables automated generation of a review plan document that lists all review sets
           and coverage status, suitable for inclusion in release documentation.
         tests:
-          - Context_Create_PlanFlag_SetsPlanFile
+          - Cli_PlanFlag_GeneratesReviewPlan
         children: [ReviewMark-Config-Reading, ReviewMark-Program-Dispatch]
 
       - id: ReviewMark-Cmd-PlanDepth
@@ -152,11 +121,7 @@ sections:
           Allows the review plan to be embedded at any heading level within a larger
           Markdown document, with a default depth of 1 when not specified.
         tests:
-          - Context_Create_PlanDepthFlag_SetsPlanDepth
-          - Context_Create_PlanDepthFlag_WithInvalidValue_ThrowsArgumentException
-          - Context_Create_PlanDepthFlag_WithZeroValue_ThrowsArgumentException
-          - Context_Create_PlanDepthFlag_WithValueGreaterThanFive_ThrowsArgumentException
-          - Context_Create_NoArguments_PlanDepthDefaultsToOne
+          - Cli_PlanDepthFlag_SetsHeadingDepth
         children: [ReviewMark-Context-Parsing]
 
       - id: ReviewMark-Cmd-Report
@@ -165,7 +130,7 @@ sections:
           Enables automated generation of a review report document showing the current
           status of each review set against the evidence index, suitable for release documentation.
         tests:
-          - Context_Create_ReportFlag_SetsReportFile
+          - Cli_ReportFlag_GeneratesReviewReport
         children: [ReviewMark-Config-Reading, ReviewMark-Program-Dispatch]
 
       - id: ReviewMark-Cmd-ReportDepth
@@ -174,12 +139,7 @@ sections:
           Allows the review report to be embedded at any heading level within a larger
           Markdown document, with a default depth of 1 when not specified.
         tests:
-          - Context_Create_ReportDepthFlag_SetsReportDepth
-          - Context_Create_ReportDepthFlag_MissingValue_ThrowsArgumentException
-          - Context_Create_ReportDepthFlag_NonNumeric_ThrowsArgumentException
-          - Context_Create_ReportDepthFlag_Zero_ThrowsArgumentException
-          - Context_Create_ReportDepthFlag_WithValueGreaterThanFive_ThrowsArgumentException
-          - Context_Create_NoArguments_ReportDepthDefaultsToOne
+          - Cli_ReportDepthFlag_SetsHeadingDepth
         children: [ReviewMark-Context-Parsing]
 
       - id: ReviewMark-Cmd-Index
@@ -190,9 +150,7 @@ sections:
           files, reading embedded metadata from each PDF's Keywords field to populate
           the index with review IDs, fingerprints, dates, results, and file names.
         tests:
-          - Context_Create_IndexFlag_AddsIndexPath
-          - Context_Create_IndexFlag_MultipleTimes_AddsAllPaths
-          - Context_Create_NoArguments_IndexPathsEmpty
+          - Cli_IndexFlag_CreatesIndexJson
         children: [ReviewMark-Index-PdfParsing, ReviewMark-Program-Dispatch]
 
       - id: ReviewMark-Cmd-Enforce
@@ -202,8 +160,7 @@ sections:
           stale, or missing, or when files requiring review are not covered by any review-set.
           Without --enforce the tool generates the plan and report but exits with code 0.
         tests:
-          - Context_Create_EnforceFlag_SetsEnforceTrue
-          - Context_Create_NoArguments_EnforceFalse
+          - Cli_EnforceFlag_ExitsNonZeroWhenNotCurrent
         children: [ReviewMark-Program-Dispatch]
 
       - id: ReviewMark-Cmd-Dir
@@ -213,9 +170,7 @@ sections:
           the process working directory, enabling consistent scripting and CI/CD usage
           without requiring a cd command before invoking the tool.
         tests:
-          - Context_Create_DirFlag_SetsWorkingDirectory
-          - Context_Create_NoArguments_WorkingDirectoryIsNull
-          - Context_Create_DirFlag_MissingValue_ThrowsArgumentException
+          - Cli_DirFlag_SetsWorkingDirectory
         children: [ReviewMark-Program-Dispatch]
 
       - id: ReviewMark-Cmd-Elaborate
@@ -226,18 +181,7 @@ sections:
           command provides this information formatted as Markdown so it can be copied
           directly into review documentation.
         tests:
-          - Context_Create_ElaborateFlag_SetsElaborateId
-          - Context_Create_NoArguments_ElaborateIdIsNull
-          - Context_Create_ElaborateFlag_WithoutValue_ThrowsArgumentException
-          - ReviewMarkConfiguration_ElaborateReviewSet_ValidId_ReturnsElaboration
-          - ReviewMarkConfiguration_ElaborateReviewSet_UnknownId_ThrowsArgumentException
-          - ReviewMarkConfiguration_ElaborateReviewSet_NullId_ThrowsArgumentException
-          - ReviewMarkConfiguration_ElaborateReviewSet_MarkdownDepth_UsedForHeadings
-          - ReviewMarkConfiguration_ElaborateReviewSet_MarkdownDepthAbove5_Throws
-          - ReviewMarkConfiguration_ElaborateReviewSet_ContainsFullFingerprint
-          - Program_Run_WithHelpFlag_IncludesElaborateOption
-          - Program_Run_WithElaborateFlag_OutputsElaboration
-          - Program_Run_WithElaborateFlag_UnknownId_ReportsError
+          - Cli_ElaborateFlag_OutputsElaboration
         children: [ReviewMark-Config-Reading, ReviewMark-Program-Dispatch]
 
       - id: ReviewMark-Cmd-Lint
@@ -247,17 +191,5 @@ sections:
           before running the main tool, providing clear error messages about the cause and
           location of any issues.
         tests:
-          - Context_Create_LintFlag_SetsLintTrue
-          - Context_Create_NoArguments_LintIsFalse
-          - Program_Run_WithHelpFlag_IncludesLintOption
-          - Program_Run_WithLintFlag_ValidConfig_ReportsSuccess
-          - Program_Run_WithLintFlag_MissingConfig_ReportsError
-          - Program_Run_WithLintFlag_DuplicateIds_ReportsError
-          - Program_Run_WithLintFlag_UnknownSourceType_ReportsError
-          - Program_Run_WithLintFlag_CorruptedYaml_ReportsError
-          - Program_Run_WithLintFlag_MissingEvidenceSource_ReportsError
-          - Program_Run_WithLintFlag_MultipleErrors_ReportsAll
-          - ReviewMarkConfiguration_Load_InvalidYaml_ReturnsNullConfigWithErrorIssue
-          - ReviewMarkConfiguration_Load_MissingEvidenceSource_ReturnsNullConfigWithErrorIssue
-          - ReviewMarkConfiguration_Load_MultipleErrors_ReturnsAllIssues
+          - Cli_LintFlag_ReportsSuccess
         children: [ReviewMark-Config-Loading, ReviewMark-Program-Dispatch]
