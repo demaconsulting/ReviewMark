@@ -209,36 +209,28 @@ public class ValidationTests
     [TestMethod]
     public void Validation_Run_WithResultsFileInNewDirectory_CreatesDirectory()
     {
-        // Arrange
-        var subDir = Path.Combine(Path.GetTempPath(), $"reviewmark-validation-{Guid.NewGuid()}");
+        // Arrange — use TestDirectory as the root; the 'output' subdirectory does not exist yet
+        using var tempDir = new TestDirectory();
+        var subDir = Path.Combine(tempDir.DirectoryPath, "output");
         var resultsFile = Path.Combine(subDir, "results.trx");
+
+        var originalOut = Console.Out;
         try
         {
-            var originalOut = Console.Out;
-            try
-            {
-                using var outWriter = new StringWriter();
-                Console.SetOut(outWriter);
-                using var context = Context.Create(["--validate", "--results", resultsFile]);
+            using var outWriter = new StringWriter();
+            Console.SetOut(outWriter);
+            using var context = Context.Create(["--validate", "--results", resultsFile]);
 
-                // Act
-                Validation.Run(context);
+            // Act
+            Validation.Run(context);
 
-                // Assert — directory and results file were created
-                Assert.IsTrue(Directory.Exists(subDir), "Parent directory was not created");
-                Assert.IsTrue(File.Exists(resultsFile), "TRX results file was not created in new directory");
-            }
-            finally
-            {
-                Console.SetOut(originalOut);
-            }
+            // Assert — directory and results file were created
+            Assert.IsTrue(Directory.Exists(subDir), "Parent directory was not created");
+            Assert.IsTrue(File.Exists(resultsFile), "TRX results file was not created in new directory");
         }
         finally
         {
-            if (Directory.Exists(subDir))
-            {
-                Directory.Delete(subDir, recursive: true);
-            }
+            Console.SetOut(originalOut);
         }
     }
 }
