@@ -20,10 +20,6 @@ sections:
           summary, enabling quality assurance teams to obtain tool qualification evidence
           without requiring a separate test harness.
         tests:
-          - Validation_Run_NullContext_ThrowsArgumentNullException
-          - Validation_Run_WritesValidationHeader
-          - Validation_Run_WritesSummaryWithTotalTests
-          - Validation_Run_AllTestsPass_ExitCodeIsZero
           - SelfTest_Run_AllTestsPass_ExitCodeIsZero
         children: [ReviewMark-Validation-Run]
 
@@ -36,7 +32,5 @@ sections:
           directly into pipeline tooling and traceability reports without additional
           conversion steps, satisfying audit trail requirements.
         tests:
-          - Validation_Run_WithTrxResultsFile_WritesFile
-          - Validation_Run_WithXmlResultsFile_WritesFile
           - SelfTest_Run_GeneratesResultsFile
         children: [ReviewMark-Validation-ResultsFile]

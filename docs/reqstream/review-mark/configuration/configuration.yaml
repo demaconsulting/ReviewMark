@@ -18,7 +18,6 @@ sections:
           and excludes in declaration order, so that ReviewMark can detect uncovered files
           and generate accurate review plans.
         tests:
-          - ReviewMarkConfiguration_GetNeedsReviewFiles_ReturnsMatchingFiles
           - Configuration_LoadConfig_ResolvesNeedsReviewFiles
         children: [ReviewMark-Config-Reading, ReviewMark-GlobMatcher-IncludeExclude]
 
@@ -30,9 +29,6 @@ sections:
           content rather than names alone, so that renamed files do not invalidate the
           fingerprint, and changed content always produces a new fingerprint.
         tests:
-          - ReviewSet_GetFingerprint_SameContent_ReturnsSameFingerprint
-          - ReviewSet_GetFingerprint_DifferentContent_ReturnsDifferentFingerprint
-          - ReviewSet_GetFingerprint_RenameFile_ReturnsSameFingerprint
           - Configuration_LoadConfig_FingerprintReflectsFileContent
         children: [ReviewMark-Config-Reading]
 
@@ -43,7 +39,6 @@ sections:
           and what files they cover. It enables auditors to verify that all relevant files
           are included in at least one review-set before reviews are conducted.
         tests:
-          - ReviewMark_ReviewPlanGeneration
           - Configuration_LoadConfig_PlanGenerationSucceeds
         children: [ReviewMark-Config-Reading, ReviewMark-Config-Loading]
 
@@ -54,7 +49,7 @@ sections:
           of each review-set (Current, Stale, Missing, or Failed), enabling auditors to
           confirm that all review-sets have current evidence before a release.
         tests:
-          - ReviewMark_ReviewReportGeneration
+          - Configuration_LoadConfig_ReportGenerationSucceeds
         children: [ReviewMark-Config-Reading, ReviewMark-Config-Loading]
 
       - id: ReviewMark-Configuration-Elaboration
@@ -65,5 +60,5 @@ sections:
           command provides this formatted as Markdown so it can be copied directly into
           review documentation.
         tests:
-          - ReviewMark_Elaborate
+          - Configuration_LoadConfig_ElaborationSucceeds
         children: [ReviewMark-Config-Reading]
