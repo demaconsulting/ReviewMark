@@ -189,13 +189,16 @@ public class CliTests
 
         try
         {
-            using var context = Context.Create(["--log", logFile]);
+            int exitCode;
+            using (var context = Context.Create(["--log", logFile]))
+            {
+                // Act
+                Program.Run(context);
+                exitCode = context.ExitCode;
+            }
 
-            // Act
-            Program.Run(context);
-
-            // Assert — exit code is zero and log file contains the version banner
-            Assert.AreEqual(0, context.ExitCode);
+            // context is disposed here — log file is closed and safe to read
+            Assert.AreEqual(0, exitCode);
             Assert.IsTrue(File.Exists(logFile), "Log file was not created");
             var logContent = File.ReadAllText(logFile);
             Assert.Contains("ReviewMark version", logContent);
