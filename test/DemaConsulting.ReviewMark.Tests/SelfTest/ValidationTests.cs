@@ -202,4 +202,35 @@ public class ValidationTests
             }
         }
     }
+
+    /// <summary>
+    ///     Test that Run creates the parent directory when --results specifies a path with a non-existent parent.
+    /// </summary>
+    [TestMethod]
+    public void Validation_Run_WithResultsFileInNewDirectory_CreatesDirectory()
+    {
+        // Arrange — use TestDirectory as the root; the 'output' subdirectory does not exist yet
+        using var tempDir = new TestDirectory();
+        var subDir = Path.Combine(tempDir.DirectoryPath, "output");
+        var resultsFile = Path.Combine(subDir, "results.trx");
+
+        var originalOut = Console.Out;
+        try
+        {
+            using var outWriter = new StringWriter();
+            Console.SetOut(outWriter);
+            using var context = Context.Create(["--validate", "--results", resultsFile]);
+
+            // Act
+            Validation.Run(context);
+
+            // Assert — directory and results file were created
+            Assert.IsTrue(Directory.Exists(subDir), "Parent directory was not created");
+            Assert.IsTrue(File.Exists(resultsFile), "TRX results file was not created in new directory");
+        }
+        finally
+        {
+            Console.SetOut(originalOut);
+        }
+    }
 }
