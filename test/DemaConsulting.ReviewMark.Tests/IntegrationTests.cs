@@ -286,7 +286,7 @@ public class IntegrationTests
                 "--plan",
                 planFile);
 
-            // Assert — exit succeeds and plan file contains review set id
+            // Assert — exit succeeds and plan file contains review-set id
             Assert.AreEqual(0, exitCode, $"Output: {output}");
             Assert.IsTrue(File.Exists(planFile), "Plan file was not created");
             var planContent = File.ReadAllText(planFile);
@@ -341,7 +341,7 @@ public class IntegrationTests
                 "--report",
                 reportFile);
 
-            // Assert — exit succeeds and report file contains review set id
+            // Assert — exit succeeds and report file contains review-set id
             Assert.AreEqual(0, exitCode, $"Output: {output}");
             Assert.IsTrue(File.Exists(reportFile), "Report file was not created");
             var reportContent = File.ReadAllText(reportFile);
@@ -532,7 +532,7 @@ public class IntegrationTests
                 "--elaborate",
                 "Test-Review");
 
-            // Assert — exits successfully and output contains the review set id
+            // Assert — exits successfully and output contains the review-set id
             Assert.AreEqual(0, exitCode, $"Output: {output}");
             Assert.Contains("Test-Review", output);
         }

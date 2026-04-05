@@ -398,7 +398,7 @@ public class CliTests
                 // Act
                 Program.Run(context);
 
-                // Assert — plan file exists and contains review set id
+                // Assert — plan file exists and contains review-set id
                 Assert.AreEqual(0, context.ExitCode);
                 Assert.IsTrue(File.Exists(planFile), "Plan file was not created");
                 var planContent = File.ReadAllText(planFile);
@@ -458,7 +458,7 @@ public class CliTests
                 // Act
                 Program.Run(context);
 
-                // Assert — report file exists and contains review set id
+                // Assert — report file exists and contains review-set id
                 Assert.AreEqual(0, context.ExitCode);
                 Assert.IsTrue(File.Exists(reportFile), "Report file was not created");
                 var reportContent = File.ReadAllText(reportFile);
@@ -598,7 +598,7 @@ public class CliTests
     }
 
     /// <summary>
-    ///     Test that --elaborate flag outputs elaboration for a valid review set.
+    ///     Test that --elaborate flag outputs elaboration for a valid review-set.
     /// </summary>
     [TestMethod]
     public void Cli_ElaborateFlag_OutputsElaboration()
@@ -631,7 +631,7 @@ public class CliTests
                 // Act
                 Program.Run(context);
 
-                // Assert — exits successfully and output contains review set id
+                // Assert — exits successfully and output contains review-set id
                 Assert.AreEqual(0, context.ExitCode);
                 var output = outWriter.ToString();
                 Assert.Contains("Test-Review", output);
