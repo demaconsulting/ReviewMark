@@ -135,8 +135,6 @@ sections:
         tests:
           - Context_Create_DefinitionFlag_SetsDefinitionFile
           - Context_Create_DefinitionFlag_WithoutValue_ThrowsArgumentException
-          - ReviewMark_ReviewPlanGeneration
-          - ReviewMark_ReviewReportGeneration
         children: [ReviewMark-Config-Loading, ReviewMark-Program-Dispatch]
 
       - id: ReviewMark-Cmd-Plan
@@ -146,7 +144,6 @@ sections:
           and coverage status, suitable for inclusion in release documentation.
         tests:
           - Context_Create_PlanFlag_SetsPlanFile
-          - ReviewMark_ReviewPlanGeneration
         children: [ReviewMark-Config-Reading, ReviewMark-Program-Dispatch]
 
       - id: ReviewMark-Cmd-PlanDepth
@@ -169,7 +166,6 @@ sections:
           status of each review set against the evidence index, suitable for release documentation.
         tests:
           - Context_Create_ReportFlag_SetsReportFile
-          - ReviewMark_ReviewReportGeneration
         children: [ReviewMark-Config-Reading, ReviewMark-Program-Dispatch]
 
       - id: ReviewMark-Cmd-ReportDepth
@@ -197,7 +193,6 @@ sections:
           - Context_Create_IndexFlag_AddsIndexPath
           - Context_Create_IndexFlag_MultipleTimes_AddsAllPaths
           - Context_Create_NoArguments_IndexPathsEmpty
-          - ReviewMark_IndexScan
         children: [ReviewMark-Index-PdfParsing, ReviewMark-Program-Dispatch]
 
       - id: ReviewMark-Cmd-Enforce
@@ -209,7 +204,6 @@ sections:
         tests:
           - Context_Create_EnforceFlag_SetsEnforceTrue
           - Context_Create_NoArguments_EnforceFalse
-          - ReviewMark_Enforce
         children: [ReviewMark-Program-Dispatch]
 
       - id: ReviewMark-Cmd-Dir
@@ -222,7 +216,6 @@ sections:
           - Context_Create_DirFlag_SetsWorkingDirectory
           - Context_Create_NoArguments_WorkingDirectoryIsNull
           - Context_Create_DirFlag_MissingValue_ThrowsArgumentException
-          - ReviewMark_WorkingDirectoryOverride
         children: [ReviewMark-Program-Dispatch]
 
       - id: ReviewMark-Cmd-Elaborate
@@ -245,7 +238,6 @@ sections:
           - Program_Run_WithHelpFlag_IncludesElaborateOption
           - Program_Run_WithElaborateFlag_OutputsElaboration
           - Program_Run_WithElaborateFlag_UnknownId_ReportsError
-          - ReviewMark_Elaborate
         children: [ReviewMark-Config-Reading, ReviewMark-Program-Dispatch]
 
       - id: ReviewMark-Cmd-Lint
@@ -268,5 +260,4 @@ sections:
           - ReviewMarkConfiguration_Load_InvalidYaml_ReturnsNullConfigWithErrorIssue
           - ReviewMarkConfiguration_Load_MissingEvidenceSource_ReturnsNullConfigWithErrorIssue
           - ReviewMarkConfiguration_Load_MultipleErrors_ReturnsAllIssues
-          - ReviewMark_Lint
         children: [ReviewMark-Config-Loading, ReviewMark-Program-Dispatch]

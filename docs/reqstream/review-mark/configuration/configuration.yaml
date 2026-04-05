@@ -43,7 +43,6 @@ sections:
           and what files they cover. It enables auditors to verify that all relevant files
           are included in at least one review-set before reviews are conducted.
         tests:
-          - ReviewMark_ReviewPlanGeneration
           - Configuration_LoadConfig_PlanGenerationSucceeds
         children: [ReviewMark-Config-Reading, ReviewMark-Config-Loading]
 
@@ -54,7 +53,9 @@ sections:
           of each review-set (Current, Stale, Missing, or Failed), enabling auditors to
           confirm that all review-sets have current evidence before a release.
         tests:
-          - ReviewMark_ReviewReportGeneration
+          - ReviewMarkConfiguration_PublishReviewReport_CurrentReview_NoIssues
+          - ReviewMarkConfiguration_PublishReviewReport_StaleReview_HasIssues
+          - ReviewMarkConfiguration_PublishReviewReport_FailedReview_HasIssues
         children: [ReviewMark-Config-Reading, ReviewMark-Config-Loading]
 
       - id: ReviewMark-Configuration-Elaboration
@@ -65,5 +66,5 @@ sections:
           command provides this formatted as Markdown so it can be copied directly into
           review documentation.
         tests:
-          - ReviewMark_Elaborate
+          - ReviewMarkConfiguration_ElaborateReviewSet_ValidId_ReturnsElaboration
         children: [ReviewMark-Config-Reading]

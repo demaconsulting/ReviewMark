@@ -32,3 +32,4 @@ sections:
         tests:
           - Validation_Run_WithTrxResultsFile_WritesFile
           - Validation_Run_WithXmlResultsFile_WritesFile
+          - Validation_Run_WithResultsFileInNewDirectory_CreatesDirectory

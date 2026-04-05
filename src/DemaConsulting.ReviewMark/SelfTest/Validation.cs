@@ -531,6 +531,12 @@ internal static partial class Validation
                 return;
             }
 
+            var directory = Path.GetDirectoryName(context.ResultsFile);
+            if (!string.IsNullOrEmpty(directory))
+            {
+                Directory.CreateDirectory(directory);
+            }
+
             File.WriteAllText(context.ResultsFile, content);
             context.WriteLine($"Results written to {context.ResultsFile}");
         }
