@@ -572,7 +572,7 @@ public class IntegrationTests
 
             // Assert — exits successfully and output is empty (no issues, no banner)
             Assert.AreEqual(0, exitCode, $"Output: {output}");
-            Assert.IsTrue(string.IsNullOrWhiteSpace(output), $"Expected empty output but got: {output}");
+            Assert.AreEqual(string.Empty, output, $"Expected empty output but got: {output}");
         }
         finally
         {

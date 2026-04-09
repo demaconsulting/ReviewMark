@@ -355,7 +355,7 @@ public class ProgramTests
         // Assert — exit code is zero and log contains no output (no issues, no banner)
         var logContent = File.ReadAllText(logFile);
         Assert.AreEqual(0, exitCode);
-        Assert.IsTrue(string.IsNullOrWhiteSpace(logContent), $"Expected empty log but got: {logContent}");
+        Assert.AreEqual(string.Empty, logContent, $"Expected empty log but got: {logContent}");
     }
 
     /// <summary>
@@ -393,10 +393,9 @@ public class ProgramTests
             // Act
             Program.Run(context);
 
-            // Assert — no banner or copyright in output
+            // Assert — successful lint output is fully silent
             var output = outWriter.ToString();
-            Assert.DoesNotContain("ReviewMark version", output);
-            Assert.DoesNotContain("Copyright", output);
+            Assert.AreEqual(string.Empty, output);
             Assert.AreEqual(0, context.ExitCode);
         }
         finally

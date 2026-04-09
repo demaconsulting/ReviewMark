@@ -409,7 +409,7 @@ internal static partial class Validation
 
             // Verify the log is empty (no issues found, no banner)
             var logContent = File.ReadAllText(logFile);
-            return string.IsNullOrWhiteSpace(logContent) ? null : $"Lint output is not empty: {logContent}";
+            return logContent == string.Empty ? null : $"Lint output is not empty: {logContent}";
         });
     }
 

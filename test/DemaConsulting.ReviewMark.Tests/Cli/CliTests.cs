@@ -678,7 +678,7 @@ public class CliTests
                 // Assert — exits successfully and produces no output (no issues, no banner)
                 Assert.AreEqual(0, context.ExitCode);
                 var output = outWriter.ToString();
-                Assert.IsTrue(string.IsNullOrWhiteSpace(output), $"Expected empty output but got: {output}");
+                Assert.AreEqual(string.Empty, output, $"Expected empty output but got: {output}");
             }
             finally
             {
