@@ -43,3 +43,16 @@ sections:
           - Program_Run_WithHelpFlag_IncludesLintOption
           - Program_Run_WithElaborateFlag_OutputsElaboration
           - Program_Run_WithElaborateFlag_UnknownId_ReportsError
+
+      - id: ReviewMark-Program-LintVerbosity
+        title: >-
+          The Program unit shall suppress the application banner and produce no output
+          when lint succeeds, printing only issue messages on failure.
+        justification: |
+          When --lint is used from scripts or CI pipelines, any output other than the
+          actual issues pollutes the stream and complicates result detection. Suppressing
+          the banner and summary follows the Unix convention of silence-on-success,
+          making the exit code the sole signal for a clean definition file.
+        tests:
+          - Program_Run_WithLintFlag_ValidConfig_ReportsSuccess
+          - Program_Run_WithLintFlag_ValidConfig_SuppressesBanner

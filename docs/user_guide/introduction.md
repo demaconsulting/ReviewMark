@@ -160,6 +160,17 @@ Lint checks the following:
 
 All detected issues are reported together so you can fix multiple problems in one pass.
 
+### Lint Verbosity
+
+When linting, the application banner and any summary messages are suppressed. Only the
+actual issue messages are printed, making the output suitable for direct integration
+with linting scripts and CI pipelines:
+
+- **Success (exit code 0)** — no output is produced. Silence means the definition file
+  is valid.
+- **Failure (exit code 1)** — only the issue messages are printed, with no surrounding
+  banner or summary text.
+
 ### Lint Error Messages
 
 Lint errors follow the standard `[location]: [severity]: [issue]` format. For YAML syntax
@@ -169,12 +180,6 @@ errors the location includes the line and column number:
 definition.yaml:3:5: error: (yaml parse details)
 definition.yaml: error: Configuration is missing required 'evidence-source' block.
 definition.yaml: error: reviews[1] has duplicate ID 'core-module' (first defined at reviews[0]).
-```
-
-When no issues are found:
-
-```text
-definition.yaml: No issues found
 ```
 
 ## Silent Mode
@@ -644,10 +649,10 @@ Lint a specific definition file:
 reviewmark --lint --definition path/to/.reviewmark.yaml
 ```
 
-With silent mode and logging (useful in CI pipelines):
+With logging to capture any issues (useful in CI pipelines):
 
 ```bash
-reviewmark --silent --log lint.log --lint
+reviewmark --log lint.log --lint
 ```
 
 ## Example 5: Self-Validation with Results

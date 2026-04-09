@@ -185,11 +185,14 @@ sections:
         children: [ReviewMark-Config-Reading, ReviewMark-Program-Dispatch]
 
       - id: ReviewMark-Cmd-Lint
-        title: The tool shall support --lint flag to validate the definition file and report issues.
+        title: >-
+          The tool shall support --lint flag to validate the definition file, printing only
+          issue messages on failure and producing no output on success.
         justification: |
           Users need a way to verify that the .reviewmark.yaml configuration file is valid
           before running the main tool, providing clear error messages about the cause and
-          location of any issues.
+          location of any issues. Suppressing the banner and summary output on success
+          (silence-on-success) makes lint suitable for direct use in scripts and CI pipelines.
         tests:
           - Cli_LintFlag_ReportsSuccess
-        children: [ReviewMark-Config-Loading, ReviewMark-Program-Dispatch]
+        children: [ReviewMark-Config-Loading, ReviewMark-Program-Dispatch, ReviewMark-Program-LintVerbosity]
