@@ -352,10 +352,57 @@ public class ProgramTests
             exitCode = context.ExitCode;
         }
 
-        // Assert — exit code is zero and log contains success message
+        // Assert — exit code is zero and log contains no output (no issues, no banner)
         var logContent = File.ReadAllText(logFile);
         Assert.AreEqual(0, exitCode);
-        Assert.Contains("No issues found", logContent);
+        Assert.IsTrue(string.IsNullOrWhiteSpace(logContent), $"Expected empty log but got: {logContent}");
+    }
+
+    /// <summary>
+    ///     Test that Run with --lint flag does not print banner or copyright text.
+    /// </summary>
+    [TestMethod]
+    public void Program_Run_WithLintFlag_ValidConfig_SuppressesBanner()
+    {
+        // Arrange — create temp directory with a valid definition file
+        using var tempDir = new TestDirectory();
+        var indexFile = PathHelpers.SafePathCombine(tempDir.DirectoryPath, "index.json");
+        File.WriteAllText(indexFile, """{"reviews":[]}""");
+
+        var definitionFile = PathHelpers.SafePathCombine(tempDir.DirectoryPath, "definition.yaml");
+        File.WriteAllText(definitionFile, $"""
+            needs-review:
+              - "src/**/*.cs"
+            evidence-source:
+              type: fileshare
+              location: {indexFile}
+            reviews:
+              - id: Core-Logic
+                title: Review of core business logic
+                paths:
+                  - "src/**/*.cs"
+            """);
+
+        var originalOut = Console.Out;
+        try
+        {
+            using var outWriter = new StringWriter();
+            Console.SetOut(outWriter);
+            using var context = Context.Create(["--lint", "--definition", definitionFile]);
+
+            // Act
+            Program.Run(context);
+
+            // Assert — no banner or copyright in output
+            var output = outWriter.ToString();
+            Assert.DoesNotContain("ReviewMark version", output);
+            Assert.DoesNotContain("Copyright", output);
+            Assert.AreEqual(0, context.ExitCode);
+        }
+        finally
+        {
+            Console.SetOut(originalOut);
+        }
     }
 
     /// <summary>
