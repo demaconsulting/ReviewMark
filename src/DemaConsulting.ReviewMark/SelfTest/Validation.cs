@@ -407,9 +407,9 @@ internal static partial class Validation
                 return $"Program exited with code {exitCode}";
             }
 
-            // Verify the log contains a success message
+            // Verify the log is empty (no issues found, no banner)
             var logContent = File.ReadAllText(logFile);
-            return logContent.Contains("No issues found") ? null : "Lint output does not contain 'No issues found'";
+            return logContent == string.Empty ? null : $"Lint output is not empty: {logContent}";
         });
     }
 

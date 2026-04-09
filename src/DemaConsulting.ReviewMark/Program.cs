@@ -99,8 +99,11 @@ internal static class Program
             return;
         }
 
-        // Print application banner
-        PrintBanner(context);
+        // Print application banner (suppressed for --lint to show only issues)
+        if (!context.Lint)
+        {
+            PrintBanner(context);
+        }
 
         // Priority 2: Help
         if (context.Help)
@@ -179,12 +182,6 @@ internal static class Program
         // Load and lint the file in one pass, collecting all detectable issues.
         var result = ReviewMarkConfiguration.Load(definitionFile);
         result.ReportIssues(context);
-
-        // Report overall result
-        if (result.Issues.Count == 0)
-        {
-            context.WriteLine($"{definitionFile}: No issues found");
-        }
     }
 
     /// <summary>

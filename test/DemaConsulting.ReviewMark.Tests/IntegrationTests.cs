@@ -570,9 +570,9 @@ public class IntegrationTests
                 defFile,
                 "--lint");
 
-            // Assert — exits successfully and output reports no issues
+            // Assert — exits successfully and output is empty (no issues, no banner)
             Assert.AreEqual(0, exitCode, $"Output: {output}");
-            Assert.Contains("No issues found", output);
+            Assert.AreEqual(string.Empty, output, $"Expected empty output but got: {output}");
         }
         finally
         {

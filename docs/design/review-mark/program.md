@@ -31,24 +31,40 @@ than by `Program.Main` explicitly returning a non-zero value.
 executing the first matching action and returning:
 
 1. If `--version` — print version and return
-2. Print application banner
+2. Print application banner (skipped for `--lint`)
 3. If `--help` — print help and return
 4. If `--validate` — run self-validation and return
 5. If `--lint` — run configuration lint and return
 6. Otherwise — run main tool logic (index scanning and/or Review Plan/Report/Elaborate)
 
-The application banner (step 2) is always printed unless `--version` is specified.
-Only one top-level action is performed per invocation. Actions later in the priority
-order are not reached if an earlier flag is set.
+The application banner (step 2) is always printed unless `--version` or `--lint` is
+specified. Only one top-level action is performed per invocation. Actions later in the
+priority order are not reached if an earlier flag is set.
 
 ## PrintBanner()
 
 `Program.PrintBanner(Context)` writes the application name, version, and copyright
 notice to the console via `Context.WriteLine()`. The banner is printed for every
-invocation except `--version`.
+invocation except `--version` and `--lint`.
 
 ## PrintHelp()
 
 `Program.PrintHelp(Context)` writes usage information to the console via
 `Context.WriteLine()`. The help text lists all supported flags and arguments with brief
 descriptions.
+
+## RunLintLogic()
+
+`Program.RunLintLogic(Context)` validates the definition file and reports issues:
+
+1. Resolves the definition file path (from `--definition` or the default
+   `.reviewmark.yaml` relative to the working directory).
+2. Loads and lints the file via `ReviewMarkConfiguration.Load()`, collecting all
+   detectable issues in one pass.
+3. Writes each issue to the context via `ReportIssues()` — errors go to
+   `Context.WriteError()`, warnings to `Context.WriteLine()`.
+4. If any errors are present, the exit code is set to 1.
+
+No banner and no summary message are printed. Successful lint produces no output
+(silence means the definition file is valid). This keeps the output clean for
+integration with linting scripts and CI pipelines.

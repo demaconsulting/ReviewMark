@@ -675,10 +675,10 @@ public class CliTests
                 // Act
                 Program.Run(context);
 
-                // Assert — exits successfully and reports no issues
+                // Assert — exits successfully and produces no output (no issues, no banner)
                 Assert.AreEqual(0, context.ExitCode);
                 var output = outWriter.ToString();
-                Assert.Contains("No issues found", output);
+                Assert.AreEqual(string.Empty, output, $"Expected empty output but got: {output}");
             }
             finally
             {

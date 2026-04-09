@@ -115,10 +115,14 @@ sections:
           - ReviewMark-Cmd-Elaborate
 
       - id: ReviewMark-System-Lint
-        title: The tool shall validate the definition file and report issues when --lint is provided.
+        title: >-
+          The tool shall validate the definition file and report only issue messages when
+          --lint is provided, producing no output on success.
         justification: |
           Users need a way to verify that the .reviewmark.yaml configuration file is valid
-          before running the main tool.
+          before running the main tool. Suppressing the banner and summary on success
+          (silence-on-success) allows the exit code alone to signal whether the file is
+          valid, improving integration with linting scripts and CI pipelines.
         tests:
           - IntegrationTest_Lint
         children:
