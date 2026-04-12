@@ -437,15 +437,6 @@ jobs:
       - name: Install npm dependencies
         run: npm install
 
-      - name: Install ReviewMark from package
-        shell: bash
-        run: |
-          echo "Installing ReviewMark version ${{ inputs.version }}"
-          dotnet tool install --global \
-            --add-source packages \
-            --version ${{ inputs.version }} \
-            DemaConsulting.ReviewMark
-
       - name: Restore Tools
         run: dotnet tool restore
 
@@ -460,7 +451,7 @@ jobs:
           echo "Capturing tool versions..."
           dotnet versionmark --capture --job-id "build-docs" \
             --output "artifacts/versionmark-build-docs.json" -- \
-            dotnet git node npm pandoc weasyprint sarifmark sonarmark reqstream buildmark versionmark
+            dotnet git node npm pandoc weasyprint sarifmark sonarmark reqstream buildmark versionmark reviewmark
           echo "✓ Tool versions captured"
 
       # === CAPTURE OTS SELF-VALIDATION RESULTS ===
@@ -481,6 +472,9 @@ jobs:
 
       - name: Run SonarMark self-validation
         run: dotnet sonarmark --validate --results artifacts/sonarmark-self-validation.trx
+
+      - name: Run ReviewMark self-validation
+        run: dotnet reviewmark --validate --results artifacts/reviewmark-self-validation.trx
 
       # === GENERATE MARKDOWN REPORTS ===
       # This section generates all markdown reports from various tools and sources.
@@ -533,7 +527,7 @@ jobs:
         shell: bash
         # TODO: Add --enforce once reviews branch is populated with review evidence PDFs and index.json
         run: >
-          reviewmark
+          dotnet reviewmark
           --plan docs/code_review_plan/plan.md
           --plan-depth 1
           --report docs/code_review_report/report.md
