@@ -227,6 +227,31 @@ public class ContextTests
     }
 
     /// <summary>
+    ///     Test creating a context with the --result alias sets the results file.
+    /// </summary>
+    [TestMethod]
+    public void Context_Create_ResultAlias_SetsResultsFile()
+    {
+        // Act
+        using var context = Context.Create(["--result", "test.trx"]);
+
+        // Assert — ResultsFile is set to the provided path and exit code is zero
+        Assert.AreEqual("test.trx", context.ResultsFile);
+        Assert.AreEqual(0, context.ExitCode);
+    }
+
+    /// <summary>
+    ///     Test creating a context with --result alias but no value throws exception.
+    /// </summary>
+    [TestMethod]
+    public void Context_Create_ResultAlias_WithoutValue_ThrowsArgumentException()
+    {
+        // Act & Assert
+        var exception = Assert.ThrowsExactly<ArgumentException>(() => Context.Create(["--result"]));
+        Assert.Contains("--result", exception.Message);
+    }
+
+    /// <summary>
     ///     Test WriteLine writes to console output when not silent.
     /// </summary>
     [TestMethod]
