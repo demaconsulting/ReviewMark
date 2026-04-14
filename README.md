@@ -123,10 +123,11 @@ reviewmark --silent --log output.log
 | `--results <file>`        | Write validation results to file (TRX or JUnit format)       |
 | `--log <file>`            | Write output to log file                                     |
 | `--definition <file>`     | Specify the definition YAML file (default: .reviewmark.yaml) |
+| `--depth <#>`             | Set the default heading depth for all generated documents    |
 | `--plan <file>`           | Write review plan to the specified Markdown file             |
-| `--plan-depth <#>`        | Set the heading depth for the review plan (default: 1)       |
+| `--plan-depth <#>`        | Set the heading depth for the review plan (overrides --depth)|
 | `--report <file>`         | Write review report to the specified Markdown file           |
-| `--report-depth <#>`      | Set the heading depth for the review report (default: 1)     |
+| `--report-depth <#>`      | Set the heading depth for the review report (overrides --depth)|
 | `--index <glob-path>`     | Index PDF evidence files matching the glob path              |
 | `--dir <directory>`       | Set the working directory for file operations                |
 | `--enforce`               | Exit with non-zero code if there are review issues           |
