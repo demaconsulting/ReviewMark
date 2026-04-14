@@ -539,6 +539,71 @@ public class IntegrationTests
     }
 
     /// <summary>
+    ///     Test that --depth flag sets the default heading depth across all generated documents.
+    /// </summary>
+    [TestMethod]
+    public void IntegrationTest_DepthFlag_SetsDefaultHeadingDepth()
+    {
+        // Arrange
+        var defFile = Path.Combine(Path.GetTempPath(), Path.ChangeExtension(Path.GetRandomFileName(), ".yaml"));
+        var planFile = Path.Combine(Path.GetTempPath(), Path.ChangeExtension(Path.GetRandomFileName(), ".md"));
+        var reportFile = Path.Combine(Path.GetTempPath(), Path.ChangeExtension(Path.GetRandomFileName(), ".md"));
+
+        try
+        {
+            File.WriteAllText(defFile, """
+                needs-review:
+                  - "src/**/*.cs"
+                evidence-source:
+                  type: none
+                reviews:
+                  - id: Test-Review
+                    title: Test review
+                    paths:
+                      - "src/**/*.cs"
+                """);
+
+            // Act
+            var exitCode = Runner.Run(
+                out var output,
+                "dotnet",
+                _dllPath,
+                "--definition",
+                defFile,
+                "--plan",
+                planFile,
+                "--report",
+                reportFile,
+                "--depth",
+                "2");
+
+            // Assert — exit succeeds, plan and report both use ## (depth 2) headings
+            Assert.AreEqual(0, exitCode, $"Output: {output}");
+            Assert.IsTrue(File.Exists(planFile), "Plan file was not created");
+            Assert.IsTrue(File.Exists(reportFile), "Report file was not created");
+            var planContent = File.ReadAllText(planFile);
+            var reportContent = File.ReadAllText(reportFile);
+            StringAssert.Contains(planContent, "## ");
+            StringAssert.Contains(reportContent, "## ");
+        }
+        finally
+        {
+            if (File.Exists(defFile))
+            {
+                File.Delete(defFile);
+            }
+            if (File.Exists(planFile))
+            {
+                File.Delete(planFile);
+            }
+            if (File.Exists(reportFile))
+            {
+                File.Delete(reportFile);
+            }
+        }
+    }
+
+    /// <summary>
     ///     Test that --lint with a valid config reports success.
     /// </summary>
     [TestMethod]

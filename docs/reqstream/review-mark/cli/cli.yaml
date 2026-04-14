@@ -71,11 +71,9 @@ sections:
         children: [ReviewMark-Context-Output]
 
       - id: ReviewMark-Cmd-Depth
-        title: The tool shall support --depth flag to set the default Markdown heading depth for all
-          generated documents.
+        title: The tool shall support --depth flag to set the default Markdown heading depth.
         justification: |
-          Allows users to set the heading depth once and have it apply to the self-validation
-          report, review plan, and review report, unless overridden by --plan-depth or --report-depth.
+          Allows users to specify a default Markdown heading depth on the command line.
           Default depth is 1 when not specified.
         tests:
           - Cli_DepthFlag_SetsDefaultHeadingDepth
