@@ -807,8 +807,9 @@ public class ContextTests
     [TestMethod]
     public void Context_Create_DepthFlag_WithInvalidValue_ThrowsArgumentException()
     {
-        // Act & Assert - --depth with a non-numeric value should throw
-        Assert.ThrowsExactly<ArgumentException>(() => Context.Create(["--depth", "not-a-number"]));
+        // Act & Assert - --depth with a non-numeric value should throw with a message referencing --depth
+        var exception = Assert.ThrowsExactly<ArgumentException>(() => Context.Create(["--depth", "not-a-number"]));
+        Assert.Contains("--depth", exception.Message);
     }
 
     /// <summary>
@@ -818,7 +819,8 @@ public class ContextTests
     public void Context_Create_DepthFlag_WithZeroValue_ThrowsArgumentException()
     {
         // Act & Assert - --depth requires a positive integer; zero is not valid
-        Assert.ThrowsExactly<ArgumentException>(() => Context.Create(["--depth", "0"]));
+        var exception = Assert.ThrowsExactly<ArgumentException>(() => Context.Create(["--depth", "0"]));
+        Assert.Contains("--depth", exception.Message);
     }
 }
 
