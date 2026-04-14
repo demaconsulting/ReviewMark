@@ -22,9 +22,10 @@ arguments:
 | `ResultsFile` | string? | Path for TRX/JUnit test results output |
 | `DefinitionFile` | string? | Path to the `.reviewmark.yaml` configuration |
 | `PlanFile` | string? | Output path for the Review Plan document |
-| `PlanDepth` | int | Heading depth for the Review Plan |
+| `Depth` | int | Default heading depth for all generated documents |
+| `PlanDepth` | int | Heading depth for the Review Plan (defaults to `Depth`) |
 | `ReportFile` | string? | Output path for the Review Report document |
-| `ReportDepth` | int | Heading depth for the Review Report |
+| `ReportDepth` | int | Heading depth for the Review Report (defaults to `Depth`) |
 | `IndexPaths` | string[]? | Paths to scan when building an evidence index |
 | `WorkingDirectory` | string? | Base directory for resolving relative paths |
 | `Enforce` | bool | Fail if any review-set is not Current |

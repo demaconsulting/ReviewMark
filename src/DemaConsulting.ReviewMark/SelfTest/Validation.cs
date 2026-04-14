@@ -59,6 +59,7 @@ internal static partial class Validation
         RunEnforceTest(context, testResults);
         RunElaborateTest(context, testResults);
         RunLintTest(context, testResults);
+        RunDepthTest(context, testResults);
 
         // Calculate totals
         var totalTests = testResults.Results.Count;
@@ -91,7 +92,7 @@ internal static partial class Validation
     /// <param name="context">The context for output.</param>
     private static void PrintValidationHeader(Context context)
     {
-        context.WriteLine("# DEMA Consulting ReviewMark");
+        context.WriteLine($"{new string('#', context.Depth)} DEMA Consulting ReviewMark");
         context.WriteLine("");
         context.WriteLine("| Information         | Value                                              |");
         context.WriteLine("| :------------------ | :------------------------------------------------- |");
@@ -410,6 +411,43 @@ internal static partial class Validation
             // Verify the log is empty (no issues found, no banner)
             var logContent = File.ReadAllText(logFile);
             return logContent == string.Empty ? null : $"Lint output is not empty: {logContent}";
+        });
+    }
+
+    /// <summary>
+    ///     Runs a test for the --depth flag setting the default heading depth.
+    /// </summary>
+    /// <param name="context">The context for output.</param>
+    /// <param name="testResults">The test results collection.</param>
+    private static void RunDepthTest(Context context, DemaConsulting.TestResults.TestResults testResults)
+    {
+        RunValidationTest(context, testResults, "ReviewMark_DepthFlag", () =>
+        {
+            using var tempDir = new TemporaryDirectory();
+            var (definitionFile, _) = CreateTestDefinitionFixtures(tempDir.DirectoryPath);
+            var planFile = PathHelpers.SafePathCombine(tempDir.DirectoryPath, "plan.md");
+
+            // Run with --depth 2 and no --plan-depth; plan headings should use ##
+            int exitCode;
+            using (var testContext = Context.Create(["--silent", "--definition", definitionFile, "--plan", planFile, "--depth", "2"]))
+            {
+                Program.Run(testContext);
+                exitCode = testContext.ExitCode;
+            }
+
+            if (exitCode != 0)
+            {
+                return $"Program exited with code {exitCode}";
+            }
+
+            if (!File.Exists(planFile))
+            {
+                return "Plan file was not created";
+            }
+
+            // Verify the plan file uses ## headings (depth 2)
+            var planContent = File.ReadAllText(planFile);
+            return planContent.Contains("## Review Coverage") ? null : "Plan file does not contain '## Review Coverage'";
         });
     }
 

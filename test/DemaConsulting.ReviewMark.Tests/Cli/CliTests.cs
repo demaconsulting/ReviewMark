@@ -852,4 +852,62 @@ public class CliTests
             }
         }
     }
+
+    /// <summary>
+    ///     Test that --depth flag sets the default heading depth for the generated review plan.
+    /// </summary>
+    [TestMethod]
+    public void Cli_DepthFlag_SetsDefaultHeadingDepth()
+    {
+        // Arrange
+        var defFile = Path.Combine(Path.GetTempPath(), Path.ChangeExtension(Path.GetRandomFileName(), ".yaml"));
+        var planFile = Path.Combine(Path.GetTempPath(), Path.ChangeExtension(Path.GetRandomFileName(), ".md"));
+
+        try
+        {
+            File.WriteAllText(defFile, """
+                needs-review:
+                  - "src/**/*.cs"
+                evidence-source:
+                  type: none
+                reviews:
+                  - id: Test-Review
+                    title: Test review
+                    paths:
+                      - "src/**/*.cs"
+                """);
+
+            var originalOut = Console.Out;
+            try
+            {
+                using var outWriter = new StringWriter();
+                Console.SetOut(outWriter);
+                using var context = Context.Create(["--definition", defFile, "--plan", planFile, "--depth", "2"]);
+
+                // Act
+                Program.Run(context);
+
+                // Assert — plan file uses ## (depth 2) headings because --depth 2 sets the default
+                Assert.AreEqual(0, context.ExitCode);
+                Assert.IsTrue(File.Exists(planFile), "Plan file was not created");
+                var planContent = File.ReadAllText(planFile);
+                StringAssert.Contains(planContent, "## Review Coverage");
+            }
+            finally
+            {
+                Console.SetOut(originalOut);
+            }
+        }
+        finally
+        {
+            if (File.Exists(defFile))
+            {
+                File.Delete(defFile);
+            }
+            if (File.Exists(planFile))
+            {
+                File.Delete(planFile);
+            }
+        }
+    }
 }

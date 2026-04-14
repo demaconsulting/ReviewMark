@@ -227,10 +227,11 @@ The following command-line options are supported:
 | `--results <file>`        | Write validation results to file (TRX or JUnit format)       |
 | `--log <file>`            | Write output to log file                                     |
 | `--definition <file>`     | Specify the definition YAML file (default: .reviewmark.yaml) |
+| `--depth <#>`             | Default heading depth for generated documents (default: 1)   |
 | `--plan <file>`           | Write review plan to the specified Markdown file             |
-| `--plan-depth <#>`        | Set the heading depth for the review plan (default: 1)       |
+| `--plan-depth <#>`        | Heading depth for the review plan (overrides --depth)        |
 | `--report <file>`         | Write review report to the specified Markdown file           |
-| `--report-depth <#>`      | Set the heading depth for the review report (default: 1)     |
+| `--report-depth <#>`      | Heading depth for the review report (overrides --depth)      |
 | `--index <glob-path>`     | Index PDF evidence files matching the glob path              |
 | `--dir <directory>`       | Set the working directory for default paths and glob paths   |
 | `--enforce`               | Exit with non-zero code if there are review issues           |
