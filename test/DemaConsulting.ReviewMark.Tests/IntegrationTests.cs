@@ -583,8 +583,8 @@ public class IntegrationTests
             Assert.IsTrue(File.Exists(reportFile), "Report file was not created");
             var planContent = File.ReadAllText(planFile);
             var reportContent = File.ReadAllText(reportFile);
-            StringAssert.Contains(planContent, "## ");
-            StringAssert.Contains(reportContent, "## ");
+            StringAssert.Contains(planContent, "## Review Coverage");
+            StringAssert.Contains(reportContent, "## Review Status");
         }
         finally
         {
