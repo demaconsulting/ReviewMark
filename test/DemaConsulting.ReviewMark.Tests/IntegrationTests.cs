@@ -619,7 +619,7 @@ public class IntegrationTests
             "2");
 
         // Assert — exit succeeds and validation output uses ## (depth 2) heading
-        Assert.AreEqual(0, exitCode);
+        Assert.AreEqual(0, exitCode, $"Output: {output}");
         StringAssert.Contains(output, "## DEMA Consulting ReviewMark");
     }
 
