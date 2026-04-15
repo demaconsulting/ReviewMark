@@ -157,6 +157,7 @@ sections:
           Default depth is 1 when not specified.
         tests:
           - IntegrationTest_DepthFlag_SetsDefaultHeadingDepth
+          - IntegrationTest_DepthFlag_SetsValidationHeadingDepth
         children:
           - ReviewMark-Cmd-Depth
 

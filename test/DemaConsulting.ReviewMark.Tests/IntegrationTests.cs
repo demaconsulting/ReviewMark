@@ -604,6 +604,26 @@ public class IntegrationTests
     }
 
     /// <summary>
+    ///     Test that --depth flag sets the heading depth in the self-validation report.
+    /// </summary>
+    [TestMethod]
+    public void IntegrationTest_DepthFlag_SetsValidationHeadingDepth()
+    {
+        // Act
+        var exitCode = Runner.Run(
+            out var output,
+            "dotnet",
+            _dllPath,
+            "--validate",
+            "--depth",
+            "2");
+
+        // Assert — exit succeeds and validation output uses ## (depth 2) heading
+        Assert.AreEqual(0, exitCode);
+        StringAssert.Contains(output, "## DEMA Consulting ReviewMark");
+    }
+
+    /// <summary>
     ///     Test that --lint with a valid config reports success.
     /// </summary>
     [TestMethod]

@@ -157,12 +157,12 @@ internal static class Program
         context.WriteLine("  --lint                     Lint the definition file and report issues");
         context.WriteLine("  --results <file>           Write validation results to file (.trx or .xml)");
         context.WriteLine("  --log <file>               Write output to log file");
-        context.WriteLine("  --depth <#>                Set the default heading depth for all generated documents");
+        context.WriteLine("  --depth <#>                Set the default heading depth for all generated documents (default: 1)");
         context.WriteLine("  --definition <file>        Specify the definition YAML file (default: .reviewmark.yaml)");
         context.WriteLine("  --plan <file>              Write review plan to the specified Markdown file");
-        context.WriteLine("  --plan-depth <#>           Set the heading depth for the review plan (overrides --depth)");
+        context.WriteLine("  --plan-depth <#>           Set the heading depth for the review plan (default: --depth or 1)");
         context.WriteLine("  --report <file>            Write review report to the specified Markdown file");
-        context.WriteLine("  --report-depth <#>         Set the heading depth for the review report (overrides --depth)");
+        context.WriteLine("  --report-depth <#>         Set the heading depth for the review report (default: --depth or 1)");
         context.WriteLine("  --index <glob-path>        Index PDF evidence files matching the glob path");
         context.WriteLine("  --dir <directory>          Set the working directory (used for default paths and glob scanning)");
         context.WriteLine("                             Note: explicit paths given to --definition/--plan/--report are used as-is");
