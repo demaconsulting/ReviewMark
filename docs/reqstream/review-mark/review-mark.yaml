@@ -148,6 +148,19 @@ sections:
         children:
           - ReviewMark-Cmd-Log
 
+      - id: ReviewMark-System-Depth
+        title: The tool shall apply the --depth flag as the default Markdown heading depth for all
+          generated documents, unless overridden by --plan-depth or --report-depth.
+        justification: |
+          Allows users to set the heading depth once and have it apply to the review plan,
+          review report, and self-validation report, unless a more specific flag is provided.
+          Default depth is 1 when not specified.
+        tests:
+          - IntegrationTest_DepthFlag_SetsDefaultHeadingDepth
+          - IntegrationTest_DepthFlag_SetsValidationHeadingDepth
+        children:
+          - ReviewMark-Cmd-Depth
+
       - id: ReviewMark-System-InvalidArgs
         title: The tool shall reject unknown command-line arguments with a non-zero exit code.
         justification: |

@@ -81,6 +81,11 @@ internal sealed class Context : IDisposable
     public string? PlanFile { get; private init; }
 
     /// <summary>
+    ///     Gets the default heading depth for all generated documents.
+    /// </summary>
+    public int Depth { get; private init; } = 1;
+
+    /// <summary>
     ///     Gets the heading depth for the review plan.
     /// </summary>
     public int PlanDepth { get; private init; } = 1;
@@ -168,9 +173,10 @@ internal sealed class Context : IDisposable
             ResultsFile = parser.ResultsFile,
             DefinitionFile = parser.DefinitionFile,
             PlanFile = parser.PlanFile,
-            PlanDepth = parser.PlanDepth,
+            Depth = parser.Depth,
+            PlanDepth = parser.PlanDepth ?? parser.Depth,
             ReportFile = parser.ReportFile,
-            ReportDepth = parser.ReportDepth,
+            ReportDepth = parser.ReportDepth ?? parser.Depth,
             IndexPaths = parser.IndexPaths.AsReadOnly(),
             WorkingDirectory = parser.WorkingDirectory,
             Enforce = parser.Enforce,
@@ -258,9 +264,14 @@ internal sealed class Context : IDisposable
         public string? PlanFile { get; private set; }
 
         /// <summary>
+        ///     Gets the default heading depth for all generated documents.
+        /// </summary>
+        public int Depth { get; private set; } = 1;
+
+        /// <summary>
         ///     Gets the heading depth for the review plan.
         /// </summary>
-        public int PlanDepth { get; private set; } = 1;
+        public int? PlanDepth { get; private set; }
 
         /// <summary>
         ///     Gets the report file path.
@@ -270,7 +281,7 @@ internal sealed class Context : IDisposable
         /// <summary>
         ///     Gets the heading depth for the review report.
         /// </summary>
-        public int ReportDepth { get; private set; } = 1;
+        public int? ReportDepth { get; private set; }
 
         /// <summary>
         ///     Gets the glob paths for PDF evidence files to index.
@@ -345,6 +356,15 @@ internal sealed class Context : IDisposable
 
                 case "--log":
                     LogFile = GetRequiredStringArgument(arg, args, index, FilenameArgument);
+                    return index + 1;
+
+                case "--depth":
+                    Depth = GetRequiredIntArgument(arg, args, index);
+                    if (Depth > 5)
+                    {
+                        throw new ArgumentException($"{arg} cannot be greater than 5", nameof(args));
+                    }
+
                     return index + 1;
 
                 case "--result":

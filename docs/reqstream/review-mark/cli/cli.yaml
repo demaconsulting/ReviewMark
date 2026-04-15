@@ -70,6 +70,15 @@ sections:
           - Cli_LogFlag_WritesOutputToFile
         children: [ReviewMark-Context-Output]
 
+      - id: ReviewMark-Cmd-Depth
+        title: The tool shall support --depth flag to set the default Markdown heading depth.
+        justification: |
+          Allows users to specify a default Markdown heading depth on the command line.
+          Default depth is 1 when not specified.
+        tests:
+          - Cli_DepthFlag_SetsDefaultHeadingDepth
+        children: [ReviewMark-Context-Parsing]
+
       - id: ReviewMark-Cmd-ErrorOutput
         title: The tool shall write error messages to stderr.
         justification: |
@@ -119,7 +128,8 @@ sections:
         title: The tool shall support --plan-depth flag to set the Markdown heading depth for the review plan.
         justification: |
           Allows the review plan to be embedded at any heading level within a larger
-          Markdown document, with a default depth of 1 when not specified.
+          Markdown document, overriding --depth when specified. Default depth is 1 when
+          neither --plan-depth nor --depth is specified.
         tests:
           - Cli_PlanDepthFlag_SetsHeadingDepth
         children: [ReviewMark-Context-Parsing]
@@ -137,7 +147,8 @@ sections:
         title: The tool shall support --report-depth flag to set the Markdown heading depth for the review report.
         justification: |
           Allows the review report to be embedded at any heading level within a larger
-          Markdown document, with a default depth of 1 when not specified.
+          Markdown document, overriding --depth when specified. Default depth is 1 when
+          neither --report-depth nor --depth is specified.
         tests:
           - Cli_ReportDepthFlag_SetsHeadingDepth
         children: [ReviewMark-Context-Parsing]

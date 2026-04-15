@@ -768,5 +768,97 @@ public class ContextTests
         // Assert — Lint is false when --lint is not specified
         Assert.IsFalse(context.Lint);
     }
+
+    /// <summary>
+    ///     Test that --depth sets Depth, PlanDepth, and ReportDepth to the provided value.
+    /// </summary>
+    [TestMethod]
+    public void Context_Create_DepthFlag_SetsDepth()
+    {
+        // Act - create context specifying a default heading depth of 3
+        using var context = Context.Create(["--depth", "3"]);
+
+        // Assert — Depth, PlanDepth, and ReportDepth are all set to 3 and exit code is 0
+        Assert.AreEqual(3, context.Depth);
+        Assert.AreEqual(3, context.PlanDepth);
+        Assert.AreEqual(3, context.ReportDepth);
+        Assert.AreEqual(0, context.ExitCode);
+    }
+
+    /// <summary>
+    ///     Test that --depth sets the default but --plan-depth overrides only PlanDepth.
+    /// </summary>
+    [TestMethod]
+    public void Context_Create_DepthFlag_PlanDepthOverride()
+    {
+        // Act - create context with --depth 2 and --plan-depth 4
+        using var context = Context.Create(["--depth", "2", "--plan-depth", "4"]);
+
+        // Assert — Depth is 2, PlanDepth is 4 (overridden), ReportDepth is 2 (from --depth)
+        Assert.AreEqual(2, context.Depth);
+        Assert.AreEqual(4, context.PlanDepth);
+        Assert.AreEqual(2, context.ReportDepth);
+        Assert.AreEqual(0, context.ExitCode);
+    }
+
+    /// <summary>
+    ///     Test that --depth with a non-numeric value throws ArgumentException.
+    /// </summary>
+    [TestMethod]
+    public void Context_Create_DepthFlag_WithInvalidValue_ThrowsArgumentException()
+    {
+        // Act & Assert - --depth with a non-numeric value should throw with a message referencing --depth
+        var exception = Assert.ThrowsExactly<ArgumentException>(() => Context.Create(["--depth", "not-a-number"]));
+        Assert.Contains("--depth", exception.Message);
+    }
+
+    /// <summary>
+    ///     Test that --depth with a value of 0 throws ArgumentException.
+    /// </summary>
+    [TestMethod]
+    public void Context_Create_DepthFlag_WithZeroValue_ThrowsArgumentException()
+    {
+        // Act & Assert - --depth requires a positive integer; zero is not valid
+        var exception = Assert.ThrowsExactly<ArgumentException>(() => Context.Create(["--depth", "0"]));
+        Assert.Contains("--depth", exception.Message);
+    }
+
+    /// <summary>
+    ///     Test that --depth with a value greater than 5 throws ArgumentException.
+    /// </summary>
+    [TestMethod]
+    public void Context_Create_DepthFlag_WithValueGreaterThanFive_ThrowsArgumentException()
+    {
+        // Act & Assert - --depth cannot exceed 5
+        var exception = Assert.ThrowsExactly<ArgumentException>(() => Context.Create(["--depth", "6"]));
+        Assert.Contains("--depth", exception.Message);
+    }
+
+    /// <summary>
+    ///     Test that --depth without a value throws ArgumentException.
+    /// </summary>
+    [TestMethod]
+    public void Context_Create_DepthFlag_MissingValue_ThrowsArgumentException()
+    {
+        // Act & Assert - --depth with no following value should throw and include the flag name in the message
+        var exception = Assert.ThrowsExactly<ArgumentException>(() => Context.Create(["--depth"]));
+        Assert.Contains("--depth", exception.Message);
+    }
+
+    /// <summary>
+    ///     Test that --depth sets the default but --report-depth overrides only ReportDepth.
+    /// </summary>
+    [TestMethod]
+    public void Context_Create_DepthFlag_ReportDepthOverride()
+    {
+        // Act - create context with --depth 2 and --report-depth 4
+        using var context = Context.Create(["--depth", "2", "--report-depth", "4"]);
+
+        // Assert — Depth is 2, PlanDepth is 2 (from --depth), ReportDepth is 4 (overridden)
+        Assert.AreEqual(2, context.Depth);
+        Assert.AreEqual(2, context.PlanDepth);
+        Assert.AreEqual(4, context.ReportDepth);
+        Assert.AreEqual(0, context.ExitCode);
+    }
 }
 
