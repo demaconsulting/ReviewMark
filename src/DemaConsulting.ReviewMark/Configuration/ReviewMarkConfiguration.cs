@@ -277,7 +277,7 @@ file static class ReviewMarkConfigurationHelpers
     /// <param name="filePath">Path to the configuration file, used in issue locations.</param>
     /// <param name="evidenceSource">The raw evidence-source YAML node to validate, or <c>null</c> if absent.</param>
     /// <param name="issues">The list to append any detected issues to.</param>
-    internal static void ValidateEvidenceSource(
+    private static void ValidateEvidenceSource(
         string filePath,
         EvidenceSourceYaml? evidenceSource,
         ICollection<LintIssue> issues)
@@ -331,7 +331,7 @@ file static class ReviewMarkConfigurationHelpers
     ///     "Core-Logic" and "core-logic" are distinct IDs. Evidence-source type uses OrdinalIgnoreCase
     ///     because YAML convention allows any casing for keyword values like "url" or "fileshare".
     /// </remarks>
-    internal static void ValidateReviews(
+    private static void ValidateReviews(
         string filePath,
         IList<ReviewSetYaml> reviews,
         ICollection<LintIssue> issues)

@@ -103,9 +103,10 @@ review-set in the configuration.
 
 ## ValidateEvidenceSource
 
-`ReviewMarkConfiguration.ValidateEvidenceSource(string filePath, EvidenceSourceYaml? evidenceSource, ICollection<LintIssue> issues)`
-validates the `evidence-source` block and appends any detected issues to `issues`. It is
-called by `Load()` and is `internal` to allow direct unit testing.
+`ReviewMarkConfigurationHelpers.ValidateEvidenceSource(string filePath, EvidenceSourceYaml? evidenceSource, ICollection<LintIssue> issues)`
+validates the `evidence-source` block and appends any detected issues to `issues`. It is a
+`private static` method on the file-local `ReviewMarkConfigurationHelpers` type, called by
+`Load()`. Validation is exercised indirectly through `Load()` tests.
 
 Checks performed:
 
@@ -116,9 +117,10 @@ Checks performed:
 
 ## ValidateReviews
 
-`ReviewMarkConfiguration.ValidateReviews(string filePath, IList<ReviewSetYaml> reviews, ICollection<LintIssue> issues)`
-validates every entry in the `reviews` list and appends any detected issues to `issues`. It is
-called by `Load()` and is `internal` to allow direct unit testing.
+`ReviewMarkConfigurationHelpers.ValidateReviews(string filePath, IList<ReviewSetYaml> reviews, ICollection<LintIssue> issues)`
+validates every entry in the `reviews` list and appends any detected issues to `issues`. It is a
+`private static` method on the file-local `ReviewMarkConfigurationHelpers` type, called by
+`Load()`. Validation is exercised indirectly through `Load()` tests.
 
 The method iterates over `reviews` by index and for each entry checks:
 
