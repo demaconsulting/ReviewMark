@@ -85,7 +85,7 @@ public class ReviewMarkConfigurationTests
 
         // Act & Assert
 #pragma warning disable CS8604 // Possible null reference argument — intentional for this test
-        Assert.Throws<ArgumentNullException>(() =>
+        Assert.ThrowsExactly<ArgumentNullException>(() =>
             ReviewMarkConfiguration.Parse(yaml!));
 #pragma warning restore CS8604
     }
@@ -755,7 +755,7 @@ public class ReviewMarkConfigurationTests
         File.WriteAllText(PathHelpers.SafePathCombine(srcDir, "A.cs"), "class A {}");
 
         // Act & Assert — depth 6 should throw because subheadings would require level 7
-        Assert.Throws<ArgumentOutOfRangeException>(
+        Assert.ThrowsExactly<ArgumentOutOfRangeException>(
             () => config.PublishReviewPlan(_testDirectory, markdownDepth: 6));
     }
 
@@ -774,7 +774,7 @@ public class ReviewMarkConfigurationTests
         var index = ReviewIndex.Empty();
 
         // Act & Assert — depth 6 should throw because subheadings would require level 7
-        Assert.Throws<ArgumentOutOfRangeException>(
+        Assert.ThrowsExactly<ArgumentOutOfRangeException>(
             () => config.PublishReviewReport(index, _testDirectory, markdownDepth: 6));
     }
 
@@ -822,7 +822,7 @@ public class ReviewMarkConfigurationTests
         File.WriteAllText(PathHelpers.SafePathCombine(srcDir, "A.cs"), "class A {}");
 
         // Act & Assert — an unknown review-set ID should throw ArgumentException
-        Assert.Throws<ArgumentException>(() =>
+        Assert.ThrowsExactly<ArgumentException>(() =>
             config.ElaborateReviewSet("NonExistent", _testDirectory));
     }
 
@@ -838,7 +838,7 @@ public class ReviewMarkConfigurationTests
 
         // Act & Assert — null review-set ID should throw
 #pragma warning disable CS8625 // Cannot convert null literal to non-nullable reference type — intentional
-        Assert.Throws<ArgumentException>(() =>
+        Assert.ThrowsExactly<ArgumentNullException>(() =>
             config.ElaborateReviewSet(null!, _testDirectory));
 #pragma warning restore CS8625
     }
@@ -877,7 +877,7 @@ public class ReviewMarkConfigurationTests
         File.WriteAllText(PathHelpers.SafePathCombine(srcDir, "A.cs"), "class A {}");
 
         // Act & Assert — depth 6 should throw
-        Assert.Throws<ArgumentOutOfRangeException>(
+        Assert.ThrowsExactly<ArgumentOutOfRangeException>(
             () => config.ElaborateReviewSet("Core-Logic", _testDirectory, markdownDepth: 6));
     }
 

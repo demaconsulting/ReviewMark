@@ -37,18 +37,18 @@ reviews:
 
   # Special review-sets (system-level)
   - id: ReviewMark-Architecture
-    title: Review of ReviewMark system-level behavior, platform support, and integration
+    title: Review that ReviewMark Architecture Satisfies Requirements
     paths:
       - "docs/reqstream/review-mark/review-mark.yaml"            # system requirements
-      - "docs/reqstream/review-mark/platform-requirements.yaml"  # platform requirements
       - "docs/design/introduction.md"                            # design introduction and architecture
       - "docs/design/review-mark/review-mark.md"                 # system design
       - "test/**/IntegrationTests.cs"                            # integration tests
       - "test/**/Runner.cs"                                      # test infrastructure
       - "test/**/AssemblyInfo.cs"                                # test infrastructure
+      - "test/**/TestDirectory.cs"                               # test infrastructure
 
   - id: ReviewMark-Design
-    title: Review of all ReviewMark design documentation
+    title: Review that ReviewMark Design is Consistent and Complete
     paths:
       - "docs/reqstream/review-mark/review-mark.yaml"            # system requirements
       - "docs/reqstream/review-mark/platform-requirements.yaml"  # platform requirements
@@ -56,7 +56,7 @@ reviews:
       - "docs/design/review-mark/**/*.md"                        # system design documents
 
   - id: ReviewMark-AllRequirements
-    title: Review of all ReviewMark requirements files
+    title: Review that All ReviewMark Requirements are Complete
     paths:
       - "requirements.yaml"                                      # root requirements file
       - "docs/reqstream/review-mark/**/*.yaml"                   # all review-mark requirements files
@@ -64,28 +64,28 @@ reviews:
 
   # Subsystem reviews - one per subsystem (no unit source code)
   - id: ReviewMark-Cli
-    title: Review of Cli subsystem (command-line interface)
+    title: Review that ReviewMark Cli Satisfies Subsystem Requirements
     paths:
       - "docs/reqstream/review-mark/cli/cli.yaml"                # subsystem requirements
       - "docs/design/review-mark/cli/cli.md"                     # Cli subsystem design
       - "test/**/Cli/CliTests.cs"                                # Cli subsystem tests
 
   - id: ReviewMark-Configuration
-    title: Review of Configuration subsystem (configuration parsing and file pattern matching)
+    title: Review that ReviewMark Configuration Satisfies Subsystem Requirements
     paths:
       - "docs/reqstream/review-mark/configuration/configuration.yaml"           # subsystem requirements
       - "docs/design/review-mark/configuration/configuration.md"                # Configuration subsystem design
       - "test/**/Configuration/ConfigurationTests.cs"                           # Configuration subsystem tests
 
   - id: ReviewMark-Indexing
-    title: Review of Indexing subsystem (review evidence loading and path utilities)
+    title: Review that ReviewMark Indexing Satisfies Subsystem Requirements
     paths:
       - "docs/reqstream/review-mark/indexing/indexing.yaml"      # subsystem requirements
       - "docs/design/review-mark/indexing/indexing.md"           # Indexing subsystem design
       - "test/**/Indexing/IndexingTests.cs"                      # Indexing subsystem tests
 
   - id: ReviewMark-SelfTest
-    title: Review of SelfTest subsystem (self-validation)
+    title: Review that ReviewMark SelfTest Satisfies Subsystem Requirements
     paths:
       - "docs/reqstream/review-mark/self-test/self-test.yaml"    # subsystem requirements
       - "docs/design/review-mark/self-test/self-test.md"         # SelfTest subsystem design
@@ -93,7 +93,7 @@ reviews:
 
   # Software unit reviews - one per unit
   - id: ReviewMark-Program
-    title: Review of Program software unit (main entry point and tool orchestration)
+    title: Review that ReviewMark Program Implementation is Correct
     paths:
       - "docs/reqstream/review-mark/program.yaml"              # requirements
       - "docs/design/review-mark/program.md"                   # design
@@ -101,7 +101,7 @@ reviews:
       - "test/**/ProgramTests.cs"                              # unit tests
 
   - id: ReviewMark-Cli-Context
-    title: Review of Context software unit (command-line argument handling)
+    title: Review that ReviewMark Cli Context Implementation is Correct
     paths:
       - "docs/reqstream/review-mark/cli/context.yaml"          # requirements
       - "docs/design/review-mark/cli/context.md"               # design
@@ -109,7 +109,7 @@ reviews:
       - "test/**/Cli/ContextTests.cs"                          # tests
 
   - id: ReviewMark-Configuration-ReviewMarkConfiguration
-    title: Review of ReviewMarkConfiguration software unit (configuration parsing and processing)
+    title: Review that ReviewMark Configuration ReviewMarkConfiguration Implementation is Correct
     paths:
       - "docs/reqstream/review-mark/configuration/review-mark-configuration.yaml"    # requirements
       - "docs/design/review-mark/configuration/review-mark-configuration.md"         # design
@@ -117,7 +117,7 @@ reviews:
       - "test/**/Configuration/ReviewMarkConfigurationTests.cs"                      # tests
 
   - id: ReviewMark-Configuration-GlobMatcher
-    title: Review of GlobMatcher software unit (file pattern matching)
+    title: Review that ReviewMark Configuration GlobMatcher Implementation is Correct
     paths:
       - "docs/reqstream/review-mark/configuration/glob-matcher.yaml"   # requirements
       - "docs/design/review-mark/configuration/glob-matcher.md"        # design
@@ -125,7 +125,7 @@ reviews:
       - "test/**/Configuration/GlobMatcherTests.cs"                    # tests
 
   - id: ReviewMark-Indexing-ReviewIndex
-    title: Review of ReviewIndex software unit (review evidence indexing)
+    title: Review that ReviewMark Indexing ReviewIndex Implementation is Correct
     paths:
       - "docs/reqstream/review-mark/indexing/review-index.yaml"   # requirements
       - "docs/design/review-mark/indexing/review-index.md"        # design
@@ -133,7 +133,7 @@ reviews:
       - "test/**/Indexing/IndexTests.cs"                           # tests
 
   - id: ReviewMark-Indexing-PathHelpers
-    title: Review of PathHelpers software unit (file path utilities)
+    title: Review that ReviewMark Indexing PathHelpers Implementation is Correct
     paths:
       - "docs/reqstream/review-mark/indexing/path-helpers.yaml"   # requirements
       - "docs/design/review-mark/indexing/path-helpers.md"        # design
@@ -141,7 +141,7 @@ reviews:
       - "test/**/Indexing/PathHelpersTests.cs"                     # tests
 
   - id: ReviewMark-SelfTest-Validation
-    title: Review of Validation software unit (self-validation test execution)
+    title: Review that ReviewMark SelfTest Validation Implementation is Correct
     paths:
       - "docs/reqstream/review-mark/self-test/validation.yaml"   # requirements
       - "docs/design/review-mark/self-test/validation.md"        # design

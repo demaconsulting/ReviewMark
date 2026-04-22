@@ -149,15 +149,14 @@ public class IntegrationTests
     {
         // Act
         var exitCode = Runner.Run(
-            out var _,
+            out var output,
             "dotnet",
             _dllPath,
             "--silent");
 
-        // Assert — exit code is zero, proving silent mode did not cause an error
+        // Assert — exit code is zero and console output is empty
         Assert.AreEqual(0, exitCode);
-
-        // Output check removed since silent mode may still produce some output
+        Assert.AreEqual(string.Empty, output.Trim());
     }
 
     /// <summary>
@@ -666,5 +665,29 @@ public class IntegrationTests
                 File.Delete(defFile);
             }
         }
+    }
+
+    /// <summary>
+    ///     Test that an invalid log file path causes Main() to return a non-zero exit code.
+    /// </summary>
+    [TestMethod]
+    public void IntegrationTest_InvalidLogPath_ReturnsError()
+    {
+        // Arrange — construct a log path whose parent directory does not exist
+        var nonExistentDir = Path.Combine(Path.GetTempPath(), $"reviewmark_missing_{Guid.NewGuid()}");
+        var invalidLogPath = Path.Combine(nonExistentDir, "log.txt");
+
+        // Act — Context.Create fails to open the log file and throws InvalidOperationException,
+        //       which Main() catches and converts to exit code 1
+        var exitCode = Runner.Run(
+            out var output,
+            "dotnet",
+            _dllPath,
+            "--log",
+            invalidLogPath);
+
+        // Assert — non-zero exit code and error message on stderr (captured by Runner)
+        Assert.AreNotEqual(0, exitCode);
+        Assert.Contains("Error", output);
     }
 }

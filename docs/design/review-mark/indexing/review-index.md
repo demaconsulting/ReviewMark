@@ -50,9 +50,11 @@ source type:
 
 ## ReviewIndex.Scan()
 
-`ReviewIndex.Scan(directory, patterns)` scans a directory for PDF files matching
+`ReviewIndex.Scan(directory, patterns, onWarning)` scans a directory for PDF files matching
 the given glob patterns. For each PDF file found, it reads embedded metadata to
 extract the review record fields and returns a populated in-memory `ReviewIndex`.
+The `onWarning` parameter is an optional `Action<string>?` callback invoked with a
+warning message when a PDF is skipped due to missing or incomplete metadata fields.
 The caller (e.g., `Program`) is responsible for choosing an output path and calling
 `Save(...)` on the returned index to produce `index.json` as part of the `--index`
 workflow.

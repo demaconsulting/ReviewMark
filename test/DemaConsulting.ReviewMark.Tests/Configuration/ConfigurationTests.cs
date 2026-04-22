@@ -252,4 +252,25 @@ public class ConfigurationTests
         // Assert
         Assert.Contains("Core-Logic", elaborateResult.Markdown);
     }
+
+    /// <summary>
+    ///     Test that loading a malformed YAML configuration returns a null Configuration
+    ///     with at least one issue reported.
+    /// </summary>
+    [TestMethod]
+    public void Configuration_LoadConfig_MalformedYaml_ReturnsIssues()
+    {
+        // Arrange — write a YAML file with invalid structure (indentation that breaks parsing)
+        var definitionFile = PathHelpers.SafePathCombine(_testDirectory, ".reviewmark.yaml");
+        File.WriteAllText(definitionFile, """
+            : this is not valid yaml: [
+            """);
+
+        // Act
+        var result = ReviewMarkConfiguration.Load(definitionFile);
+
+        // Assert — configuration is null and at least one issue was reported
+        Assert.IsNull(result.Configuration);
+        Assert.IsTrue(result.Issues.Count > 0);
+    }
 }

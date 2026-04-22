@@ -15,7 +15,7 @@ The `.reviewmark.yaml` file is deserialized into the following model:
 | ----- | ----------- |
 | `ReviewMarkYaml` | Root configuration object containing the evidence source and review list |
 | `EvidenceSourceYaml` | Describes how to locate the evidence index (`type`, `location`, optional `credentials`) |
-| `ReviewYaml` | Describes a single review-set (`id`, `title`, file patterns) |
+| `ReviewSetYaml` | Describes a single review-set (`id`, `title`, file patterns) |
 
 ### Evidence Source Types
 
@@ -63,7 +63,6 @@ a Markdown document that lists every file in the `needs-review` file-set and, fo
 each file, identifies which review-sets provide coverage.
 
 - The `--plan-depth` argument controls the heading level used for sections
-- The `--elaborate` flag expands the file list for each review-set inline
 
 ## Review Report Generation
 
@@ -80,7 +79,23 @@ Status is determined by looking up the current fingerprint in the loaded evidenc
 index to establish whether a passing, failing, stale, or missing review result exists.
 
 - The `--report-depth` argument controls the heading level used for sections
-- The `--elaborate` flag expands the list of files covered by each review-set
+
+## ElaborateReviewSet
+
+`ReviewMarkConfiguration.ElaborateReviewSet(string id, string workingDirectory, int markdownDepth = 1)`
+returns an `ElaborateResult` containing a Markdown document that elaborates on the named review-set.
+
+The generated Markdown document contains:
+
+- A heading with the review-set ID (at the specified `markdownDepth`)
+- A metadata table with the following rows: `ID`, `Title`, and `Fingerprint`
+- A `Files` subheading (at `markdownDepth + 1`) with all matched files listed as inline code
+
+The `markdownDepth` parameter controls the heading level (1–5). If `markdownDepth` is greater
+than 5, the method throws `ArgumentOutOfRangeException`.
+
+The method throws `ArgumentException` if `id` is `null`, empty, or does not match any
+review-set in the configuration.
 
 ## Linting
 
@@ -90,3 +105,58 @@ without stopping at the first error. Lint checks include:
 - Missing or invalid `evidence-source` block and fields
 - All review-set `id` values are unique
 - Each review-set has required `id`, `title`, and `paths` fields
+
+## Internal API Types
+
+The following internal types are used by `ReviewMarkConfiguration` and related classes:
+
+### EvidenceSource
+
+`EvidenceSource(string Type, string? Location, string? UsernameEnv, string? PasswordEnv)` — an
+immutable record that describes how to locate the evidence index. `Type` is one of `none`,
+`fileshare`, or `url`. `Location` is the file path or URL, and is optional for `none` sources.
+`UsernameEnv` and `PasswordEnv` are the names of environment variables holding HTTP Basic-auth
+credentials, used only by `url` sources.
+
+### ReviewSet
+
+`ReviewSet` is a class with the following members:
+
+- `Id` — the review-set identifier
+- `Title` — the human-readable title
+- `Paths` — the ordered list of glob patterns
+- `GetFingerprint(directory)` — computes the SHA-256 fingerprint for the review-set file-set
+- `GetFiles(directory)` — returns the list of files matched by the review-set patterns
+
+### LintSeverity
+
+`LintSeverity` is an enum with two values: `Warning` and `Error`.
+
+### LintIssue
+
+`LintIssue(string Location, LintSeverity Severity, string Description)` — a record representing
+a single linting diagnostic. `ToString()` formats the issue as `{location}: {severity}: {description}`,
+matching standard linting tool output conventions.
+
+### ReviewMarkLoadResult
+
+`ReviewMarkLoadResult(ReviewMarkConfiguration? Configuration, IReadOnlyList<LintIssue> Issues)` — a
+record returned by `ReviewMarkConfiguration.Load()`. `Configuration` is `null` if any error-level
+issues were detected. `Issues` contains all detected lint diagnostics.
+
+### ReviewPlanResult
+
+`ReviewPlanResult(string Markdown, bool HasIssues)` — a record returned by
+`ReviewMarkConfiguration.PublishReviewPlan()`. `Markdown` is the generated plan document.
+`HasIssues` is `true` if any files in the needs-review set are not covered by any review-set.
+
+### ReviewReportResult
+
+`ReviewReportResult(string Markdown, bool HasIssues)` — a record returned by
+`ReviewMarkConfiguration.PublishReviewReport()`. `Markdown` is the generated report document.
+`HasIssues` is `true` if any review-set has a status other than `Current`.
+
+### ElaborateResult
+
+`ElaborateResult(string Markdown)` — a record returned by
+`ReviewMarkConfiguration.ElaborateReviewSet()`. `Markdown` is the generated elaboration document.

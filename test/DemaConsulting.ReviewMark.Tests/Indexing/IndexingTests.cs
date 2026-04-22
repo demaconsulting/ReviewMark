@@ -161,4 +161,22 @@ public class IndexingTests
         Assert.Throws<ArgumentException>(() =>
             PathHelpers.SafePathCombine(evidenceDir, Path.GetTempPath()));
     }
+
+    /// <summary>
+    ///     Test that Scan with no PDF files in the target directory returns an empty index.
+    /// </summary>
+    [TestMethod]
+    public void Indexing_ReviewIndex_Scan_WithNoPdfs_ReturnsEmptyIndex()
+    {
+        // Arrange — create a directory with no PDF files
+        var evidenceDir = PathHelpers.SafePathCombine(_testDirectory, "evidence");
+        Directory.CreateDirectory(evidenceDir);
+        File.WriteAllText(PathHelpers.SafePathCombine(evidenceDir, "notes.txt"), "not a pdf");
+
+        // Act — scan for PDFs; no matches expected
+        var index = ReviewIndex.Scan(_testDirectory, ["evidence/**/*.pdf"]);
+
+        // Assert — index is empty because no PDFs are present
+        Assert.IsFalse(index.HasId("any-id"));
+    }
 }

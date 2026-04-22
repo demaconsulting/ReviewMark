@@ -18,3 +18,27 @@ of integration tests against a temporary working directory and reports the resul
 | Unit       | Source File               | Purpose                                          |
 |------------|---------------------------|--------------------------------------------------|
 | Validation | `SelfTest/Validation.cs`  | Self-validation test runner                      |
+
+## Entry Point
+
+`Validation.Run(Context context)` is the single public entry point for this
+subsystem. It is called by `Program.Run()` when the `--validate` flag is set.
+`Validation.Run` depends on the `Configuration` and `Indexing` subsystems
+(to construct a valid runtime environment for each test case) and on the `Cli`
+subsystem (to report results through the context).
+
+The method:
+
+1. Runs each built-in test case against a temporary working directory.
+2. Writes a TRX or JUnit XML results file if `--results` was specified.
+3. Writes a human-readable summary table (pass count, fail count, total) to
+   the console via `context.WriteLine()`.
+4. Sets the context exit code to 1 if any test case fails.
+
+## Error Handling
+
+If test infrastructure setup fails (for example, the temporary directory cannot
+be created, or a required file cannot be written), the exception propagates
+out of `Validation.Run()` to `Program.Main()`, where it is caught by the
+third-tier handler, written to `Console.Error`, and rethrown as an unhandled
+exception.

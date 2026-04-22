@@ -30,3 +30,10 @@ consistent fingerprint computation across platforms.
 
 - The `needs-review` file list, which represents all files subject to review
 - Each `review-set` file list, which represents the files covered by a specific review record
+
+## Error Handling
+
+`GlobMatcher.GetMatchingFiles()` throws the following exceptions for invalid inputs:
+
+- `ArgumentNullException` — when `baseDirectory` or `patterns` is `null`
+- `ArgumentException` — when `baseDirectory` is empty or whitespace

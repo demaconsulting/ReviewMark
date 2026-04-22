@@ -19,7 +19,7 @@ DEMA Consulting tool for automated file-review evidence management in regulated 
 - 📊 **Status Reporting** - Review report shows whether each review-set is Current, Stale, Missing, or Failed
 - 🔍 **Review Elaboration** - `--elaborate` prints the ID, fingerprint, and file list for a review set
 - 🔎 **Configuration Linting** - `--lint` validates the definition file and reports all structural and semantic issues
-- 🚦 **Enforcement** - `--enforce` exits non-zero if any review-set is stale or missing, or any file is uncovered
+- 🚦 **Enforcement** - `--enforce` exits non-zero if any review-set is stale, missing, or failed, or any file is uncovered
 - 🔄 **Re-indexing** - `--index` scans PDF evidence files and writes an up-to-date `index.json`
 - ✅ **Self-Validation** - Built-in validation tests with TRX and JUnit output
 - 🌐 **Multi-Platform** - Builds and runs on Windows, Linux, and macOS
@@ -75,7 +75,7 @@ reviews:
       - "src/Auth/**/*.cs"
 ```
 
-See [THEORY-OF-OPERATIONS.md][link-theory-of-operations] for the theory of operations including fingerprinting,
+See the [System Design][link-system-design] for the theory of operations including fingerprinting,
 evidence indexing, and compliance report formats.
 
 ## Installation
@@ -216,5 +216,5 @@ By contributing to this project, you agree that your contributions will be licen
 [link-security]: https://sonarcloud.io/dashboard?id=demaconsulting_ReviewMark
 [link-nuget]: https://www.nuget.org/packages/DemaConsulting.ReviewMark
 [link-guide]: https://github.com/demaconsulting/ReviewMark/blob/main/docs/user_guide/introduction.md
-[link-theory-of-operations]: https://github.com/demaconsulting/ReviewMark/blob/main/THEORY-OF-OPERATIONS.md
+[link-system-design]: https://github.com/demaconsulting/ReviewMark/blob/main/docs/design/review-mark/review-mark.md
 [link-continuous-compliance]: https://github.com/demaconsulting/ContinuousCompliance

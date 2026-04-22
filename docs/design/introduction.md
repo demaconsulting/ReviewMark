@@ -49,7 +49,7 @@ ReviewMark (System)
     └── Validation (Unit)
 ```
 
-Each unit is described in detail in its own chapter within this document.
+Each unit is described in detail in its own companion design document, linked from the folder layout below.
 
 ## Folder Layout
 
@@ -109,10 +109,10 @@ Throughout this document:
 
 ## References
 
-- [ReviewMark Architecture][arch]
+- [ReviewMark System Design][arch]
 - [ReviewMark User Guide][guide]
 - [ReviewMark Repository][repo]
 
-[arch]: ../../THEORY-OF-OPERATIONS.md
+[arch]: review-mark/review-mark.md
 [guide]: ../../README.md
 [repo]: https://github.com/demaconsulting/ReviewMark

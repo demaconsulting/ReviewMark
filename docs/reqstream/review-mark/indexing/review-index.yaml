@@ -61,3 +61,59 @@ sections:
           - ReviewIndex_Scan_PdfWithMissingDate_SkipsWithWarning
           - ReviewIndex_Scan_PdfWithMissingResult_SkipsWithWarning
           - ReviewIndex_Scan_PdfWithNoKeywords_SkipsWithWarning
+          - ReviewIndex_Scan_NoMatchingFiles_LeavesIndexEmpty
+          - ReviewIndex_Scan_MultiplePdfs_PopulatesAllEntries
+          - ReviewIndex_Scan_ClearsExistingEntries
+
+      - id: ReviewMark-Index-Empty
+        title: "The ReviewIndex.Empty() factory method shall return a new empty index."
+        justification: |
+          When the evidence source type is 'none', or when an empty index is needed
+          as an initial state, ReviewIndex.Empty() must return an index with no records.
+          This factory method provides a consistent way to create an empty index
+          without loading from any external source.
+        tests:
+          - ReviewIndex_Empty_ReturnsEmptyIndex
+
+      - id: ReviewMark-Index-Save
+        title: "The ReviewIndex shall persist the evidence index to JSON via Save() overloads."
+        justification: |
+          After scanning PDF evidence files, the resulting index must be persisted so
+          that other tools can consume it. ReviewIndex provides two Save() overloads:
+          one writing to a file path and one writing to a Stream, enabling both
+          direct file output and in-memory serialization for testing.
+        tests:
+          - ReviewIndex_Save_Stream_NullStream_ThrowsArgumentNullException
+          - ReviewIndex_Save_File_NullPath_ThrowsArgumentException
+          - ReviewIndex_Save_RoundTrip_PreservesAllEntries
+
+      - id: ReviewMark-Index-GetEvidence
+        title: "ReviewIndex.GetEvidence() shall return the matching evidence record or null."
+        justification: |
+          When looking up review evidence by ID and fingerprint, ReviewIndex.GetEvidence()
+          must return the matching ReviewEvidence record if one exists, or null if no
+          record matches both the given ID and fingerprint.
+        tests:
+          - ReviewIndex_GetEvidence_ExistingEntry_ReturnsEvidence
+          - ReviewIndex_GetEvidence_WrongFingerprint_ReturnsNull
+          - ReviewIndex_GetEvidence_UnknownId_ReturnsNull
+
+      - id: ReviewMark-Index-HasId
+        title: "ReviewIndex.HasId() shall return true if any record exists for the given id."
+        justification: |
+          When checking whether an ID has any associated review evidence, ReviewIndex.HasId()
+          must return true if at least one record exists for the given ID regardless of
+          fingerprint, and false if no record exists.
+        tests:
+          - ReviewIndex_HasId_ExistingId_ReturnsTrue
+          - ReviewIndex_HasId_UnknownId_ReturnsFalse
+
+      - id: ReviewMark-Index-GetAllForId
+        title: "ReviewIndex.GetAllForId() shall return all records for the given id."
+        justification: |
+          When retrieving all review evidence for a given ID, ReviewIndex.GetAllForId()
+          must return all ReviewEvidence records that match the given ID, as an enumerable
+          collection. If no records exist for the ID, an empty collection must be returned.
+        tests:
+          - ReviewIndex_GetAllForId_ExistingId_ReturnsAllEntries
+          - ReviewIndex_GetAllForId_UnknownId_ReturnsEmptyList

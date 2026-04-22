@@ -163,7 +163,7 @@ public class IndexTests
 
         // Act & Assert
 #pragma warning disable CS8604 // Possible null reference argument — intentional for this test
-        Assert.Throws<ArgumentNullException>(() =>
+        Assert.ThrowsExactly<ArgumentNullException>(() =>
             ReviewIndex.Load(nullSource!));
 #pragma warning restore CS8604
     }
@@ -184,7 +184,7 @@ public class IndexTests
             PasswordEnv: null);
 
         // Act & Assert
-        Assert.Throws<InvalidOperationException>(() =>
+        Assert.ThrowsExactly<InvalidOperationException>(() =>
             ReviewIndex.Load(source));
     }
 
@@ -201,7 +201,7 @@ public class IndexTests
         var source = new EvidenceSource("fileshare", path, null, null);
 
         // Act & Assert — invalid JSON content should cause an InvalidOperationException
-        Assert.Throws<InvalidOperationException>(() =>
+        Assert.ThrowsExactly<InvalidOperationException>(() =>
             ReviewIndex.Load(source));
     }
 
@@ -380,7 +380,7 @@ public class IndexTests
             PasswordEnv: null);
 
         // Act & Assert
-        Assert.Throws<InvalidOperationException>(() =>
+        Assert.ThrowsExactly<InvalidOperationException>(() =>
             ReviewIndex.Load(source));
     }
 
@@ -450,7 +450,7 @@ public class IndexTests
             PasswordEnv: null);
 
         // Act & Assert — a 404 should be reported as an InvalidOperationException
-        Assert.Throws<InvalidOperationException>(() =>
+        Assert.ThrowsExactly<InvalidOperationException>(() =>
             ReviewIndex.Load(source, httpClient));
     }
 
@@ -477,7 +477,7 @@ public class IndexTests
             PasswordEnv: null);
 
         // Act & Assert — malformed JSON should produce an InvalidOperationException
-        Assert.Throws<InvalidOperationException>(() =>
+        Assert.ThrowsExactly<InvalidOperationException>(() =>
             ReviewIndex.Load(source, httpClient));
     }
 
@@ -499,7 +499,7 @@ public class IndexTests
 
         // Act & Assert
 #pragma warning disable CS8604 // Possible null reference argument — intentional for this test
-        Assert.Throws<ArgumentNullException>(() =>
+        Assert.ThrowsExactly<ArgumentNullException>(() =>
             ReviewIndex.Load(source, nullClient!));
 #pragma warning restore CS8604
     }
@@ -567,7 +567,7 @@ public class IndexTests
 
         // Act & Assert
 #pragma warning disable CS8604 // Possible null reference argument — intentional for this test
-        Assert.Throws<ArgumentNullException>(() =>
+        Assert.ThrowsExactly<ArgumentNullException>(() =>
             index.Save(nullStream!));
 #pragma warning restore CS8604
     }
@@ -584,7 +584,7 @@ public class IndexTests
         var emptyPath = string.Empty;
 
         // Act & Assert — an empty path is invalid and should throw
-        Assert.Throws<ArgumentException>(() =>
+        Assert.ThrowsExactly<ArgumentException>(() =>
             index.Save(emptyPath));
     }
 

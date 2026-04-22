@@ -24,8 +24,18 @@ sections:
           - GlobMatcher_GetMatchingFiles_ExcludePattern_ExcludesMatchingFiles
           - GlobMatcher_GetMatchingFiles_ReIncludeAfterExclude_ReturnsReIncludedFiles
           - GlobMatcher_GetMatchingFiles_IncludeAndExclude_ReturnsFilteredFiles
-          - GlobMatcher_GetMatchingFiles_NullBaseDirectory_ThrowsArgumentNullException
-          - GlobMatcher_GetMatchingFiles_NullPatterns_ThrowsArgumentNullException
           - GlobMatcher_GetMatchingFiles_NoMatchingFiles_ReturnsEmptyList
           - GlobMatcher_GetMatchingFiles_EmptyPatterns_ReturnsEmptyList
           - GlobMatcher_GetMatchingFiles_MultipleIncludePatterns_ReturnsAllMatching
+
+      - id: ReviewMark-GlobMatcher-NullAndEmptyRejection
+        title: "The GlobMatcher shall reject null and empty-or-whitespace input parameters."
+        justification: |
+          When baseDirectory is null, empty, or whitespace, or when patterns is null,
+          GlobMatcher.GetMatchingFiles must guard against invalid inputs by throwing
+          the appropriate exception. This ensures callers receive a clear diagnostic
+          rather than an unhandled exception when invalid values are passed.
+        tests:
+          - GlobMatcher_GetMatchingFiles_NullBaseDirectory_ThrowsArgumentNullException
+          - GlobMatcher_GetMatchingFiles_NullPatterns_ThrowsArgumentNullException
+          - GlobMatcher_GetMatchingFiles_EmptyBaseDirectory_ThrowsArgumentException
