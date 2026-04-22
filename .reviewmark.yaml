@@ -6,12 +6,14 @@
 # Patterns identifying all files that require review.
 # Processed in order; prefix a pattern with '!' to exclude.
 needs-review:
-  - "**/*.cs"                       # All C# source and test files
-  - "requirements.yaml"             # Root requirements file
-  - "docs/reqstream/**/*.yaml"         # Per-software-item requirements files
-  - "docs/design/**/*.md"           # Software design documents (including subsystem folders)
-  - "!**/obj/**"                    # Exclude build output
-  - "!**/bin/**"                    # Exclude build output
+  - "README.md"                  # Project readme
+  - "**/*.cs"                    # All C# source and test files
+  - "requirements.yaml"          # Root requirements file
+  - "docs/reqstream/**/*.yaml"   # Requirements files
+  - "docs/user_guide/**/*.md"    # User guide documents
+  - "docs/design/**/*.md"        # Design documents
+  - "!**/obj/**"                 # Exclude build output
+  - "!**/bin/**"                 # Exclude build output
 
 # Evidence source: review data and index.json are located in the 'reviews' branch
 # of this repository, accessed through the GitHub public HTTPS raw content access.
@@ -21,12 +23,7 @@ evidence-source:
   type: url
   location: https://raw.githubusercontent.com/demaconsulting/ReviewMark/reviews/index.json
 
-# Review sets grouping files by software unit.
-# Each review-set groups requirements, source, and tests for a coherent software unit
-# so that an AI-assisted review can verify consistency across the full evidence chain:
-# - requirements: what the code must do and why
-# - source: what the code actually does
-# - tests: which behaviors are verified and how
+# Review sets following standardized patterns for hierarchical compliance coverage
 reviews:
   # Purpose review - proves advertised features match system design
   - id: Purpose
