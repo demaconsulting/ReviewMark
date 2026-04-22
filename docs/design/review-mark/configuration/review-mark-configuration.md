@@ -42,6 +42,10 @@ Errors result in a `null` configuration so callers can distinguish between a com
 invalid file and a file with only warnings. `LintIssue.ToString()` formats each issue as
 `{location}: {severity}: {description}`, matching standard linting tool output conventions.
 
+The method delegates validation to `ValidateEvidenceSource` and `ValidateReviews`, which
+accumulate issues into the shared `issues` list before `Load` decides whether to return a
+valid configuration or `null`.
+
 ## Fingerprinting Algorithm
 
 The fingerprint for a review-set uniquely identifies the exact content of its file-set.
@@ -97,10 +101,37 @@ than 5, the method throws `ArgumentOutOfRangeException`.
 The method throws `ArgumentException` if `id` is `null`, empty, or does not match any
 review-set in the configuration.
 
+## ValidateEvidenceSource
+
+`ReviewMarkConfiguration.ValidateEvidenceSource(string filePath, EvidenceSourceYaml? evidenceSource, ICollection<LintIssue> issues)`
+validates the `evidence-source` block and appends any detected issues to `issues`. It is
+called by `Load()` and is `internal` to allow direct unit testing.
+
+Checks performed:
+
+- If `evidenceSource` is `null`, one `Error` is added ("missing required 'evidence-source' block") and the method returns early.
+- If `type` is missing or whitespace, one `Error` is added.
+- If `type` is present but not one of `none`, `fileshare`, or `url`, one `Error` is added.
+- If `type` is not `none` and `location` is missing or whitespace, one `Error` is added.
+
+## ValidateReviews
+
+`ReviewMarkConfiguration.ValidateReviews(string filePath, IList<ReviewSetYaml> reviews, ICollection<LintIssue> issues)`
+validates every entry in the `reviews` list and appends any detected issues to `issues`. It is
+called by `Load()` and is `internal` to allow direct unit testing.
+
+The method iterates over `reviews` by index and for each entry checks:
+
+- Missing `id` — adds an `Error` referencing the zero-based index.
+- Duplicate `id` — adds an `Error` naming both the duplicate index and the first-seen index.
+- Missing `title` — adds an `Error` referencing the zero-based index.
+- Missing or empty `paths` (no non-whitespace entries) — adds an `Error` referencing the zero-based index.
+
 ## Linting
 
 `ReviewMarkConfiguration.Load(filePath)` accumulates all detectable issues in a single pass
-without stopping at the first error. Lint checks include:
+without stopping at the first error. It delegates to `ValidateEvidenceSource` and
+`ValidateReviews`, which together cover:
 
 - Missing or invalid `evidence-source` block and fields
 - All review-set `id` values are unique
