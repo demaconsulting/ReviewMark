@@ -23,7 +23,6 @@ input-files:
   - docs/design/review-mark/indexing/path-helpers.md
   - docs/design/review-mark/self-test/self-test.md
   - docs/design/review-mark/self-test/validation.md
-
 template: template.html
 
 table-of-contents: true

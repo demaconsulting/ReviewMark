@@ -154,8 +154,7 @@ sections:
         children: [ReviewMark-Context-Parsing]
 
       - id: ReviewMark-Cmd-Index
-        title: The tool shall support --index flag to scan PDF evidence files matching a glob path and write
-          index.json.
+        title: The tool shall support --index flag to scan PDF evidence files matching a glob path and write index.json.
         justification: |
           Provides a mechanism to regenerate the review evidence index from scanned PDF
           files, reading embedded metadata from each PDF's Keywords field to populate

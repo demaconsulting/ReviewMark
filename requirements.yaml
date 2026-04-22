@@ -1,27 +1,3 @@
-# Root Requirements File
-#
-# PURPOSE:
-# - Serve as the entry point for ReqStream requirement processing
-# - Include all reviewable requirement files from docs/reqstream/
-#
-# USAGE:
-# - Run ReqStream against this file to process all requirements:
-#
-#   dotnet reqstream \
-#     --requirements requirements.yaml \
-#     --tests "artifacts/**/*.trx" \
-#     --report docs/requirements_doc/requirements.md \
-#     --justifications docs/requirements_doc/justifications.md \
-#     --matrix docs/requirements_report/trace_matrix.md \
-#     --enforce
-#
-# - Add new requirement files under docs/reqstream/ and include them here
-#
-# NOTE: Test links can include a source filter prefix (e.g. "windows@", "ubuntu@", "net8.0@",
-# "dotnet8.x@") to restrict which test results count as evidence for a requirement. This
-# is critical for platform and framework requirements - removing these filters invalidates
-# the evidence-based proof.
-#
 ---
 includes:
   - docs/reqstream/review-mark/review-mark.yaml
@@ -37,9 +13,12 @@ includes:
   - docs/reqstream/review-mark/indexing/path-helpers.yaml
   - docs/reqstream/review-mark/self-test/self-test.yaml
   - docs/reqstream/review-mark/self-test/validation.yaml
-  - docs/reqstream/ots/ots-mstest.yaml
-  - docs/reqstream/ots/ots-reqstream.yaml
-  - docs/reqstream/ots/ots-buildmark.yaml
-  - docs/reqstream/ots/ots-versionmark.yaml
-  - docs/reqstream/ots/ots-sarifmark.yaml
-  - docs/reqstream/ots/ots-sonarmark.yaml
+  - docs/reqstream/ots/mstest.yaml
+  - docs/reqstream/ots/reqstream.yaml
+  - docs/reqstream/ots/buildmark.yaml
+  - docs/reqstream/ots/versionmark.yaml
+  - docs/reqstream/ots/sarifmark.yaml
+  - docs/reqstream/ots/sonarmark.yaml
+  - docs/reqstream/ots/pandoc.yaml
+  - docs/reqstream/ots/weasyprint.yaml
+  - docs/reqstream/ots/fileassert.yaml
