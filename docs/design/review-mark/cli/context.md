@@ -26,7 +26,7 @@ arguments:
 | `PlanDepth` | int | Heading depth for the Review Plan (defaults to `Depth`) |
 | `ReportFile` | string? | Output path for the Review Report document |
 | `ReportDepth` | int | Heading depth for the Review Report (defaults to `Depth`) |
-| `IndexPaths` | IReadOnlyList&lt;string&gt; | Paths to scan when building an evidence index (empty when `--index` is not specified) |
+| `IndexPaths` | IReadOnlyList&lt;string&gt; | Scan paths for evidence index (empty when `--index` not specified) |
 | `WorkingDirectory` | string? | Base directory for resolving relative paths |
 | `Enforce` | bool | Fail if any review-set is not Current |
 | `ElaborateId` | string? | Review-set ID to elaborate, or null if `--elaborate` was not specified |
@@ -51,7 +51,7 @@ The `--result` flag is accepted as an alias for `--results`; both set the
 | Method | Description |
 | ------ | ----------- |
 | `WriteLine(string)` | Writes a line to the console (unless `Silent` is set) and to the log file |
-| `WriteError(string)` | Sets `HasErrors` (making `ExitCode` non-zero), then writes an error line to the console (unless `Silent` is set) and to the log file |
+| `WriteError(string)` | Sets `HasErrors` and `ExitCode`, writes error to console (unless `Silent`) and log file |
 
 ## Exit Code
 

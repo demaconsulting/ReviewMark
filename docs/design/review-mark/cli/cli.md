@@ -26,7 +26,7 @@ All flags are parsed by `Context.Create(string[] args)`. The following table lis
 supported flag, its type, aliases, and constraints:
 
 | Flag | Alias(es) | Type | Constraint | Description |
-|------|-----------|------|------------|-------------|
+| ------ | --------- | ------ | ---------- | ----------- |
 | `--version` | `-v` | bool | — | Display version string only |
 | `--help` | `-?`, `-h` | bool | — | Display usage information |
 | `--silent` | — | bool | — | Suppress all console output |

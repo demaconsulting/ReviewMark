@@ -37,10 +37,10 @@ When `Configuration` is non-null, callers may invoke the following methods:
 
 | Method | Signature | Returns | Description |
 | ------ | --------- | ------- | ----------- |
-| `GetNeedsReviewFiles` | `(string workingDirectory)` | `IReadOnlyList<string>` | Resolves `needs-review` glob patterns |
-| `ElaborateReviewSet` | `(string id, string workingDirectory)` | `ElaborateResult` | Builds an elaboration for one review-set |
-| `PublishReviewPlan` | `(string workingDirectory, int depth = 1)` | `ReviewPlanResult` | Generates the Review Plan Markdown |
-| `PublishReviewReport` | `(ReviewIndex, string workingDirectory, int depth = 1)` | `ReviewReportResult` | Generates the Review Report Markdown |
+| `GetNeedsReviewFiles` | `(string dir)` | `IReadOnlyList<string>` | Resolves `needs-review` glob patterns |
+| `ElaborateReviewSet` | `(string id, string dir)` | `ElaborateResult` | Builds an elaboration for one review-set |
+| `PublishReviewPlan` | `(string dir, int depth = 1)` | `ReviewPlanResult` | Generates the Review Plan Markdown |
+| `PublishReviewReport` | `(ReviewIndex, string dir, int depth = 1)` | `ReviewReportResult` | Produces Review Report |
 
 ## Error Handling
 
