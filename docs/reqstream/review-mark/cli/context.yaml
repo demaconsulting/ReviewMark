@@ -20,13 +20,54 @@ sections:
         tests:
           - Context_Create_NoArguments_ReturnsDefaultContext
           - Context_Create_VersionFlag_SetsVersionTrue
+          - Context_Create_ShortVersionFlag_SetsVersionTrue
           - Context_Create_HelpFlag_SetsHelpTrue
+          - Context_Create_ShortHelpFlag_H_SetsHelpTrue
+          - Context_Create_ShortHelpFlag_Question_SetsHelpTrue
           - Context_Create_SilentFlag_SetsSilentTrue
           - Context_Create_ValidateFlag_SetsValidateTrue
           - Context_Create_ResultsFlag_SetsResultsFile
+          - Context_Create_ResultsFlag_WithoutValue_ThrowsArgumentException
+          - Context_Create_ResultAlias_SetsResultsFile
+          - Context_Create_ResultAlias_WithoutValue_ThrowsArgumentException
           - Context_Create_LogFlag_OpensLogFile
+          - Context_Create_LogFlag_WithoutValue_ThrowsArgumentException
           - Context_Create_UnknownArgument_ThrowsArgumentException
-          - Context_Create_ShortVersionFlag_SetsVersionTrue
+          - Context_Create_DefinitionFlag_SetsDefinitionFile
+          - Context_Create_DefinitionFlag_WithoutValue_ThrowsArgumentException
+          - Context_Create_PlanFlag_SetsPlanFile
+          - Context_Create_PlanDepthFlag_SetsPlanDepth
+          - Context_Create_PlanDepthFlag_WithInvalidValue_ThrowsArgumentException
+          - Context_Create_PlanDepthFlag_WithZeroValue_ThrowsArgumentException
+          - Context_Create_PlanDepthFlag_WithValueGreaterThanFive_ThrowsArgumentException
+          - Context_Create_ReportFlag_SetsReportFile
+          - Context_Create_ReportDepthFlag_SetsReportDepth
+          - Context_Create_ReportDepthFlag_NonNumeric_ThrowsArgumentException
+          - Context_Create_ReportDepthFlag_Zero_ThrowsArgumentException
+          - Context_Create_ReportDepthFlag_MissingValue_ThrowsArgumentException
+          - Context_Create_ReportDepthFlag_WithValueGreaterThanFive_ThrowsArgumentException
+          - Context_Create_IndexFlag_AddsIndexPath
+          - Context_Create_IndexFlag_MultipleTimes_AddsAllPaths
+          - Context_Create_NoArguments_IndexPathsEmpty
+          - Context_Create_NoArguments_PlanDepthDefaultsToOne
+          - Context_Create_NoArguments_ReportDepthDefaultsToOne
+          - Context_Create_EnforceFlag_SetsEnforceTrue
+          - Context_Create_NoArguments_EnforceFalse
+          - Context_Create_DirFlag_SetsWorkingDirectory
+          - Context_Create_NoArguments_WorkingDirectoryIsNull
+          - Context_Create_DirFlag_MissingValue_ThrowsArgumentException
+          - Context_Create_ElaborateFlag_SetsElaborateId
+          - Context_Create_NoArguments_ElaborateIdIsNull
+          - Context_Create_ElaborateFlag_WithoutValue_ThrowsArgumentException
+          - Context_Create_LintFlag_SetsLintTrue
+          - Context_Create_NoArguments_LintIsFalse
+          - Context_Create_DepthFlag_SetsDepth
+          - Context_Create_DepthFlag_PlanDepthOverride
+          - Context_Create_DepthFlag_ReportDepthOverride
+          - Context_Create_DepthFlag_WithInvalidValue_ThrowsArgumentException
+          - Context_Create_DepthFlag_WithZeroValue_ThrowsArgumentException
+          - Context_Create_DepthFlag_WithValueGreaterThanFive_ThrowsArgumentException
+          - Context_Create_DepthFlag_MissingValue_ThrowsArgumentException
 
       - id: ReviewMark-Context-Output
         title: The Context unit shall provide WriteLine and WriteError methods for unified output and logging.
@@ -36,6 +77,9 @@ sections:
           additionally set the error exit code so that the process exits with a non-zero
           status when any error is reported.
         tests:
-          - Context_WriteError_NotSilent_WritesToConsole
-          - Context_WriteError_SetsErrorExitCode
+          - Context_WriteLine_NotSilent_WritesToConsole
           - Context_WriteLine_Silent_DoesNotWriteToConsole
+          - Context_WriteError_NotSilent_WritesToConsole
+          - Context_WriteError_Silent_DoesNotWriteToConsole
+          - Context_WriteError_SetsErrorExitCode
+          - Context_WriteError_WritesToLogFile

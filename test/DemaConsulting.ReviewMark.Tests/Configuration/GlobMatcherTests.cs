@@ -68,7 +68,7 @@ public class GlobMatcherTests
 
         // Act & Assert
 #pragma warning disable CS8604 // Possible null reference argument — intentional for this test
-        Assert.Throws<ArgumentNullException>(() =>
+        Assert.ThrowsExactly<ArgumentNullException>(() =>
             GlobMatcher.GetMatchingFiles(baseDirectory!, patterns));
 #pragma warning restore CS8604
     }
@@ -84,9 +84,24 @@ public class GlobMatcherTests
 
         // Act & Assert
 #pragma warning disable CS8604 // Possible null reference argument — intentional for this test
-        Assert.Throws<ArgumentNullException>(() =>
+        Assert.ThrowsExactly<ArgumentNullException>(() =>
             GlobMatcher.GetMatchingFiles(_testDirectory, patterns!));
 #pragma warning restore CS8604
+    }
+
+    /// <summary>
+    ///     Test that passing an empty base directory throws <see cref="ArgumentException" />.
+    /// </summary>
+    [TestMethod]
+    public void GlobMatcher_GetMatchingFiles_EmptyBaseDirectory_ThrowsArgumentException()
+    {
+        // Arrange
+        var baseDirectory = string.Empty;
+        IReadOnlyList<string> patterns = ["**/*.cs"];
+
+        // Act & Assert
+        Assert.ThrowsExactly<ArgumentException>(() =>
+            GlobMatcher.GetMatchingFiles(baseDirectory, patterns));
     }
 
     /// <summary>

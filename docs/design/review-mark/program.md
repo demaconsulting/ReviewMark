@@ -20,10 +20,19 @@ time from the assembly metadata and follows semantic versioning conventions.
 2. Calls `Program.Run(Context)` to perform the requested operation
 3. Returns `Context.ExitCode` as the process exit code
 
-Any unexpected exception that escapes `Run()` is logged to the standard error stream
-via `Console.Error` and then rethrown. As a result, the process terminates due to the
-unhandled exception and the final exit code is determined by the .NET runtime rather
-than by `Program.Main` explicitly returning a non-zero value.
+**Exception handling — three tiers:**
+
+| Exception type | Action |
+| -------------- | ------ |
+| `ArgumentException` | Write `"Error: {message}"` to `Console.Error`; return exit code 1 |
+| `InvalidOperationException` | Write `"Error: {message}"` to `Console.Error`; return exit code 1 |
+| Any other exception | Write `"Unexpected error: {message}"` to `Console.Error`; rethrow |
+
+`ArgumentException` is thrown by `Context.Create` when an unknown or malformed
+argument is supplied. `InvalidOperationException` is thrown by `Context.Create`
+when the log file cannot be opened, or by `RunDefinitionLogic` when a plan or
+report file cannot be written. Other exceptions propagate as unhandled, which
+terminates the process with a runtime-generated error exit code.
 
 ## Run() Dispatch Logic
 
@@ -68,3 +77,50 @@ descriptions.
 No banner and no summary message are printed. Successful lint produces no output
 (silence means the definition file is valid). This keeps the output clean for
 integration with linting scripts and CI pipelines.
+
+## RunToolLogic()
+
+`Program.RunToolLogic(Context)` is called when none of the early-exit flags
+(`--version`, `--help`, `--validate`, `--lint`) are set. It:
+
+1. Determines the working directory from `context.WorkingDirectory` or
+   `Directory.GetCurrentDirectory()`.
+2. If `context.IndexPaths` is non-empty, calls `RunIndexLogic()` to scan PDF
+   evidence files and write an `index.json` file.
+3. If any definition-based action is requested (`--plan`, `--report`,
+   `--definition`, or `--elaborate`), calls `RunDefinitionLogic()`.
+4. If neither index nor definition actions are requested, prints a usage hint
+   via `context.WriteLine()`.
+
+## RunIndexLogic()
+
+`Program.RunIndexLogic(Context, string directory)` scans PDF files using
+`ReviewIndex.Scan(directory, context.IndexPaths)` and writes the resulting
+index to `index.json` in the working directory via `ReviewIndex.Save()`.
+Warnings from the scan (e.g., PDFs missing required metadata) are forwarded
+to `context.WriteLine()`.
+
+## RunDefinitionLogic()
+
+`Program.RunDefinitionLogic(Context, string directory, string definitionFile)`
+handles the definition-based workflow:
+
+1. Loads the configuration file via `ReviewMarkConfiguration.Load()`.
+2. Reports all lint issues via `loadResult.ReportIssues(context)`.
+3. If `Configuration` is null after loading, returns immediately.
+4. If `--plan` is set, generates the Review Plan Markdown and writes it to
+   the specified file; wraps I/O failures as `InvalidOperationException`.
+5. If `--report` is set, loads the evidence index via `ReviewIndex.Load()`,
+   generates the Review Report Markdown, and writes it to the specified file.
+6. If `--elaborate` is set, calls `config.ElaborateReviewSet()` and writes the
+   result to the console; catches `ArgumentException` for unknown IDs.
+
+## HandleIssues()
+
+`Program.HandleIssues(Context, bool hasIssues, string message)` translates a
+boolean issue flag into a context message:
+
+- If `hasIssues` is false, it does nothing.
+- If `context.Enforce` is true, calls `context.WriteError(message)` (sets
+  exit code to 1).
+- Otherwise, calls `context.WriteLine($"Warning: {message}")` (non-fatal).

@@ -28,7 +28,9 @@ sections:
           CI/CD pipelines and requirements traceability tools (such as ReqStream) consume
           test result files in standard formats. By supporting both TRX (MSTest) and JUnit
           XML output, the self-validation results can be fed directly into pipeline tooling
-          without additional conversion steps.
+          without additional conversion steps. If the results file has an unsupported
+          extension, an error is written via WriteError and the validation run continues
+          without writing a results file.
         tests:
           - Validation_Run_WithTrxResultsFile_WritesFile
           - Validation_Run_WithXmlResultsFile_WritesFile

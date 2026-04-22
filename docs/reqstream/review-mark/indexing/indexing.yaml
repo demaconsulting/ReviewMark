@@ -22,6 +22,7 @@ sections:
           from any CI/CD environment.
         tests:
           - Indexing_SafePathCombine_WithIndexPath_LoadsIndex
+          - Indexing_ReviewIndex_SaveAndLoad_RoundTrip
         children: [ReviewMark-Index-EvidenceSource, ReviewMark-EvidenceSource-None]
 
       - id: ReviewMark-Indexing-ScanPdfEvidence
@@ -32,7 +33,7 @@ sections:
           and extract the review ID, fingerprint, date, and result from each file to
           populate the evidence index used for report generation.
         tests:
-          - Indexing_ReviewIndex_SaveAndLoad_RoundTrip
+          - Indexing_ReviewIndex_Scan_WithNoPdfs_ReturnsEmptyIndex
         children: [ReviewMark-Index-PdfParsing]
 
       - id: ReviewMark-Indexing-SafePathCombine

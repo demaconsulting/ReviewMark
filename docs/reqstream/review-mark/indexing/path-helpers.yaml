@@ -26,3 +26,14 @@ sections:
           - PathHelpers_SafePathCombine_DoubleDotsInMiddle_ThrowsArgumentException
           - PathHelpers_SafePathCombine_CurrentDirectoryReference_CombinesCorrectly
           - PathHelpers_SafePathCombine_EmptyRelativePath_ReturnsBasePath
+
+      - id: ReviewMark-PathHelpers-NullRejection
+        title: "The PathHelpers shall reject null inputs by throwing ArgumentNullException."
+        justification: |
+          When basePath or relativePath is null, SafePathCombine must guard against null
+          reference exceptions by throwing ArgumentNullException. This ensures callers
+          receive a clear diagnostic rather than an unhandled NullReferenceException when
+          null values are passed for either path component.
+        tests:
+          - PathHelpers_SafePathCombine_NullBasePath_ThrowsArgumentNullException
+          - PathHelpers_SafePathCombine_NullRelativePath_ThrowsArgumentNullException

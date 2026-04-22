@@ -17,13 +17,16 @@ sections:
           Program.Main is the process entry point. It must create the execution context,
           call Program.Run to perform the requested operation, and return the exit code
           from the context so that callers can detect success or failure programmatically.
-          Unexpected exceptions are written to error output and then rethrown, so callers
-          may observe either a normal exit code or a process termination due to an
-          unhandled exception.
+          ArgumentException and InvalidOperationException are caught and converted to exit
+          code 1. Other unexpected exceptions are written to error output and then rethrown,
+          so callers may observe either a normal exit code or a process termination due to
+          an unhandled exception.
         tests:
           - Program_Run_WithVersionFlag_DisplaysVersionOnly
           - Program_Version_ReturnsNonEmptyString
           - Program_Run_WithHelpFlag_DisplaysUsageInformation
+          - IntegrationTest_UnknownArgument_ReturnsError
+          - IntegrationTest_InvalidLogPath_ReturnsError
 
       - id: ReviewMark-Program-Dispatch
         title: >-
@@ -43,6 +46,8 @@ sections:
           - Program_Run_WithHelpFlag_IncludesLintOption
           - Program_Run_WithElaborateFlag_OutputsElaboration
           - Program_Run_WithElaborateFlag_UnknownId_ReportsError
+          - Program_Run_NoArguments_DisplaysDefaultBehavior
+          - Program_Run_WithDefinitionFlag_InvalidConfig_ReportsLintError
 
       - id: ReviewMark-Program-LintVerbosity
         title: >-
@@ -56,3 +61,10 @@ sections:
         tests:
           - Program_Run_WithLintFlag_ValidConfig_ReportsSuccess
           - Program_Run_WithLintFlag_ValidConfig_SuppressesBanner
+          - Program_Run_WithLintFlag_MissingConfig_ReportsError
+          - Program_Run_WithLintFlag_DuplicateIds_ReportsError
+          - Program_Run_WithLintFlag_UnknownSourceType_ReportsError
+          - Program_Run_WithLintFlag_CorruptedYaml_ReportsError
+          - Program_Run_WithLintFlag_MissingEvidenceSource_ReportsError
+          - Program_Run_WithLintFlag_MultipleErrors_ReportsAll
+          - Program_Run_WithDefinitionFlag_InvalidConfig_ReportsLintError
