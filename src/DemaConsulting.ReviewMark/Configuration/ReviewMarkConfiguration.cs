@@ -354,7 +354,7 @@ file static class ReviewMarkConfigurationHelpers
                 issues.Add(new LintIssue(
                     filePath,
                     LintSeverity.Error,
-                    $"Review set id '{r.Id}' is duplicated."));
+                    $"Review set has duplicate ID '{r.Id}'."));
             }
 
             if (string.IsNullOrWhiteSpace(r.Title))
