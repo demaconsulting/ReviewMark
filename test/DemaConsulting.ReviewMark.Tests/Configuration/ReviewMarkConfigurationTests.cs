@@ -305,7 +305,7 @@ public class ReviewMarkConfigurationTests
 
         // Assert — configuration is null and one error issue is reported
         Assert.IsNull(result.Configuration);
-        Assert.AreEqual(1, result.Issues.Count);
+        Assert.HasCount(1, result.Issues);
         Assert.AreEqual(LintSeverity.Error, result.Issues[0].Severity);
     }
 
@@ -324,7 +324,7 @@ public class ReviewMarkConfigurationTests
 
         // Assert — configuration is null, one error issue naming file and line
         Assert.IsNull(result.Configuration);
-        Assert.AreEqual(1, result.Issues.Count);
+        Assert.HasCount(1, result.Issues);
         Assert.AreEqual(LintSeverity.Error, result.Issues[0].Severity);
         Assert.Contains(".reviewmark.yaml", result.Issues[0].Location);
         Assert.Contains("at line", result.Issues[0].Description);
@@ -354,7 +354,7 @@ public class ReviewMarkConfigurationTests
 
         // Assert — configuration is null and error mentions evidence-source
         Assert.IsNull(result.Configuration);
-        Assert.AreEqual(1, result.Issues.Count);
+        Assert.HasCount(1, result.Issues);
         Assert.AreEqual(LintSeverity.Error, result.Issues[0].Severity);
         Assert.Contains("evidence-source", result.Issues[0].Description);
     }
@@ -387,12 +387,18 @@ public class ReviewMarkConfigurationTests
 
         // Assert — configuration is null and both errors are reported
         Assert.IsNull(result.Configuration);
-        Assert.AreEqual(2, result.Issues.Count);
-        Assert.IsTrue(result.Issues.All(i => i.Severity == LintSeverity.Error),
+        Assert.HasCount(2, result.Issues);
+        Assert.DoesNotContain(
+            (LintIssue i) => i.Severity != LintSeverity.Error,
+            result.Issues,
             "Expected all issues to have error severity.");
-        Assert.IsTrue(result.Issues.Any(i => i.Description.Contains("evidence-source")),
+        Assert.Contains(
+            (LintIssue i) => i.Description.Contains("evidence-source"),
+            result.Issues,
             "Expected an error about missing evidence-source.");
-        Assert.IsTrue(result.Issues.Any(i => i.Description.Contains("duplicate ID") && i.Description.Contains("Core-Logic")),
+        Assert.Contains(
+            (LintIssue i) => i.Description.Contains("duplicate ID") && i.Description.Contains("Core-Logic"),
+            result.Issues,
             "Expected an error about duplicate ID 'Core-Logic'.");
     }
 

@@ -32,6 +32,21 @@ namespace DemaConsulting.ReviewMark.SelfTest;
 internal static partial class Validation
 {
     /// <summary>
+    ///     CLI argument to suppress banner output during self-validation tests.
+    /// </summary>
+    private const string ArgSilent = "--silent";
+
+    /// <summary>
+    ///     CLI argument to write program output to a log file during self-validation tests.
+    /// </summary>
+    private const string ArgLog = "--log";
+
+    /// <summary>
+    ///     CLI argument to specify the ReviewMark definition file during self-validation tests.
+    /// </summary>
+    private const string ArgDefinition = "--definition";
+
+    /// <summary>
     ///     Runs self-validation tests and optionally writes results to a file.
     /// </summary>
     /// <param name="context">The context containing command line arguments and program state.</param>
@@ -118,7 +133,7 @@ internal static partial class Validation
 
             // Run the program capturing output to a log file
             int exitCode;
-            using (var testContext = Context.Create(["--silent", "--log", logFile, "--version"]))
+            using (var testContext = Context.Create([ArgSilent, ArgLog, logFile, "--version"]))
             {
                 Program.Run(testContext);
                 exitCode = testContext.ExitCode;
@@ -150,7 +165,7 @@ internal static partial class Validation
 
             // Run the program capturing output to a log file
             int exitCode;
-            using (var testContext = Context.Create(["--silent", "--log", logFile, "--help"]))
+            using (var testContext = Context.Create([ArgSilent, ArgLog, logFile, "--help"]))
             {
                 Program.Run(testContext);
                 exitCode = testContext.ExitCode;
@@ -183,7 +198,7 @@ internal static partial class Validation
 
             // Run the program to generate the plan file
             int exitCode;
-            using (var testContext = Context.Create(["--silent", "--definition", definitionFile, "--plan", planFile]))
+            using (var testContext = Context.Create([ArgSilent, ArgDefinition, definitionFile, "--plan", planFile]))
             {
                 Program.Run(testContext);
                 exitCode = testContext.ExitCode;
@@ -220,7 +235,7 @@ internal static partial class Validation
 
             // Run without --enforce so missing reviews only emit a warning; exit code is 0
             int exitCode;
-            using (var testContext = Context.Create(["--silent", "--definition", definitionFile, "--report", reportFile]))
+            using (var testContext = Context.Create([ArgSilent, ArgDefinition, definitionFile, "--report", reportFile]))
             {
                 Program.Run(testContext);
                 exitCode = testContext.ExitCode;
@@ -256,7 +271,7 @@ internal static partial class Validation
 
             // Run with --dir so index.json is written to the temporary directory
             int exitCode;
-            using (var testContext = Context.Create(["--silent", "--dir", tempDir.DirectoryPath, "--index", "**/*.pdf"]))
+            using (var testContext = Context.Create([ArgSilent, "--dir", tempDir.DirectoryPath, "--index", "**/*.pdf"]))
             {
                 Program.Run(testContext);
                 exitCode = testContext.ExitCode;
@@ -287,7 +302,7 @@ internal static partial class Validation
             // Run with --dir pointing to the temp directory; glob patterns in the definition
             // are resolved under that directory rather than the process working directory
             int exitCode;
-            using (var testContext = Context.Create(["--silent", "--dir", tempDir.DirectoryPath, "--definition", definitionFile, "--plan", planFile]))
+            using (var testContext = Context.Create([ArgSilent, "--dir", tempDir.DirectoryPath, ArgDefinition, definitionFile, "--plan", planFile]))
             {
                 Program.Run(testContext);
                 exitCode = testContext.ExitCode;
@@ -317,7 +332,7 @@ internal static partial class Validation
 
             // Run with --enforce: missing reviews should cause non-zero exit code
             int exitCode;
-            using (var testContext = Context.Create(["--silent", "--definition", definitionFile, "--report", reportFile, "--enforce"]))
+            using (var testContext = Context.Create([ArgSilent, ArgDefinition, definitionFile, "--report", reportFile, "--enforce"]))
             {
                 Program.Run(testContext);
                 exitCode = testContext.ExitCode;
@@ -342,7 +357,7 @@ internal static partial class Validation
 
             // Run the program to elaborate the review set
             int exitCode;
-            using (var testContext = Context.Create(["--silent", "--log", logFile, "--definition", definitionFile, "--dir", tempDir.DirectoryPath, "--elaborate", "Core-Logic"]))
+            using (var testContext = Context.Create([ArgSilent, ArgLog, logFile, ArgDefinition, definitionFile, "--dir", tempDir.DirectoryPath, "--elaborate", "Core-Logic"]))
             {
                 Program.Run(testContext);
                 exitCode = testContext.ExitCode;
@@ -397,7 +412,7 @@ internal static partial class Validation
 
             // Run the program to lint the definition file
             int exitCode;
-            using (var testContext = Context.Create(["--silent", "--log", logFile, "--lint", "--definition", definitionFile]))
+            using (var testContext = Context.Create([ArgSilent, ArgLog, logFile, "--lint", ArgDefinition, definitionFile]))
             {
                 Program.Run(testContext);
                 exitCode = testContext.ExitCode;
@@ -429,7 +444,7 @@ internal static partial class Validation
 
             // Run with --depth 2 and no --plan-depth; plan headings should use ##
             int exitCode;
-            using (var testContext = Context.Create(["--silent", "--definition", definitionFile, "--plan", planFile, "--depth", "2"]))
+            using (var testContext = Context.Create([ArgSilent, ArgDefinition, definitionFile, "--plan", planFile, "--depth", "2"]))
             {
                 Program.Run(testContext);
                 exitCode = testContext.ExitCode;

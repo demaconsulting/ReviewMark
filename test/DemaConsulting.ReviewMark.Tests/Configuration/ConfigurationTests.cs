@@ -94,7 +94,7 @@ public class ConfigurationTests
         // Assert
         Assert.IsNotNull(result.Configuration);
         var files = result.Configuration.GetNeedsReviewFiles(_testDirectory);
-        Assert.AreEqual(2, files.Count);
+        Assert.HasCount(2, files);
     }
 
     /// <summary>
@@ -271,6 +271,6 @@ public class ConfigurationTests
 
         // Assert — configuration is null and at least one issue was reported
         Assert.IsNull(result.Configuration);
-        Assert.IsTrue(result.Issues.Count > 0);
+        Assert.IsNotEmpty(result.Issues);
     }
 }
