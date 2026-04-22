@@ -582,8 +582,8 @@ public class IntegrationTests
             Assert.IsTrue(File.Exists(reportFile), "Report file was not created");
             var planContent = File.ReadAllText(planFile);
             var reportContent = File.ReadAllText(reportFile);
-            StringAssert.Contains(planContent, "## Review Coverage");
-            StringAssert.Contains(reportContent, "## Review Status");
+            Assert.Contains("## Review Coverage", planContent);
+            Assert.Contains("## Review Status", reportContent);
         }
         finally
         {
@@ -619,7 +619,7 @@ public class IntegrationTests
 
         // Assert — exit succeeds and validation output uses ## (depth 2) heading
         Assert.AreEqual(0, exitCode, $"Output: {output}");
-        StringAssert.Contains(output, "## DEMA Consulting ReviewMark");
+        Assert.Contains("## DEMA Consulting ReviewMark", output);
     }
 
     /// <summary>

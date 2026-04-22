@@ -29,6 +29,11 @@ namespace DemaConsulting.ReviewMark.Tests.Cli;
 public class CliTests
 {
     /// <summary>
+    ///     Static readonly array for the unknown argument used in CLI error handling tests.
+    /// </summary>
+    private static readonly string[] UnknownArgArray = ["--unknown-arg-xyz"];
+
+    /// <summary>
     ///     Test that the CLI correctly outputs only the version string when --version is supplied.
     /// </summary>
     [TestMethod]
@@ -232,14 +237,14 @@ public class CliTests
 
             // Act — invoke the real CLI entrypoint so invalid args are handled exactly
             // as they are in production, including writing parse errors to stderr.
-            var result = mainMethod.Invoke(null, [new string[] { "--unknown-arg-xyz" }]);
+            var result = mainMethod.Invoke(null, [UnknownArgArray]);
             var exitCode = result is int code ? code : 0;
 
             // Assert — invalid args should return a failure exit code and write an error to stderr
             var stderr = errWriter.ToString();
             Assert.AreNotEqual(0, exitCode);
-            StringAssert.Contains(stderr, "Error:");
-            StringAssert.Contains(stderr, "--unknown-arg-xyz");
+            Assert.Contains("Error:", stderr);
+            Assert.Contains("--unknown-arg-xyz", stderr);
         }
         finally
         {
@@ -775,7 +780,7 @@ public class CliTests
                 Assert.AreEqual(0, context.ExitCode);
                 Assert.IsTrue(File.Exists(planFile), "Plan file was not created");
                 var planContent = File.ReadAllText(planFile);
-                StringAssert.Contains(planContent, "## Review Coverage");
+                Assert.Contains("## Review Coverage", planContent);
             }
             finally
             {
@@ -833,7 +838,7 @@ public class CliTests
                 Assert.AreEqual(0, context.ExitCode);
                 Assert.IsTrue(File.Exists(reportFile), "Report file was not created");
                 var reportContent = File.ReadAllText(reportFile);
-                StringAssert.Contains(reportContent, "## Review Status");
+                Assert.Contains("## Review Status", reportContent);
             }
             finally
             {
@@ -891,7 +896,7 @@ public class CliTests
                 Assert.AreEqual(0, context.ExitCode);
                 Assert.IsTrue(File.Exists(planFile), "Plan file was not created");
                 var planContent = File.ReadAllText(planFile);
-                StringAssert.Contains(planContent, "## Review Coverage");
+                Assert.Contains("## Review Coverage", planContent);
             }
             finally
             {

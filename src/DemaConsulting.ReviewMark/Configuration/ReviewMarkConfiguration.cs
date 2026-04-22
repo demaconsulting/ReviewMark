@@ -270,6 +270,115 @@ file static class ReviewMarkConfigurationHelpers
 
         return new ReviewMarkConfiguration(needsReviewPatterns, evidenceSource, reviews);
     }
+
+    /// <summary>
+    ///     Validates the evidence-source block and appends any field-level issues to the list.
+    /// </summary>
+    /// <param name="filePath">Path to the configuration file, used in issue locations.</param>
+    /// <param name="evidenceSource">The raw evidence-source YAML node to validate, or <c>null</c> if absent.</param>
+    /// <param name="issues">The list to append any detected issues to.</param>
+    internal static void ValidateEvidenceSource(
+        string filePath,
+        EvidenceSourceYaml? evidenceSource,
+        ICollection<LintIssue> issues)
+    {
+        // Report missing block as a single error and return early
+        if (evidenceSource == null)
+        {
+            issues.Add(new LintIssue(
+                filePath,
+                LintSeverity.Error,
+                "Configuration is missing required 'evidence-source' block."));
+            return;
+        }
+
+        // Validate the type field
+        if (string.IsNullOrWhiteSpace(evidenceSource.Type))
+        {
+            issues.Add(new LintIssue(
+                filePath,
+                LintSeverity.Error,
+                "'evidence-source' is missing a required 'type' field."));
+        }
+        else if (!IsSupportedEvidenceSourceType(evidenceSource.Type))
+        {
+            issues.Add(new LintIssue(
+                filePath,
+                LintSeverity.Error,
+                $"'evidence-source' type '{evidenceSource.Type}' is not supported (must be 'none', 'url', or 'fileshare')."));
+        }
+
+        // Validate that a location is present for non-none source types
+        if (string.IsNullOrWhiteSpace(evidenceSource.Location) &&
+            !string.Equals(evidenceSource.Type, "none", StringComparison.OrdinalIgnoreCase))
+        {
+            issues.Add(new LintIssue(
+                filePath,
+                LintSeverity.Error,
+                "'evidence-source' is missing a required 'location' field."));
+        }
+    }
+
+    /// <summary>
+    ///     Validates each review-set entry for structural and uniqueness errors,
+    ///     appending any issues to the list.
+    /// </summary>
+    /// <param name="filePath">Path to the configuration file, used in issue locations.</param>
+    /// <param name="reviews">The ordered list of raw review-set YAML nodes to validate.</param>
+    /// <param name="issues">The list to append any detected issues to.</param>
+    /// <remarks>
+    ///     Review IDs are treated as case-sensitive identifiers (Ordinal), which is intentional:
+    ///     "Core-Logic" and "core-logic" are distinct IDs. Evidence-source type uses OrdinalIgnoreCase
+    ///     because YAML convention allows any casing for keyword values like "url" or "fileshare".
+    /// </remarks>
+    internal static void ValidateReviews(
+        string filePath,
+        IList<ReviewSetYaml> reviews,
+        ICollection<LintIssue> issues)
+    {
+        // Track seen IDs to detect duplicates across the review list
+        var seenIds = new Dictionary<string, int>(StringComparer.Ordinal);
+
+        for (var i = 0; i < reviews.Count; i++)
+        {
+            var r = reviews[i];
+
+            if (string.IsNullOrWhiteSpace(r.Id))
+            {
+                issues.Add(new LintIssue(
+                    filePath,
+                    LintSeverity.Error,
+                    $"Review set at index {i} is missing a required 'id' field."));
+            }
+            else if (seenIds.TryGetValue(r.Id, out var firstIndex))
+            {
+                issues.Add(new LintIssue(
+                    filePath,
+                    LintSeverity.Error,
+                    $"reviews[{i}] has duplicate ID '{r.Id}' (first defined at reviews[{firstIndex}])."));
+            }
+            else
+            {
+                seenIds[r.Id] = i;
+            }
+
+            if (string.IsNullOrWhiteSpace(r.Title))
+            {
+                issues.Add(new LintIssue(
+                    filePath,
+                    LintSeverity.Error,
+                    $"Review set at index {i} is missing a required 'title' field."));
+            }
+
+            if (r.Paths == null || !r.Paths.Any(p => !string.IsNullOrWhiteSpace(p)))
+            {
+                issues.Add(new LintIssue(
+                    filePath,
+                    LintSeverity.Error,
+                    $"Review set at index {i} is missing required 'paths' entries."));
+            }
+        }
+    }
 }
 
 // ---------------------------------------------------------------------------
@@ -559,86 +668,9 @@ internal sealed class ReviewMarkConfiguration
             return new ReviewMarkLoadResult(null, issues);
         }
 
-        // Validate the evidence-source block, collecting all field-level errors.
-        var es = raw.EvidenceSource;
-        if (es == null)
-        {
-            issues.Add(new LintIssue(
-                filePath,
-                LintSeverity.Error,
-                "Configuration is missing required 'evidence-source' block."));
-        }
-        else
-        {
-            if (string.IsNullOrWhiteSpace(es.Type))
-            {
-                issues.Add(new LintIssue(
-                    filePath,
-                    LintSeverity.Error,
-                    "'evidence-source' is missing a required 'type' field."));
-            }
-            else if (!ReviewMarkConfigurationHelpers.IsSupportedEvidenceSourceType(es.Type))
-            {
-                issues.Add(new LintIssue(
-                    filePath,
-                    LintSeverity.Error,
-                    $"'evidence-source' type '{es.Type}' is not supported (must be 'none', 'url', or 'fileshare')."));
-            }
-
-            if (string.IsNullOrWhiteSpace(es.Location) && !string.Equals(es.Type, "none", StringComparison.OrdinalIgnoreCase))
-            {
-                issues.Add(new LintIssue(
-                    filePath,
-                    LintSeverity.Error,
-                    "'evidence-source' is missing a required 'location' field."));
-            }
-        }
-
-        // Validate each review set, accumulating all structural and uniqueness errors.
-        // Review IDs are treated as case-sensitive identifiers (Ordinal), which is intentional:
-        // "Core-Logic" and "core-logic" are distinct IDs. Evidence-source type uses OrdinalIgnoreCase
-        // because YAML convention allows any casing for keyword values like "url" or "fileshare".
-        var seenIds = new Dictionary<string, int>(StringComparer.Ordinal);
-        var reviews = raw.Reviews ?? [];
-        for (var i = 0; i < reviews.Count; i++)
-        {
-            var r = reviews[i];
-
-            if (string.IsNullOrWhiteSpace(r.Id))
-            {
-                issues.Add(new LintIssue(
-                    filePath,
-                    LintSeverity.Error,
-                    $"Review set at index {i} is missing a required 'id' field."));
-            }
-            else if (seenIds.TryGetValue(r.Id, out var firstIndex))
-            {
-                issues.Add(new LintIssue(
-                    filePath,
-                    LintSeverity.Error,
-                    $"reviews[{i}] has duplicate ID '{r.Id}' (first defined at reviews[{firstIndex}])."));
-            }
-            else
-            {
-                seenIds[r.Id] = i;
-            }
-
-            if (string.IsNullOrWhiteSpace(r.Title))
-            {
-                issues.Add(new LintIssue(
-                    filePath,
-                    LintSeverity.Error,
-                    $"Review set at index {i} is missing a required 'title' field."));
-            }
-
-            if (r.Paths == null || !r.Paths.Any(p => !string.IsNullOrWhiteSpace(p)))
-            {
-                issues.Add(new LintIssue(
-                    filePath,
-                    LintSeverity.Error,
-                    $"Review set at index {i} is missing required 'paths' entries."));
-            }
-        }
+        // Validate the evidence-source block and each review set, collecting all field-level errors.
+        ReviewMarkConfigurationHelpers.ValidateEvidenceSource(filePath, raw.EvidenceSource, issues);
+        ReviewMarkConfigurationHelpers.ValidateReviews(filePath, raw.Reviews ?? [], issues);
 
         // If any error-level issues were found, return null configuration
         if (issues.Any(i => i.Severity == LintSeverity.Error))
