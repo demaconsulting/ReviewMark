@@ -47,6 +47,8 @@ status, followed by detailed output for any failing tests to aid diagnosis.
 ## Error Handling
 
 - If `ResultsFile` has an unsupported file extension, `WriteError` is called and no results
-  file is written; the validation run continues normally.
+  file is written; the validation run continues, but the process is still considered failed
+  because the logged error causes a non-zero exit code.
 - I/O exceptions when writing the results file are caught, logged via `WriteError`, and the
-  run continues without failing the overall validation.
+  run continues, but the process is still considered failed because the logged error causes
+  a non-zero exit code.
