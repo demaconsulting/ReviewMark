@@ -103,14 +103,16 @@ review-set in the configuration.
 
 ## ValidateEvidenceSource
 
-`ReviewMarkConfigurationHelpers.ValidateEvidenceSource(string filePath, EvidenceSourceYaml? evidenceSource, ICollection<LintIssue> issues)`
+`ReviewMarkConfigurationHelpers.ValidateEvidenceSource(string filePath, EvidenceSourceYaml? evidenceSource,
+ICollection<LintIssue> issues)`
 validates the `evidence-source` block and appends any detected issues to `issues`. It is a
 `private static` method on the file-local `ReviewMarkConfigurationHelpers` type, called by
 `Load()`. Validation is exercised indirectly through `Load()` tests.
 
 Checks performed:
 
-- If `evidenceSource` is `null`, one `Error` is added ("missing required 'evidence-source' block") and the method returns early.
+- If `evidenceSource` is `null`, one `Error` is added
+  ("missing required 'evidence-source' block") and the method returns early.
 - If `type` is missing or whitespace, one `Error` is added.
 - If `type` is present but not one of `none`, `fileshare`, or `url`, one `Error` is added.
 - If `type` is not `none` and `location` is missing or whitespace, one `Error` is added.
