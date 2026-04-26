@@ -246,10 +246,13 @@ public class ValidationTests
         var resultsFile = Path.Combine(tempDir.DirectoryPath, "results.csv");
 
         var originalOut = Console.Out;
+        var originalError = Console.Error;
         try
         {
             using var outWriter = new StringWriter();
+            using var errWriter = new StringWriter();
             Console.SetOut(outWriter);
+            Console.SetError(errWriter);
             using var context = Context.Create(["--validate", "--results", resultsFile]);
 
             // Act
@@ -258,10 +261,12 @@ public class ValidationTests
             // Assert — no results file is created and the context received a write-error call
             Assert.IsFalse(File.Exists(resultsFile), "Results file should not be created for unsupported extension");
             Assert.AreNotEqual(0, context.ExitCode, "Exit code should be non-zero after a write-error call");
+            Assert.IsFalse(string.IsNullOrWhiteSpace(errWriter.ToString()), "Error output should contain a message for unsupported extension");
         }
         finally
         {
             Console.SetOut(originalOut);
+            Console.SetError(originalError);
         }
     }
 }
