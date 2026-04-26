@@ -32,9 +32,8 @@ sections:
         title: "The GlobMatcher shall reject null and empty-or-whitespace input parameters."
         justification: |
           When baseDirectory is null, empty, or whitespace, or when patterns is null,
-          GlobMatcher.GetMatchingFiles must guard against invalid inputs by throwing
-          the appropriate exception. This ensures callers receive a clear diagnostic
-          rather than an unhandled exception when invalid values are passed.
+          the operation must be rejected with a clear error so callers receive a diagnostic
+          rather than an unhandled error when invalid values are passed.
         tests:
           - GlobMatcher_GetMatchingFiles_NullBaseDirectory_ThrowsArgumentNullException
           - GlobMatcher_GetMatchingFiles_NullPatterns_ThrowsArgumentNullException

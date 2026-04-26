@@ -22,12 +22,12 @@ sections:
         children: [ReviewMark-Config-Reading, ReviewMark-GlobMatcher-IncludeExclude]
 
       - id: ReviewMark-Configuration-Fingerprinting
-        title: The tool shall compute SHA-256 fingerprints for review-sets to detect file changes.
+        title: The tool shall compute content-based fingerprints for review-sets to detect file changes.
         justification: |
           Review-set fingerprints are the mechanism by which ReviewMark detects that files
-          have changed since the last review. The SHA-256 fingerprint must be based on file
-          content rather than names alone, so that renamed files do not invalidate the
-          fingerprint, and changed content always produces a new fingerprint.
+          have changed since the last review. The fingerprint must be based on file content
+          rather than names alone, so that renamed files do not invalidate the fingerprint,
+          and changed content always produces a new fingerprint.
         tests:
           - Configuration_LoadConfig_FingerprintReflectsFileContent
         children: [ReviewMark-Config-Reading]

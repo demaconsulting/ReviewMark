@@ -14,10 +14,9 @@ sections:
         justification: |
           When constructing file paths from user-supplied or externally-sourced components
           (such as relative paths read from an evidence index), the tool must prevent path
-          traversal attacks. SafePathCombine combines the paths and then resolves both to
-          absolute form, using Path.GetRelativePath to verify the combined path remains
-          within the base directory. This post-combine canonical-path check handles all
-          traversal patterns without fragile pre-combine string inspection.
+          traversal attacks. The combined path must be verified to remain within the base
+          directory, ensuring that no input can cause access to files outside the intended
+          directory scope.
         tests:
           - PathHelpers_SafePathCombine_ValidPaths_CombinesCorrectly
           - PathHelpers_SafePathCombine_PathTraversalWithDoubleDots_ThrowsArgumentException
@@ -30,10 +29,9 @@ sections:
       - id: ReviewMark-PathHelpers-NullRejection
         title: "The PathHelpers shall reject null inputs by throwing ArgumentNullException."
         justification: |
-          When basePath or relativePath is null, SafePathCombine must guard against null
-          reference exceptions by throwing ArgumentNullException. This ensures callers
-          receive a clear diagnostic rather than an unhandled NullReferenceException when
-          null values are passed for either path component.
+          When basePath or relativePath is null, the operation must be rejected with a
+          clear error so the caller can report a diagnostic rather than encountering an
+          unhandled error.
         tests:
           - PathHelpers_SafePathCombine_NullBasePath_ThrowsArgumentNullException
           - PathHelpers_SafePathCombine_NullRelativePath_ThrowsArgumentNullException

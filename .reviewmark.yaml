@@ -25,9 +25,9 @@ evidence-source:
 
 # Review sets following standardized patterns for hierarchical compliance coverage
 reviews:
-  # Purpose review - proves advertised features match system design
+  # Purpose Review (only one per repository)
   - id: Purpose
-    title: Review that Advertised Features Match System Design
+    title: Review of user-facing capabilities and system promises
     paths:
       - "README.md"
       - "docs/user_guide/**/*.md"

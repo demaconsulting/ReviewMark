@@ -11,16 +11,15 @@ sections:
     requirements:
       - id: ReviewMark-Program-EntryPoint
         title: >-
-          The Program unit shall construct a Context, dispatch to the appropriate operation,
-          and return the Context exit code as the process exit code.
+          The Program unit shall parse command-line arguments, execute the requested operation,
+          and return an exit code reflecting success or failure.
         justification: |
-          Program.Main is the process entry point. It must create the execution context,
-          call Program.Run to perform the requested operation, and return the exit code
-          from the context so that callers can detect success or failure programmatically.
-          ArgumentException and InvalidOperationException are caught and converted to exit
-          code 1. Other unexpected exceptions are written to error output and then rethrown,
-          so callers may observe either a normal exit code or a process termination due to
-          an unhandled exception.
+          The Program unit is the process entry point. It must parse command-line arguments,
+          perform the requested operation, and return an exit code so that callers can detect
+          success or failure programmatically. Argument errors and invalid operations are
+          converted to exit code 1. Other unexpected exceptions are written to error output
+          and then rethrown, so callers may observe either a normal exit code or a process
+          termination due to an unhandled exception.
         tests:
           - Program_Run_WithVersionFlag_DisplaysVersionOnly
           - Program_Version_ReturnsNonEmptyString

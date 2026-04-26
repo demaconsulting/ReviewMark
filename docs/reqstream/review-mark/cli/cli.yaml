@@ -10,10 +10,12 @@ sections:
   - title: Command-Line Interface Subsystem Requirements
     requirements:
       - id: ReviewMark-Cmd-Context
-        title: The tool shall implement a Context class for command-line argument handling.
+        title: The CLI subsystem shall accept and parse command-line arguments and maintain execution state for the requested
+          operation.
         justification: |
-          Provides a standardized approach to command-line argument parsing and output
-          handling across all DEMA Consulting DotNet Tools.
+          Command-line arguments must be parsed into a consistent execution state so that all
+          downstream processing reads from a single, validated source of truth. This approach
+          is used consistently across DEMA Consulting DotNet Tools.
         tests:
           - Cli_VersionFlag_OutputsVersionOnly
         children: [ReviewMark-Context-Parsing, ReviewMark-Context-Output]
