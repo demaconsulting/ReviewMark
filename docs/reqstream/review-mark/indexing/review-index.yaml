@@ -63,7 +63,8 @@ sections:
           - ReviewIndex_Scan_MultiplePdfs_PopulatesAllEntries
 
       - id: ReviewMark-Index-Freshness
-        title: The ReviewIndex.Scan() method shall return a new index containing only the records found in the current scan.
+        title: The ReviewIndex.Scan() method shall return a new index containing only the records
+          found in the current scan.
         justification: |
           The Scan() factory method always creates a fresh ReviewIndex, ensuring that
           entries from any previous index do not contaminate the result. This guarantees
@@ -93,8 +94,8 @@ sections:
           - ReviewIndex_Save_RoundTrip_PreservesAllEntries
 
       - id: ReviewMark-Index-GetEvidence
-        title: The ReviewIndex unit shall look up a review evidence record by ID and fingerprint, returning null if no match
-          exists.
+        title: The ReviewIndex unit shall look up a review evidence record by ID and fingerprint,
+          returning null if no match exists.
         justification: |
           When looking up review evidence by ID and fingerprint, the ReviewIndex must
           return the matching evidence record if one exists, or null if no record matches
@@ -115,8 +116,8 @@ sections:
           - ReviewIndex_HasId_UnknownId_ReturnsFalse
 
       - id: ReviewMark-Index-GetAllForId
-        title: The ReviewIndex unit shall retrieve all evidence records for a given ID, returning an empty collection when
-          none exist.
+        title: The ReviewIndex unit shall retrieve all evidence records for a given ID,
+          returning an empty collection when none exist.
         justification: |
           When retrieving all review evidence for a given ID, the ReviewIndex must return
           all matching records as a collection. If no records exist for the ID, an empty

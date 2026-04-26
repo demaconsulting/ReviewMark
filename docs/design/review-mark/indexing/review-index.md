@@ -51,11 +51,10 @@ This overload is **not** exposed for test injection; see
 `ReviewIndex.Load(EvidenceSource)` selects a loading strategy based on the evidence
 source type:
 
-| Source Type | Behavior |
-| ----------- | -------- |
-| `none` | Returns an empty index (equivalent to `ReviewIndex.Empty()`) |
-| `fileshare` | Reads `index.json` from the specified file path |
-| `url` | Downloads `index.json` from the specified HTTP or HTTPS URL, with optional Basic-auth credentials read from environment variables |
+- **`none`** — Returns an empty index (equivalent to `ReviewIndex.Empty()`)
+- **`fileshare`** — Reads `index.json` from the specified file path
+- **`url`** — Downloads `index.json` from the specified HTTP or HTTPS URL, with optional
+  Basic-auth credentials read from environment variables
 
 ### Error Behavior
 
@@ -76,7 +75,7 @@ source type:
 `ReviewIndex.Load(EvidenceSource, HttpClient)` is an internally-visible overload that
 accepts a caller-supplied `HttpClient`. It is exposed to allow unit tests to inject a
 fake `HttpMessageHandler` when testing `url`-type evidence sources, avoiding real
-network calls. The behaviour is identical to the single-argument overload except that
+network calls. The behavior is identical to the single-argument overload except that
 the caller provides the `HttpClient` instead of having one created internally.
 
 ## ReviewIndex.Scan()

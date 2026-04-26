@@ -61,28 +61,23 @@ assembly):
 
 ### Static Factory Methods
 
-| Method | Signature | Description |
-|--------|-----------|-------------|
-| `Empty` | `() → ReviewIndex` | Returns a new empty index with no entries |
-| `Load` | `(EvidenceSource) → ReviewIndex` | Loads the index from the configured source |
-| `Load` | `(EvidenceSource, HttpClient) → ReviewIndex` | Testable overload with injected HttpClient |
-| `Scan` | `(string dir, IReadOnlyList<string> paths, Action<string>? onWarning) → ReviewIndex` | Builds an index by scanning PDF files |
+- **`Empty()`** → `ReviewIndex` — Returns a new empty index with no entries
+- **`Load(EvidenceSource)`** → `ReviewIndex` — Loads the index from the configured source
+- **`Load(EvidenceSource, HttpClient)`** → `ReviewIndex` — Testable overload with injected HttpClient
+- **`Scan(string dir, IReadOnlyList<string> paths, Action<string>? onWarning)`** → `ReviewIndex` —
+  Builds an index by scanning PDF files
 
 ### Instance Methods
 
-| Method | Signature | Description |
-|--------|-----------|-------------|
-| `Save` | `(string filePath)` | Saves the index to a JSON file |
-| `Save` | `(Stream stream)` | Saves the index to a stream (testable overload) |
-| `HasId` | `(string id) → bool` | Returns true if any evidence exists for the given ID |
-| `GetEvidence` | `(string id, string fingerprint) → ReviewEvidence?` | Returns matching evidence or null |
-| `GetAllForId` | `(string id) → IReadOnlyList<ReviewEvidence>` | Returns all evidence entries for an ID |
+- **`Save(string filePath)`** — Saves the index to a JSON file
+- **`Save(Stream stream)`** — Saves the index to a stream (testable overload)
+- **`HasId(string id)`** → `bool` — Returns true if any evidence exists for the given ID
+- **`GetEvidence(string id, string fingerprint)`** → `ReviewEvidence?` — Returns matching evidence or null
+- **`GetAllForId(string id)`** → `IReadOnlyList<ReviewEvidence>` — Returns all evidence entries for an ID
 
 `PathHelpers` exposes:
 
-| Method | Signature | Description |
-|--------|-----------|-------------|
-| `SafePathCombine` | `(string base, string relative) → string` | Combines paths, rejecting traversal sequences |
+- **`SafePathCombine(string base, string relative)`** → `string` — Combines paths, rejecting traversal sequences
 
 ## Normal Operation
 

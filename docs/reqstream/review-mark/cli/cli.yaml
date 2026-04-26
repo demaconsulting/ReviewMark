@@ -20,7 +20,8 @@ sections:
         children: [ReviewMark-Context-Parsing]
 
       - id: ReviewMark-Cmd-ExecutionState
-        title: The CLI subsystem shall maintain execution state (output channels, exit code) for the duration of the operation.
+        title: The CLI subsystem shall maintain execution state (output channels, exit code)
+          for the duration of the operation.
         justification: |
           A single context object owns stdout, the optional log file, and the process exit
           code so that all output from any subsystem is routed consistently and the final

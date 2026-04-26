@@ -75,8 +75,8 @@ sections:
           - Configuration_LoadConfig_MalformedYaml_ReturnsIssues
 
       - id: ReviewMark-Configuration-ElaborateUnknownId
-        title: The tool shall throw ArgumentException when ElaborateReviewSet is called with an ID that does not exist in
-          the configuration.
+        title: The tool shall throw ArgumentException when ElaborateReviewSet is called with an ID
+          that does not exist in the configuration.
         justification: |
           Passing an unknown review-set ID to ElaborateReviewSet is a programming error that
           cannot be resolved without correcting the caller. Throwing ArgumentException with

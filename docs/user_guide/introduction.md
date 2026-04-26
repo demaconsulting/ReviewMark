@@ -227,7 +227,7 @@ The following command-line options are supported:
 | `--results <file>`        | Write validation results to file (TRX or JUnit format)                         |
 | `--log <file>`            | Write output to log file                                                       |
 | `--definition <file>`     | Specify the definition YAML file (default: .reviewmark.yaml)                   |
-| `--depth <#>`             | Default heading depth for all generated documents (default: 1)                     |
+| `--depth <#>`             | Default heading depth for all generated documents (default: 1)                 |
 | `--plan <file>`           | Write review plan to the specified Markdown file                               |
 | `--plan-depth <#>`        | Heading depth for the review plan (overrides --depth; default: --depth or 1)   |
 | `--report <file>`         | Write review report to the specified Markdown file                             |

@@ -59,11 +59,11 @@ When `--plan-depth` or `--report-depth` is omitted, the value from `--depth`
 
 ## Output Methods
 
-| Method | Description |
-| ------ | ----------- |
-| `WriteLine(string)` | Writes a line to the console (unless `Silent` is set) and to the log file |
-| `WriteError(string)` | Sets the internal error flag (causing `ExitCode` to return non-zero), writes error to console (unless `Silent`) and log file |
-| `Dispose()` | Closes the log file handle opened by `--log`, if any; called automatically at the end of the `using` block in `Program.Main()` |
+- **`WriteLine(string)`** — Writes a line to the console (unless `Silent` is set) and to the log file
+- **`WriteError(string)`** — Sets the internal error flag (causing `ExitCode` to return non-zero),
+  writes error to console (unless `Silent`) and log file
+- **`Dispose()`** — Closes the log file handle opened by `--log`, if any; called automatically at
+  the end of the `using` block in `Program.Main()`
 
 ## Exit Code
 
