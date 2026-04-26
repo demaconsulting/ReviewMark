@@ -10,15 +10,24 @@ sections:
   - title: Command-Line Interface Subsystem Requirements
     requirements:
       - id: ReviewMark-Cmd-Context
-        title: The CLI subsystem shall accept and parse command-line arguments and maintain execution state for the requested
-          operation.
+        title: The CLI subsystem shall accept and parse command-line arguments into a structured execution context.
         justification: |
           Command-line arguments must be parsed into a consistent execution state so that all
           downstream processing reads from a single, validated source of truth. This approach
           is used consistently across DEMA Consulting DotNet Tools.
         tests:
           - Cli_VersionFlag_OutputsVersionOnly
-        children: [ReviewMark-Context-Parsing, ReviewMark-Context-Output]
+        children: [ReviewMark-Context-Parsing]
+
+      - id: ReviewMark-Cmd-ExecutionState
+        title: The CLI subsystem shall maintain execution state (output channels, exit code) for the duration of the operation.
+        justification: |
+          A single context object owns stdout, the optional log file, and the process exit
+          code so that all output from any subsystem is routed consistently and the final
+          exit code reflects all errors encountered during the run.
+        tests:
+          - Cli_VersionFlag_OutputsVersionOnly
+        children: [ReviewMark-Context-Output]
 
       - id: ReviewMark-Cmd-Version
         title: The tool shall support -v and --version flags to display version information.
@@ -87,7 +96,7 @@ sections:
           Error messages must be written to stderr so they remain visible to the user
           without polluting stdout, which consumers may pipe or redirect for data capture.
         tests:
-          - Cli_ErrorOutput_WritesToStderr
+          - Cli_ErrorOutput_UnknownArg_WritesToStderr
         children: [ReviewMark-Context-Output]
 
       - id: ReviewMark-Cmd-InvalidArgs
@@ -193,7 +202,7 @@ sections:
           command provides this information formatted as Markdown so it can be copied
           directly into review documentation.
         tests:
-          - Cli_ElaborateFlag_OutputsElaboration
+          - Cli_ElaborateFlag_ValidId_OutputsElaboration
         children: [ReviewMark-Config-Reading, ReviewMark-Program-Dispatch]
 
       - id: ReviewMark-Cmd-Lint

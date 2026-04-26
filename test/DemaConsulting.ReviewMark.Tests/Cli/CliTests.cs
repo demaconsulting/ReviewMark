@@ -220,7 +220,7 @@ public class CliTests
     ///     Test that unknown argument causes error output to stderr.
     /// </summary>
     [TestMethod]
-    public void Cli_ErrorOutput_WritesToStderr()
+    public void Cli_ErrorOutput_UnknownArg_WritesToStderr()
     {
         // Arrange
         var originalError = Console.Error;
@@ -258,38 +258,29 @@ public class CliTests
     [TestMethod]
     public void Cli_InvalidArgs_ReturnsNonZeroExitCode()
     {
-        // Arrange + Act — the full CLI (Context.Create in Main) catches ArgumentException and writes error
-        var originalOut = Console.Out;
+        // Arrange
         var originalError = Console.Error;
         try
         {
-            using var outWriter = new StringWriter();
             using var errWriter = new StringWriter();
-            Console.SetOut(outWriter);
             Console.SetError(errWriter);
 
-            // Simulate what Program.Main does: catch ArgumentException and use WriteError
-            int exitCode;
-            try
-            {
-                using var context = Context.Create(["--completely-invalid-arg"]);
-                Program.Run(context);
-                exitCode = context.ExitCode;
-            }
-            catch (ArgumentException ex)
-            {
-                // Program.Main writes this to a temporary context — simulate
-                using var errorContext = Context.Create([]);
-                errorContext.WriteError(ex.Message);
-                exitCode = errorContext.ExitCode;
-            }
+            var mainMethod = typeof(Program).GetMethod(
+                "Main",
+                System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Static);
+
+            Assert.IsNotNull(mainMethod, "Could not find Program.Main(string[] args).");
+
+            // Act — invoke the real CLI entrypoint with an invalid argument so the exit
+            // code is produced by the actual production code path, not a simulation
+            var result = mainMethod.Invoke(null, [UnknownArgArray]);
+            var exitCode = result is int code ? code : 0;
 
             // Assert — non-zero exit code for invalid arguments
             Assert.AreNotEqual(0, exitCode);
         }
         finally
         {
-            Console.SetOut(originalOut);
             Console.SetError(originalError);
         }
     }
@@ -599,7 +590,7 @@ public class CliTests
     ///     Test that --elaborate flag outputs elaboration for a valid review-set.
     /// </summary>
     [TestMethod]
-    public void Cli_ElaborateFlag_OutputsElaboration()
+    public void Cli_ElaborateFlag_ValidId_OutputsElaboration()
     {
         // Arrange
         var defFile = Path.Combine(Path.GetTempPath(), Path.ChangeExtension(Path.GetRandomFileName(), ".yaml"));

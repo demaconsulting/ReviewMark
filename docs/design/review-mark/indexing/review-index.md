@@ -48,6 +48,20 @@ source type:
 | `fileshare` | Reads `index.json` from the specified file path |
 | `url` | Downloads `index.json` from the specified HTTP or HTTPS URL |
 
+### Error Behavior
+
+- **`fileshare` — file missing or unreadable**: If the file at the specified path does not
+  exist or cannot be read, an `InvalidOperationException` is thrown with a message
+  identifying the path and the underlying I/O failure.
+- **`fileshare` — malformed JSON**: If the file exists but cannot be deserialized as a
+  valid evidence index, an `InvalidOperationException` is thrown with a message describing
+  the parse failure.
+- **`url` — HTTP request fails**: If the HTTP or HTTPS request fails (e.g., network
+  error, non-success status code), an `InvalidOperationException` is thrown with a message
+  identifying the URL and the HTTP status or network error.
+- **`url` — malformed response**: If the response body is not valid evidence-index JSON,
+  an `InvalidOperationException` is thrown with a message describing the parse failure.
+
 ## ReviewIndex.Scan()
 
 `ReviewIndex.Scan(directory, patterns, onWarning)` scans a directory for PDF files matching

@@ -40,7 +40,7 @@ sections:
           are included in at least one review-set before reviews are conducted.
         tests:
           - Configuration_LoadConfig_PlanGenerationSucceeds
-        children: [ReviewMark-Config-Reading, ReviewMark-Config-Loading]
+        children: [ReviewMark-Config-Reading, ReviewMark-Config-Loading, ReviewMark-Config-PlanGeneration]
 
       - id: ReviewMark-Configuration-ReportGeneration
         title: The tool shall generate a Review Report Markdown document showing review-set status.
@@ -50,7 +50,7 @@ sections:
           confirm that all review-sets have current evidence before a release.
         tests:
           - Configuration_LoadConfig_ReportGenerationSucceeds
-        children: [ReviewMark-Config-Reading, ReviewMark-Config-Loading]
+        children: [ReviewMark-Config-Reading, ReviewMark-Config-Loading, ReviewMark-Config-ReportGeneration]
 
       - id: ReviewMark-Configuration-Elaboration
         title: The tool shall elaborate a review-set by providing its ID, fingerprint, and file list.
@@ -61,4 +61,4 @@ sections:
           review documentation.
         tests:
           - Configuration_LoadConfig_ElaborationSucceeds
-        children: [ReviewMark-Config-Reading]
+        children: [ReviewMark-Config-Reading, ReviewMark-Config-Elaboration]

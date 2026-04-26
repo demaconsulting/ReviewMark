@@ -60,10 +60,16 @@ The statuses have the following meanings:
 
 ## Enforcement
 
-When the `--enforce` flag is set, ReviewMark returns a non-zero exit code if any
-review-set does not have Current status (i.e., is Stale, Missing, or Failed). This allows
-CI/CD pipelines to fail builds when review coverage is incomplete, out of date, or has
-failed results for the current fingerprint.
+When the `--enforce` flag is set, ReviewMark returns a non-zero exit code in either
+of two situations:
+
+1. The Review Plan shows that one or more files matching the `needs-review` patterns
+   are not covered by any review-set.
+2. The Review Report shows that any review-set has a status other than Current
+   (i.e., is Stale, Missing, or Failed).
+
+This allows CI/CD pipelines to fail builds when review coverage is incomplete, files
+are uncovered, reviews are out of date, or review evidence has a failed result.
 
 ## Index Management
 
@@ -71,3 +77,93 @@ The `--index` flag causes ReviewMark to scan a directory for PDF evidence files 
 write an `index.json` file suitable for use as a fileshare evidence source. This
 supports workflows where review PDFs are stored alongside source code or on a
 shared network location.
+
+## Operational Modes
+
+ReviewMark supports several distinct operational modes, each activated by a specific flag:
+
+### Review Plan and Report Generation
+
+The default operational mode. When `--plan` and/or `--report` are supplied, ReviewMark
+loads the definition file, resolves file lists, and generates the requested documents.
+The `--enforce` flag can be combined with this mode to fail the process when issues are
+detected.
+
+### Elaborate Mode (`--elaborate`)
+
+When `--elaborate <id>` is supplied, ReviewMark loads the definition file, looks up the
+named review-set, and writes a Markdown elaboration to stdout. The elaboration contains
+the review-set ID, title, current fingerprint, and the full sorted list of files matched
+by the review-set paths. This mode does not query the evidence store. When the supplied
+`id` does not match any review-set, an error is written to stderr and the process exits
+with a non-zero code.
+
+### Lint Mode (`--lint`)
+
+When `--lint` is supplied, ReviewMark loads and validates the definition file in a single
+pass, collecting all detectable structural and semantic issues. The application banner is
+suppressed so that only issue messages reach the console.
+
+- **Success (exit code 0)** — the definition file is valid; no output is produced.
+- **Failure (exit code 1)** — one or more issues were found; only the issue messages are
+  printed, with no surrounding banner or summary text.
+
+Unlike normal operation, lint mode never queries the evidence store.
+
+### Validate Mode (`--validate`)
+
+When `--validate` is supplied, ReviewMark runs a built-in self-test suite that exercises
+core tool behaviors and produces a pass/fail summary. Validation results can be written to
+a TRX or JUnit XML file via `--results`. This mode is intended for tool qualification
+in regulated environments.
+
+### Version Mode (`--version`)
+
+When `--version` is supplied, ReviewMark writes only the version string to stdout and
+exits immediately. No banner or other output is produced.
+
+### Help Mode (`--help`)
+
+When `--help` is supplied, ReviewMark writes the usage message listing all supported flags
+to stdout and exits.
+
+## Command-Line Flags
+
+The following flags are recognized at the system design level:
+
+| Flag | Description |
+| ---- | ----------- |
+| `--version` / `-v` | Display version string and exit |
+| `--help` / `-?` / `-h` | Display usage information and exit |
+| `--silent` | Suppress all console output; the exit code still signals success or failure |
+| `--lint` | Validate the definition file; print only issues; exit non-zero on failure |
+| `--validate` | Run built-in self-validation tests |
+| `--results <file>` | Write validation results to a TRX or JUnit XML file (used with `--validate`) |
+| `--log <file>` | Write all output to a persistent log file in addition to stdout |
+| `--depth <#>` | Default Markdown heading depth (1–5) for all generated documents; default is 1 |
+| `--dir <directory>` | Set the working directory used for default paths and glob scanning |
+| `--definition <file>` | Override the default `.reviewmark.yaml` configuration file path |
+
+## External Interfaces
+
+The command-line interface is the sole external interface of the ReviewMark system.
+All inputs are supplied as command-line arguments to the `reviewmark` executable, and all
+outputs are written to stdout, stderr, and optionally to files. There is no network
+listener, no REST API, and no graphical interface.
+
+## Exit Codes and Error Handling
+
+| Exit Code | Meaning |
+| --------- | ------- |
+| `0` | Success — all requested operations completed without errors or enforcement failures |
+| `1` | Failure — an error occurred or enforcement detected review issues |
+
+Unrecognized or malformed command-line arguments cause the argument parser to throw an
+`ArgumentException`. `Program.Main` catches this exception, writes a descriptive error
+message to `stderr`, and returns exit code 1. The process never exits silently on an
+argument error.
+
+Expected operational errors (e.g., unreadable definition file, unknown review-set ID)
+are reported as error messages to stderr and result in exit code 1. Unexpected
+exceptions are also written to stderr and re-thrown so that the host environment
+generates an event log entry.

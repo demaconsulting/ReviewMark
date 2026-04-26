@@ -18,7 +18,13 @@ tool.
 
 | Unit    | Source File              | Purpose                                      |
 |---------|--------------------------|----------------------------------------------|
-| Context | `Cli/Context.cs`         | Command-line argument parser and I/O owner   |
+| Context | `Cli/Context.cs`         | Command-line argument parser and I/O owner — see the Context unit design documentation |
+
+## Dependencies
+
+| Dependency | Type   | Reason |
+| ---------- | ------ | ------ |
+| Program    | Unit   | `CliTests` invoke `Program.Run()` to exercise the full CLI execution path |
 
 ## Supported Flags
 
