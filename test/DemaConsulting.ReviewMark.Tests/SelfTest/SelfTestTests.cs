@@ -109,7 +109,7 @@ public class SelfTestTests
     ///     within the validation run, exercising the same exit-code mechanism as a test failure.
     /// </summary>
     [TestMethod]
-    public void SelfTest_Run_ValidationTestFails_ExitCodeIsNonZero()
+    public void SelfTest_Run_UnsupportedResultsFormat_ExitCodeIsNonZero()
     {
         // Arrange — an unsupported results file extension causes WriteResultsFile to call
         // context.WriteError, which sets the exit code to 1 via the same path used for test failures.

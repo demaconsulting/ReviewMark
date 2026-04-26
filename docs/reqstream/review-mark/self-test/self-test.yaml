@@ -37,14 +37,16 @@ sections:
         children: [ReviewMark-Validation-ResultsFile]
 
       - id: ReviewMark-SelfTest-ExitCodeOnFailure
-        title: The tool shall set the process exit code to 1 when any self-validation test fails.
+        title: The tool shall set the process exit code to 1 when any validation error occurs
+          during self-validation.
         justification: |
           Callers such as CI/CD pipelines and automated qualification scripts rely on
           the process exit code to determine whether tool qualification succeeded.
-          A non-zero exit code on any test failure ensures that a broken deployment
-          environment is detected without requiring inspection of the output text.
+          A non-zero exit code on any validation error (including test failures and
+          results output errors) ensures that a broken deployment environment is
+          detected without requiring inspection of the output text.
         tests:
-          - SelfTest_Run_ValidationTestFails_ExitCodeIsNonZero
+          - SelfTest_Run_UnsupportedResultsFormat_ExitCodeIsNonZero
 
       - id: ReviewMark-SelfTest-ConsoleSummary
         title: The tool shall write a human-readable summary of pass and fail counts to the console

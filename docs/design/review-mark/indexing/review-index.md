@@ -40,16 +40,13 @@ Each record has the following fields:
 ## ReviewIndex.Load(EvidenceSource)
 
 `ReviewIndex.Load(EvidenceSource)` selects a loading strategy based on the evidence
-source type (see table below). For `url` sources, the tool constructs an `HttpClient`
+source type (see below). For `url` sources, the tool constructs an `HttpClient`
 internally and applies a pre-emptive `Authorization: Basic <base64>` header when both
 credential environment-variable names (`UsernameEnv` and `PasswordEnv` from the
 `EvidenceSource`) are set and the corresponding environment variables are non-empty.
 The encoded credential is `Base64(UTF-8("<username>:<password>"))`.  
 This overload is **not** exposed for test injection; see
 `Load(EvidenceSource, HttpClient)` for the testable overload.
-
-`ReviewIndex.Load(EvidenceSource)` selects a loading strategy based on the evidence
-source type:
 
 - **`none`** — Returns an empty index (equivalent to `ReviewIndex.Empty()`)
 - **`fileshare`** — Reads `index.json` from the specified file path
