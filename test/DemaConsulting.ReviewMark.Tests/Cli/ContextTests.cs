@@ -860,5 +860,23 @@ public class ContextTests
         Assert.AreEqual(4, context.ReportDepth);
         Assert.AreEqual(0, context.ExitCode);
     }
+
+    /// <summary>
+    ///     Test that Context.Create throws InvalidOperationException when the log file path
+    ///     cannot be opened because its parent directory does not exist.
+    /// </summary>
+    [TestMethod]
+    public void Context_Create_LogFlag_InvalidPath_ThrowsInvalidOperationException()
+    {
+        // Arrange — construct a path whose parent directory does not exist
+        var invalidLogPath = Path.Combine(
+            Path.GetTempPath(),
+            $"nonexistent_dir_{Guid.NewGuid():N}",
+            "reviewmark.log");
+
+        // Act & Assert — Context.Create should throw InvalidOperationException when the
+        // log file cannot be opened because the parent directory is missing
+        Assert.ThrowsExactly<InvalidOperationException>(() => Context.Create(["--log", invalidLogPath]));
+    }
 }
 

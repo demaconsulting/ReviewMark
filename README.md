@@ -129,7 +129,7 @@ reviewmark --silent --log output.log
 | `--report <file>`         | Write review report to the specified Markdown file                             |
 | `--report-depth <#>`      | Heading depth for the review report (overrides --depth; default: --depth or 1) |
 | `--index <glob-path>`     | Index PDF evidence files matching the glob path                                |
-| `--dir <directory>`       | Set the working directory for file operations                                  |
+| `--dir <directory>`       | Set the working directory for default paths and glob paths                     |
 | `--enforce`               | Exit with non-zero code if there are review issues                             |
 | `--elaborate <id>`        | Print a Markdown elaboration of the specified review set                       |
 

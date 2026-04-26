@@ -37,6 +37,7 @@ The self-validation suite covers the following scenarios:
 - **Working directory override**: Relative paths are resolved correctly when the working directory is overridden
 - **Elaborate mode**: File lists are expanded in generated documents when elaborate mode is active
 - **Lint mode**: Configuration errors are detected correctly
+- **Depth flag**: Tool respects the `--depth` flag, adjusting heading depth in generated documents
 
 ## Console Output
 

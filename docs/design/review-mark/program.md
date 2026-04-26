@@ -71,8 +71,11 @@ descriptions.
 2. Loads and lints the file via `ReviewMarkConfiguration.Load()`, collecting all
    detectable issues in one pass.
 3. Writes each issue to the context via `ReportIssues()` — errors go to
-   `Context.WriteError()`, warnings to `Context.WriteLine()`.
-4. If any errors are present, the exit code is set to 1.
+   `Context.WriteError()`, warnings to `Context.WriteLine()`. The call to
+   `Context.WriteError()` is also the mechanism by which the exit code is
+   implicitly set to 1: `ReportIssues()` calls `Context.WriteError()` for each
+   error-severity issue, and `Context.WriteError()` sets the internal error flag
+   that drives `Context.ExitCode`.
 
 No banner and no summary message are printed. Successful lint produces no output
 (silence means the definition file is valid). This keeps the output clean for
@@ -98,7 +101,9 @@ integration with linting scripts and CI pipelines.
 `ReviewIndex.Scan(directory, context.IndexPaths)` and writes the resulting
 index to `index.json` in the working directory via `ReviewIndex.Save()`.
 Warnings from the scan (e.g., PDFs missing required metadata) are forwarded
-to `context.WriteLine()`.
+to `context.WriteLine()`. Progress messages `"Scanning PDF evidence files..."`
+and `"Index written to {indexFile}"` are emitted via `context.WriteLine()`
+before and after the scan respectively.
 
 ## RunDefinitionLogic()
 
@@ -113,7 +118,9 @@ handles the definition-based workflow:
 5. If `--report` is set, loads the evidence index via `ReviewIndex.Load()`,
    generates the Review Report Markdown, and writes it to the specified file.
 6. If `--elaborate` is set, calls `config.ElaborateReviewSet()` and writes the
-   result to the console; catches `ArgumentException` for unknown IDs.
+   result to the console via `context.WriteLine()`; catches `ArgumentException`
+   for unknown IDs and calls `context.WriteError()` with the exception message,
+   which sets the exit code to 1.
 
 ## HandleIssues()
 

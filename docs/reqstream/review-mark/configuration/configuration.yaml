@@ -22,14 +22,15 @@ sections:
         children: [ReviewMark-Config-Reading, ReviewMark-GlobMatcher-IncludeExclude]
 
       - id: ReviewMark-Configuration-Fingerprinting
-        title: The tool shall compute SHA-256 fingerprints for review-sets to detect file changes.
+        title: The tool shall compute content-based fingerprints for review-sets to detect file changes.
         justification: |
           Review-set fingerprints are the mechanism by which ReviewMark detects that files
-          have changed since the last review. The SHA-256 fingerprint must be based on file
-          content rather than names alone, so that renamed files do not invalidate the
-          fingerprint, and changed content always produces a new fingerprint.
+          have changed since the last review. The fingerprint must be based on file content
+          rather than names alone, so that renamed files do not invalidate the fingerprint,
+          and changed content always produces a new fingerprint.
         tests:
           - Configuration_LoadConfig_FingerprintReflectsFileContent
+          - Configuration_LoadConfig_FingerprintIsRenameInvariant
         children: [ReviewMark-Config-Reading]
 
       - id: ReviewMark-Configuration-PlanGeneration
@@ -40,7 +41,7 @@ sections:
           are included in at least one review-set before reviews are conducted.
         tests:
           - Configuration_LoadConfig_PlanGenerationSucceeds
-        children: [ReviewMark-Config-Reading, ReviewMark-Config-Loading]
+        children: [ReviewMark-Config-Reading, ReviewMark-Config-Loading, ReviewMark-Config-PlanGeneration]
 
       - id: ReviewMark-Configuration-ReportGeneration
         title: The tool shall generate a Review Report Markdown document showing review-set status.
@@ -50,7 +51,7 @@ sections:
           confirm that all review-sets have current evidence before a release.
         tests:
           - Configuration_LoadConfig_ReportGenerationSucceeds
-        children: [ReviewMark-Config-Reading, ReviewMark-Config-Loading]
+        children: [ReviewMark-Config-Reading, ReviewMark-Config-Loading, ReviewMark-Config-ReportGeneration]
 
       - id: ReviewMark-Configuration-Elaboration
         title: The tool shall elaborate a review-set by providing its ID, fingerprint, and file list.
@@ -61,4 +62,25 @@ sections:
           review documentation.
         tests:
           - Configuration_LoadConfig_ElaborationSucceeds
-        children: [ReviewMark-Config-Reading]
+        children: [ReviewMark-Config-Reading, ReviewMark-Config-Elaboration]
+
+      - id: ReviewMark-Configuration-MalformedYaml
+        title: The tool shall return a null configuration with diagnostic issues when the YAML file is malformed.
+        justification: |
+          A malformed YAML file cannot be parsed into a valid configuration model. Returning
+          null with descriptive diagnostic issues allows callers to detect the failure and
+          report a meaningful error message to the user, rather than propagating a raw
+          YAML parser exception.
+        tests:
+          - Configuration_LoadConfig_MalformedYaml_ReturnsIssues
+
+      - id: ReviewMark-Configuration-ElaborateUnknownId
+        title: The tool shall throw ArgumentException when ElaborateReviewSet is called with an ID
+          that does not exist in the configuration.
+        justification: |
+          Passing an unknown review-set ID to ElaborateReviewSet is a programming error that
+          cannot be resolved without correcting the caller. Throwing ArgumentException with
+          a clear message enables callers to detect and report the mistake immediately rather
+          than silently producing empty output.
+        tests:
+          - Configuration_LoadConfig_ElaborateUnknownId_ThrowsArgumentException

@@ -10,13 +10,13 @@ sections:
   - title: Context Unit Requirements
     requirements:
       - id: ReviewMark-Context-Parsing
-        title: The Context unit shall parse command-line arguments into a strongly-typed Context object.
+        title: The Context unit shall parse command-line arguments into a structured representation
+          of the requested operation and its options.
         justification: |
-          All downstream processing reads options from the Context object rather than
-          directly from the raw argument array. The Context.Create factory method processes
-          arguments sequentially, recognizing flag and value arguments, and returns a fully
-          initialized Context. Unknown arguments must raise an ArgumentException so the
-          caller can report a clear error message.
+          All downstream processing reads options from the parsed representation rather than
+          directly from the raw argument array. Arguments are processed sequentially,
+          recognizing flag and value arguments. Unknown arguments must cause an error so
+          the caller can report a clear diagnostic.
         tests:
           - Context_Create_NoArguments_ReturnsDefaultContext
           - Context_Create_VersionFlag_SetsVersionTrue
@@ -69,11 +69,23 @@ sections:
           - Context_Create_DepthFlag_WithValueGreaterThanFive_ThrowsArgumentException
           - Context_Create_DepthFlag_MissingValue_ThrowsArgumentException
 
-      - id: ReviewMark-Context-Output
-        title: The Context unit shall provide WriteLine and WriteError methods for unified output and logging.
+      - id: ReviewMark-Context-LogFileError
+        title: The Context unit shall throw InvalidOperationException when the log file cannot be opened.
         justification: |
-          All output goes through Context so that the --silent flag is honoured and
-          optionally duplicated to a log file opened by the --log flag. WriteError must
+          If the log file path is invalid or the parent directory does not exist, the
+          Context cannot fulfil its logging contract. Throwing InvalidOperationException
+          wrapping the underlying file-system exception gives callers a typed signal that
+          the tool cannot start, enabling Program.Main to convert it into a clean error
+          exit with an actionable message rather than an unhandled exception crash.
+        tests:
+          - Context_Create_LogFlag_InvalidPath_ThrowsInvalidOperationException
+
+      - id: ReviewMark-Context-Output
+        title: The Context unit shall provide unified output and error logging, respecting
+          the --silent flag and optional --log file.
+        justification: |
+          All output goes through the Context so that the --silent flag is honoured and
+          optionally duplicated to a log file opened by the --log flag. Error output must
           additionally set the error exit code so that the process exits with a non-zero
           status when any error is reported.
         tests:

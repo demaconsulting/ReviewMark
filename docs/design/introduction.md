@@ -114,5 +114,5 @@ Throughout this document:
 - [ReviewMark Repository][repo]
 
 [arch]: review-mark/review-mark.md
-[guide]: ../../README.md
+[guide]: ../user_guide/introduction.md
 [repo]: https://github.com/demaconsulting/ReviewMark

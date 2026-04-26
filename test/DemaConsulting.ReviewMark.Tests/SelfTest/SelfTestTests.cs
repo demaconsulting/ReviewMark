@@ -18,6 +18,7 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
+using System.Xml.Linq;
 using DemaConsulting.ReviewMark.Cli;
 using DemaConsulting.ReviewMark.SelfTest;
 
@@ -27,6 +28,7 @@ namespace DemaConsulting.ReviewMark.Tests.SelfTest;
 ///     Subsystem integration tests for the SelfTest subsystem.
 /// </summary>
 [TestClass]
+[DoNotParallelize]
 public class SelfTestTests
 {
     /// <summary>
@@ -48,7 +50,10 @@ public class SelfTestTests
 
             // Assert
             Assert.AreEqual(0, context.ExitCode);
-            Assert.Contains("Total Tests:", outWriter.ToString());
+            var outString = outWriter.ToString();
+            Assert.Contains("Total Tests:", outString);
+            Assert.Contains("Passed:", outString);
+            Assert.Contains("Failed:", outString);
         }
         finally
         {
@@ -79,7 +84,9 @@ public class SelfTestTests
                 // Assert
                 Assert.IsTrue(File.Exists(resultsFile), "Results file was not created");
                 var content = File.ReadAllText(resultsFile);
-                Assert.Contains("TestRun", content);
+                var doc = XDocument.Parse(content);
+                Assert.AreEqual("TestRun", doc.Root?.Name.LocalName,
+                    "Expected the root XML element to be <TestRun>");
             }
             finally
             {
@@ -92,6 +99,40 @@ public class SelfTestTests
             {
                 File.Delete(resultsFile);
             }
+        }
+    }
+
+    /// <summary>
+    ///     Test that the process exit code is non-zero when self-validation encounters an error.
+    ///     Since all built-in validation tests pass in a correctly functioning environment, this
+    ///     test uses an unsupported results-file format (.csv) to trigger a controlled WriteError
+    ///     within the validation run, exercising the same exit-code mechanism as a test failure.
+    /// </summary>
+    [TestMethod]
+    public void SelfTest_Run_UnsupportedResultsFormat_ExitCodeIsNonZero()
+    {
+        // Arrange — an unsupported results file extension causes WriteResultsFile to call
+        // context.WriteError, which sets the exit code to 1 via the same path used for test failures.
+        var originalOut = Console.Out;
+        var originalError = Console.Error;
+        try
+        {
+            using var outWriter = new StringWriter();
+            using var errWriter = new StringWriter();
+            Console.SetOut(outWriter);
+            Console.SetError(errWriter);
+            using var context = Context.Create(["--validate", "--results", "unsupported-format.csv"]);
+
+            // Act
+            Validation.Run(context);
+
+            // Assert — exit code is non-zero when the validation process calls WriteError
+            Assert.AreNotEqual(0, context.ExitCode);
+        }
+        finally
+        {
+            Console.SetOut(originalOut);
+            Console.SetError(originalError);
         }
     }
 }

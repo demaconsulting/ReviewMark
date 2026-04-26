@@ -663,4 +663,102 @@ public class ProgramTests
         Assert.Contains("error:", logContent);
         Assert.Contains("evidence-source", logContent);
     }
+
+    /// <summary>
+    ///     Test that Run sets exit code 1 when --enforce is set and the report has review issues.
+    /// </summary>
+    [TestMethod]
+    public void Program_HandleIssues_WithEnforce_SetsExitCode1()
+    {
+        // Arrange — empty index means the report will have review issues (no current evidence)
+        using var tempDir = new TestDirectory();
+        var indexFile = PathHelpers.SafePathCombine(tempDir.DirectoryPath, "index.json");
+        File.WriteAllText(indexFile, """{"reviews":[]}""");
+
+        var definitionFile = PathHelpers.SafePathCombine(tempDir.DirectoryPath, "definition.yaml");
+        File.WriteAllText(definitionFile, $"""
+            needs-review:
+              - "src/**/*.cs"
+            evidence-source:
+              type: fileshare
+              location: {indexFile}
+            reviews:
+              - id: Core-Logic
+                title: Review of core business logic
+                paths:
+                  - "src/**/*.cs"
+            """);
+
+        var reportFile = PathHelpers.SafePathCombine(tempDir.DirectoryPath, "report.md");
+        var originalError = Console.Error;
+        try
+        {
+            using var errWriter = new StringWriter();
+            Console.SetError(errWriter);
+            using var context = Context.Create([
+                "--silent",
+                "--definition", definitionFile,
+                "--report", reportFile,
+                "--enforce"]);
+
+            // Act
+            Program.Run(context);
+
+            // Assert — exit code is 1 when --enforce is set and review-set has no current evidence
+            Assert.AreEqual(1, context.ExitCode);
+        }
+        finally
+        {
+            Console.SetError(originalError);
+        }
+    }
+
+    /// <summary>
+    ///     Test that Run emits a warning but exits with code 0 when review issues exist without --enforce.
+    /// </summary>
+    [TestMethod]
+    public void Program_HandleIssues_WithoutEnforce_EmitsWarning()
+    {
+        // Arrange — empty index means the report will have review issues; without --enforce
+        // the tool should emit a warning and exit with code 0
+        using var tempDir = new TestDirectory();
+        var indexFile = PathHelpers.SafePathCombine(tempDir.DirectoryPath, "index.json");
+        File.WriteAllText(indexFile, """{"reviews":[]}""");
+
+        var definitionFile = PathHelpers.SafePathCombine(tempDir.DirectoryPath, "definition.yaml");
+        File.WriteAllText(definitionFile, $"""
+            needs-review:
+              - "src/**/*.cs"
+            evidence-source:
+              type: fileshare
+              location: {indexFile}
+            reviews:
+              - id: Core-Logic
+                title: Review of core business logic
+                paths:
+                  - "src/**/*.cs"
+            """);
+
+        var reportFile = PathHelpers.SafePathCombine(tempDir.DirectoryPath, "report.md");
+        var originalOut = Console.Out;
+        try
+        {
+            using var outWriter = new StringWriter();
+            Console.SetOut(outWriter);
+            using var context = Context.Create([
+                "--definition", definitionFile,
+                "--report", reportFile]);
+
+            // Act
+            Program.Run(context);
+
+            // Assert — exit code is 0 and output contains "Warning:" when --enforce is not set
+            Assert.AreEqual(0, context.ExitCode);
+            Assert.Contains("Warning:", outWriter.ToString());
+        }
+        finally
+        {
+            Console.SetOut(originalOut);
+        }
+    }
 }

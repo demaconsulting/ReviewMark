@@ -365,7 +365,7 @@ file static class ReviewMarkConfigurationHelpers
                     $"Review set '{r.Id ?? $"at index {i}"}' is missing a required 'title' field."));
             }
 
-            if (r.Paths == null || r.Paths.Count == 0)
+            if (r.Paths == null || r.Paths.Count == 0 || !r.Paths.Any(p => !string.IsNullOrWhiteSpace(p)))
             {
                 issues.Add(new LintIssue(
                     filePath,
