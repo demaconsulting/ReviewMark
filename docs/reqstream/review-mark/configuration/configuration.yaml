@@ -30,6 +30,7 @@ sections:
           and changed content always produces a new fingerprint.
         tests:
           - Configuration_LoadConfig_FingerprintReflectsFileContent
+          - Configuration_LoadConfig_FingerprintIsRenameInvariant
         children: [ReviewMark-Config-Reading]
 
       - id: ReviewMark-Configuration-PlanGeneration
@@ -62,3 +63,24 @@ sections:
         tests:
           - Configuration_LoadConfig_ElaborationSucceeds
         children: [ReviewMark-Config-Reading, ReviewMark-Config-Elaboration]
+
+      - id: ReviewMark-Configuration-MalformedYaml
+        title: The tool shall return a null configuration with diagnostic issues when the YAML file is malformed.
+        justification: |
+          A malformed YAML file cannot be parsed into a valid configuration model. Returning
+          null with descriptive diagnostic issues allows callers to detect the failure and
+          report a meaningful error message to the user, rather than propagating a raw
+          YAML parser exception.
+        tests:
+          - Configuration_LoadConfig_MalformedYaml_ReturnsIssues
+
+      - id: ReviewMark-Configuration-ElaborateUnknownId
+        title: The tool shall throw ArgumentException when ElaborateReviewSet is called with an ID that does not exist in
+          the configuration.
+        justification: |
+          Passing an unknown review-set ID to ElaborateReviewSet is a programming error that
+          cannot be resolved without correcting the caller. Throwing ArgumentException with
+          a clear message enables callers to detect and report the mistake immediately rather
+          than silently producing empty output.
+        tests:
+          - Configuration_LoadConfig_ElaborateUnknownId_ThrowsArgumentException

@@ -67,3 +67,17 @@ sections:
           - Program_Run_WithLintFlag_MissingEvidenceSource_ReportsError
           - Program_Run_WithLintFlag_MultipleErrors_ReportsAll
           - Program_Run_WithDefinitionFlag_InvalidConfig_ReportsLintError
+
+      - id: ReviewMark-Program-HandleIssues
+        title: >-
+          The Program unit shall set the exit code to 1 when --enforce is set and review
+          issues are present, and emit a non-fatal warning otherwise.
+        justification: |
+          --enforce enables CI/CD pipelines to treat non-current reviews as a blocking
+          failure. Without --enforce, the same issues produce only a warning so that
+          developers can run report generation locally without failing the process. This
+          dual-mode behavior is controlled by a single helper so that the policy is
+          applied consistently across all plan and report operations.
+        tests:
+          - Program_HandleIssues_WithEnforce_SetsExitCode1
+          - Program_HandleIssues_WithoutEnforce_EmitsWarning

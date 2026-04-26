@@ -127,7 +127,7 @@ validates every entry in the `reviews` list and appends any detected issues to `
 The method iterates over `reviews` by index and for each entry checks:
 
 - Missing `id` — adds an `Error` referencing the zero-based index.
-- Duplicate `id` — adds an `Error` naming both the duplicate index and the first-seen index.
+- Duplicate `id` — adds an `Error` naming the duplicate ID.
 - Missing `title` — adds an `Error` referencing the zero-based index.
 - Missing or empty `paths` (no non-whitespace entries) — adds an `Error` referencing the zero-based index.
 

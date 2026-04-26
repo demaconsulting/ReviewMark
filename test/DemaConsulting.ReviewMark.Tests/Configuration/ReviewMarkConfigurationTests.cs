@@ -959,4 +959,32 @@ public class ReviewMarkConfigurationTests
         Assert.Contains("error", log);
         Assert.Contains("An error message", log);
     }
+
+    /// <summary>
+    ///     Test that Load returns a lint error when a review set has only whitespace entries in its paths list.
+    /// </summary>
+    [TestMethod]
+    public void ReviewMarkConfiguration_Load_WhitespaceOnlyPaths_ReturnsLintError()
+    {
+        // Arrange — write a config with a review set whose paths list contains only a whitespace string
+        var configPath = PathHelpers.SafePathCombine(_testDirectory, ".reviewmark.yaml");
+        File.WriteAllText(configPath, """
+            evidence-source:
+              type: none
+            reviews:
+              - id: Core-Logic
+                title: Review of core business logic
+                paths:
+                  - "   "
+            """);
+
+        // Act
+        var result = ReviewMarkConfiguration.Load(configPath);
+
+        // Assert — whitespace-only paths list should produce a lint error naming the review set
+        Assert.IsNull(result.Configuration);
+        Assert.HasCount(1, result.Issues);
+        Assert.AreEqual(LintSeverity.Error, result.Issues[0].Severity);
+        Assert.Contains("paths", result.Issues[0].Description);
+    }
 }

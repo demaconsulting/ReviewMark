@@ -36,7 +36,7 @@ public class ValidationTests
     public void Validation_Run_NullContext_ThrowsArgumentNullException()
     {
         // Act & Assert
-        Assert.Throws<ArgumentNullException>(() => Validation.Run(null!));
+        Assert.ThrowsExactly<ArgumentNullException>(() => Validation.Run(null!));
     }
 
     /// <summary>
@@ -227,6 +227,37 @@ public class ValidationTests
             // Assert — directory and results file were created
             Assert.IsTrue(Directory.Exists(subDir), "Parent directory was not created");
             Assert.IsTrue(File.Exists(resultsFile), "TRX results file was not created in new directory");
+        }
+        finally
+        {
+            Console.SetOut(originalOut);
+        }
+    }
+
+    /// <summary>
+    ///     Test that Run calls WriteError and does not create a file when the results
+    ///     file has an unsupported extension.
+    /// </summary>
+    [TestMethod]
+    public void Validation_Run_WithUnsupportedResultsFileExtension_WritesError()
+    {
+        // Arrange — use a .csv extension which is not supported
+        using var tempDir = new TestDirectory();
+        var resultsFile = Path.Combine(tempDir.DirectoryPath, "results.csv");
+
+        var originalOut = Console.Out;
+        try
+        {
+            using var outWriter = new StringWriter();
+            Console.SetOut(outWriter);
+            using var context = Context.Create(["--validate", "--results", resultsFile]);
+
+            // Act
+            Validation.Run(context);
+
+            // Assert — no results file is created and the context received a write-error call
+            Assert.IsFalse(File.Exists(resultsFile), "Results file should not be created for unsupported extension");
+            Assert.AreNotEqual(0, context.ExitCode, "Exit code should be non-zero after a write-error call");
         }
         finally
         {

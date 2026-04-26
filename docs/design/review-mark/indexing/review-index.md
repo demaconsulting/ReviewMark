@@ -18,7 +18,7 @@ single review record once the index has been loaded or scanned.
 | `Fingerprint` | string | The SHA-256 fingerprint of the reviewed files |
 | `Date` | string | The date of the review (e.g. `2026-02-14`) |
 | `Result` | string | The review outcome (`pass` or `fail`) |
-| `File` | string | The file name of the review evidence PDF |
+| `File` | string | The relative path to the review evidence PDF |
 
 The `ReviewIndex` holds these records in a two-level
 `Dictionary<string, Dictionary<string, ReviewEvidence>>` keyed first by `Id` and
@@ -37,7 +37,16 @@ Each record has the following fields:
 | `result` | string | Review outcome (`pass` or `fail`) |
 | `file` | string | Relative path to the PDF evidence file |
 
-## ReviewIndex.Load()
+## ReviewIndex.Load(EvidenceSource)
+
+`ReviewIndex.Load(EvidenceSource)` selects a loading strategy based on the evidence
+source type (see table below). For `url` sources, the tool constructs an `HttpClient`
+internally and applies a pre-emptive `Authorization: Basic <base64>` header when both
+credential environment-variable names (`UsernameEnv` and `PasswordEnv` from the
+`EvidenceSource`) are set and the corresponding environment variables are non-empty.
+The encoded credential is `Base64(UTF-8("<username>:<password>"))`.  
+This overload is **not** exposed for test injection; see
+`Load(EvidenceSource, HttpClient)` for the testable overload.
 
 `ReviewIndex.Load(EvidenceSource)` selects a loading strategy based on the evidence
 source type:
@@ -46,7 +55,7 @@ source type:
 | ----------- | -------- |
 | `none` | Returns an empty index (equivalent to `ReviewIndex.Empty()`) |
 | `fileshare` | Reads `index.json` from the specified file path |
-| `url` | Downloads `index.json` from the specified HTTP or HTTPS URL |
+| `url` | Downloads `index.json` from the specified HTTP or HTTPS URL, with optional Basic-auth credentials read from environment variables |
 
 ### Error Behavior
 
@@ -62,13 +71,24 @@ source type:
 - **`url` — malformed response**: If the response body is not valid evidence-index JSON,
   an `InvalidOperationException` is thrown with a message describing the parse failure.
 
+## ReviewIndex.Load(EvidenceSource, HttpClient)
+
+`ReviewIndex.Load(EvidenceSource, HttpClient)` is an internally-visible overload that
+accepts a caller-supplied `HttpClient`. It is exposed to allow unit tests to inject a
+fake `HttpMessageHandler` when testing `url`-type evidence sources, avoiding real
+network calls. The behaviour is identical to the single-argument overload except that
+the caller provides the `HttpClient` instead of having one created internally.
+
 ## ReviewIndex.Scan()
 
-`ReviewIndex.Scan(directory, patterns, onWarning)` scans a directory for PDF files matching
+`ReviewIndex.Scan(directory, paths, onWarning)` scans a directory for PDF files matching
 the given glob patterns. For each PDF file found, it reads embedded metadata to
 extract the review record fields and returns a populated in-memory `ReviewIndex`.
 The `onWarning` parameter is an optional `Action<string>?` callback invoked with a
 warning message when a PDF is skipped due to missing or incomplete metadata fields.
+When a PDF file cannot be opened or read (e.g., the file is corrupt or access is
+denied), `onWarning` is invoked with a descriptive message and scanning continues
+with the next file; no exception is propagated to the caller.
 The caller (e.g., `Program`) is responsible for choosing an output path and calling
 `Save(...)` on the returned index to produce `index.json` as part of the `--index`
 workflow.

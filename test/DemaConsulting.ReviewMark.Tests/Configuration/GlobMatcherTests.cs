@@ -105,6 +105,21 @@ public class GlobMatcherTests
     }
 
     /// <summary>
+    ///     Test that passing a whitespace-only base directory throws <see cref="ArgumentException" />.
+    /// </summary>
+    [TestMethod]
+    public void GlobMatcher_GetMatchingFiles_WhitespaceBaseDirectory_ThrowsArgumentException()
+    {
+        // Arrange
+        var baseDirectory = "   ";
+        IReadOnlyList<string> patterns = ["**/*.cs"];
+
+        // Act & Assert
+        Assert.ThrowsExactly<ArgumentException>(() =>
+            GlobMatcher.GetMatchingFiles(baseDirectory, patterns));
+    }
+
+    /// <summary>
     ///     Test that an empty patterns list returns an empty result.
     /// </summary>
     [TestMethod]
@@ -243,5 +258,25 @@ public class GlobMatcherTests
         Assert.Contains("src/Real.cs", result);
         Assert.Contains("Generated/Special.cs", result);
         Assert.DoesNotContain("Generated/Other.cs", result);
+    }
+
+    /// <summary>
+    ///     Test that returned relative paths use forward slashes as separators,
+    ///     regardless of the host operating system's directory separator.
+    /// </summary>
+    [TestMethod]
+    public void GlobMatcher_GetMatchingFiles_FileInSubdirectory_UsesForwardSlashSeparator()
+    {
+        // Arrange — create a file inside a subdirectory so the result contains a separator
+        var subDir = PathHelpers.SafePathCombine(_testDirectory, "SubFolder");
+        Directory.CreateDirectory(subDir);
+        File.WriteAllText(PathHelpers.SafePathCombine(subDir, "Alpha.cs"), "class Alpha {}");
+
+        // Act
+        var result = GlobMatcher.GetMatchingFiles(_testDirectory, ["**/*.cs"]);
+
+        // Assert — path uses a forward slash, not the platform directory separator
+        Assert.HasCount(1, result);
+        Assert.AreEqual("SubFolder/Alpha.cs", result[0]);
     }
 }

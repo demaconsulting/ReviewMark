@@ -61,6 +61,14 @@ sections:
           - ReviewIndex_Scan_PdfWithNoKeywords_SkipsWithWarning
           - ReviewIndex_Scan_NoMatchingFiles_LeavesIndexEmpty
           - ReviewIndex_Scan_MultiplePdfs_PopulatesAllEntries
+
+      - id: ReviewMark-Index-Freshness
+        title: The ReviewIndex.Scan() method shall return a new index containing only the records found in the current scan.
+        justification: |
+          The Scan() factory method always creates a fresh ReviewIndex, ensuring that
+          entries from any previous index do not contaminate the result. This guarantees
+          that the scan result reflects only the evidence files present in the scanned directory.
+        tests:
           - ReviewIndex_Scan_ClearsExistingEntries
 
       - id: ReviewMark-Index-Empty

@@ -44,6 +44,13 @@ the base directory.
   identifying `relativePath` as the problematic parameter, making debugging straightforward.
 - **No logging or error accumulation**: `SafePathCombine` is a pure utility method that throws
   on invalid input; it does not interact with the `Context` or any output mechanism.
+- **Platform-passthrough exceptions**: `SafePathCombine` does not suppress platform exceptions
+  arising from the path arguments. Callers should be aware that platform-specific conditions
+  may surface through `Path.GetFullPath` and `Path.Combine`:
+  - `NotSupportedException` — thrown when a path contains an unsupported format (e.g. a colon
+    in a non-drive-root position on Windows).
+  - `PathTooLongException` — thrown when the combined path exceeds the platform path-length
+    limit. These are passed through to the caller without wrapping.
 
 ## Security Rationale
 

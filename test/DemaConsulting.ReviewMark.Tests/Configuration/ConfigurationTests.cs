@@ -217,7 +217,7 @@ public class ConfigurationTests
     }
 
     /// <summary>
-    ///     Test that elaborating a review-set succeeds and includes the review set ID and fingerprint.
+    ///     Test that elaborating a review-set succeeds and includes the review set ID, fingerprint, and file list.
     /// </summary>
     [TestMethod]
     public void Configuration_LoadConfig_ElaborationSucceeds()
@@ -249,8 +249,89 @@ public class ConfigurationTests
         Assert.IsNotNull(result.Configuration);
         var elaborateResult = result.Configuration.ElaborateReviewSet("Core-Logic", _testDirectory);
 
-        // Assert
+        // Assert — elaborated markdown contains the review ID, a fingerprint, and the file list
         Assert.Contains("Core-Logic", elaborateResult.Markdown);
+        Assert.Contains("Fingerprint", elaborateResult.Markdown);
+        Assert.Contains("Files", elaborateResult.Markdown);
+        Assert.Contains("Main.cs", elaborateResult.Markdown);
+    }
+
+    /// <summary>
+    ///     Test that elaborating a review-set with an unknown ID throws ArgumentException.
+    /// </summary>
+    [TestMethod]
+    public void Configuration_LoadConfig_ElaborateUnknownId_ThrowsArgumentException()
+    {
+        // Arrange
+        var indexFile = PathHelpers.SafePathCombine(_testDirectory, "index.json");
+        File.WriteAllText(indexFile, """{"reviews":[]}""");
+
+        var definitionFile = PathHelpers.SafePathCombine(_testDirectory, ".reviewmark.yaml");
+        File.WriteAllText(definitionFile, $"""
+            needs-review:
+              - "src/**/*.cs"
+            evidence-source:
+              type: fileshare
+              location: {indexFile}
+            reviews:
+              - id: Core-Logic
+                title: Core logic review
+                paths:
+                  - "src/**/*.cs"
+            """);
+
+        // Act
+        var result = ReviewMarkConfiguration.Load(definitionFile);
+        Assert.IsNotNull(result.Configuration);
+
+        // Assert — unknown review-set ID throws ArgumentException
+        Assert.ThrowsExactly<ArgumentException>(() =>
+            result.Configuration.ElaborateReviewSet("Unknown-Id", _testDirectory));
+    }
+
+    /// <summary>
+    ///     Test that renaming a file in a review-set does not change its fingerprint.
+    /// </summary>
+    [TestMethod]
+    public void Configuration_LoadConfig_FingerprintIsRenameInvariant()
+    {
+        // Arrange — create a source file and record its fingerprint
+        var srcDir = PathHelpers.SafePathCombine(_testDirectory, "src");
+        Directory.CreateDirectory(srcDir);
+        var originalFile = PathHelpers.SafePathCombine(srcDir, "Original.cs");
+        File.WriteAllText(originalFile, "class Original {}");
+
+        var indexFile = PathHelpers.SafePathCombine(_testDirectory, "index.json");
+        File.WriteAllText(indexFile, """{"reviews":[]}""");
+
+        var definitionFile = PathHelpers.SafePathCombine(_testDirectory, ".reviewmark.yaml");
+        File.WriteAllText(definitionFile, $"""
+            needs-review:
+              - "src/**/*.cs"
+            evidence-source:
+              type: fileshare
+              location: {indexFile}
+            reviews:
+              - id: Core-Logic
+                title: Core logic review
+                paths:
+                  - "src/**/*.cs"
+            """);
+
+        var result1 = ReviewMarkConfiguration.Load(definitionFile);
+        Assert.IsNotNull(result1.Configuration);
+        var fingerprint1 = result1.Configuration.Reviews[0].GetFingerprint(_testDirectory);
+
+        // Act — rename the file (same content, different name)
+        var renamedFile = PathHelpers.SafePathCombine(srcDir, "Renamed.cs");
+        File.Move(originalFile, renamedFile);
+
+        var result2 = ReviewMarkConfiguration.Load(definitionFile);
+        Assert.IsNotNull(result2.Configuration);
+        var fingerprint2 = result2.Configuration.Reviews[0].GetFingerprint(_testDirectory);
+
+        // Assert — fingerprint is the same after rename (content-based, not name-based)
+        Assert.AreEqual(fingerprint1, fingerprint2);
     }
 
     /// <summary>

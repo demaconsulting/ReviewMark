@@ -28,13 +28,37 @@ sections:
           - GlobMatcher_GetMatchingFiles_EmptyPatterns_ReturnsEmptyList
           - GlobMatcher_GetMatchingFiles_MultipleIncludePatterns_ReturnsAllMatching
 
-      - id: ReviewMark-GlobMatcher-NullAndEmptyRejection
-        title: "The GlobMatcher shall reject null and empty-or-whitespace input parameters."
+      - id: ReviewMark-GlobMatcher-NullBaseDirectoryRejection
+        title: The GlobMatcher shall reject a null baseDirectory parameter with an ArgumentNullException.
         justification: |
-          When baseDirectory is null, empty, or whitespace, or when patterns is null,
-          the operation must be rejected with a clear error so callers receive a diagnostic
-          rather than an unhandled error when invalid values are passed.
+          When baseDirectory is null, the operation must be rejected with an ArgumentNullException
+          so callers receive a clear diagnostic rather than an unhandled error.
         tests:
           - GlobMatcher_GetMatchingFiles_NullBaseDirectory_ThrowsArgumentNullException
+
+      - id: ReviewMark-GlobMatcher-NullPatternsRejection
+        title: The GlobMatcher shall reject a null patterns parameter with an ArgumentNullException.
+        justification: |
+          When patterns is null, the operation must be rejected with an ArgumentNullException
+          so callers receive a clear diagnostic rather than an unhandled error.
+        tests:
           - GlobMatcher_GetMatchingFiles_NullPatterns_ThrowsArgumentNullException
+
+      - id: ReviewMark-GlobMatcher-EmptyBaseDirectoryRejection
+        title: The GlobMatcher shall reject an empty or whitespace-only baseDirectory parameter with an ArgumentException.
+        justification: |
+          When baseDirectory is empty or contains only whitespace, the operation must be
+          rejected with an ArgumentException so callers receive a clear diagnostic rather
+          than an unhandled error when invalid values are passed.
+        tests:
           - GlobMatcher_GetMatchingFiles_EmptyBaseDirectory_ThrowsArgumentException
+          - GlobMatcher_GetMatchingFiles_WhitespaceBaseDirectory_ThrowsArgumentException
+
+      - id: ReviewMark-GlobMatcher-PathNormalization
+        title: The GlobMatcher shall normalize returned relative paths to use forward slashes as directory separators.
+        justification: |
+          Returned paths must use forward slashes regardless of the host operating system's
+          native directory separator to ensure consistent fingerprint computation across
+          platforms (Windows, Linux, macOS).
+        tests:
+          - GlobMatcher_GetMatchingFiles_FileInSubdirectory_UsesForwardSlashSeparator

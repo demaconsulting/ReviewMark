@@ -24,7 +24,7 @@ sections:
         children: [ReviewMark-Validation-Run]
 
       - id: ReviewMark-SelfTest-ResultsOutput
-        title: The tool shall write self-validation results to a standard test result file when --results is provided.
+        title: The tool shall write self-validation results to a TRX (MSTest) or JUnit XML file when --results is provided.
         justification: |
           CI/CD pipelines and requirements traceability tools (such as ReqStream) consume
           test result files in standard formats. By supporting both TRX (MSTest) and JUnit
@@ -34,3 +34,24 @@ sections:
         tests:
           - SelfTest_Run_GeneratesResultsFile
         children: [ReviewMark-Validation-ResultsFile]
+
+      - id: ReviewMark-SelfTest-ExitCodeOnFailure
+        title: The tool shall set the process exit code to 1 when any self-validation test fails.
+        justification: |
+          Callers such as CI/CD pipelines and automated qualification scripts rely on
+          the process exit code to determine whether tool qualification succeeded.
+          A non-zero exit code on any test failure ensures that a broken deployment
+          environment is detected without requiring inspection of the output text.
+        tests:
+          - SelfTest_Run_ValidationTestFails_ExitCodeIsNonZero
+
+      - id: ReviewMark-SelfTest-ConsoleSummary
+        title: The tool shall write a human-readable summary of pass and fail counts to the console after running self-validation.
+        justification: |
+          Operators running self-validation manually need an immediate summary of the
+          results without parsing machine-readable output. A console summary including
+          total, passed, and failed counts provides an at-a-glance status that lets
+          operators quickly confirm that qualification succeeded or identify how many
+          tests require investigation.
+        tests:
+          - SelfTest_Run_AllTestsPass_ExitCodeIsZero

@@ -69,6 +69,17 @@ sections:
           - Context_Create_DepthFlag_WithValueGreaterThanFive_ThrowsArgumentException
           - Context_Create_DepthFlag_MissingValue_ThrowsArgumentException
 
+      - id: ReviewMark-Context-LogFileError
+        title: The Context unit shall throw InvalidOperationException when the log file cannot be opened.
+        justification: |
+          If the log file path is invalid or the parent directory does not exist, the
+          Context cannot fulfil its logging contract. Throwing InvalidOperationException
+          wrapping the underlying file-system exception gives callers a typed signal that
+          the tool cannot start, enabling Program.Main to convert it into a clean error
+          exit with an actionable message rather than an unhandled exception crash.
+        tests:
+          - Context_Create_LogFlag_InvalidPath_ThrowsInvalidOperationException
+
       - id: ReviewMark-Context-Output
         title: The Context unit shall provide unified output and error logging, respecting the --silent flag and optional
           --log file.
