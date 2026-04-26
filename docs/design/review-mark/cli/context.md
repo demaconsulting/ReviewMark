@@ -12,24 +12,22 @@ to all processing subsystems.
 The following properties are populated by `Context.Create()` from the command-line
 arguments:
 
-| Property | Type | Description |
-| -------- | ---- | ----------- |
-| `Version` | bool | Requests version display |
-| `Help` | bool | Requests help display |
-| `Silent` | bool | Suppresses console output |
-| `Validate` | bool | Requests self-validation run |
-| `Lint` | bool | Requests configuration linting |
-| `ResultsFile` | string? | Path for TRX/JUnit test results output |
-| `DefinitionFile` | string? | Path to the `.reviewmark.yaml` configuration |
-| `PlanFile` | string? | Output path for the Review Plan document |
-| `Depth` | int | Default heading depth for all generated documents |
-| `PlanDepth` | int | Heading depth for the Review Plan (defaults to `Depth`) |
-| `ReportFile` | string? | Output path for the Review Report document |
-| `ReportDepth` | int | Heading depth for the Review Report (defaults to `Depth`) |
-| `IndexPaths` | IReadOnlyList&lt;string&gt; | Scan paths for evidence index (empty when `--index` not specified) |
-| `WorkingDirectory` | string? | Base directory for resolving relative paths |
-| `Enforce` | bool | Fail if any review-set is not Current |
-| `ElaborateId` | string? | Review-set ID to elaborate, or null if `--elaborate` was not specified |
+- **`Version`** `bool` — Requests version display
+- **`Help`** `bool` — Requests help display
+- **`Silent`** `bool` — Suppresses console output
+- **`Validate`** `bool` — Requests self-validation run
+- **`Lint`** `bool` — Requests configuration linting
+- **`ResultsFile`** `string?` — Path for TRX/JUnit test results output
+- **`DefinitionFile`** `string?` — Path to the `.reviewmark.yaml` configuration
+- **`PlanFile`** `string?` — Output path for the Review Plan document
+- **`Depth`** `int` — Default heading depth for all generated documents
+- **`PlanDepth`** `int` — Heading depth for the Review Plan (defaults to `Depth`)
+- **`ReportFile`** `string?` — Output path for the Review Report document
+- **`ReportDepth`** `int` — Heading depth for the Review Report (defaults to `Depth`)
+- **`IndexPaths`** `IReadOnlyList<string>` — Scan paths for evidence index (empty when `--index` not specified)
+- **`WorkingDirectory`** `string?` — Base directory for resolving relative paths
+- **`Enforce`** `bool` — Fail if any review-set is not Current
+- **`ElaborateId`** `string?` — Review-set ID to elaborate, or null if `--elaborate` was not specified
 
 The `--log <file>` argument is consumed during `Context.Create()` to open the log file handle; the
 path is not retained as a public property after initialization.

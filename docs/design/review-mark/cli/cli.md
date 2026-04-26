@@ -22,28 +22,26 @@ tool.
 
 ## Supported Flags
 
-All flags are parsed by `Context.Create(string[] args)`. The following table lists every
-supported flag, its type, aliases, and constraints:
+All flags are parsed by `Context.Create(string[] args)`. Each entry below lists the flag,
+its alias(es), type, constraint, and description:
 
-| Flag | Alias(es) | Type | Constraint | Description |
-| ------ | --------- | ------ | ---------- | ----------- |
-| `--version` | `-v` | bool | — | Display version string only |
-| `--help` | `-?`, `-h` | bool | — | Display usage information |
-| `--silent` | — | bool | — | Suppress all console output |
-| `--validate` | — | bool | — | Run self-validation tests |
-| `--lint` | — | bool | — | Validate the definition file and report issues |
-| `--log <file>` | — | string | Valid file path | Write all output to a log file |
-| `--results <file>` | `--result` | string | Valid file path | Write validation results (TRX or JUnit) |
-| `--definition <file>` | — | string | Valid file path | Override default `.reviewmark.yaml` path |
-| `--plan <file>` | — | string | Valid file path | Output path for the Review Plan Markdown document |
-| `--depth <#>` | — | int | 1–5 | Default heading depth for all generated documents (default: 1) |
-| `--plan-depth <#>` | — | int | 1–5 | Heading depth for the Review Plan (overrides `--depth`) |
-| `--report <file>` | — | string | Valid file path | Output path for the Review Report Markdown document |
-| `--report-depth <#>` | — | int | 1–5 | Heading depth for the Review Report (overrides `--depth`) |
-| `--index <glob-path>` | — | string (repeatable) | Glob expression | Scan PDF evidence files matching the glob path |
-| `--dir <directory>` | — | string | Valid directory path | Set the working directory for file operations |
-| `--enforce` | — | bool | — | Exit with non-zero code if any review-set is not Current |
-| `--elaborate <id>` | — | string | Non-empty review-set ID | Print a Markdown elaboration of the specified review set |
+- **`--version`** (alias: `-v`) `bool` — Display version string only
+- **`--help`** (alias: `-?`, `-h`) `bool` — Display usage information
+- **`--silent`** `bool` — Suppress all console output
+- **`--validate`** `bool` — Run self-validation tests
+- **`--lint`** `bool` — Validate the definition file and report issues
+- **`--log <file>`** `string` | valid file path — Write all output to a log file
+- **`--results <file>`** (alias: `--result`) `string` | valid file path — Write validation results (TRX or JUnit)
+- **`--definition <file>`** `string` | valid file path — Override default `.reviewmark.yaml` path
+- **`--plan <file>`** `string` | valid file path — Output path for the Review Plan Markdown document
+- **`--depth <#>`** `int` | 1–5 — Default heading depth for all generated documents (default: 1)
+- **`--plan-depth <#>`** `int` | 1–5 — Heading depth for the Review Plan (overrides `--depth`)
+- **`--report <file>`** `string` | valid file path — Output path for the Review Report Markdown document
+- **`--report-depth <#>`** `int` | 1–5 — Heading depth for the Review Report (overrides `--depth`)
+- **`--index <glob-path>`** `string` (repeatable) | glob expression — Scan PDF evidence files matching the glob path
+- **`--dir <directory>`** `string` | valid directory path — Set the working directory for file operations
+- **`--enforce`** `bool` — Exit with non-zero code if any review-set is not Current
+- **`--elaborate <id>`** `string` | non-empty review-set ID — Print a Markdown elaboration of the specified review set
 
 **Depth defaulting**: `PlanDepth` defaults to `Depth` when `--plan-depth` is not
 specified; `ReportDepth` defaults to `Depth` when `--report-depth` is not specified.

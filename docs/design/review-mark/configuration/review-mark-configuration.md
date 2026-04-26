@@ -21,11 +21,10 @@ The `.reviewmark.yaml` file is deserialized into the following model:
 
 The `type` field of `EvidenceSourceYaml` controls how the evidence index is located:
 
-| Type | Description |
-| ---- | ----------- |
-| `none` | No evidence index. The `location` field is optional and ignored. All review-sets are reported as Missing. |
-| `fileshare` | The evidence index is read from the file path specified in `location`. |
-| `url` | The evidence index is downloaded from the HTTP or HTTPS URL specified in `location`. |
+- **`none`** — No evidence index. The `location` field is optional and ignored.
+  All review-sets are reported as Missing.
+- **`fileshare`** — The evidence index is read from the file path specified in `location`.
+- **`url`** — The evidence index is downloaded from the HTTP or HTTPS URL specified in `location`.
 
 ## ReviewMarkConfiguration.Load()
 
