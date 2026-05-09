@@ -16,77 +16,99 @@ No file system access or mocking is required.
 
 #### Test Scenarios
 
-##### PathHelpers_SafePathCombine_SimpleRelativePath_ReturnsCombinedPath
+##### PathHelpers_SafePathCombine_ValidPaths_CombinesCorrectly
 
-**Scenario**: `SafePathCombine("base", "relative/file.txt")` is called.
+**Scenario**: `SafePathCombine("/home/user/project", "subfolder/file.txt")` is called.
 
-**Expected**: Returns `"base/relative/file.txt"` using forward slashes.
+**Expected**: Returns the result of `Path.Combine(basePath, relativePath)`.
 
-**Requirement coverage**: `ReviewMark-PathHelpers-SafePathCombine`
+**Requirement coverage**: `ReviewMark-PathHelpers-SafeCombine`
 
-##### PathHelpers_SafePathCombine_AbsoluteRelative_ReturnsRelativeOnly
+##### PathHelpers_SafePathCombine_NestedPaths_CombinesCorrectly
 
-**Scenario**: `SafePathCombine` is called where `relative` begins with a drive letter or
-absolute path segment.
+**Scenario**: `SafePathCombine` is called with a multi-level relative path
+(`"level1/level2/level3/file.txt"`).
 
-**Expected**: Returns the relative path without the base; path traversal is prevented.
+**Expected**: Returns the correctly combined nested path.
 
-**Boundary / error path**: Absolute relative injection.
+**Requirement coverage**: `ReviewMark-PathHelpers-SafeCombine`
 
-**Requirement coverage**: `ReviewMark-PathHelpers-SafePathCombine`
+##### PathHelpers_SafePathCombine_CurrentDirectoryReference_CombinesCorrectly
 
-##### PathHelpers_SafePathCombine_DotDotRelative_ReturnsSafeBase
+**Scenario**: `SafePathCombine` is called with a relative path that begins with `./`.
 
-**Scenario**: `SafePathCombine("base", "../../etc/passwd")` is called.
+**Expected**: Returns the combined path with the current-directory prefix preserved.
 
-**Expected**: Returns only the base path; directory traversal is blocked.
+**Requirement coverage**: `ReviewMark-PathHelpers-SafeCombine`
 
-**Boundary / error path**: Path traversal attempt.
+##### PathHelpers_SafePathCombine_EmptyRelativePath_ReturnsBasePath
 
-**Requirement coverage**: `ReviewMark-PathHelpers-SafePathCombine`
+**Scenario**: `SafePathCombine` is called with an empty relative path (`""`).
 
-##### PathHelpers_ToForwardSlash_BackslashPath_ReturnsForwardSlashPath
+**Expected**: Returns the base path unchanged.
 
-**Scenario**: `ToForwardSlash(@"a\b\c")` is called.
+**Requirement coverage**: `ReviewMark-PathHelpers-SafeCombine`
 
-**Expected**: Returns `"a/b/c"`.
+##### PathHelpers_SafePathCombine_PathTraversalWithDoubleDots_ThrowsArgumentException
 
-**Requirement coverage**: `ReviewMark-PathHelpers-Normalization`
+**Scenario**: `SafePathCombine("/home/user/project", "../etc/passwd")` is called.
 
-##### PathHelpers_ToForwardSlash_AlreadyForwardSlash_ReturnsUnchanged
+**Expected**: `ArgumentException` is thrown with a message containing "Invalid path component".
 
-**Scenario**: `ToForwardSlash("a/b/c")` is called.
+**Boundary / error path**: Path traversal via leading `..` segment.
 
-**Expected**: Returns `"a/b/c"` unchanged.
+**Requirement coverage**: `ReviewMark-PathHelpers-SafeCombine`
 
-**Requirement coverage**: `ReviewMark-PathHelpers-Normalization`
+##### PathHelpers_SafePathCombine_DoubleDotsInMiddle_ThrowsArgumentException
 
-##### PathHelpers_SafePathCombine_NullBase_ThrowsArgumentNullException
+**Scenario**: `SafePathCombine` is called with a relative path containing `..` embedded
+in the middle (e.g. `"subfolder/../../../etc/passwd"`).
+
+**Expected**: `ArgumentException` is thrown with a message containing "Invalid path component".
+
+**Boundary / error path**: Path traversal via embedded `..` segments.
+
+**Requirement coverage**: `ReviewMark-PathHelpers-SafeCombine`
+
+##### PathHelpers_SafePathCombine_AbsolutePath_ThrowsArgumentException
+
+**Scenario**: `SafePathCombine` is called where the relative path is an absolute path
+(Unix: `/etc/passwd`; Windows: `C:\Windows\file.txt`).
+
+**Expected**: `ArgumentException` is thrown with a message containing "Invalid path component".
+
+**Boundary / error path**: Absolute path injection.
+
+**Requirement coverage**: `ReviewMark-PathHelpers-SafeCombine`
+
+##### PathHelpers_SafePathCombine_NullBasePath_ThrowsArgumentNullException
 
 **Scenario**: `SafePathCombine(null, "relative")` is called.
 
 **Expected**: `ArgumentNullException` is thrown.
 
-**Boundary / error path**: Null input rejection.
+**Boundary / error path**: Null base path rejection.
 
 **Requirement coverage**: `ReviewMark-PathHelpers-NullRejection`
 
-##### PathHelpers_SafePathCombine_NullRelative_ThrowsArgumentNullException
+##### PathHelpers_SafePathCombine_NullRelativePath_ThrowsArgumentNullException
 
 **Scenario**: `SafePathCombine("base", null)` is called.
 
 **Expected**: `ArgumentNullException` is thrown.
 
-**Boundary / error path**: Null input rejection.
+**Boundary / error path**: Null relative path rejection.
 
 **Requirement coverage**: `ReviewMark-PathHelpers-NullRejection`
 
 #### Requirements Coverage
 
-- **ReviewMark-PathHelpers-SafePathCombine**: PathHelpers_SafePathCombine_SimpleRelativePath_ReturnsCombinedPath,
-  PathHelpers_SafePathCombine_AbsoluteRelative_ReturnsRelativeOnly,
-  PathHelpers_SafePathCombine_DotDotRelative_ReturnsSafeBase
-- **ReviewMark-PathHelpers-Normalization**: PathHelpers_ToForwardSlash_BackslashPath_ReturnsForwardSlashPath,
-  PathHelpers_ToForwardSlash_AlreadyForwardSlash_ReturnsUnchanged
-- **ReviewMark-PathHelpers-NullRejection**: PathHelpers_SafePathCombine_NullBase_ThrowsArgumentNullException,
-  PathHelpers_SafePathCombine_NullRelative_ThrowsArgumentNullException
+- **ReviewMark-PathHelpers-SafeCombine**: PathHelpers_SafePathCombine_ValidPaths_CombinesCorrectly,
+  PathHelpers_SafePathCombine_NestedPaths_CombinesCorrectly,
+  PathHelpers_SafePathCombine_CurrentDirectoryReference_CombinesCorrectly,
+  PathHelpers_SafePathCombine_EmptyRelativePath_ReturnsBasePath,
+  PathHelpers_SafePathCombine_PathTraversalWithDoubleDots_ThrowsArgumentException,
+  PathHelpers_SafePathCombine_DoubleDotsInMiddle_ThrowsArgumentException,
+  PathHelpers_SafePathCombine_AbsolutePath_ThrowsArgumentException
+- **ReviewMark-PathHelpers-NullRejection**: PathHelpers_SafePathCombine_NullBasePath_ThrowsArgumentNullException,
+  PathHelpers_SafePathCombine_NullRelativePath_ThrowsArgumentNullException

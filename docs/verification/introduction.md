@@ -65,18 +65,76 @@ ReviewMark (System)
 
 ## Companion Artifact Structure
 
-Verification design documents are companion artifacts to requirements, design, source
-code, and tests. The parallel tree below shows how each artifact type maps to the same
-software structure:
+The list below shows how each artifact type maps to the same software structure,
+using per-item path patterns:
 
-```text
-docs/requirements_doc/   - compiled requirements document (generated)
-docs/reqstream/          - requirements source YAML files
-docs/design/             - software design document source
-docs/verification/       - this document (verification design source)
-src/DemaConsulting.ReviewMark/   - implementation source
-test/DemaConsulting.ReviewMark.Tests/   - test source
-```
+- **System** — Req: `docs/reqstream/review-mark.yaml`,
+  Design: `docs/design/review-mark.md`,
+  Verification: `docs/verification/review-mark.md`,
+  Tests: `test/.../IntegrationTests.cs`
+- **Program** — Req: `docs/reqstream/review-mark/program.yaml`,
+  Design: `docs/design/review-mark/program.md`,
+  Verification: `docs/verification/review-mark/program.md`,
+  Source: `src/.../Program.cs`, Tests: `test/.../ProgramTests.cs`
+- **Cli subsystem** — Req: `docs/reqstream/review-mark/cli/cli.yaml`,
+  Design: `docs/design/review-mark/cli.md`,
+  Verification: `docs/verification/review-mark/cli.md`,
+  Source: `src/.../Cli/`
+- **Context** — Req: `docs/reqstream/review-mark/cli/context.yaml`,
+  Design: `docs/design/review-mark/cli/context.md`,
+  Verification: `docs/verification/review-mark/cli/context.md`,
+  Source: `src/.../Cli/Context.cs`, Tests: `test/.../ContextTests.cs`
+- **Configuration subsystem** —
+  Req: `docs/reqstream/review-mark/configuration/configuration.yaml`,
+  Design: `docs/design/review-mark/configuration.md`,
+  Verification: `docs/verification/review-mark/configuration.md`,
+  Source: `src/.../Configuration/`
+- **ReviewMarkConfiguration** —
+  Req: `docs/reqstream/review-mark/configuration/review-mark-configuration.yaml`,
+  Design: `docs/design/review-mark/configuration/review-mark-configuration.md`,
+  Verification: `docs/verification/review-mark/configuration/review-mark-configuration.md`,
+  Source: `src/.../Configuration/ReviewMarkConfiguration.cs`,
+  Tests: `test/.../ReviewMarkConfigurationTests.cs`
+- **GlobMatcher** — Req: `docs/reqstream/review-mark/configuration/glob-matcher.yaml`,
+  Design: `docs/design/review-mark/configuration/glob-matcher.md`,
+  Verification: `docs/verification/review-mark/configuration/glob-matcher.md`,
+  Source: `src/.../Configuration/GlobMatcher.cs`,
+  Tests: `test/.../GlobMatcherTests.cs`
+- **Indexing subsystem** — Req: `docs/reqstream/review-mark/indexing/indexing.yaml`,
+  Design: `docs/design/review-mark/indexing.md`,
+  Verification: `docs/verification/review-mark/indexing.md`,
+  Source: `src/.../Indexing/`
+- **ReviewIndex** — Req: `docs/reqstream/review-mark/indexing/review-index.yaml`,
+  Design: `docs/design/review-mark/indexing/review-index.md`,
+  Verification: `docs/verification/review-mark/indexing/review-index.md`,
+  Source: `src/.../Indexing/ReviewIndex.cs`, Tests: `test/.../IndexingTests.cs`
+- **PathHelpers** — Req: `docs/reqstream/review-mark/indexing/path-helpers.yaml`,
+  Design: `docs/design/review-mark/indexing/path-helpers.md`,
+  Verification: `docs/verification/review-mark/indexing/path-helpers.md`,
+  Source: `src/.../Indexing/PathHelpers.cs`, Tests: `test/.../IndexingTests.cs`
+- **SelfTest subsystem** — Req: `docs/reqstream/review-mark/self-test/self-test.yaml`,
+  Design: `docs/design/review-mark/self-test.md`,
+  Verification: `docs/verification/review-mark/self-test.md`,
+  Source: `src/.../SelfTest/`
+- **Validation** — Req: `docs/reqstream/review-mark/self-test/validation.yaml`,
+  Design: `docs/design/review-mark/self-test/validation.md`,
+  Verification: `docs/verification/review-mark/self-test/validation.md`,
+  Source: `src/.../SelfTest/Validation.cs`, Tests: `test/.../ValidationTests.cs`
+
+OTS components verified in this document have their requirements at:
+
+| OTS Component | Requirements |
+| ------------- | ------------ |
+| ReviewMark (self-referential) | `docs/reqstream/ots/reviewmark.yaml` |
+| BuildMark | `docs/reqstream/ots/buildmark.yaml` |
+| FileAssert | `docs/reqstream/ots/fileassert.yaml` |
+| Pandoc | `docs/reqstream/ots/pandoc.yaml` |
+| ReqStream | `docs/reqstream/ots/reqstream.yaml` |
+| SarifMark | `docs/reqstream/ots/sarifmark.yaml` |
+| SonarMark | `docs/reqstream/ots/sonarmark.yaml` |
+| VersionMark | `docs/reqstream/ots/versionmark.yaml` |
+| WeasyPrint | `docs/reqstream/ots/weasyprint.yaml` |
+| xUnit | `docs/reqstream/ots/xunit.yaml` |
 
 Each chapter in this verification document corresponds to a unit or subsystem chapter
 in the design document. Requirement IDs referenced in the Requirements Coverage sections

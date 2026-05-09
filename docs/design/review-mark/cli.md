@@ -1,29 +1,31 @@
-# Cli Subsystem
+## Cli Subsystem
 
-## Overview
+### Overview
 
 The Cli subsystem is responsible for parsing and owning the command-line interface of
 ReviewMark. It exposes a single software unit — Context — that processes the raw
 `string[] args` array into a structured set of properties consumed by the rest of the
 tool.
 
-## Responsibilities
+### Responsibilities
 
 - Parse all supported command-line flags and arguments into a typed `Context` object
 - Validate that no unrecognized arguments are supplied
 - Own the output channels (stdout and optional log file) and the process exit code
 - Propagate the `--silent` flag to suppress non-error output
 
-## Units
+### Units
 
 - **Context** (`Cli/Context.cs`) — Command-line argument parser and I/O owner;
   see the Context unit design documentation
 
-## Dependencies
+### Dependencies
 
-- **Program** (Unit) — `CliTests` invoke `Program.Run()` to exercise the full CLI execution path
+- **Cli** (Subsystem) — `Program.Main` creates a `Context` instance via `Context.Create(args)`
+  and passes it to `Program.Run(Context)`. `Context` is a passive data carrier; the Cli
+  subsystem has no dependency on Program.
 
-## Supported Flags
+### Supported Flags
 
 All flags are parsed by `Context.Create(string[] args)`. The following table lists every
 supported flag, its type, aliases, and constraints:
@@ -54,7 +56,7 @@ specified; `ReportDepth` defaults to `Depth` when `--report-depth` is not specif
 **`--index` is repeatable**: Multiple `--index <glob-path>` arguments may be provided;
 all matching PDF files are combined into a single index scan.
 
-## Error Handling
+### Error Handling
 
 Unrecognized or malformed arguments cause `Context.Create` to throw an `ArgumentException`.
 `Program.Main` catches this exception, writes the error message to `Console.Error`, and

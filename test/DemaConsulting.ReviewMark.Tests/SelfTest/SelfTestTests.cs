@@ -100,6 +100,45 @@ public class SelfTestTests
     }
 
     /// <summary>
+    ///     Test that running self-validation with --results creates a JUnit XML results file.
+    /// </summary>
+    [Fact]
+    public void SelfTest_Run_GeneratesJUnitResultsFile()
+    {
+        // Arrange
+        var resultsFile = Path.Combine(Path.GetTempPath(), $"reviewmark-selftest-{Guid.NewGuid()}.xml");
+        try
+        {
+            var originalOut = Console.Out;
+            try
+            {
+                using var outWriter = new StringWriter();
+                Console.SetOut(outWriter);
+                using var context = Context.Create(["--validate", "--results", resultsFile]);
+
+                // Act
+                Validation.Run(context);
+
+                // Assert
+                Assert.True(File.Exists(resultsFile), "JUnit XML results file was not created");
+                var content = File.ReadAllText(resultsFile);
+                Assert.Contains("testsuites", content);
+            }
+            finally
+            {
+                Console.SetOut(originalOut);
+            }
+        }
+        finally
+        {
+            if (File.Exists(resultsFile))
+            {
+                File.Delete(resultsFile);
+            }
+        }
+    }
+
+    /// <summary>
     ///     Test that the process exit code is non-zero when self-validation encounters an error.
     ///     Since all built-in validation tests pass in a correctly functioning environment, this
     ///     test uses an unsupported results-file format (.csv) to trigger a controlled WriteError

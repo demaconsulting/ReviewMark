@@ -24,7 +24,9 @@ sections:
         children: [ReviewMark-Validation-Run]
 
       - id: ReviewMark-SelfTest-ResultsOutput
-        title: The tool shall write self-validation results to a TRX (MSTest) or JUnit XML file when --results is provided.
+        title: >-
+          The tool shall write self-validation results to a TRX (MSTest) or JUnit XML
+          file when --results is provided.
         justification: |
           CI/CD pipelines and requirements traceability tools (such as ReqStream) consume
           test result files in standard formats. By supporting both TRX (MSTest) and JUnit
@@ -33,6 +35,7 @@ sections:
           conversion steps, satisfying audit trail requirements.
         tests:
           - SelfTest_Run_GeneratesResultsFile
+          - SelfTest_Run_GeneratesJUnitResultsFile
         children: [ReviewMark-Validation-ResultsFile]
 
       - id: ReviewMark-SelfTest-ExitCodeOnFailure
@@ -45,9 +48,12 @@ sections:
           detected without requiring inspection of the output text.
         tests:
           - SelfTest_Run_UnsupportedResultsFormat_ExitCodeIsNonZero
+        children: [ReviewMark-Validation-Run]
 
       - id: ReviewMark-SelfTest-ConsoleSummary
-        title: The tool shall write a human-readable summary of pass and fail counts to the console after running self-validation.
+        title: >-
+          The tool shall write a human-readable summary of pass and fail counts to
+          the console after running self-validation.
         justification: |
           Operators running self-validation manually need an immediate summary of the
           results without parsing machine-readable output. A console summary including
@@ -56,3 +62,4 @@ sections:
           tests require investigation.
         tests:
           - SelfTest_Run_AllTestsPass_ExitCodeIsZero
+        children: [ReviewMark-Validation-Run]

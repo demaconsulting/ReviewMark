@@ -12,11 +12,11 @@ clean isolation between tests.
 
 ### Dependencies
 
-| Mock / Stub           | Reason                                                            |
-| --------------------- | ----------------------------------------------------------------- |
-| Temporary directory   | Isolated filesystem prevents test interference                    |
-| Fake JSON index file  | Provides controlled evidence index without real PDF evidence      |
-| `FakeHttpMessageHandler` | Returns fixed JSON payload for URL-source tests               |
+| Mock / Stub              | Reason                                                         |
+| ------------------------ | -------------------------------------------------------------- |
+| Temporary directory      | Isolated filesystem prevents test interference                 |
+| Fake JSON index file     | Provides controlled evidence index without real PDF evidence   |
+| `FakeHttpMessageHandler` | Returns fixed JSON payload for URL-source tests                |
 
 ### Test Scenarios
 
@@ -54,10 +54,43 @@ returning a fixed JSON payload.
 
 **Requirement coverage**: `ReviewMark-Indexing-LoadEvidence`
 
+#### Indexing_SafePathCombine_WithTraversalInputs_Throws
+
+**Scenario**: `PathHelpers.SafePathCombine` is called with path traversal inputs — first
+with a `..`-based relative path (`../../etc/sensitive`) and then with an absolute path.
+
+**Expected**: `ArgumentException` is thrown in both cases; directory traversal and
+absolute-path injection are rejected.
+
+**Boundary / error path**: Path traversal prevention.
+
+**Requirement coverage**: `ReviewMark-Indexing-SafePathCombine`
+
+#### Indexing_ReviewIndex_Scan_WithNoPdfs_ReturnsEmptyIndex
+
+**Scenario**: `ReviewIndex.Scan` is called against a directory that contains no PDF files
+(only a plain text file).
+
+**Expected**: Returns an empty index with no entries.
+
+**Requirement coverage**: `ReviewMark-Indexing-ScanPdfEvidence`
+
+#### Indexing_ReviewIndex_Scan_WithValidPdf_ReturnsPopulatedIndex
+
+**Scenario**: `ReviewIndex.Scan` is called against a directory containing a single PDF
+with all required keyword metadata fields (`id`, `fingerprint`, `date`, `result`).
+
+**Expected**: Returns an index populated with the evidence entry extracted from the PDF.
+
+**Requirement coverage**: `ReviewMark-Indexing-ScanPdfEvidence`
+
 ### Requirements Coverage
 
 - **ReviewMark-Indexing-LoadEvidence**: Indexing_SafePathCombine_WithIndexPath_LoadsIndex,
   Indexing_ReviewIndex_SaveAndLoad_RoundTrip, Indexing_ReviewIndex_Load_WithNoneSource_ReturnsEmptyIndex,
   Indexing_ReviewIndex_Load_WithUrlSource_ReturnsPopulatedIndex
 - **ReviewMark-Indexing-Save**: Indexing_ReviewIndex_SaveAndLoad_RoundTrip
-- **ReviewMark-Indexing-SafePathCombine**: Indexing_SafePathCombine_WithIndexPath_LoadsIndex
+- **ReviewMark-Indexing-SafePathCombine**: Indexing_SafePathCombine_WithIndexPath_LoadsIndex,
+  Indexing_SafePathCombine_WithTraversalInputs_Throws
+- **ReviewMark-Indexing-ScanPdfEvidence**: Indexing_ReviewIndex_Scan_WithNoPdfs_ReturnsEmptyIndex,
+  Indexing_ReviewIndex_Scan_WithValidPdf_ReturnsPopulatedIndex

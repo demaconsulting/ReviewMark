@@ -262,7 +262,7 @@ internal sealed class ReviewIndex
         catch (Exception ex)
         {
             throw new InvalidOperationException(
-                $"Failed to read review index file '{filePath}': {ex.Message}", ex);
+                $"Failed to parse review index file '{filePath}': {ex.Message}", ex);
         }
     }
 

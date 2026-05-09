@@ -1,13 +1,13 @@
-# Context
+### Context
 
-## Purpose
+#### Purpose
 
 The `Context` software unit is responsible for parsing command-line arguments and
 providing a unified interface for output and logging throughout the tool. It acts as
 the primary configuration carrier, passing parsed options from the CLI entry point
 to all processing subsystems.
 
-## Properties
+#### Properties
 
 The following properties are populated by `Context.Create()` from the command-line
 arguments:
@@ -30,11 +30,12 @@ arguments:
 | `WorkingDirectory` | string? | Base directory for resolving relative paths |
 | `Enforce` | bool | Fail if any review-set is not Current |
 | `ElaborateId` | string? | Review-set ID to elaborate, or null if `--elaborate` was not specified |
+| `ExitCode` | int | Computed output property; 0 = success, 1 = error. Set via `ReportError`. |
 
 The `--log <file>` argument is consumed during `Context.Create()` to open the log file handle; the
 path is not retained as a public property after initialization.
 
-## Argument Parsing
+#### Argument Parsing
 
 `Context.Create(string[] args)` is a factory method that processes the argument
 array sequentially, recognizing both flag arguments (e.g., `--validate`) and
@@ -57,7 +58,7 @@ inclusive; values outside this range cause `ArgumentException` to be thrown.
 When `--plan-depth` or `--report-depth` is omitted, the value from `--depth`
 (or its default of 1) is used for that document.
 
-## Output Methods
+#### Output Methods
 
 - **`WriteLine(string)`** — Writes a line to the console (unless `Silent` is set) and to the log file
 - **`WriteError(string)`** — Sets the internal error flag (causing `ExitCode` to return non-zero),
@@ -65,20 +66,20 @@ When `--plan-depth` or `--report-depth` is omitted, the value from `--depth`
 - **`Dispose()`** — Closes the log file handle opened by `--log`, if any; called automatically at
   the end of the `using` block in `Program.Main()`
 
-## Exit Code
+#### Exit Code
 
 `Context.ExitCode` reflects the current error status of the tool run. It is set to
 a non-zero value when an error is detected. The value of `ExitCode` is returned from
 `Program.Main()` as the process exit code.
 
-## IDisposable Contract
+#### IDisposable Contract
 
 `Context` implements `IDisposable`. Callers must dispose the instance (typically via a
 `using` statement) to ensure the log file handle opened by `--log` is closed promptly.
 `Program.Main()` wraps the `Context` in a `using` block so the log is always flushed and
 closed before the process exits.
 
-## Logging
+#### Logging
 
 When a log file path is provided via the `--log` CLI argument, `Context` opens and
 holds the log file handle for the duration of the tool run. All output written through

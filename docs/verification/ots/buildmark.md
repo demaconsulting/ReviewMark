@@ -5,9 +5,16 @@
 **Acceptance approach**: Established industry use and automated build pipeline verification.
 
 BuildMark is maintained by DemaConsulting and is used as a build tool in the CI/CD
-pipeline. Its integration is tested implicitly by the CI pipeline succeeding.
+pipeline. Its integration is verified through the GitHub Actions workflow (`build.yaml`),
+where the "Run BuildMark self-validation" step and the "Generate Build Notes with BuildMark"
+step run as part of the `build-docs` job. A successful CI pipeline run provides evidence
+that BuildMark executed without error and produced its expected markdown output.
 
-No dedicated unit tests are required for BuildMark itself; its correct behaviour is
-confirmed by the successful execution of `build.ps1` in CI.
+### Test scenario coverage
+
+- **`BuildMark_MarkdownReportGeneration`** — BuildMark successfully queries the GitHub
+  Actions API and generates a markdown build-notes document from workflow run metadata.
+  CI Evidence: "Run BuildMark self-validation" step in the `build-docs` job of
+  `build.yaml`, writing results to `artifacts/buildmark-self-validation.trx`.
 
 **Requirement coverage**: `ReviewMark-OTS-BuildMark`

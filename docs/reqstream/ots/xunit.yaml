@@ -8,13 +8,30 @@ sections:
     sections:
       - title: xUnit Requirements
         requirements:
-          - id: ReviewMark-OTS-xUnit
-            title: xUnit shall execute unit tests and report results.
+          - id: ReviewMark-OTS-xUnit-Execute
+            title: xUnit shall execute unit tests.
             justification: |
               xUnit (xunit.v3 and xunit.runner.visualstudio) is the unit-testing framework used
-              by the project. It discovers and runs all test methods and writes TRX result files that
-              feed into coverage reporting and requirements traceability. Passing tests confirm the
-              framework is functioning correctly.
+              by the project. It discovers and runs all test methods in the test suite. Passing
+              tests confirm the framework is correctly discovering and executing test cases.
+            tags: [ots]
+            tests:
+              - Context_Create_NoArguments_ReturnsDefaultContext
+              - Context_Create_VersionFlag_SetsVersionTrue
+              - Context_Create_HelpFlag_SetsHelpTrue
+              - Context_Create_SilentFlag_SetsSilentTrue
+              - Context_Create_ValidateFlag_SetsValidateTrue
+              - Context_Create_ResultsFlag_SetsResultsFile
+              - Context_Create_LogFlag_OpensLogFile
+              - Context_Create_UnknownArgument_ThrowsArgumentException
+              - Context_Create_ShortVersionFlag_SetsVersionTrue
+          - id: ReviewMark-OTS-xUnit-Report
+            title: xUnit shall report test results in TRX format.
+            justification: |
+              xUnit (xunit.v3 and xunit.runner.visualstudio) writes TRX result files that
+              feed into coverage reporting and requirements traceability. The presence of
+              well-formed TRX output for each passing test confirms the framework is correctly
+              recording and reporting test results.
             tags: [ots]
             tests:
               - Context_Create_NoArguments_ReturnsDefaultContext

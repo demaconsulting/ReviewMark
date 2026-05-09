@@ -143,6 +143,13 @@ The following flags are recognized at the system design level:
 | `--depth <#>` | Default Markdown heading depth (1–5) for all generated documents; default is 1 |
 | `--dir <directory>` | Set the working directory used for default paths and glob scanning |
 | `--definition <file>` | Override the default `.reviewmark.yaml` configuration file path |
+| `--plan <file>` | Generate a Markdown review-plan document listing all review sets and their current status |
+| `--plan-depth <#>` | Override the Markdown heading depth for the plan document (default: `--depth` value) |
+| `--report <file>` | Generate a Markdown review-report document summarizing review-set completion |
+| `--report-depth <#>` | Override the Markdown heading depth for the report document (default: `--depth` value) |
+| `--elaborate <id>` | Print a Markdown elaboration for the named review set (ID, title, fingerprint, and file list) |
+| `--enforce` | Exit with code 1 if the plan has uncovered files or any review-set is non-current |
+| `--index <pattern>` | Scan PDF evidence files matching the glob pattern and write an `index.json` file to `--dir` |
 
 ## External Interfaces
 

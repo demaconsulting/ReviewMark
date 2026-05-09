@@ -60,7 +60,7 @@ public sealed class ConfigurationTests : IDisposable
     ///     Test that loading a configuration with needs-review glob patterns correctly resolves matching files.
     /// </summary>
     [Fact]
-    public void Configuration_LoadConfig_ResolvesNeedsReviewFiles()
+    public void Configuration_NeedsReview_ValidConfig_ResolvesFiles()
     {
         // Arrange
         var srcDir = PathHelpers.SafePathCombine(_testDirectory, "src");
@@ -91,14 +91,14 @@ public sealed class ConfigurationTests : IDisposable
         // Assert
         Assert.NotNull(result.Configuration);
         var files = result.Configuration.GetNeedsReviewFiles(_testDirectory);
-        Assert.Equal(2, files.Count());
+        Assert.Equal(2, files.Count);
     }
 
     /// <summary>
     ///     Test that modifying a file changes the review-set fingerprint.
     /// </summary>
     [Fact]
-    public void Configuration_LoadConfig_FingerprintReflectsFileContent()
+    public void Configuration_Fingerprinting_ContentModified_FingerprintDiffers()
     {
         // Arrange
         var srcDir = PathHelpers.SafePathCombine(_testDirectory, "src");
@@ -142,7 +142,7 @@ public sealed class ConfigurationTests : IDisposable
     ///     Test that generating a review plan succeeds and includes the review set ID.
     /// </summary>
     [Fact]
-    public void Configuration_LoadConfig_PlanGenerationSucceeds()
+    public void Configuration_PlanGeneration_ValidConfig_Succeeds()
     {
         // Arrange
         var srcDir = PathHelpers.SafePathCombine(_testDirectory, "src");
@@ -179,7 +179,7 @@ public sealed class ConfigurationTests : IDisposable
     ///     Test that generating a review report succeeds and includes the review set ID.
     /// </summary>
     [Fact]
-    public void Configuration_LoadConfig_ReportGenerationSucceeds()
+    public void Configuration_ReportGeneration_ValidConfig_Succeeds()
     {
         // Arrange
         var srcDir = PathHelpers.SafePathCombine(_testDirectory, "src");
@@ -217,7 +217,7 @@ public sealed class ConfigurationTests : IDisposable
     ///     Test that elaborating a review-set succeeds and includes the review set ID, fingerprint, and file list.
     /// </summary>
     [Fact]
-    public void Configuration_LoadConfig_ElaborationSucceeds()
+    public void Configuration_Elaboration_ValidId_Succeeds()
     {
         // Arrange
         var srcDir = PathHelpers.SafePathCombine(_testDirectory, "src");
@@ -290,7 +290,7 @@ public sealed class ConfigurationTests : IDisposable
     ///     Test that renaming a file in a review-set does not change its fingerprint.
     /// </summary>
     [Fact]
-    public void Configuration_LoadConfig_FingerprintIsRenameInvariant()
+    public void Configuration_Fingerprinting_FileRenamed_FingerprintUnchanged()
     {
         // Arrange — create a source file and record its fingerprint
         var srcDir = PathHelpers.SafePathCombine(_testDirectory, "src");

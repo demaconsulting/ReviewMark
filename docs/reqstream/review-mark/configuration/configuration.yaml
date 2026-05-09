@@ -18,8 +18,14 @@ sections:
           and excludes in declaration order, so that ReviewMark can detect uncovered files
           and generate accurate review plans.
         tests:
-          - Configuration_LoadConfig_ResolvesNeedsReviewFiles
-        children: [ReviewMark-Config-Reading, ReviewMark-GlobMatcher-IncludeExclude]
+          - Configuration_NeedsReview_ValidConfig_ResolvesFiles
+        children:
+          - ReviewMark-Config-Reading
+          - ReviewMark-GlobMatcher-IncludeExclude
+          - ReviewMark-GlobMatcher-NullBaseDirectoryRejection
+          - ReviewMark-GlobMatcher-NullPatternsRejection
+          - ReviewMark-GlobMatcher-EmptyBaseDirectoryRejection
+          - ReviewMark-GlobMatcher-PathNormalization
 
       - id: ReviewMark-Configuration-Fingerprinting
         title: The tool shall compute content-based fingerprints for review-sets to detect file changes.
@@ -29,8 +35,8 @@ sections:
           rather than names alone, so that renamed files do not invalidate the fingerprint,
           and changed content always produces a new fingerprint.
         tests:
-          - Configuration_LoadConfig_FingerprintReflectsFileContent
-          - Configuration_LoadConfig_FingerprintIsRenameInvariant
+          - Configuration_Fingerprinting_ContentModified_FingerprintDiffers
+          - Configuration_Fingerprinting_FileRenamed_FingerprintUnchanged
         children: [ReviewMark-Config-Reading]
 
       - id: ReviewMark-Configuration-PlanGeneration
@@ -40,8 +46,13 @@ sections:
           and what files they cover. It enables auditors to verify that all relevant files
           are included in at least one review-set before reviews are conducted.
         tests:
-          - Configuration_LoadConfig_PlanGenerationSucceeds
-        children: [ReviewMark-Config-Reading, ReviewMark-Config-Loading, ReviewMark-Config-PlanGeneration]
+          - Configuration_PlanGeneration_ValidConfig_Succeeds
+        children:
+          - ReviewMark-Config-Reading
+          - ReviewMark-Config-Loading
+          - ReviewMark-Config-PlanGeneration
+          - ReviewMark-Config-PlanMarkdownDepth
+          - ReviewMark-Config-PlanMarkdownDepthValidation
 
       - id: ReviewMark-Configuration-ReportGeneration
         title: The tool shall generate a Review Report Markdown document showing review-set status.
@@ -50,19 +61,29 @@ sections:
           of each review-set (Current, Stale, Missing, or Failed), enabling auditors to
           confirm that all review-sets have current evidence before a release.
         tests:
-          - Configuration_LoadConfig_ReportGenerationSucceeds
-        children: [ReviewMark-Config-Reading, ReviewMark-Config-Loading, ReviewMark-Config-ReportGeneration]
+          - Configuration_ReportGeneration_ValidConfig_Succeeds
+        children:
+          - ReviewMark-Config-Reading
+          - ReviewMark-Config-Loading
+          - ReviewMark-Config-ReportGeneration
+          - ReviewMark-Config-ReportMarkdownDepth
+          - ReviewMark-Config-ReportMarkdownDepthValidation
 
       - id: ReviewMark-Configuration-Elaboration
-        title: The tool shall elaborate a review-set by providing its ID, fingerprint, and file list.
+        title: The tool shall generate a Markdown elaboration document for a named review-set.
         justification: |
           When preparing for a code review, the reviewer needs the review set ID, its current
           fingerprint, and the full sorted list of files to be reviewed. The elaboration
           command provides this formatted as Markdown so it can be copied directly into
           review documentation.
         tests:
-          - Configuration_LoadConfig_ElaborationSucceeds
-        children: [ReviewMark-Config-Reading, ReviewMark-Config-Elaboration]
+          - Configuration_Elaboration_ValidId_Succeeds
+        children:
+          - ReviewMark-Config-Reading
+          - ReviewMark-Config-Elaboration
+          - ReviewMark-Config-ElaborationMarkdownDepth
+          - ReviewMark-Config-ElaborationMarkdownDepthValidation
+          - ReviewMark-Config-ElaborationNullRejection
 
       - id: ReviewMark-Configuration-MalformedYaml
         title: The tool shall return a null configuration with diagnostic issues when the YAML file is malformed.
@@ -73,10 +94,12 @@ sections:
           YAML parser exception.
         tests:
           - Configuration_LoadConfig_MalformedYaml_ReturnsIssues
+        children: [ReviewMark-Config-LoadingNullOnError]
 
       - id: ReviewMark-Configuration-ElaborateUnknownId
-        title: The tool shall throw ArgumentException when ElaborateReviewSet is called with an ID that does not exist in
-          the configuration.
+        title: >-
+          The tool shall throw ArgumentException when ElaborateReviewSet is called
+          with an ID that does not exist in the configuration.
         justification: |
           Passing an unknown review-set ID to ElaborateReviewSet is a programming error that
           cannot be resolved without correcting the caller. Throwing ArgumentException with
@@ -84,3 +107,4 @@ sections:
           than silently producing empty output.
         tests:
           - Configuration_LoadConfig_ElaborateUnknownId_ThrowsArgumentException
+        children: [ReviewMark-Config-ElaborationUnknownIdRejection]

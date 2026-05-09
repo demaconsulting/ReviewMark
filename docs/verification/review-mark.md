@@ -20,11 +20,11 @@ for unknown arguments.
 | ---------------------- | --------------------------------------------------------------- |
 | Temporary YAML files   | Created in-process to provide controlled definition inputs      |
 | Temporary directories  | Isolated filesystem state prevents test interference            |
-| `Runner.Run`           | Launches DLL as subprocess; captures stdout/stderr for assertion |
+| `Runner.Run`           | Runs DLL as subprocess; captures stdout/stderr for assertion    |
 
 ## Test Scenarios (System-Level)
 
-### IntegrationTest_VersionFlag_OutputsVersion
+### ReviewMark_VersionFlag_Invoked_OutputsVersion
 
 **Scenario**: The tool is invoked with `--version`.
 
@@ -33,7 +33,7 @@ for unknown arguments.
 
 **Requirement coverage**: `ReviewMark-System-Version`
 
-### IntegrationTest_HelpFlag_OutputsUsageInformation
+### ReviewMark_HelpFlag_Invoked_OutputsUsageInformation
 
 **Scenario**: The tool is invoked with `--help`.
 
@@ -41,7 +41,7 @@ for unknown arguments.
 
 **Requirement coverage**: `ReviewMark-System-Help`
 
-### IntegrationTest_ValidateFlag_RunsValidation
+### ReviewMark_ValidateFlag_Invoked_RunsValidation
 
 **Scenario**: The tool is invoked with `--validate`.
 
@@ -49,7 +49,7 @@ for unknown arguments.
 
 **Requirement coverage**: `ReviewMark-System-Validate`
 
-### IntegrationTest_ValidateWithResults_GeneratesTrxFile
+### ReviewMark_ValidateFlag_WithTrxResultsPath_GeneratesTrxFile
 
 **Scenario**: The tool is invoked with `--validate --results <file>.trx`.
 
@@ -58,7 +58,7 @@ for unknown arguments.
 
 **Requirement coverage**: `ReviewMark-System-Results`
 
-### IntegrationTest_ValidateWithResults_GeneratesJUnitFile
+### ReviewMark_ValidateFlag_WithXmlResultsPath_GeneratesJUnitFile
 
 **Scenario**: The tool is invoked with `--validate --results <file>.xml`.
 
@@ -66,7 +66,7 @@ for unknown arguments.
 
 **Requirement coverage**: `ReviewMark-System-Results`
 
-### IntegrationTest_SilentFlag_SuppressesOutput
+### ReviewMark_SilentFlag_Invoked_SuppressesOutput
 
 **Scenario**: The tool is invoked with `--silent`.
 
@@ -74,7 +74,7 @@ for unknown arguments.
 
 **Requirement coverage**: `ReviewMark-System-Silent`
 
-### IntegrationTest_LogFlag_WritesOutputToFile
+### ReviewMark_LogFlag_Invoked_WritesOutputToFile
 
 **Scenario**: The tool is invoked with `--log <file>`.
 
@@ -82,7 +82,7 @@ for unknown arguments.
 
 **Requirement coverage**: `ReviewMark-System-Log`
 
-### IntegrationTest_UnknownArgument_ReturnsError
+### ReviewMark_UnknownArgument_Provided_ReturnsNonZeroAndError
 
 **Scenario**: The tool is invoked with `--unknown`.
 
@@ -90,7 +90,7 @@ for unknown arguments.
 
 **Requirement coverage**: `ReviewMark-System-InvalidArgs`
 
-### IntegrationTest_ReviewPlanGeneration
+### ReviewMark_PlanFlag_WithDefinitionFile_GeneratesReviewPlan
 
 **Scenario**: The tool is invoked with `--definition <file> --plan <planfile>` using
 a temporary definition file with one review set.
@@ -99,15 +99,93 @@ a temporary definition file with one review set.
 
 **Requirement coverage**: `ReviewMark-System-ReviewPlan`, `ReviewMark-System-Definition`
 
+### ReviewMark_ReportFlag_WithDefinitionFile_GeneratesReviewReport
+
+**Scenario**: The tool is invoked with `--definition <file> --report <reportfile>` using
+a temporary definition file with one review set.
+
+**Expected**: Exit code is 0; report file is created; report file contains the review set ID.
+
+**Requirement coverage**: `ReviewMark-System-ReviewReport`, `ReviewMark-System-Definition`
+
+### ReviewMark_EnforceFlag_WithNoEvidence_ReturnsNonZero
+
+**Scenario**: The tool is invoked with `--definition <file> --report <reportfile> --enforce`
+where the evidence source is `type: none`.
+
+**Expected**: Exit code is non-zero because no reviews are current against a `none` evidence source.
+
+**Requirement coverage**: `ReviewMark-System-Enforce`
+
+### ReviewMark_IndexFlag_OnEmptyDirectory_CreatesIndexJson
+
+**Scenario**: The tool is invoked with `--dir <tmpdir> --index <tmpdir>/**/*.pdf` against
+an empty temporary directory.
+
+**Expected**: Exit code is 0; `index.json` is created in the temporary directory.
+
+**Requirement coverage**: `ReviewMark-System-IndexScan`
+
+### ReviewMark_DirFlag_Invoked_OverridesWorkingDirectory
+
+**Scenario**: The tool is invoked with `--dir <tmpdir> --plan <planfile>` where `<tmpdir>`
+contains a `.reviewmark.yaml` definition file.
+
+**Expected**: Exit code is 0; plan file is created; ReviewMark resolves the definition file
+relative to the overridden working directory.
+
+**Requirement coverage**: `ReviewMark-System-WorkingDirectory`, `ReviewMark-System-ReviewPlan`
+
+### ReviewMark_ElaborateFlag_WithValidId_OutputsElaboration
+
+**Scenario**: The tool is invoked with `--definition <file> --elaborate Test-Review` where
+the definition file defines a review set named `Test-Review`.
+
+**Expected**: Exit code is 0; output contains `Test-Review`.
+
+**Requirement coverage**: `ReviewMark-System-Elaborate`
+
+### ReviewMark_DepthFlag_Invoked_SetsDefaultHeadingDepth
+
+**Scenario**: The tool is invoked with `--definition <file> --plan <planfile> --report <reportfile> --depth 2`.
+
+**Expected**: Exit code is 0; plan file contains `## Review Coverage`; report file contains `## Review Status`.
+
+**Requirement coverage**: `ReviewMark-System-Depth`
+
+### ReviewMark_DepthFlag_WithValidate_SetsValidationHeadingDepth
+
+**Scenario**: The tool is invoked with `--validate --depth 2`.
+
+**Expected**: Exit code is 0; output contains `## DEMA Consulting ReviewMark`.
+
+**Requirement coverage**: `ReviewMark-System-Depth`
+
+### ReviewMark_LintFlag_WithValidConfig_ProducesNoOutput
+
+**Scenario**: The tool is invoked with `--definition <file> --lint` using a valid definition file.
+
+**Expected**: Exit code is 0; output is empty (no issues, no banner in lint mode).
+
+**Requirement coverage**: `ReviewMark-System-LintValidation`, `ReviewMark-System-LintSilenceOnSuccess`
+
 ## Requirements Coverage
 
-- **ReviewMark-System-Version**: IntegrationTest_VersionFlag_OutputsVersion
-- **ReviewMark-System-Help**: IntegrationTest_HelpFlag_OutputsUsageInformation
-- **ReviewMark-System-Validate**: IntegrationTest_ValidateFlag_RunsValidation
-- **ReviewMark-System-Results**: IntegrationTest_ValidateWithResults_GeneratesTrxFile,
-  IntegrationTest_ValidateWithResults_GeneratesJUnitFile
-- **ReviewMark-System-Silent**: IntegrationTest_SilentFlag_SuppressesOutput
-- **ReviewMark-System-Log**: IntegrationTest_LogFlag_WritesOutputToFile
-- **ReviewMark-System-InvalidArgs**: IntegrationTest_UnknownArgument_ReturnsError
-- **ReviewMark-System-ReviewPlan**: IntegrationTest_ReviewPlanGeneration
-- **ReviewMark-System-Definition**: IntegrationTest_ReviewPlanGeneration
+- **ReviewMark-System-Version**: ReviewMark_VersionFlag_Invoked_OutputsVersion
+- **ReviewMark-System-Help**: ReviewMark_HelpFlag_Invoked_OutputsUsageInformation
+- **ReviewMark-System-Validate**: ReviewMark_ValidateFlag_Invoked_RunsValidation
+- **ReviewMark-System-Results**: ReviewMark_ValidateFlag_WithTrxResultsPath_GeneratesTrxFile,
+  ReviewMark_ValidateFlag_WithXmlResultsPath_GeneratesJUnitFile
+- **ReviewMark-System-Silent**: ReviewMark_SilentFlag_Invoked_SuppressesOutput
+- **ReviewMark-System-Log**: ReviewMark_LogFlag_Invoked_WritesOutputToFile
+- **ReviewMark-System-InvalidArgs**: ReviewMark_UnknownArgument_Provided_ReturnsNonZeroAndError
+- **ReviewMark-System-ReviewPlan**: ReviewMark_PlanFlag_WithDefinitionFile_GeneratesReviewPlan, ReviewMark_DirFlag_Invoked_OverridesWorkingDirectory
+- **ReviewMark-System-ReviewReport**: ReviewMark_ReportFlag_WithDefinitionFile_GeneratesReviewReport
+- **ReviewMark-System-Enforce**: ReviewMark_EnforceFlag_WithNoEvidence_ReturnsNonZero
+- **ReviewMark-System-IndexScan**: ReviewMark_IndexFlag_OnEmptyDirectory_CreatesIndexJson
+- **ReviewMark-System-WorkingDirectory**: ReviewMark_DirFlag_Invoked_OverridesWorkingDirectory
+- **ReviewMark-System-Elaborate**: ReviewMark_ElaborateFlag_WithValidId_OutputsElaboration
+- **ReviewMark-System-Depth**: ReviewMark_DepthFlag_Invoked_SetsDefaultHeadingDepth, ReviewMark_DepthFlag_WithValidate_SetsValidationHeadingDepth
+- **ReviewMark-System-LintValidation**: ReviewMark_LintFlag_WithValidConfig_ProducesNoOutput
+- **ReviewMark-System-LintSilenceOnSuccess**: ReviewMark_LintFlag_WithValidConfig_ProducesNoOutput
+- **ReviewMark-System-Definition**: ReviewMark_PlanFlag_WithDefinitionFile_GeneratesReviewPlan, ReviewMark_ReportFlag_WithDefinitionFile_GeneratesReviewReport

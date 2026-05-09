@@ -71,11 +71,73 @@ pattern.
 
 **Requirement coverage**: `ReviewMark-GlobMatcher-PathNormalization`
 
+##### GlobMatcher_GetMatchingFiles_NullPatterns_ThrowsArgumentNullException
+
+**Scenario**: `GetMatchingFiles` is called with null as the patterns list.
+
+**Expected**: `ArgumentNullException` is thrown.
+
+**Boundary / error path**: Null patterns rejection.
+
+**Requirement coverage**: `ReviewMark-GlobMatcher-NullPatternsRejection`
+
+##### GlobMatcher_GetMatchingFiles_WhitespaceBaseDirectory_ThrowsArgumentException
+
+**Scenario**: `GetMatchingFiles` is called with a whitespace-only string as the base directory.
+
+**Expected**: `ArgumentException` is thrown.
+
+**Boundary / error path**: Whitespace base directory rejection.
+
+**Requirement coverage**: `ReviewMark-GlobMatcher-EmptyBaseDirectoryRejection`
+
+##### GlobMatcher_GetMatchingFiles_ReIncludeAfterExclude_ReturnsReIncludedFiles
+
+**Scenario**: `GetMatchingFiles` is called with patterns that include all `.cs` files,
+exclude a subdirectory, then re-include a specific file in that subdirectory.
+
+**Expected**: The re-included file and all other non-excluded files are in the result; the other excluded files are absent.
+
+**Requirement coverage**: `ReviewMark-GlobMatcher-IncludeExclude`
+
+##### GlobMatcher_GetMatchingFiles_IncludeAndExclude_ReturnsFilteredFiles
+
+**Scenario**: `GetMatchingFiles` is called with an include pattern for all `.cs` files
+and an exclude pattern for the `obj/` directory.
+
+**Expected**: Only files outside the excluded directory are returned.
+
+**Requirement coverage**: `ReviewMark-GlobMatcher-IncludeExclude`
+
+##### GlobMatcher_GetMatchingFiles_EmptyPatterns_ReturnsEmptyList
+
+**Scenario**: `GetMatchingFiles` is called with an empty patterns list.
+
+**Expected**: An empty list is returned.
+
+**Requirement coverage**: `ReviewMark-GlobMatcher-IncludeExclude`
+
+##### GlobMatcher_GetMatchingFiles_MultipleIncludePatterns_ReturnsAllMatching
+
+**Scenario**: `GetMatchingFiles` is called with two include patterns (e.g., `**/*.cs` and `**/*.yaml`).
+
+**Expected**: Files matching either pattern are returned; files matching neither are absent.
+
+**Requirement coverage**: `ReviewMark-GlobMatcher-IncludeExclude`
+
 #### Requirements Coverage
 
-- **ReviewMark-GlobMatcher-IncludeExclude**: GlobMatcher_GetMatchingFiles_SingleIncludePattern_ReturnsMatchingFiles,
+- **ReviewMark-GlobMatcher-IncludeExclude**:
+  GlobMatcher_GetMatchingFiles_SingleIncludePattern_ReturnsMatchingFiles,
   GlobMatcher_GetMatchingFiles_ExcludePattern_ExcludesMatchingFiles,
-  GlobMatcher_GetMatchingFiles_NoMatchingFiles_ReturnsEmptyList
+  GlobMatcher_GetMatchingFiles_NoMatchingFiles_ReturnsEmptyList,
+  GlobMatcher_GetMatchingFiles_ReIncludeAfterExclude_ReturnsReIncludedFiles,
+  GlobMatcher_GetMatchingFiles_IncludeAndExclude_ReturnsFilteredFiles,
+  GlobMatcher_GetMatchingFiles_EmptyPatterns_ReturnsEmptyList,
+  GlobMatcher_GetMatchingFiles_MultipleIncludePatterns_ReturnsAllMatching
 - **ReviewMark-GlobMatcher-NullBaseDirectoryRejection**: GlobMatcher_GetMatchingFiles_NullBaseDirectory_ThrowsArgumentNullException
-- **ReviewMark-GlobMatcher-EmptyBaseDirectoryRejection**: GlobMatcher_GetMatchingFiles_EmptyBaseDirectory_ThrowsArgumentException
+- **ReviewMark-GlobMatcher-EmptyBaseDirectoryRejection**:
+  GlobMatcher_GetMatchingFiles_EmptyBaseDirectory_ThrowsArgumentException,
+  GlobMatcher_GetMatchingFiles_WhitespaceBaseDirectory_ThrowsArgumentException
+- **ReviewMark-GlobMatcher-NullPatternsRejection**: GlobMatcher_GetMatchingFiles_NullPatterns_ThrowsArgumentNullException
 - **ReviewMark-GlobMatcher-PathNormalization**: GlobMatcher_GetMatchingFiles_FileInSubdirectory_UsesForwardSlashSeparator

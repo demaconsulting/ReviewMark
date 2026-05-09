@@ -7,59 +7,101 @@ It defines the test scenarios, dependency usage, and requirement coverage for
 #### Verification Approach
 
 `Validation` is verified with unit tests in `ValidationTests.cs`. Tests call
-`Validation.Validate` with controlled inputs (inline YAML, temporary files, or
-constructed objects) and assert on the returned issue list.
+`Validation.Run(Context)` with controlled `Context` instances created via
+`Context.Create` with specific argument arrays, capture console output using
+`StringWriter`, and assert on exit codes, output content, and results file presence.
 
 #### Dependencies
 
-`Validation` has no dependencies on external processes or network. It accesses the file
-system to resolve paths referenced in the YAML definition; tests provide those paths
-via temporary files.
+| Dependency                   | Reason                                                        |
+| ---------------------------- | ------------------------------------------------------------- |
+| `Context` (real)             | Parsing and state are exercised via the real `Context` class  |
+| Captured `Console.Out`       | Allows tests to assert on human-readable output               |
+| Temporary files/directories  | Results file tests need a real writable path                  |
 
 #### Test Scenarios
 
-##### Validation_Validate_ValidConfiguration_ReturnsNoIssues
+##### Validation_Run_NullContext_ThrowsArgumentNullException
 
-**Scenario**: `Validation.Validate` is called with a fully valid definition.
+**Scenario**: `Validation.Run` is called with a `null` context.
 
-**Expected**: Returns an empty issue list.
+**Expected**: `ArgumentNullException` is thrown.
 
-**Requirement coverage**: `ReviewMark-Validation-NoIssues`
+**Boundary / error path**: Null input rejection.
 
-##### Validation_Validate_MissingReviewSetFile_ReturnsErrorIssue
+**Requirement coverage**: `ReviewMark-Validation-Run`
 
-**Scenario**: `Validation.Validate` is called with a review-set that references a file
-path that does not exist.
+##### Validation_Run_WritesValidationHeader
 
-**Expected**: Returns at least one error-level issue referencing the missing file.
+**Scenario**: `Validation.Run` is called with `["--validate"]`; console output is captured.
 
-**Boundary / error path**: Missing referenced file.
+**Expected**: Output contains `DEMA Consulting ReviewMark`, `Tool Version`, and `Machine Name`.
 
-**Requirement coverage**: `ReviewMark-Validation-MissingFile`
+**Requirement coverage**: `ReviewMark-Validation-Run`
 
-##### Validation_Validate_DuplicateReviewSetId_ReturnsErrorIssue
+##### Validation_Run_WritesSummaryWithTotalTests
 
-**Scenario**: `Validation.Validate` is called with two review-sets sharing the same ID.
+**Scenario**: `Validation.Run` is called with `["--validate"]`; console output is captured.
 
-**Expected**: Returns at least one error-level issue about the duplicate ID.
+**Expected**: Output contains `Total Tests:`, `Passed:`, and `Failed:`.
 
-**Boundary / error path**: Duplicate ID detection.
+**Requirement coverage**: `ReviewMark-Validation-Run`
 
-**Requirement coverage**: `ReviewMark-Validation-DuplicateId`
+##### Validation_Run_AllTestsPass_ExitCodeIsZero
 
-##### Validation_Validate_EmptyReviewSetId_ReturnsErrorIssue
+**Scenario**: `Validation.Run` is called with `["--validate"]` in a correctly functioning
+build environment.
 
-**Scenario**: `Validation.Validate` is called with a review-set with an empty ID.
+**Expected**: `context.ExitCode` is 0 after the run completes.
 
-**Expected**: Returns at least one error-level issue.
+**Requirement coverage**: `ReviewMark-Validation-Run`
 
-**Boundary / error path**: Empty ID rejection.
+##### Validation_Run_WithTrxResultsFile_WritesFile
 
-**Requirement coverage**: `ReviewMark-Validation-EmptyId`
+**Scenario**: `Validation.Run` is called with `["--validate", "--results", "<path>.trx"]`.
+
+**Expected**: The TRX file is created, is non-empty, and contains the text `TestRun`.
+
+**Requirement coverage**: `ReviewMark-Validation-ResultsFile`
+
+##### Validation_Run_WithXmlResultsFile_WritesFile
+
+**Scenario**: `Validation.Run` is called with `["--validate", "--results", "<path>.xml"]`.
+
+**Expected**: The JUnit XML file is created, is non-empty, and contains the text `testsuites`.
+
+**Requirement coverage**: `ReviewMark-Validation-ResultsFile`
+
+##### Validation_Run_WithResultsFileInNewDirectory_CreatesDirectory
+
+**Scenario**: `Validation.Run` is called with a results path whose parent directory does
+not exist yet (e.g. `<tempDir>/output/results.trx`).
+
+**Expected**: The parent directory is created and the results file is written successfully.
+
+**Boundary / error path**: Parent directory creation.
+
+**Requirement coverage**: `ReviewMark-Validation-ResultsFile`
+
+##### Validation_Run_WithUnsupportedResultsFileExtension_WritesError
+
+**Scenario**: `Validation.Run` is called with `["--validate", "--results", "results.csv"]`.
+The `.csv` extension is not supported.
+
+**Expected**: No results file is created; `context.ExitCode` is non-zero; error output
+contains a message about the unsupported extension.
+
+**Boundary / error path**: Unsupported results file extension.
+
+**Requirement coverage**: `ReviewMark-Validation-ResultsFile`
 
 #### Requirements Coverage
 
-- **ReviewMark-Validation-NoIssues**: Validation_Validate_ValidConfiguration_ReturnsNoIssues
-- **ReviewMark-Validation-MissingFile**: Validation_Validate_MissingReviewSetFile_ReturnsErrorIssue
-- **ReviewMark-Validation-DuplicateId**: Validation_Validate_DuplicateReviewSetId_ReturnsErrorIssue
-- **ReviewMark-Validation-EmptyId**: Validation_Validate_EmptyReviewSetId_ReturnsErrorIssue
+- **ReviewMark-Validation-Run**: Validation_Run_NullContext_ThrowsArgumentNullException,
+  Validation_Run_WritesValidationHeader,
+  Validation_Run_WritesSummaryWithTotalTests,
+  Validation_Run_AllTestsPass_ExitCodeIsZero
+- **ReviewMark-Validation-ResultsFile**: Validation_Run_WithTrxResultsFile_WritesFile,
+  Validation_Run_WithXmlResultsFile_WritesFile,
+  Validation_Run_WithResultsFileInNewDirectory_CreatesDirectory,
+  Validation_Run_WithUnsupportedResultsFileExtension_WritesError

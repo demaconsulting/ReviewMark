@@ -19,7 +19,7 @@ test operates in a clean environment.
 
 ### Test Scenarios
 
-#### Configuration_LoadConfig_ResolvesNeedsReviewFiles
+#### Configuration_NeedsReview_ValidConfig_ResolvesFiles
 
 **Scenario**: A configuration with `needs-review: ["src/**/*.cs"]` is loaded; two `.cs`
 files exist in `src/`.
@@ -28,7 +28,7 @@ files exist in `src/`.
 
 **Requirement coverage**: `ReviewMark-Configuration-NeedsReview`
 
-#### Configuration_LoadConfig_FingerprintReflectsFileContent
+#### Configuration_Fingerprinting_ContentModified_FingerprintDiffers
 
 **Scenario**: A configuration is loaded before and after modifying a source file.
 
@@ -36,7 +36,7 @@ files exist in `src/`.
 
 **Requirement coverage**: `ReviewMark-Configuration-Fingerprinting`
 
-#### Configuration_LoadConfig_PlanGenerationSucceeds
+#### Configuration_PlanGeneration_ValidConfig_Succeeds
 
 **Scenario**: A valid configuration is loaded and `PublishReviewPlan` is called.
 
@@ -44,7 +44,7 @@ files exist in `src/`.
 
 **Requirement coverage**: `ReviewMark-Configuration-PlanGeneration`
 
-#### Configuration_LoadConfig_ReportGenerationSucceeds
+#### Configuration_ReportGeneration_ValidConfig_Succeeds
 
 **Scenario**: A valid configuration is loaded and `PublishReviewReport` is called.
 
@@ -52,9 +52,48 @@ files exist in `src/`.
 
 **Requirement coverage**: `ReviewMark-Configuration-ReportGeneration`
 
+#### Configuration_Elaboration_ValidId_Succeeds
+
+**Scenario**: A valid configuration file is loaded and `ElaborateReviewSet` is called with a known review-set ID.
+
+**Expected**: The returned elaboration markdown contains the review-set ID, fingerprint, and file paths.
+
+**Requirement coverage**: `ReviewMark-Configuration-Elaboration`
+
+#### Configuration_LoadConfig_ElaborateUnknownId_ThrowsArgumentException
+
+**Scenario**: A valid configuration file is loaded and `ElaborateReviewSet` is called with an ID that does not exist.
+
+**Expected**: `ArgumentException` is thrown.
+
+**Boundary / error path**: Unknown review-set ID validation at subsystem level.
+
+**Requirement coverage**: `ReviewMark-Configuration-ElaborateUnknownId`
+
+#### Configuration_LoadConfig_MalformedYaml_ReturnsIssues
+
+**Scenario**: A configuration file with invalid/malformed YAML is loaded.
+
+**Expected**: The configuration is null and the issues list is non-empty.
+
+**Boundary / error path**: Malformed YAML input.
+
+**Requirement coverage**: `ReviewMark-Configuration-MalformedYaml`
+
+#### Configuration_Fingerprinting_FileRenamed_FingerprintUnchanged
+
+**Scenario**: A review-set fingerprint is computed before and after renaming one of its source files.
+
+**Expected**: The fingerprint is identical before and after renaming (content-based, not path-based).
+
+**Requirement coverage**: `ReviewMark-Configuration-Fingerprinting`
+
 ### Requirements Coverage
 
-- **ReviewMark-Configuration-NeedsReview**: Configuration_LoadConfig_ResolvesNeedsReviewFiles
-- **ReviewMark-Configuration-Fingerprinting**: Configuration_LoadConfig_FingerprintReflectsFileContent
-- **ReviewMark-Configuration-PlanGeneration**: Configuration_LoadConfig_PlanGenerationSucceeds
-- **ReviewMark-Configuration-ReportGeneration**: Configuration_LoadConfig_ReportGenerationSucceeds
+- **ReviewMark-Configuration-NeedsReview**: Configuration_NeedsReview_ValidConfig_ResolvesFiles
+- **ReviewMark-Configuration-Fingerprinting**: Configuration_Fingerprinting_ContentModified_FingerprintDiffers, Configuration_Fingerprinting_FileRenamed_FingerprintUnchanged
+- **ReviewMark-Configuration-PlanGeneration**: Configuration_PlanGeneration_ValidConfig_Succeeds
+- **ReviewMark-Configuration-ReportGeneration**: Configuration_ReportGeneration_ValidConfig_Succeeds
+- **ReviewMark-Configuration-Elaboration**: Configuration_Elaboration_ValidId_Succeeds
+- **ReviewMark-Configuration-ElaborateUnknownId**: Configuration_LoadConfig_ElaborateUnknownId_ThrowsArgumentException
+- **ReviewMark-Configuration-MalformedYaml**: Configuration_LoadConfig_MalformedYaml_ReturnsIssues

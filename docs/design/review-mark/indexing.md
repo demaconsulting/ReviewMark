@@ -1,12 +1,12 @@
-# Indexing Subsystem
+## Indexing Subsystem
 
-## Overview
+### Overview
 
 The Indexing subsystem is responsible for loading review evidence from an external index
 and for safe file-path manipulation. It provides the lookup engine that determines whether
 each review-set is Current, Stale, Missing, or Failed.
 
-## Responsibilities
+### Responsibilities
 
 - Load the evidence index from a `none`, `fileshare`, or `url` source
 - Scan a set of PDF files, extract structured metadata from the Keywords field, and
@@ -14,14 +14,14 @@ each review-set is Current, Stale, Missing, or Failed.
 - Save the evidence index to a JSON file for later loading
 - Provide safe path-combination utilities that prevent directory-traversal attacks
 
-## Units
+### Units
 
 | Unit          | Source File                    | Purpose                                              |
 |---------------|--------------------------------|------------------------------------------------------|
 | ReviewIndex   | `Indexing/ReviewIndex.cs`      | Review evidence loader and query engine              |
 | PathHelpers   | `Indexing/PathHelpers.cs`      | File path utilities (safe path combination)          |
 
-## Cross-Unit Interaction and Data Flow
+### Cross-Unit Interaction and Data Flow
 
 `ReviewIndex` is the primary unit of the subsystem. It depends on `GlobMatcher`
 (from the Configuration subsystem) to resolve glob patterns into sorted file lists
@@ -54,12 +54,12 @@ The data flow through the subsystem follows two distinct paths:
 6. The completed `ReviewIndex` is returned, and `Program` calls `Save()` to
    persist it as `index.json`.
 
-## API
+### API
 
 `ReviewIndex` exposes the following public API (all members are `internal` to the
 assembly):
 
-### Static Factory Methods
+#### Static Factory Methods
 
 - **`Empty()`** → `ReviewIndex` — Returns a new empty index with no entries
 - **`Load(EvidenceSource)`** → `ReviewIndex` — Loads the index from the configured source
@@ -67,7 +67,7 @@ assembly):
 - **`Scan(string dir, IReadOnlyList<string> paths, Action<string>? onWarning)`** → `ReviewIndex` —
   Builds an index by scanning PDF files
 
-### Instance Methods
+#### Instance Methods
 
 - **`Save(string filePath)`** — Saves the index to a JSON file
 - **`Save(Stream stream)`** — Saves the index to a stream (testable overload)
@@ -79,7 +79,7 @@ assembly):
 
 - **`SafePathCombine(string base, string relative)`** → `string` — Combines paths, rejecting traversal sequences
 
-## Normal Operation
+### Normal Operation
 
 During a typical review plan or report generation run:
 
@@ -95,7 +95,7 @@ During a typical review plan or report generation run:
 3. When the `--index` flag is used, `ReviewIndex.Scan` is called first to rebuild
    the index from PDF files, and `Save` is called to write `index.json`.
 
-## Error Handling
+### Error Handling
 
 - If the evidence source type is unrecognized, `Load` throws
   `InvalidOperationException` with a descriptive message.

@@ -43,7 +43,7 @@ public class IntegrationTests
     ///     Test that version flag outputs version information.
     /// </summary>
     [Fact]
-    public void IntegrationTest_VersionFlag_OutputsVersion()
+    public void ReviewMark_VersionFlag_Invoked_OutputsVersion()
     {
         // Act
         var exitCode = Runner.Run(
@@ -63,7 +63,7 @@ public class IntegrationTests
     ///     Test that help flag outputs usage information.
     /// </summary>
     [Fact]
-    public void IntegrationTest_HelpFlag_OutputsUsageInformation()
+    public void ReviewMark_HelpFlag_Invoked_OutputsUsageInformation()
     {
         // Act
         var exitCode = Runner.Run(
@@ -83,7 +83,7 @@ public class IntegrationTests
     ///     Test that validate flag runs self-validation.
     /// </summary>
     [Fact]
-    public void IntegrationTest_ValidateFlag_RunsValidation()
+    public void ReviewMark_ValidateFlag_Invoked_RunsValidation()
     {
         // Act
         var exitCode = Runner.Run(
@@ -102,7 +102,7 @@ public class IntegrationTests
     ///     Test that validate with results flag generates TRX file.
     /// </summary>
     [Fact]
-    public void IntegrationTest_ValidateWithResults_GeneratesTrxFile()
+    public void ReviewMark_ValidateFlag_WithTrxResultsPath_GeneratesTrxFile()
     {
         // Arrange
         var resultsFile = Path.GetTempFileName();
@@ -140,7 +140,7 @@ public class IntegrationTests
     ///     Test that silent flag suppresses output.
     /// </summary>
     [Fact]
-    public void IntegrationTest_SilentFlag_SuppressesOutput()
+    public void ReviewMark_SilentFlag_Invoked_SuppressesOutput()
     {
         // Act
         var exitCode = Runner.Run(
@@ -158,7 +158,7 @@ public class IntegrationTests
     ///     Test that log flag writes output to file.
     /// </summary>
     [Fact]
-    public void IntegrationTest_LogFlag_WritesOutputToFile()
+    public void ReviewMark_LogFlag_Invoked_WritesOutputToFile()
     {
         // Arrange
         var logFile = Path.GetTempFileName();
@@ -193,7 +193,7 @@ public class IntegrationTests
     ///     Test that validate with results flag generates JUnit XML file.
     /// </summary>
     [Fact]
-    public void IntegrationTest_ValidateWithResults_GeneratesJUnitFile()
+    public void ReviewMark_ValidateFlag_WithXmlResultsPath_GeneratesJUnitFile()
     {
         // Arrange
         var resultsFile = Path.GetTempFileName();
@@ -230,7 +230,7 @@ public class IntegrationTests
     ///     Test that unknown argument returns error.
     /// </summary>
     [Fact]
-    public void IntegrationTest_UnknownArgument_ReturnsError()
+    public void ReviewMark_UnknownArgument_Provided_ReturnsNonZeroAndError()
     {
         // Act
         var exitCode = Runner.Run(
@@ -248,7 +248,7 @@ public class IntegrationTests
     ///     Test that review plan generation writes a Markdown plan file.
     /// </summary>
     [Fact]
-    public void IntegrationTest_ReviewPlanGeneration()
+    public void ReviewMark_PlanFlag_WithDefinitionFile_GeneratesReviewPlan()
     {
         // Arrange
         var defFile = Path.Combine(Path.GetTempPath(), Path.ChangeExtension(Path.GetRandomFileName(), ".yaml"));
@@ -301,7 +301,7 @@ public class IntegrationTests
     ///     Test that review report generation writes a Markdown report file.
     /// </summary>
     [Fact]
-    public void IntegrationTest_ReviewReportGeneration()
+    public void ReviewMark_ReportFlag_WithDefinitionFile_GeneratesReviewReport()
     {
         // Arrange
         var defFile = Path.Combine(Path.GetTempPath(), Path.ChangeExtension(Path.GetRandomFileName(), ".yaml"));
@@ -354,7 +354,7 @@ public class IntegrationTests
     ///     Test that --enforce returns non-zero when reviews are not current.
     /// </summary>
     [Fact]
-    public void IntegrationTest_Enforce()
+    public void ReviewMark_EnforceFlag_WithNoEvidence_ReturnsNonZero()
     {
         // Arrange
         var defFile = Path.Combine(Path.GetTempPath(), Path.ChangeExtension(Path.GetRandomFileName(), ".yaml"));
@@ -405,92 +405,70 @@ public class IntegrationTests
     ///     Test that --index scans a directory and creates an index.json.
     /// </summary>
     [Fact]
-    public void IntegrationTest_IndexScan()
+    public void ReviewMark_IndexFlag_OnEmptyDirectory_CreatesIndexJson()
     {
         // Arrange — create a temp directory to index (with no PDF files)
-        var tmpDir = Path.Combine(Path.GetTempPath(), $"reviewmark_idx_{Guid.NewGuid()}");
-        Directory.CreateDirectory(tmpDir);
-        var indexFile = Path.Combine(tmpDir, "index.json");
+        using var tempDir = new TestDirectory();
+        var indexFile = Path.Combine(tempDir.DirectoryPath, "index.json");
 
-        try
-        {
-            // Act — index the empty directory
-            var exitCode = Runner.Run(
-                out _,
-                "dotnet",
-                _dllPath,
-                "--dir",
-                tmpDir,
-                "--index",
-                Path.Combine(tmpDir, "**", "*.pdf"));
+        // Act — index the empty directory
+        var exitCode = Runner.Run(
+            out _,
+            "dotnet",
+            _dllPath,
+            "--dir",
+            tempDir.DirectoryPath,
+            "--index",
+            Path.Combine(tempDir.DirectoryPath, "**", "*.pdf"));
 
-            // Assert — exits successfully and produces index.json
-            Assert.Equal(0, exitCode);
-            Assert.True(File.Exists(indexFile), "index.json was not created");
-        }
-        finally
-        {
-            if (Directory.Exists(tmpDir))
-            {
-                Directory.Delete(tmpDir, recursive: true);
-            }
-        }
+        // Assert — exits successfully and produces index.json
+        Assert.Equal(0, exitCode);
+        Assert.True(File.Exists(indexFile), "index.json was not created");
     }
 
     /// <summary>
     ///     Test that --dir sets the working directory for file operations.
     /// </summary>
     [Fact]
-    public void IntegrationTest_WorkingDirectoryOverride()
+    public void ReviewMark_DirFlag_Invoked_OverridesWorkingDirectory()
     {
         // Arrange — create a temp directory with a definition file
-        var tmpDir = Path.Combine(Path.GetTempPath(), $"reviewmark_work_{Guid.NewGuid()}");
-        Directory.CreateDirectory(tmpDir);
-        var defFile = Path.Combine(tmpDir, ".reviewmark.yaml");
-        var planFile = Path.Combine(tmpDir, "plan.md");
+        using var tempDir = new TestDirectory();
+        var defFile = Path.Combine(tempDir.DirectoryPath, ".reviewmark.yaml");
+        var planFile = Path.Combine(tempDir.DirectoryPath, "plan.md");
 
-        try
-        {
-            File.WriteAllText(defFile, """
-                needs-review:
+        File.WriteAllText(defFile, """
+            needs-review:
+              - "src/**/*.cs"
+            evidence-source:
+              type: none
+            reviews:
+              - id: Test-Review
+                title: Test review
+                paths:
                   - "src/**/*.cs"
-                evidence-source:
-                  type: none
-                reviews:
-                  - id: Test-Review
-                    title: Test review
-                    paths:
-                      - "src/**/*.cs"
-                """);
+            """);
 
-            // Act — use --dir to point to temp directory containing the definition file
-            var exitCode = Runner.Run(
-                out _,
-                "dotnet",
-                _dllPath,
-                "--dir",
-                tmpDir,
-                "--plan",
-                planFile);
+        // Act — use --dir to point to temp directory containing the definition file
+        var exitCode = Runner.Run(
+            out _,
+            "dotnet",
+            _dllPath,
+            "--dir",
+            tempDir.DirectoryPath,
+            "--plan",
+            planFile);
 
-            // Assert — exits successfully using the directory-relative definition file
-            Assert.Equal(0, exitCode);
-            Assert.True(File.Exists(planFile), "Plan file was not created");
-        }
-        finally
-        {
-            if (Directory.Exists(tmpDir))
-            {
-                Directory.Delete(tmpDir, recursive: true);
-            }
-        }
+        // Assert — exits successfully using the directory-relative definition file
+        Assert.Equal(0, exitCode);
+        Assert.True(File.Exists(planFile), "Plan file was not created");
     }
 
     /// <summary>
     ///     Test that --elaborate outputs elaboration for a valid review-set ID.
     /// </summary>
     [Fact]
-    public void IntegrationTest_Elaborate()
+    public void ReviewMark_ElaborateFlag_WithValidId_OutputsElaboration()
     {
         // Arrange
         var defFile = Path.Combine(Path.GetTempPath(), Path.ChangeExtension(Path.GetRandomFileName(), ".yaml"));
@@ -536,7 +514,7 @@ public class IntegrationTests
     ///     Test that --depth flag sets the default heading depth across all generated documents.
     /// </summary>
     [Fact]
-    public void IntegrationTest_DepthFlag_SetsDefaultHeadingDepth()
+    public void ReviewMark_DepthFlag_Invoked_SetsDefaultHeadingDepth()
     {
         // Arrange
         var defFile = Path.Combine(Path.GetTempPath(), Path.ChangeExtension(Path.GetRandomFileName(), ".yaml"));
@@ -601,7 +579,7 @@ public class IntegrationTests
     ///     Test that --depth flag sets the heading depth in the self-validation report.
     /// </summary>
     [Fact]
-    public void IntegrationTest_DepthFlag_SetsValidationHeadingDepth()
+    public void ReviewMark_DepthFlag_WithValidate_SetsValidationHeadingDepth()
     {
         // Act
         var exitCode = Runner.Run(
@@ -621,7 +599,7 @@ public class IntegrationTests
     ///     Test that --lint with a valid config reports success.
     /// </summary>
     [Fact]
-    public void IntegrationTest_Lint()
+    public void ReviewMark_LintFlag_WithValidConfig_ProducesNoOutput()
     {
         // Arrange
         var defFile = Path.Combine(Path.GetTempPath(), Path.ChangeExtension(Path.GetRandomFileName(), ".yaml"));
@@ -666,7 +644,7 @@ public class IntegrationTests
     ///     Test that an invalid log file path causes Main() to return a non-zero exit code.
     /// </summary>
     [Fact]
-    public void IntegrationTest_InvalidLogPath_ReturnsError()
+    public void ReviewMark_LogFlag_WithInvalidPath_ReturnsNonZero()
     {
         // Arrange — construct a log path whose parent directory does not exist
         var nonExistentDir = Path.Combine(Path.GetTempPath(), $"reviewmark_missing_{Guid.NewGuid()}");

@@ -24,8 +24,6 @@ sections:
           - Program_Run_WithVersionFlag_DisplaysVersionOnly
           - Program_Version_ReturnsNonEmptyString
           - Program_Run_WithHelpFlag_DisplaysUsageInformation
-          - IntegrationTest_UnknownArgument_ReturnsError
-          - IntegrationTest_InvalidLogPath_ReturnsError
 
       - id: ReviewMark-Program-Dispatch
         title: >-
@@ -81,3 +79,15 @@ sections:
         tests:
           - Program_HandleIssues_WithEnforce_SetsExitCode1
           - Program_HandleIssues_WithoutEnforce_EmitsWarning
+
+      - id: ReviewMark-Program-Index
+        title: >-
+          The Program unit shall scan PDF evidence files and write an index.json when the
+          --index flag is provided.
+        justification: |
+          When --index is provided, the Program unit must invoke RunIndexLogic() to scan
+          the specified glob paths for PDF evidence files and write the resulting index to
+          index.json in the working directory. This makes the --index flag a first-class
+          operation dispatched by Program.Run, just like --validate and --lint.
+        tests:
+          - Program_Run_WithIndexFlag_ScansAndWritesIndexFile

@@ -99,11 +99,75 @@ that does not contain that ID.
 
 #### Program_Run_WithLintFlag_ValidConfig_SuppressesBanner
 
-**Scenario**: `Program.Run` is called with `--lint --definition <valid-file>` and `--silent`.
+**Scenario**: `Program.Run` is called with `--lint --definition <valid-file>`.
 
-**Expected**: Console output is empty; exit code is 0.
+**Expected**: Console output is empty; exit code is 0. The banner is suppressed because
+lint mode itself suppresses the application banner, not because of a `--silent` flag.
 
 **Requirement coverage**: `ReviewMark-Program-LintVerbosity`
+
+#### Program_Run_WithLintFlag_MissingConfig_ReportsError
+
+**Scenario**: `Program.Run` is called with `--lint --definition <nonexistent-file>`.
+
+**Expected**: Exit code is 1; log output contains "error:" and the name of the missing file.
+
+**Requirement coverage**: `ReviewMark-Program-Dispatch`, `ReviewMark-Program-LintVerbosity`
+
+#### Program_Run_WithLintFlag_DuplicateIds_ReportsError
+
+**Scenario**: `Program.Run` is called with `--lint --definition <file>` where the definition
+contains two review sets with the same ID `Core-Logic`.
+
+**Expected**: Exit code is 1; log output contains "error:", "duplicate ID", and "Core-Logic".
+
+**Requirement coverage**: `ReviewMark-Program-Dispatch`, `ReviewMark-Program-LintVerbosity`
+
+#### Program_Run_WithLintFlag_UnknownSourceType_ReportsError
+
+**Scenario**: `Program.Run` is called with `--lint --definition <file>` where the definition
+has `evidence-source.type: ftp`.
+
+**Expected**: Exit code is 1; log output contains "error:", "ftp", and "not supported".
+
+**Requirement coverage**: `ReviewMark-Program-Dispatch`, `ReviewMark-Program-LintVerbosity`
+
+#### Program_Run_WithLintFlag_CorruptedYaml_ReportsError
+
+**Scenario**: `Program.Run` is called with `--lint --definition <file>` where the definition
+file contains invalid YAML syntax.
+
+**Expected**: Exit code is 1; log output contains "error:" and the definition file name with a line number.
+
+**Requirement coverage**: `ReviewMark-Program-Dispatch`, `ReviewMark-Program-LintVerbosity`
+
+#### Program_Run_WithLintFlag_MissingEvidenceSource_ReportsError
+
+**Scenario**: `Program.Run` is called with `--lint --definition <file>` where the definition
+has no `evidence-source` block.
+
+**Expected**: Exit code is 1; log output contains "error:", the definition file name, and "evidence-source".
+
+**Requirement coverage**: `ReviewMark-Program-Dispatch`, `ReviewMark-Program-LintVerbosity`
+
+#### Program_Run_WithLintFlag_MultipleErrors_ReportsAll
+
+**Scenario**: `Program.Run` is called with `--lint --definition <file>` where the definition
+is missing `evidence-source` AND has duplicate review-set IDs.
+
+**Expected**: Exit code is 1; log output contains BOTH "evidence-source" AND "duplicate ID",
+proving all errors are accumulated in a single pass.
+
+**Requirement coverage**: `ReviewMark-Program-Dispatch`, `ReviewMark-Program-LintVerbosity`
+
+#### Program_Run_WithDefinitionFlag_InvalidConfig_ReportsLintError
+
+**Scenario**: `Program.Run` is called with `--definition <invalid-file> --plan <planfile>` where
+the definition is missing `evidence-source`.
+
+**Expected**: Exit code is 1; log output contains "error:" and "evidence-source".
+
+**Requirement coverage**: `ReviewMark-Program-Dispatch`
 
 #### Program_HandleIssues_WithEnforce_SetsExitCode1
 
@@ -129,9 +193,19 @@ that does not contain that ID.
   Program_Run_WithHelpFlag_DisplaysUsageInformation, Program_Run_WithValidateFlag_RunsValidation,
   Program_Run_NoArguments_DisplaysDefaultBehavior, Program_Run_WithHelpFlag_IncludesElaborateOption,
   Program_Run_WithHelpFlag_IncludesLintOption, Program_Run_WithElaborateFlag_OutputsElaboration,
-  Program_Run_WithElaborateFlag_UnknownId_ReportsError, Program_Run_WithLintFlag_ValidConfig_ReportsSuccess
+  Program_Run_WithElaborateFlag_UnknownId_ReportsError, Program_Run_WithLintFlag_ValidConfig_ReportsSuccess,
+  Program_Run_WithLintFlag_MissingConfig_ReportsError, Program_Run_WithLintFlag_DuplicateIds_ReportsError,
+  Program_Run_WithLintFlag_UnknownSourceType_ReportsError, Program_Run_WithLintFlag_CorruptedYaml_ReportsError,
+  Program_Run_WithLintFlag_MissingEvidenceSource_ReportsError, Program_Run_WithLintFlag_MultipleErrors_ReportsAll,
+  Program_Run_WithDefinitionFlag_InvalidConfig_ReportsLintError
 - **ReviewMark-Program-LintVerbosity**: Program_Run_WithHelpFlag_IncludesLintOption,
   Program_Run_WithLintFlag_ValidConfig_ReportsSuccess,
-  Program_Run_WithLintFlag_ValidConfig_SuppressesBanner
+  Program_Run_WithLintFlag_ValidConfig_SuppressesBanner,
+  Program_Run_WithLintFlag_MissingConfig_ReportsError,
+  Program_Run_WithLintFlag_DuplicateIds_ReportsError,
+  Program_Run_WithLintFlag_UnknownSourceType_ReportsError,
+  Program_Run_WithLintFlag_CorruptedYaml_ReportsError,
+  Program_Run_WithLintFlag_MissingEvidenceSource_ReportsError,
+  Program_Run_WithLintFlag_MultipleErrors_ReportsAll
 - **ReviewMark-Program-HandleIssues**: Program_HandleIssues_WithEnforce_SetsExitCode1,
   Program_HandleIssues_WithoutEnforce_EmitsWarning

@@ -567,11 +567,11 @@ public sealed class IndexTests : IDisposable
     }
 
     /// <summary>
-    ///     Test that passing a null or empty path to <see cref="ReviewIndex.Save(string)" />
+    ///     Test that passing an empty path to <see cref="ReviewIndex.Save(string)" />
     ///     throws <see cref="ArgumentException" />.
     /// </summary>
     [Fact]
-    public void ReviewIndex_Save_File_NullPath_ThrowsArgumentException()
+    public void ReviewIndex_Save_File_EmptyPath_ThrowsArgumentException()
     {
         // Arrange
         var index = ReviewIndex.Empty();
@@ -580,6 +580,24 @@ public sealed class IndexTests : IDisposable
         // Act & Assert — an empty path is invalid and should throw
         Assert.Throws<ArgumentException>(() =>
             index.Save(emptyPath));
+    }
+
+    /// <summary>
+    ///     Test that passing a null path to <see cref="ReviewIndex.Save(string)" />
+    ///     throws <see cref="ArgumentException" />.
+    /// </summary>
+    [Fact]
+    public void ReviewIndex_Save_File_NullPath_ThrowsArgumentException()
+    {
+        // Arrange
+        var index = ReviewIndex.Empty();
+        string? nullPath = null;
+
+        // Act & Assert — a null path is invalid and should throw
+#pragma warning disable CS8604 // Possible null reference argument — intentional for this test
+        Assert.Throws<ArgumentException>(() =>
+            index.Save(nullPath!));
+#pragma warning restore CS8604
     }
 
     /// <summary>

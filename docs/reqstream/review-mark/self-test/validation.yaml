@@ -35,3 +35,4 @@ sections:
           - Validation_Run_WithTrxResultsFile_WritesFile
           - Validation_Run_WithXmlResultsFile_WritesFile
           - Validation_Run_WithResultsFileInNewDirectory_CreatesDirectory
+          - Validation_Run_WithUnsupportedResultsFileExtension_WritesError

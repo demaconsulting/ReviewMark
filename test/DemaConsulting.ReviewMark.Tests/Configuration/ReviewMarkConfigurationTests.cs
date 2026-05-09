@@ -93,6 +93,8 @@ public sealed class ReviewMarkConfigurationTests : IDisposable
     [Fact]
     public void ReviewMarkConfiguration_Parse_ValidYaml_ReturnsConfiguration()
     {
+        // Arrange — uses MinimalYaml constant defined at class level
+
         // Act
         var config = ReviewMarkConfiguration.Parse(MinimalYaml);
 
@@ -133,6 +135,8 @@ public sealed class ReviewMarkConfigurationTests : IDisposable
     [Fact]
     public void ReviewMarkConfiguration_Parse_EvidenceSource_ParsedCorrectly()
     {
+        // Arrange — uses MinimalYaml constant defined at class level
+
         // Act
         var config = ReviewMarkConfiguration.Parse(MinimalYaml);
 
@@ -149,6 +153,8 @@ public sealed class ReviewMarkConfigurationTests : IDisposable
     [Fact]
     public void ReviewMarkConfiguration_Parse_Reviews_ParsedCorrectly()
     {
+        // Arrange — uses MinimalYaml constant defined at class level
+
         // Act
         var config = ReviewMarkConfiguration.Parse(MinimalYaml);
 
@@ -835,6 +841,21 @@ public sealed class ReviewMarkConfigurationTests : IDisposable
         Assert.Throws<ArgumentNullException>(() =>
             config.ElaborateReviewSet(null!, _testDirectory));
 #pragma warning restore CS8625
+    }
+
+    /// <summary>
+    ///     Test that ElaborateReviewSet throws ArgumentException when the
+    ///     review-set ID is whitespace-only.
+    /// </summary>
+    [Fact]
+    public void ReviewMarkConfiguration_ElaborateReviewSet_WhitespaceId_ThrowsArgumentException()
+    {
+        // Arrange
+        var config = ReviewMarkConfiguration.Parse(MinimalYaml);
+
+        // Act & Assert — whitespace-only review-set ID should throw
+        Assert.Throws<ArgumentException>(() =>
+            config.ElaborateReviewSet("   ", _testDirectory));
     }
 
     /// <summary>

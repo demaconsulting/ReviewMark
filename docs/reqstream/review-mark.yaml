@@ -18,7 +18,7 @@ sections:
           is covered by at least one named review-set. The Review Plan document provides this
           evidence automatically on each CI/CD run, replacing manual tracking spreadsheets.
         tests:
-          - IntegrationTest_ReviewPlanGeneration
+          - ReviewMark_PlanFlag_WithDefinitionFile_GeneratesReviewPlan
         children:
           - ReviewMark-Cmd-Plan
           - ReviewMark-Configuration-NeedsReview
@@ -32,7 +32,7 @@ sections:
           Report provides this evidence automatically, showing Current, Stale, Missing, or
           Failed status for each review-set.
         tests:
-          - IntegrationTest_ReviewReportGeneration
+          - ReviewMark_ReportFlag_WithDefinitionFile_GeneratesReviewReport
         children:
           - ReviewMark-Cmd-Report
           - ReviewMark-Configuration-Fingerprinting
@@ -49,9 +49,10 @@ sections:
           Failed status. This makes incomplete file coverage, out-of-date reviews, and failed
           reviews all build-breaking conditions.
         tests:
-          - IntegrationTest_Enforce
+          - ReviewMark_EnforceFlag_WithNoEvidence_ReturnsNonZero
         children:
           - ReviewMark-Cmd-Enforce
+          - ReviewMark-Program-HandleIssues
 
       - id: ReviewMark-System-IndexScan
         title: The tool shall scan PDF evidence files and write an index.json when the --index flag is provided.
@@ -61,11 +62,12 @@ sections:
           index.json, enabling the evidence store to be refreshed after new review PDFs are added
           without manual maintenance of the index file.
         tests:
-          - IntegrationTest_IndexScan
+          - ReviewMark_IndexFlag_OnEmptyDirectory_CreatesIndexJson
         children:
           - ReviewMark-Cmd-Index
           - ReviewMark-Indexing-SafePathCombine
           - ReviewMark-Indexing-ScanPdfEvidence
+          - ReviewMark-Program-Index
 
       - id: ReviewMark-System-Validate
         title: The tool shall execute self-validation tests when the --validate flag is provided.
@@ -74,7 +76,7 @@ sections:
           functions correctly in its specific deployment environment. The --validate flag triggers
           a built-in test suite that exercises core tool behaviors and produces a pass/fail report.
         tests:
-          - IntegrationTest_ValidateFlag_RunsValidation
+          - ReviewMark_ValidateFlag_Invoked_RunsValidation
         children:
           - ReviewMark-Cmd-Validate
           - ReviewMark-SelfTest-Qualification
@@ -85,16 +87,17 @@ sections:
           Users need to quickly identify the version of the tool they are using for
           troubleshooting and compatibility verification.
         tests:
-          - IntegrationTest_VersionFlag_OutputsVersion
+          - ReviewMark_VersionFlag_Invoked_OutputsVersion
         children:
           - ReviewMark-Cmd-Version
+          - ReviewMark-Program-Dispatch
 
       - id: ReviewMark-System-Help
         title: The tool shall display usage information when the --help flag is provided.
         justification: |
           Users need access to command-line usage documentation without requiring external resources.
         tests:
-          - IntegrationTest_HelpFlag_OutputsUsageInformation
+          - ReviewMark_HelpFlag_Invoked_OutputsUsageInformation
         children:
           - ReviewMark-Cmd-Help
 
@@ -104,7 +107,7 @@ sections:
           Allows users to target an evidence store or project directory without changing
           the process working directory, enabling consistent scripting and CI/CD usage.
         tests:
-          - IntegrationTest_WorkingDirectoryOverride
+          - ReviewMark_DirFlag_Invoked_OverridesWorkingDirectory
         children:
           - ReviewMark-Cmd-Dir
 
@@ -114,24 +117,34 @@ sections:
           When preparing for a review, the reviewer needs the review set ID, its current
           fingerprint, and the full sorted list of files to be reviewed.
         tests:
-          - IntegrationTest_Elaborate
+          - ReviewMark_ElaborateFlag_WithValidId_OutputsElaboration
         children:
           - ReviewMark-Cmd-Elaborate
           - ReviewMark-Configuration-Elaboration
 
-      - id: ReviewMark-System-Lint
-        title: >-
-          The tool shall validate the definition file and report only issue messages when
-          --lint is provided, producing no output on success.
+      - id: ReviewMark-System-LintValidation
+        title: The tool shall validate the definition file and report only issue messages when --lint is provided.
         justification: |
           Users need a way to verify that the .reviewmark.yaml configuration file is valid
-          before running the main tool. Suppressing the banner and summary on success
-          (silence-on-success) allows the exit code alone to signal whether the file is
-          valid, improving integration with linting scripts and CI pipelines.
+          before running the main tool. Reporting only the issue messages (not a banner or
+          summary) keeps the output suitable for direct use in linting scripts and CI pipelines.
         tests:
-          - IntegrationTest_Lint
+          - ReviewMark_LintFlag_WithValidConfig_ProducesNoOutput
         children:
           - ReviewMark-Cmd-Lint
+          - ReviewMark-Program-LintVerbosity
+
+      - id: ReviewMark-System-LintSilenceOnSuccess
+        title: The tool shall produce no output when --lint succeeds (exit code 0).
+        justification: |
+          Suppressing all output on successful lint (silence-on-success) allows the exit code
+          alone to signal whether the file is valid. This follows the Unix convention and
+          improves integration with linting scripts and CI pipelines.
+        tests:
+          - ReviewMark_LintFlag_WithValidConfig_ProducesNoOutput
+        children:
+          - ReviewMark-Cmd-Lint
+          - ReviewMark-Program-LintVerbosity
 
       - id: ReviewMark-System-Silent
         title: The tool shall support --silent flag to suppress console output.
@@ -139,7 +152,7 @@ sections:
           Enables automated scripts and CI/CD pipelines to run the tool without cluttering
           output logs when only the exit code is needed.
         tests:
-          - IntegrationTest_SilentFlag_SuppressesOutput
+          - ReviewMark_SilentFlag_Invoked_SuppressesOutput
         children:
           - ReviewMark-Cmd-Silent
 
@@ -149,7 +162,7 @@ sections:
           Provides persistent logging for debugging and audit trails when running in CI/CD
           environments where console output may not be captured.
         tests:
-          - IntegrationTest_LogFlag_WritesOutputToFile
+          - ReviewMark_LogFlag_Invoked_WritesOutputToFile
         children:
           - ReviewMark-Cmd-Log
 
@@ -162,9 +175,13 @@ sections:
           Allows users to set the heading depth once and have it apply to the review plan,
           review report, and self-validation report, unless a more specific flag is provided.
           Default depth is 1 when not specified.
+          Note: These three flags (--depth, --plan-depth, --report-depth) are grouped in a single
+          requirement because they form a coherent depth-override mechanism; the per-command flags
+          are only meaningful in the context of the default, and all three are tested together in
+          each depth test scenario.
         tests:
-          - IntegrationTest_DepthFlag_SetsDefaultHeadingDepth
-          - IntegrationTest_DepthFlag_SetsValidationHeadingDepth
+          - ReviewMark_DepthFlag_Invoked_SetsDefaultHeadingDepth
+          - ReviewMark_DepthFlag_WithValidate_SetsValidationHeadingDepth
         children:
           - ReviewMark-Cmd-Depth
           - ReviewMark-Cmd-PlanDepth
@@ -176,11 +193,12 @@ sections:
           Providing clear feedback for invalid arguments helps users quickly correct mistakes
           and prevents silent misconfiguration in automated environments.
         tests:
-          - IntegrationTest_UnknownArgument_ReturnsError
+          - ReviewMark_UnknownArgument_Provided_ReturnsNonZeroAndError
         children:
           - ReviewMark-Cmd-InvalidArgs
           - ReviewMark-Cmd-ErrorOutput
           - ReviewMark-Cmd-ExitCode
+          - ReviewMark-Program-EntryPoint
 
       - id: ReviewMark-System-Results
         title: The tool shall write validation results to a standard test result file when --results is provided.
@@ -188,8 +206,8 @@ sections:
           Enables integration with CI/CD systems and requirements traceability tools that
           expect standard TRX or JUnit XML test result formats.
         tests:
-          - IntegrationTest_ValidateWithResults_GeneratesTrxFile
-          - IntegrationTest_ValidateWithResults_GeneratesJUnitFile
+          - ReviewMark_ValidateFlag_WithTrxResultsPath_GeneratesTrxFile
+          - ReviewMark_ValidateFlag_WithXmlResultsPath_GeneratesJUnitFile
         children:
           - ReviewMark-Cmd-Results
           - ReviewMark-SelfTest-ResultsOutput
@@ -202,6 +220,6 @@ sections:
           The --definition flag enables ReviewMark to be used with multiple configurations in the
           same repository or CI/CD pipeline.
         tests:
-          - IntegrationTest_ReviewPlanGeneration
+          - ReviewMark_PlanFlag_WithDefinitionFile_GeneratesReviewPlan
         children:
           - ReviewMark-Cmd-Definition

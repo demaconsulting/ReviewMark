@@ -31,9 +31,12 @@ sections:
           - ReviewMarkConfiguration_Load_FileshareRelativeLocation_ResolvesToAbsolutePath
           - ReviewMarkConfiguration_Parse_NoneEvidenceSource_ParsedCorrectly
           - ReviewMarkConfiguration_Parse_NoneEvidenceSource_NoLocationRequired
+
       - id: ReviewMark-Config-Loading
-        title: The ReviewMarkConfiguration unit shall perform linting during configuration loading, returning a result containing
-          both the configuration and all detected issues.
+        title: >-
+          The ReviewMarkConfiguration unit shall perform linting during configuration
+          loading, returning a result containing both the configuration and all
+          detected issues.
         justification: |
           Combining configuration parsing and linting in a single loading operation ensures
           callers receive comprehensive diagnostics without performing two separate passes.
@@ -48,8 +51,9 @@ sections:
           - ReviewMarkConfiguration_Load_WhitespaceOnlyPaths_ReturnsLintError
 
       - id: ReviewMark-Config-LoadingNullOnError
-        title: The ReviewMarkConfiguration unit shall return a null configuration in the load result when any error-level
-          lint issue is detected.
+        title: >-
+          The ReviewMarkConfiguration unit shall return a null configuration in the
+          load result when any error-level lint issue is detected.
         justification: |
           Returning null when errors are detected allows callers to distinguish between a
           completely invalid file and a file with only warnings. Null signals that the
@@ -60,8 +64,9 @@ sections:
           - ReviewMarkConfiguration_Load_MissingEvidenceSource_ReturnsNullConfigWithErrorIssue
 
       - id: ReviewMark-Config-PlanGeneration
-        title: The ReviewMarkConfiguration unit shall generate a Markdown review plan listing all files in the needs-review
-          set and their review-set coverage.
+        title: >-
+          The ReviewMarkConfiguration unit shall generate a Markdown review plan
+          listing all files in the needs-review set and their review-set coverage.
         justification: |
           The tool must generate a Markdown review plan document that lists every file
           in the needs-review file-set and identifies which review-sets provide coverage
@@ -71,19 +76,32 @@ sections:
           - ReviewMarkConfiguration_PublishReviewPlan_UncoveredFiles_HasIssues
 
       - id: ReviewMark-Config-PlanMarkdownDepth
-        title: The ReviewMarkConfiguration unit shall apply the markdownDepth parameter to control the heading level in generated
-          review plan documents, rejecting values above 5.
+        title: >-
+          The ReviewMarkConfiguration unit shall apply the markdownDepth parameter to
+          control the heading level in generated review plan documents.
         justification: |
           The heading depth controls the section heading level in the generated plan document
           and must be within the supported range (1–5) so that subheadings do not exceed
           the maximum Markdown heading level of 6.
         tests:
           - ReviewMarkConfiguration_PublishReviewPlan_MarkdownDepth_UsedForHeadings
+
+      - id: ReviewMark-Config-PlanMarkdownDepthValidation
+        title: >-
+          The ReviewMarkConfiguration unit shall reject markdownDepth values above 5
+          for plan generation with ArgumentOutOfRangeException.
+        justification: |
+          Subheadings in the generated plan document are at depth+1. Allowing depth > 5 would
+          require a heading level of 7 or more, which exceeds the maximum supported by Markdown.
+          Explicit validation with ArgumentOutOfRangeException surfaces the problem immediately
+          at the call site.
+        tests:
           - ReviewMarkConfiguration_PublishReviewPlan_MarkdownDepthAbove5_Throws
 
       - id: ReviewMark-Config-ReportGeneration
-        title: The ReviewMarkConfiguration unit shall generate a Markdown review report listing each review-set and its current
-          status.
+        title: >-
+          The ReviewMarkConfiguration unit shall generate a Markdown review report
+          listing each review-set and its current status.
         justification: |
           The tool must generate a Markdown review report document that lists every
           review-set with its current status (Current, Stale, Missing, or Failed).
@@ -94,36 +112,84 @@ sections:
           - ReviewMarkConfiguration_PublishReviewReport_MissingReview_HasIssues
 
       - id: ReviewMark-Config-ReportMarkdownDepth
-        title: The ReviewMarkConfiguration unit shall apply the markdownDepth parameter to control the heading level in generated
-          review report documents, rejecting values above 5.
+        title: >-
+          The ReviewMarkConfiguration unit shall apply the markdownDepth parameter to
+          control the heading level in generated review report documents.
         justification: |
           The heading depth controls the section heading level in the generated report document
           and must be within the supported range (1–5) so that subheadings do not exceed
           the maximum Markdown heading level of 6.
         tests:
           - ReviewMarkConfiguration_PublishReviewReport_MarkdownDepth_UsedForHeadings
+
+      - id: ReviewMark-Config-ReportMarkdownDepthValidation
+        title: >-
+          The ReviewMarkConfiguration unit shall reject markdownDepth values above 5
+          for report generation with ArgumentOutOfRangeException.
+        justification: |
+          Subheadings in the generated report document are at depth+1. Allowing depth > 5 would
+          require a heading level of 7 or more, which exceeds the maximum supported by Markdown.
+          Explicit validation with ArgumentOutOfRangeException surfaces the problem immediately
+          at the call site.
+        tests:
           - ReviewMarkConfiguration_PublishReviewReport_MarkdownDepthAbove5_Throws
 
       - id: ReviewMark-Config-Elaboration
-        title: The ReviewMarkConfiguration unit shall generate Markdown elaboration for a named review set, including its
-          ID, fingerprint, and file list.
+        title: >-
+          The ReviewMarkConfiguration unit shall generate Markdown elaboration for a
+          named review set, including its ID, fingerprint, and file list.
         justification: |
           The tool must generate a Markdown elaboration document for a named review-set,
           containing the review-set ID, title, fingerprint, and all matched files listed
-          as inline code. Null, empty, or unrecognized review-set IDs must be rejected.
+          as inline code.
         tests:
           - ReviewMarkConfiguration_ElaborateReviewSet_ValidId_ReturnsElaboration
-          - ReviewMarkConfiguration_ElaborateReviewSet_UnknownId_ThrowsArgumentException
-          - ReviewMarkConfiguration_ElaborateReviewSet_NullId_ThrowsArgumentException
           - ReviewMarkConfiguration_ElaborateReviewSet_ContainsFullFingerprint
 
+      - id: ReviewMark-Config-ElaborationNullRejection
+        title: >-
+          The ReviewMarkConfiguration unit shall throw ArgumentNullException for null
+          review-set ID and ArgumentException for whitespace/empty ID in
+          ElaborateReviewSet.
+        justification: |
+          Null and whitespace/empty review-set IDs must be rejected with typed exceptions
+          (ArgumentNullException for null, ArgumentException for whitespace/empty) so callers
+          receive clear diagnostics at the point of the invalid call.
+        tests:
+          - ReviewMarkConfiguration_ElaborateReviewSet_NullId_ThrowsArgumentException
+          - ReviewMarkConfiguration_ElaborateReviewSet_WhitespaceId_ThrowsArgumentException
+
+      - id: ReviewMark-Config-ElaborationUnknownIdRejection
+        title: >-
+          The ReviewMarkConfiguration unit shall throw ArgumentException when
+          ElaborateReviewSet is called with an ID that does not exist in the
+          configuration.
+        justification: |
+          An unrecognized review-set ID is a programming error that cannot be resolved without
+          correcting the caller. Throwing ArgumentException with a clear message enables callers
+          to detect and report the mistake immediately rather than silently producing empty output.
+        tests:
+          - ReviewMarkConfiguration_ElaborateReviewSet_UnknownId_ThrowsArgumentException
+
       - id: ReviewMark-Config-ElaborationMarkdownDepth
-        title: The ReviewMarkConfiguration unit shall apply the markdownDepth parameter to control the heading level in generated
-          elaboration documents, rejecting values above 5.
+        title: >-
+          The ReviewMarkConfiguration unit shall apply the markdownDepth parameter to
+          control the heading level in generated elaboration documents.
         justification: |
           The heading depth controls the heading level in the generated elaboration document
           and must be within the supported range (1–5) so that subheadings do not exceed
           the maximum Markdown heading level of 6.
         tests:
           - ReviewMarkConfiguration_ElaborateReviewSet_MarkdownDepth_UsedForHeadings
+
+      - id: ReviewMark-Config-ElaborationMarkdownDepthValidation
+        title: >-
+          The ReviewMarkConfiguration unit shall reject markdownDepth values above 5
+          for elaboration with ArgumentOutOfRangeException.
+        justification: |
+          Subheadings in the generated elaboration document are at depth+1. Allowing depth > 5
+          would require a heading level of 7 or more, which exceeds the maximum supported by
+          Markdown. Explicit validation with ArgumentOutOfRangeException surfaces the problem
+          immediately at the call site.
+        tests:
           - ReviewMarkConfiguration_ElaborateReviewSet_MarkdownDepthAbove5_Throws

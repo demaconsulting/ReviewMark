@@ -25,7 +25,13 @@ sections:
           - Indexing_ReviewIndex_SaveAndLoad_RoundTrip
           - Indexing_ReviewIndex_Load_WithNoneSource_ReturnsEmptyIndex
           - Indexing_ReviewIndex_Load_WithUrlSource_ReturnsPopulatedIndex
-        children: [ReviewMark-Index-EvidenceSource, ReviewMark-EvidenceSource-None]
+        children:
+          - ReviewMark-Index-EvidenceSource
+          - ReviewMark-EvidenceSource-None
+          - ReviewMark-Index-Empty
+          - ReviewMark-Index-GetEvidence
+          - ReviewMark-Index-HasId
+          - ReviewMark-Index-GetAllForId
 
       - id: ReviewMark-Indexing-ScanPdfEvidence
         title: The tool shall scan PDF evidence files and extract embedded review metadata to build an index.
@@ -37,7 +43,7 @@ sections:
         tests:
           - Indexing_ReviewIndex_Scan_WithNoPdfs_ReturnsEmptyIndex
           - Indexing_ReviewIndex_Scan_WithValidPdf_ReturnsPopulatedIndex
-        children: [ReviewMark-Index-PdfParsing]
+        children: [ReviewMark-Index-PdfParsing, ReviewMark-Index-Freshness]
 
       - id: ReviewMark-Indexing-Save
         title: The tool shall save the review evidence index to a JSON file for later loading.
@@ -48,6 +54,7 @@ sections:
           preserves all evidence entries without data loss.
         tests:
           - Indexing_ReviewIndex_SaveAndLoad_RoundTrip
+        children: [ReviewMark-Index-Save]
 
       - id: ReviewMark-Indexing-SafePathCombine
         title: The tool shall combine file paths safely, rejecting path traversal sequences.
@@ -59,4 +66,4 @@ sections:
         tests:
           - Indexing_SafePathCombine_WithIndexPath_LoadsIndex
           - Indexing_SafePathCombine_WithTraversalInputs_Throws
-        children: [ReviewMark-PathHelpers-SafeCombine]
+        children: [ReviewMark-PathHelpers-SafeCombine, ReviewMark-PathHelpers-NullRejection]

@@ -1,14 +1,36 @@
 ## ReviewMark
 
 **Component**: DemaConsulting.ReviewMark (this tool)
-**Role**: Generates review plans, review reports, and validates review completeness.
+**Role**: Scans file evidence stores, generates review plan and review report documents,
+and enforces that all governed files have current review records.
 **Acceptance approach**: Self-test and automated unit/integration test coverage.
 
 ReviewMark verifies itself through the `--validate` command (self-test). This executes
-the tool's own built-in self-test suite against its own definition and confirms the
-tool is correctly installed and operating. The self-test is run as part of `build.ps1`.
+the tool's own built-in self-test suite and confirms the tool is correctly installed and
+operating. The self-test is run via the "Run ReviewMark self-validation" step in the
+`build-docs` job of the GitHub Actions workflow (`build.yaml`), producing
+`artifacts/reviewmark-self-validation.trx`.
 
 Unit and integration tests in `test/` provide additional coverage of the individual
-subsystems (Cli, Configuration, Indexing, SelfTest, Program).
+subsystems (Cli, Configuration, Indexing, SelfTest, Program) and the four OTS-level
+capabilities described below.
 
-**Requirement coverage**: `ReviewMark-OTS-ReviewMark`
+### Test scenario coverage
+
+- **`ReviewMark_ValidateFlag_Invoked_RunsValidation`** — ReviewMark runs its built-in
+  self-test suite via `--validate`, exits successfully, and outputs a validation summary
+  — confirming it can scan its own configuration and report review status.
+  Requirement: `ReviewMark-OTS-ReviewMark-Scan`
+- **`ReviewMark_EnforceFlag_WithNoEvidence_ReturnsNonZero`** — ReviewMark exits with a
+  non-zero code when `--enforce` is supplied and the evidence source contains no matching
+  review records, proving enforcement behaviour is operative.
+  Requirement: `ReviewMark-OTS-ReviewMark-Enforce`
+- **`ReviewMark_PlanFlag_WithDefinitionFile_GeneratesReviewPlan`** — ReviewMark generates
+  a markdown review plan file from a definition file, and the plan contains the configured
+  review-set identifier. Requirement: `ReviewMark-OTS-ReviewMark-Elaborate`
+- **`ReviewMark_ReportFlag_WithDefinitionFile_GeneratesReviewReport`** — ReviewMark
+  generates a markdown review report file from a definition file, and the report contains
+  the configured review-set identifier. Requirement: `ReviewMark-OTS-ReviewMark-Report`
+
+**Requirement coverage**: `ReviewMark-OTS-ReviewMark-Scan`, `ReviewMark-OTS-ReviewMark-Enforce`,
+`ReviewMark-OTS-ReviewMark-Elaborate`, `ReviewMark-OTS-ReviewMark-Report`

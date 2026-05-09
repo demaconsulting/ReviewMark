@@ -877,5 +877,38 @@ public class ContextTests
         // log file cannot be opened because the parent directory is missing
         Assert.Throws<InvalidOperationException>(() => Context.Create(["--log", invalidLogPath]));
     }
+
+    /// <summary>
+    ///     Test that --plan without a value throws ArgumentException containing "--plan".
+    /// </summary>
+    [Fact]
+    public void Context_Create_PlanFlag_WithoutValue_ThrowsArgumentException()
+    {
+        // Act & Assert - --plan with no following value should throw and include the flag name in the message
+        var exception = Assert.Throws<ArgumentException>(() => Context.Create(["--plan"]));
+        Assert.Contains("--plan", exception.Message);
+    }
+
+    /// <summary>
+    ///     Test that --report without a value throws ArgumentException containing "--report".
+    /// </summary>
+    [Fact]
+    public void Context_Create_ReportFlag_WithoutValue_ThrowsArgumentException()
+    {
+        // Act & Assert - --report with no following value should throw and include the flag name in the message
+        var exception = Assert.Throws<ArgumentException>(() => Context.Create(["--report"]));
+        Assert.Contains("--report", exception.Message);
+    }
+
+    /// <summary>
+    ///     Test that --index without a value throws ArgumentException containing "--index".
+    /// </summary>
+    [Fact]
+    public void Context_Create_IndexFlag_WithoutValue_ThrowsArgumentException()
+    {
+        // Act & Assert - --index with no following value should throw and include the flag name in the message
+        var exception = Assert.Throws<ArgumentException>(() => Context.Create(["--index"]));
+        Assert.Contains("--index", exception.Message);
+    }
 }
 

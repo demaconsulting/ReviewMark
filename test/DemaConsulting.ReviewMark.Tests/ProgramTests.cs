@@ -108,9 +108,10 @@ public class ProgramTests
             // Act
             Program.Run(context);
 
-            // Assert — output contains the validation summary with a total test count
+            // Assert — output contains the validation summary with a total test count and exit code is 0
             var output = outWriter.ToString();
             Assert.Contains("Total Tests:", output);
+            Assert.Equal(0, context.ExitCode);
         }
         finally
         {
@@ -759,5 +760,27 @@ public class ProgramTests
         {
             Console.SetOut(originalOut);
         }
+    }
+
+    /// <summary>
+    ///     Test that Run with --index flag scans PDF evidence files and writes index.json.
+    /// </summary>
+    [Fact]
+    public void Program_Run_WithIndexFlag_ScansAndWritesIndexFile()
+    {
+        // Arrange — create a temp directory to use as the working directory (no PDFs)
+        using var tempDir = new TestDirectory();
+        var indexFile = PathHelpers.SafePathCombine(tempDir.DirectoryPath, "index.json");
+
+        using var context = Context.Create([
+            "--dir", tempDir.DirectoryPath,
+            "--index", Path.Combine(tempDir.DirectoryPath, "**", "*.pdf")]);
+
+        // Act
+        Program.Run(context);
+
+        // Assert — exits with code 0 and writes index.json to the working directory
+        Assert.Equal(0, context.ExitCode);
+        Assert.True(File.Exists(indexFile), "index.json was not created");
     }
 }

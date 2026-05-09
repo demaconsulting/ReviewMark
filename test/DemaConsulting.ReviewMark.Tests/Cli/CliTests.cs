@@ -36,7 +36,7 @@ public class CliTests
     ///     Test that the CLI correctly outputs only the version string when --version is supplied.
     /// </summary>
     [Fact]
-    public void Cli_VersionFlag_OutputsVersionOnly()
+    public void Cli_VersionFlag_FlagSupplied_OutputsVersionOnly()
     {
         // Arrange
         var originalOut = Console.Out;
@@ -64,7 +64,7 @@ public class CliTests
     ///     Test that the CLI outputs usage information when --help is supplied.
     /// </summary>
     [Fact]
-    public void Cli_HelpFlag_OutputsUsageInformation()
+    public void Cli_HelpFlag_FlagSupplied_OutputsUsageInformation()
     {
         // Arrange
         var originalOut = Console.Out;
@@ -94,7 +94,7 @@ public class CliTests
     ///     Test that the CLI runs self-validation when --validate is supplied.
     /// </summary>
     [Fact]
-    public void Cli_ValidateFlag_RunsValidation()
+    public void Cli_ValidateFlag_FlagSupplied_RunsValidation()
     {
         // Arrange
         var originalOut = Console.Out;
@@ -122,7 +122,7 @@ public class CliTests
     ///     Test that the CLI suppresses all console output when --silent is supplied.
     /// </summary>
     [Fact]
-    public void Cli_SilentFlag_SuppressesOutput()
+    public void Cli_SilentFlag_FlagSupplied_SuppressesOutput()
     {
         // Arrange
         var originalOut = Console.Out;
@@ -154,7 +154,7 @@ public class CliTests
     ///     Test that --results flag generates a TRX file.
     /// </summary>
     [Fact]
-    public void Cli_ResultsFlag_GeneratesTrxFile()
+    public void Cli_ResultsFlag_FlagSupplied_GeneratesTrxFile()
     {
         // Arrange
         var resultsFile = Path.Combine(Path.GetTempPath(), $"{Guid.NewGuid()}.trx");
@@ -185,7 +185,7 @@ public class CliTests
     ///     Test that --log flag writes output to a log file.
     /// </summary>
     [Fact]
-    public void Cli_LogFlag_WritesOutputToFile()
+    public void Cli_LogFlag_FlagSupplied_WritesOutputToFile()
     {
         // Arrange
         var logFile = Path.GetTempFileName();
@@ -228,6 +228,8 @@ public class CliTests
             using var errWriter = new StringWriter();
             Console.SetError(errWriter);
 
+            // Note: This uses reflection to invoke the internal Main method. If the method signature changes,
+            // mainMethod will be null and Assert.NotNull(mainMethod) will catch the regression.
             var mainMethod = typeof(Program).GetMethod(
                 "Main",
                 System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Static);
@@ -255,7 +257,7 @@ public class CliTests
     ///     Test that invalid arguments produce a non-zero exit code.
     /// </summary>
     [Fact]
-    public void Cli_InvalidArgs_ReturnsNonZeroExitCode()
+    public void Cli_InvalidArgs_UnknownArgSupplied_ReturnsNonZeroExitCode()
     {
         // Arrange
         var originalError = Console.Error;
@@ -264,6 +266,8 @@ public class CliTests
             using var errWriter = new StringWriter();
             Console.SetError(errWriter);
 
+            // Note: This uses reflection to invoke the internal Main method. If the method signature changes,
+            // mainMethod will be null and Assert.NotNull(mainMethod) will catch the regression.
             var mainMethod = typeof(Program).GetMethod(
                 "Main",
                 System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Static);
@@ -288,7 +292,7 @@ public class CliTests
     ///     Test that exit code is non-zero when an error occurs.
     /// </summary>
     [Fact]
-    public void Cli_ExitCode_ReturnsNonZeroOnError()
+    public void Cli_ExitCode_ErrorReported_ReturnsNonZeroExitCode()
     {
         // Arrange
         using var context = Context.Create([]);
@@ -304,7 +308,7 @@ public class CliTests
     ///     Test that --definition flag loads the specified definition file.
     /// </summary>
     [Fact]
-    public void Cli_DefinitionFlag_LoadsSpecifiedFile()
+    public void Cli_DefinitionFlag_FlagSupplied_LoadsSpecifiedFile()
     {
         // Arrange
         var defFile = Path.Combine(Path.GetTempPath(), Path.ChangeExtension(Path.GetRandomFileName(), ".yaml"));
@@ -360,7 +364,7 @@ public class CliTests
     ///     Test that --plan flag generates a review plan file.
     /// </summary>
     [Fact]
-    public void Cli_PlanFlag_GeneratesReviewPlan()
+    public void Cli_PlanFlag_FlagSupplied_GeneratesReviewPlan()
     {
         // Arrange
         var defFile = Path.Combine(Path.GetTempPath(), Path.ChangeExtension(Path.GetRandomFileName(), ".yaml"));
@@ -418,7 +422,7 @@ public class CliTests
     ///     Test that --report flag generates a review report file.
     /// </summary>
     [Fact]
-    public void Cli_ReportFlag_GeneratesReviewReport()
+    public void Cli_ReportFlag_FlagSupplied_GeneratesReviewReport()
     {
         // Arrange
         var defFile = Path.Combine(Path.GetTempPath(), Path.ChangeExtension(Path.GetRandomFileName(), ".yaml"));
@@ -476,7 +480,7 @@ public class CliTests
     ///     Test that --enforce flag exits with non-zero when reviews are not current.
     /// </summary>
     [Fact]
-    public void Cli_EnforceFlag_ExitsNonZeroWhenNotCurrent()
+    public void Cli_EnforceFlag_FlagSupplied_ExitsNonZeroWhenNotCurrent()
     {
         // Arrange
         var defFile = Path.Combine(Path.GetTempPath(), Path.ChangeExtension(Path.GetRandomFileName(), ".yaml"));
@@ -535,7 +539,7 @@ public class CliTests
     ///     Test that --dir flag sets the working directory for file operations.
     /// </summary>
     [Fact]
-    public void Cli_DirFlag_SetsWorkingDirectory()
+    public void Cli_DirFlag_FlagSupplied_SetsWorkingDirectory()
     {
         // Arrange — create a temp directory with a .reviewmark.yaml file
         var tmpDir = Path.Combine(Path.GetTempPath(), $"reviewmark_cli_{Guid.NewGuid()}");
@@ -641,7 +645,7 @@ public class CliTests
     ///     Test that --lint flag reports success for a valid config.
     /// </summary>
     [Fact]
-    public void Cli_LintFlag_ReportsSuccess()
+    public void Cli_LintFlag_ValidConfig_ReportsSuccess()
     {
         // Arrange
         var defFile = Path.Combine(Path.GetTempPath(), Path.ChangeExtension(Path.GetRandomFileName(), ".yaml"));
@@ -693,7 +697,7 @@ public class CliTests
     ///     Test that --index flag scans and creates index.json.
     /// </summary>
     [Fact]
-    public void Cli_IndexFlag_CreatesIndexJson()
+    public void Cli_IndexFlag_FlagSupplied_CreatesIndexJson()
     {
         // Arrange — create a temp directory to index
         var tmpDir = Path.Combine(Path.GetTempPath(), $"reviewmark_index_{Guid.NewGuid()}");
@@ -736,7 +740,7 @@ public class CliTests
     ///     Test that --plan-depth flag sets the heading depth in the generated review plan.
     /// </summary>
     [Fact]
-    public void Cli_PlanDepthFlag_SetsHeadingDepth()
+    public void Cli_PlanDepthFlag_FlagSupplied_SetsHeadingDepth()
     {
         // Arrange
         var defFile = Path.Combine(Path.GetTempPath(), Path.ChangeExtension(Path.GetRandomFileName(), ".yaml"));
@@ -794,7 +798,7 @@ public class CliTests
     ///     Test that --report-depth flag sets the heading depth in the generated review report.
     /// </summary>
     [Fact]
-    public void Cli_ReportDepthFlag_SetsHeadingDepth()
+    public void Cli_ReportDepthFlag_FlagSupplied_SetsHeadingDepth()
     {
         // Arrange
         var defFile = Path.Combine(Path.GetTempPath(), Path.ChangeExtension(Path.GetRandomFileName(), ".yaml"));
@@ -852,7 +856,7 @@ public class CliTests
     ///     Test that --depth flag sets the default heading depth for the generated review plan.
     /// </summary>
     [Fact]
-    public void Cli_DepthFlag_SetsDefaultHeadingDepth()
+    public void Cli_DepthFlag_FlagSupplied_SetsDefaultHeadingDepth()
     {
         // Arrange
         var defFile = Path.Combine(Path.GetTempPath(), Path.ChangeExtension(Path.GetRandomFileName(), ".yaml"));
@@ -902,6 +906,105 @@ public class CliTests
             if (File.Exists(planFile))
             {
                 File.Delete(planFile);
+            }
+        }
+    }
+
+    /// <summary>
+    ///     Test that creating a Context with no arguments returns a context with all default values.
+    /// </summary>
+    [Fact]
+    public void Cli_Context_NoArgs_Parsed()
+    {
+        // Act — create a context with no arguments
+        using var context = Context.Create([]);
+
+        // Assert — all default values are set correctly
+        Assert.False(context.Version);
+        Assert.False(context.Help);
+        Assert.False(context.Silent);
+        Assert.False(context.Validate);
+        Assert.False(context.Lint);
+        Assert.False(context.Enforce);
+        Assert.Null(context.PlanFile);
+        Assert.Null(context.ReportFile);
+        Assert.Null(context.DefinitionFile);
+        Assert.Null(context.WorkingDirectory);
+        Assert.Null(context.ElaborateId);
+        Assert.Equal(0, context.ExitCode);
+    }
+
+    /// <summary>
+    ///     Test that --depth with a value below the minimum (0) throws ArgumentException.
+    /// </summary>
+    [Fact]
+    public void Cli_DepthFlag_BelowMinimum_ThrowsArgumentException()
+    {
+        // Act & Assert — depth 0 is below the minimum of 1
+        Assert.Throws<ArgumentException>(() => Context.Create(["--depth", "0"]));
+    }
+
+    /// <summary>
+    ///     Test that --depth with a value above the maximum (6) throws ArgumentException.
+    /// </summary>
+    [Fact]
+    public void Cli_DepthFlag_AboveMaximum_ThrowsArgumentException()
+    {
+        // Act & Assert — depth 6 exceeds the maximum of 5
+        Assert.Throws<ArgumentException>(() => Context.Create(["--depth", "6"]));
+    }
+
+    /// <summary>
+    ///     Test that --lint flag with an invalid config reports issue messages.
+    /// </summary>
+    [Fact]
+    public void Cli_LintFlag_InvalidConfig_ReportsIssueMessages()
+    {
+        // Arrange — create a definition file with a malformed YAML structure
+        var defFile = Path.Combine(Path.GetTempPath(), Path.ChangeExtension(Path.GetRandomFileName(), ".yaml"));
+
+        try
+        {
+            // Write a YAML file that is syntactically valid but missing evidence-source
+            File.WriteAllText(defFile, """
+                needs-review:
+                  - "src/**/*.cs"
+                reviews:
+                  - id: Test-Review
+                    title: Test review
+                    paths:
+                      - "src/**/*.cs"
+                """);
+
+            var originalOut = Console.Out;
+            var originalError = Console.Error;
+            try
+            {
+                using var outWriter = new StringWriter();
+                using var errWriter = new StringWriter();
+                Console.SetOut(outWriter);
+                Console.SetError(errWriter);
+                using var context = Context.Create(["--definition", defFile, "--lint"]);
+
+                // Act
+                Program.Run(context);
+
+                // Assert — exits with non-zero exit code and issue messages appear in error output
+                Assert.NotEqual(0, context.ExitCode);
+                var stderr = errWriter.ToString();
+                Assert.Contains("evidence-source", stderr);
+            }
+            finally
+            {
+                Console.SetOut(originalOut);
+                Console.SetError(originalError);
+            }
+        }
+        finally
+        {
+            if (File.Exists(defFile))
+            {
+                File.Delete(defFile);
             }
         }
     }

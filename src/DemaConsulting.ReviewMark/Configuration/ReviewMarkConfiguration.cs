@@ -940,9 +940,13 @@ internal sealed class ReviewMarkConfiguration
     /// <returns>
     ///     An <see cref="ElaborateResult" /> containing the Markdown text.
     /// </returns>
+    /// <exception cref="ArgumentNullException">
+    ///     Thrown when <paramref name="reviewSetId" /> is <c>null</c>
+    ///     or when <paramref name="directory" /> is <c>null</c>.
+    /// </exception>
     /// <exception cref="ArgumentException">
-    ///     Thrown when <paramref name="reviewSetId" /> is null or whitespace,
-    ///     when <paramref name="directory" /> is null or whitespace,
+    ///     Thrown when <paramref name="reviewSetId" /> is empty or whitespace,
+    ///     when <paramref name="directory" /> is empty or whitespace,
     ///     or when no review set with the specified ID exists.
     /// </exception>
     /// <exception cref="ArgumentOutOfRangeException">

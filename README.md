@@ -133,6 +133,11 @@ reviewmark --silent --log output.log
 | `--enforce`               | Exit with non-zero code if there are review issues                             |
 | `--elaborate <id>`        | Print a Markdown elaboration of the specified review set                       |
 
+## Error Handling
+
+Unrecognized or malformed arguments produce an error message on stderr in the format
+`Error: {message}` and exit with code 1.
+
 ## Self Validation
 
 Running self-validation produces a report containing the following information:
@@ -216,5 +221,5 @@ By contributing to this project, you agree that your contributions will be licen
 [link-security]: https://sonarcloud.io/dashboard?id=demaconsulting_ReviewMark
 [link-nuget]: https://www.nuget.org/packages/DemaConsulting.ReviewMark
 [link-guide]: https://github.com/demaconsulting/ReviewMark/blob/main/docs/user_guide/introduction.md
-[link-system-design]: https://github.com/demaconsulting/ReviewMark/blob/main/docs/design/review-mark/review-mark.md
+[link-system-design]: https://github.com/demaconsulting/ReviewMark/blob/main/docs/design/review-mark.md
 [link-continuous-compliance]: https://github.com/demaconsulting/ContinuousCompliance
