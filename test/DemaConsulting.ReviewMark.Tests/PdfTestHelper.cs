@@ -38,7 +38,7 @@ internal static class PdfTestHelper
         // Build PDF objects as strings.
         var catalog = "1 0 obj\n<< /Type /Catalog /Pages 2 0 R >>\nendobj\n";
         var pages = "2 0 obj\n<< /Type /Pages /Kids [] /Count 0 >>\nendobj\n";
-        var escaped = keywords.Replace("(", "\\(").Replace(")", "\\)").Replace("\\", "\\\\");
+        var escaped = keywords.Replace("\\", "\\\\").Replace("(", "\\(").Replace(")", "\\)");
         var info = $"3 0 obj\n<< /Keywords ({escaped}) >>\nendobj\n";
 
         // Lay out the file body and record byte offsets for the xref table.

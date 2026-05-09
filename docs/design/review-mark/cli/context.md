@@ -30,7 +30,7 @@ arguments:
 | `WorkingDirectory` | string? | Base directory for resolving relative paths |
 | `Enforce` | bool | Fail if any review-set is not Current |
 | `ElaborateId` | string? | Review-set ID to elaborate, or null if `--elaborate` was not specified |
-| `ExitCode` | int | Computed output property; 0 = success, 1 = error. Set via `ReportError`. |
+| `ExitCode` | int | Computed output property; 0 = success, 1 = error. Set via `WriteError`. |
 
 The `--log <file>` argument is consumed during `Context.Create()` to open the log file handle; the
 path is not retained as a public property after initialization.

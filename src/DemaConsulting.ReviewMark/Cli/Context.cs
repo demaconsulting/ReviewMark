@@ -499,7 +499,8 @@ internal sealed class Context : IDisposable
     /// </summary>
     /// <param name="message">The error message to write.</param>
     /// <remarks>
-    /// Setting this method permanently sets an internal error flag, causing <see cref="ExitCode"/> to return 1 for the remainder of the process lifetime.
+    /// Calling this method permanently sets an internal error flag, causing
+    /// <see cref="ExitCode"/> to return 1 for the remainder of the process lifetime.
     /// </remarks>
     public void WriteError(string message)
     {

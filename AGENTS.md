@@ -1,9 +1,9 @@
 # Project Overview
 
-- **name**: TODO
-- **description**: TODO
-- **languages**: TODO
-- **technologies**: TODO
+- **name**: ReviewMark
+- **description**: DEMA Consulting command-line tool for automated file-review evidence management in regulated environments
+- **languages**: C#, Markdown, YAML, PowerShell
+- **technologies**: .NET 8/9/10, xUnit, ReqStream, ReviewMark, Pandoc
 
 # Project Structure
 
