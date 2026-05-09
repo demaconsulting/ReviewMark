@@ -18,13 +18,12 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
-using System.Text;
+using PdfSharp.Pdf;
 
 namespace DemaConsulting.ReviewMark.Tests;
 
 /// <summary>
-///     Helper that generates minimal valid PDF files for testing purposes without
-///     requiring the PDFsharp library.
+///     Helper that generates minimal valid PDF files for testing purposes.
 /// </summary>
 internal static class PdfTestHelper
 {
@@ -35,30 +34,10 @@ internal static class PdfTestHelper
     /// <param name="keywords">Value to write into the PDF /Keywords entry.</param>
     internal static void CreateMinimalPdf(string path, string keywords)
     {
-        // Build PDF objects as strings.
-        var catalog = "1 0 obj\n<< /Type /Catalog /Pages 2 0 R >>\nendobj\n";
-        var pages = "2 0 obj\n<< /Type /Pages /Kids [] /Count 0 >>\nendobj\n";
-        var escaped = keywords.Replace("\\", "\\\\").Replace("(", "\\(").Replace(")", "\\)");
-        var info = $"3 0 obj\n<< /Keywords ({escaped}) >>\nendobj\n";
-
-        // Lay out the file body and record byte offsets for the xref table.
-        var header = "%PDF-1.4\n";
-        int offset1 = header.Length;
-        int offset2 = offset1 + catalog.Length;
-        int offset3 = offset2 + pages.Length;
-        int xrefOffset = offset3 + info.Length;
-
-        // Build xref table.  Each entry MUST be exactly 20 bytes:
-        // "NNNNNNNNNN GGGGG X \n"  (10 digits, space, 5 digits, space, 1 char, space, \n)
-        var xref = new StringBuilder();
-        xref.Append("xref\n");
-        xref.Append("0 4\n");
-        xref.Append("0000000000 65535 f \n");
-        xref.AppendFormat("{0:D10} 00000 n \n", offset1);
-        xref.AppendFormat("{0:D10} 00000 n \n", offset2);
-        xref.AppendFormat("{0:D10} 00000 n \n", offset3);
-        xref.Append($"trailer\n<< /Size 4 /Root 1 0 R /Info 3 0 R >>\nstartxref\n{xrefOffset}\n%%EOF\n");
-
-        File.WriteAllText(path, header + catalog + pages + info + xref, Encoding.Latin1);
+        // Use PDFsharp in tests because the production project already depends on it at runtime.
+        using var document = new PdfDocument();
+        document.Info.Keywords = keywords;
+        document.AddPage();
+        document.Save(path);
     }
 }
