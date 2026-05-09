@@ -25,29 +25,24 @@ namespace DemaConsulting.ReviewMark.Tests;
 /// <summary>
 ///     Integration tests that run the ReviewMark application through dotnet.
 /// </summary>
-[TestClass]
 public class IntegrationTests
 {
-    private string _dllPath = string.Empty;
+    private readonly string _dllPath;
 
     /// <summary>
-    ///     Initialize test by locating the ReviewMark DLL.
+    ///     Initializes a new instance of <see cref="IntegrationTests" />.
     /// </summary>
-    [TestInitialize]
-    public void TestInitialize()
+    public IntegrationTests()
     {
-        // The DLL should be in the same directory as the test assembly
-        // because the test project references the main project
         var baseDir = AppContext.BaseDirectory;
         _dllPath = PathHelpers.SafePathCombine(baseDir, "DemaConsulting.ReviewMark.dll");
-
-        Assert.IsTrue(File.Exists(_dllPath), $"Could not find ReviewMark DLL at {_dllPath}");
+        Assert.True(File.Exists(_dllPath), $"Could not find ReviewMark DLL at {_dllPath}");
     }
 
     /// <summary>
     ///     Test that version flag outputs version information.
     /// </summary>
-    [TestMethod]
+    [Fact]
     public void IntegrationTest_VersionFlag_OutputsVersion()
     {
         // Act
@@ -58,8 +53,8 @@ public class IntegrationTests
             "--version");
 
         // Assert — exit succeeds, output is non-empty, and contains no error or copyright text
-        Assert.AreEqual(0, exitCode);
-        Assert.IsFalse(string.IsNullOrWhiteSpace(output));
+        Assert.Equal(0, exitCode);
+        Assert.False(string.IsNullOrWhiteSpace(output));
         Assert.DoesNotContain("Error", output);
         Assert.DoesNotContain("Copyright", output);
     }
@@ -67,7 +62,7 @@ public class IntegrationTests
     /// <summary>
     ///     Test that help flag outputs usage information.
     /// </summary>
-    [TestMethod]
+    [Fact]
     public void IntegrationTest_HelpFlag_OutputsUsageInformation()
     {
         // Act
@@ -78,7 +73,7 @@ public class IntegrationTests
             "--help");
 
         // Assert — exit succeeds and output contains usage, options, and version flag
-        Assert.AreEqual(0, exitCode);
+        Assert.Equal(0, exitCode);
         Assert.Contains("Usage:", output);
         Assert.Contains("Options:", output);
         Assert.Contains("--version", output);
@@ -87,7 +82,7 @@ public class IntegrationTests
     /// <summary>
     ///     Test that validate flag runs self-validation.
     /// </summary>
-    [TestMethod]
+    [Fact]
     public void IntegrationTest_ValidateFlag_RunsValidation()
     {
         // Act
@@ -98,7 +93,7 @@ public class IntegrationTests
             "--validate");
 
         // Assert — exit succeeds and output contains the validation summary
-        Assert.AreEqual(0, exitCode);
+        Assert.Equal(0, exitCode);
         Assert.Contains("Total Tests:", output);
         Assert.Contains("Passed:", output);
     }
@@ -106,7 +101,7 @@ public class IntegrationTests
     /// <summary>
     ///     Test that validate with results flag generates TRX file.
     /// </summary>
-    [TestMethod]
+    [Fact]
     public void IntegrationTest_ValidateWithResults_GeneratesTrxFile()
     {
         // Arrange
@@ -125,8 +120,8 @@ public class IntegrationTests
                 resultsFile);
 
             // Assert — exit succeeds, results file is created, and contains valid TRX XML
-            Assert.AreEqual(0, exitCode);
-            Assert.IsTrue(File.Exists(resultsFile), "Results file was not created");
+            Assert.Equal(0, exitCode);
+            Assert.True(File.Exists(resultsFile), "Results file was not created");
 
             var trxContent = File.ReadAllText(resultsFile);
             Assert.Contains("<TestRun", trxContent);
@@ -144,7 +139,7 @@ public class IntegrationTests
     /// <summary>
     ///     Test that silent flag suppresses output.
     /// </summary>
-    [TestMethod]
+    [Fact]
     public void IntegrationTest_SilentFlag_SuppressesOutput()
     {
         // Act
@@ -155,14 +150,14 @@ public class IntegrationTests
             "--silent");
 
         // Assert — exit code is zero and console output is empty
-        Assert.AreEqual(0, exitCode);
-        Assert.AreEqual(string.Empty, output.Trim());
+        Assert.Equal(0, exitCode);
+        Assert.Equal(string.Empty, output.Trim());
     }
 
     /// <summary>
     ///     Test that log flag writes output to file.
     /// </summary>
-    [TestMethod]
+    [Fact]
     public void IntegrationTest_LogFlag_WritesOutputToFile()
     {
         // Arrange
@@ -179,8 +174,8 @@ public class IntegrationTests
                 logFile);
 
             // Assert — exit succeeds, log file is created, and contains the version banner
-            Assert.AreEqual(0, exitCode);
-            Assert.IsTrue(File.Exists(logFile), "Log file was not created");
+            Assert.Equal(0, exitCode);
+            Assert.True(File.Exists(logFile), "Log file was not created");
 
             var logContent = File.ReadAllText(logFile);
             Assert.Contains("ReviewMark version", logContent);
@@ -197,7 +192,7 @@ public class IntegrationTests
     /// <summary>
     ///     Test that validate with results flag generates JUnit XML file.
     /// </summary>
-    [TestMethod]
+    [Fact]
     public void IntegrationTest_ValidateWithResults_GeneratesJUnitFile()
     {
         // Arrange
@@ -216,8 +211,8 @@ public class IntegrationTests
                 resultsFile);
 
             // Assert — exit succeeds, results file is created, and contains JUnit XML root element
-            Assert.AreEqual(0, exitCode);
-            Assert.IsTrue(File.Exists(resultsFile), "Results file was not created");
+            Assert.Equal(0, exitCode);
+            Assert.True(File.Exists(resultsFile), "Results file was not created");
 
             var xmlContent = File.ReadAllText(resultsFile);
             Assert.Contains("<testsuites", xmlContent);
@@ -234,7 +229,7 @@ public class IntegrationTests
     /// <summary>
     ///     Test that unknown argument returns error.
     /// </summary>
-    [TestMethod]
+    [Fact]
     public void IntegrationTest_UnknownArgument_ReturnsError()
     {
         // Act
@@ -245,14 +240,14 @@ public class IntegrationTests
             "--unknown");
 
         // Assert — unknown argument produces a non-zero exit code and an error message
-        Assert.AreNotEqual(0, exitCode);
+        Assert.NotEqual(0, exitCode);
         Assert.Contains("Error", output);
     }
 
     /// <summary>
     ///     Test that review plan generation writes a Markdown plan file.
     /// </summary>
-    [TestMethod]
+    [Fact]
     public void IntegrationTest_ReviewPlanGeneration()
     {
         // Arrange
@@ -275,7 +270,7 @@ public class IntegrationTests
 
             // Act
             var exitCode = Runner.Run(
-                out var output,
+                out _,
                 "dotnet",
                 _dllPath,
                 "--definition",
@@ -284,8 +279,8 @@ public class IntegrationTests
                 planFile);
 
             // Assert — exit succeeds and plan file contains review-set id
-            Assert.AreEqual(0, exitCode, $"Output: {output}");
-            Assert.IsTrue(File.Exists(planFile), "Plan file was not created");
+            Assert.Equal(0, exitCode);
+            Assert.True(File.Exists(planFile), "Plan file was not created");
             var planContent = File.ReadAllText(planFile);
             Assert.Contains("Test-Review", planContent);
         }
@@ -305,7 +300,7 @@ public class IntegrationTests
     /// <summary>
     ///     Test that review report generation writes a Markdown report file.
     /// </summary>
-    [TestMethod]
+    [Fact]
     public void IntegrationTest_ReviewReportGeneration()
     {
         // Arrange
@@ -328,7 +323,7 @@ public class IntegrationTests
 
             // Act
             var exitCode = Runner.Run(
-                out var output,
+                out _,
                 "dotnet",
                 _dllPath,
                 "--definition",
@@ -337,8 +332,8 @@ public class IntegrationTests
                 reportFile);
 
             // Assert — exit succeeds and report file contains review-set id
-            Assert.AreEqual(0, exitCode, $"Output: {output}");
-            Assert.IsTrue(File.Exists(reportFile), "Report file was not created");
+            Assert.Equal(0, exitCode);
+            Assert.True(File.Exists(reportFile), "Report file was not created");
             var reportContent = File.ReadAllText(reportFile);
             Assert.Contains("Test-Review", reportContent);
         }
@@ -358,7 +353,7 @@ public class IntegrationTests
     /// <summary>
     ///     Test that --enforce returns non-zero when reviews are not current.
     /// </summary>
-    [TestMethod]
+    [Fact]
     public void IntegrationTest_Enforce()
     {
         // Arrange
@@ -391,7 +386,7 @@ public class IntegrationTests
                 "--enforce");
 
             // Assert — non-zero because evidence source is 'none' so no reviews are current
-            Assert.AreNotEqual(0, exitCode);
+            Assert.NotEqual(0, exitCode);
         }
         finally
         {
@@ -409,7 +404,7 @@ public class IntegrationTests
     /// <summary>
     ///     Test that --index scans a directory and creates an index.json.
     /// </summary>
-    [TestMethod]
+    [Fact]
     public void IntegrationTest_IndexScan()
     {
         // Arrange — create a temp directory to index (with no PDF files)
@@ -421,7 +416,7 @@ public class IntegrationTests
         {
             // Act — index the empty directory
             var exitCode = Runner.Run(
-                out var output,
+                out _,
                 "dotnet",
                 _dllPath,
                 "--dir",
@@ -430,8 +425,8 @@ public class IntegrationTests
                 Path.Combine(tmpDir, "**", "*.pdf"));
 
             // Assert — exits successfully and produces index.json
-            Assert.AreEqual(0, exitCode, $"Output: {output}");
-            Assert.IsTrue(File.Exists(indexFile), "index.json was not created");
+            Assert.Equal(0, exitCode);
+            Assert.True(File.Exists(indexFile), "index.json was not created");
         }
         finally
         {
@@ -445,7 +440,7 @@ public class IntegrationTests
     /// <summary>
     ///     Test that --dir sets the working directory for file operations.
     /// </summary>
-    [TestMethod]
+    [Fact]
     public void IntegrationTest_WorkingDirectoryOverride()
     {
         // Arrange — create a temp directory with a definition file
@@ -470,7 +465,7 @@ public class IntegrationTests
 
             // Act — use --dir to point to temp directory containing the definition file
             var exitCode = Runner.Run(
-                out var output,
+                out _,
                 "dotnet",
                 _dllPath,
                 "--dir",
@@ -479,8 +474,8 @@ public class IntegrationTests
                 planFile);
 
             // Assert — exits successfully using the directory-relative definition file
-            Assert.AreEqual(0, exitCode, $"Output: {output}");
-            Assert.IsTrue(File.Exists(planFile), "Plan file was not created");
+            Assert.Equal(0, exitCode);
+            Assert.True(File.Exists(planFile), "Plan file was not created");
         }
         finally
         {
@@ -494,7 +489,7 @@ public class IntegrationTests
     /// <summary>
     ///     Test that --elaborate outputs elaboration for a valid review-set ID.
     /// </summary>
-    [TestMethod]
+    [Fact]
     public void IntegrationTest_Elaborate()
     {
         // Arrange
@@ -525,7 +520,7 @@ public class IntegrationTests
                 "Test-Review");
 
             // Assert — exits successfully and output contains the review-set id
-            Assert.AreEqual(0, exitCode, $"Output: {output}");
+            Assert.Equal(0, exitCode);
             Assert.Contains("Test-Review", output);
         }
         finally
@@ -540,7 +535,7 @@ public class IntegrationTests
     /// <summary>
     ///     Test that --depth flag sets the default heading depth across all generated documents.
     /// </summary>
-    [TestMethod]
+    [Fact]
     public void IntegrationTest_DepthFlag_SetsDefaultHeadingDepth()
     {
         // Arrange
@@ -564,7 +559,7 @@ public class IntegrationTests
 
             // Act
             var exitCode = Runner.Run(
-                out var output,
+                out _,
                 "dotnet",
                 _dllPath,
                 "--definition",
@@ -577,9 +572,9 @@ public class IntegrationTests
                 "2");
 
             // Assert — exit succeeds, plan and report both use ## (depth 2) headings
-            Assert.AreEqual(0, exitCode, $"Output: {output}");
-            Assert.IsTrue(File.Exists(planFile), "Plan file was not created");
-            Assert.IsTrue(File.Exists(reportFile), "Report file was not created");
+            Assert.Equal(0, exitCode);
+            Assert.True(File.Exists(planFile), "Plan file was not created");
+            Assert.True(File.Exists(reportFile), "Report file was not created");
             var planContent = File.ReadAllText(planFile);
             var reportContent = File.ReadAllText(reportFile);
             Assert.Contains("## Review Coverage", planContent);
@@ -605,7 +600,7 @@ public class IntegrationTests
     /// <summary>
     ///     Test that --depth flag sets the heading depth in the self-validation report.
     /// </summary>
-    [TestMethod]
+    [Fact]
     public void IntegrationTest_DepthFlag_SetsValidationHeadingDepth()
     {
         // Act
@@ -618,14 +613,14 @@ public class IntegrationTests
             "2");
 
         // Assert — exit succeeds and validation output uses ## (depth 2) heading
-        Assert.AreEqual(0, exitCode, $"Output: {output}");
+        Assert.Equal(0, exitCode);
         Assert.Contains("## DEMA Consulting ReviewMark", output);
     }
 
     /// <summary>
     ///     Test that --lint with a valid config reports success.
     /// </summary>
-    [TestMethod]
+    [Fact]
     public void IntegrationTest_Lint()
     {
         // Arrange
@@ -655,8 +650,8 @@ public class IntegrationTests
                 "--lint");
 
             // Assert — exits successfully and output is empty (no issues, no banner)
-            Assert.AreEqual(0, exitCode, $"Output: {output}");
-            Assert.AreEqual(string.Empty, output, $"Expected empty output but got: {output}");
+            Assert.Equal(0, exitCode);
+            Assert.Equal(string.Empty, output);
         }
         finally
         {
@@ -670,7 +665,7 @@ public class IntegrationTests
     /// <summary>
     ///     Test that an invalid log file path causes Main() to return a non-zero exit code.
     /// </summary>
-    [TestMethod]
+    [Fact]
     public void IntegrationTest_InvalidLogPath_ReturnsError()
     {
         // Arrange — construct a log path whose parent directory does not exist
@@ -687,7 +682,7 @@ public class IntegrationTests
             invalidLogPath);
 
         // Assert — non-zero exit code and error message on stderr (captured by Runner)
-        Assert.AreNotEqual(0, exitCode);
+        Assert.NotEqual(0, exitCode);
         Assert.Contains("Error", output);
     }
 }

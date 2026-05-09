@@ -11,7 +11,7 @@ resource-path:
 input-files:
   - docs/design/title.txt
   - docs/design/introduction.md
-  - docs/design/review-mark/review-mark.md
+  - docs/design/review-mark.md
   - docs/design/review-mark/program.md
   - docs/design/review-mark/cli/cli.md
   - docs/design/review-mark/cli/context.md

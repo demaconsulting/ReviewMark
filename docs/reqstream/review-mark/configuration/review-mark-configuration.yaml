@@ -32,8 +32,8 @@ sections:
           - ReviewMarkConfiguration_Parse_NoneEvidenceSource_ParsedCorrectly
           - ReviewMarkConfiguration_Parse_NoneEvidenceSource_NoLocationRequired
       - id: ReviewMark-Config-Loading
-        title: The ReviewMarkConfiguration unit shall perform linting during configuration loading,
-          returning a result containing both the configuration and all detected issues.
+        title: The ReviewMarkConfiguration unit shall perform linting during configuration loading, returning a result containing
+          both the configuration and all detected issues.
         justification: |
           Combining configuration parsing and linting in a single loading operation ensures
           callers receive comprehensive diagnostics without performing two separate passes.
@@ -48,8 +48,8 @@ sections:
           - ReviewMarkConfiguration_Load_WhitespaceOnlyPaths_ReturnsLintError
 
       - id: ReviewMark-Config-LoadingNullOnError
-        title: The ReviewMarkConfiguration unit shall return a null configuration in the load result
-          when any error-level lint issue is detected.
+        title: The ReviewMarkConfiguration unit shall return a null configuration in the load result when any error-level
+          lint issue is detected.
         justification: |
           Returning null when errors are detected allows callers to distinguish between a
           completely invalid file and a file with only warnings. Null signals that the
@@ -60,8 +60,8 @@ sections:
           - ReviewMarkConfiguration_Load_MissingEvidenceSource_ReturnsNullConfigWithErrorIssue
 
       - id: ReviewMark-Config-PlanGeneration
-        title: The ReviewMarkConfiguration unit shall generate a Markdown review plan listing all
-          files in the needs-review set and their review-set coverage.
+        title: The ReviewMarkConfiguration unit shall generate a Markdown review plan listing all files in the needs-review
+          set and their review-set coverage.
         justification: |
           The tool must generate a Markdown review plan document that lists every file
           in the needs-review file-set and identifies which review-sets provide coverage
@@ -71,8 +71,8 @@ sections:
           - ReviewMarkConfiguration_PublishReviewPlan_UncoveredFiles_HasIssues
 
       - id: ReviewMark-Config-PlanMarkdownDepth
-        title: The ReviewMarkConfiguration unit shall apply the markdownDepth parameter to control
-          the heading level in generated review plan documents, rejecting values above 5.
+        title: The ReviewMarkConfiguration unit shall apply the markdownDepth parameter to control the heading level in generated
+          review plan documents, rejecting values above 5.
         justification: |
           The heading depth controls the section heading level in the generated plan document
           and must be within the supported range (1–5) so that subheadings do not exceed
@@ -82,8 +82,8 @@ sections:
           - ReviewMarkConfiguration_PublishReviewPlan_MarkdownDepthAbove5_Throws
 
       - id: ReviewMark-Config-ReportGeneration
-        title: The ReviewMarkConfiguration unit shall generate a Markdown review report listing
-          each review-set and its current status.
+        title: The ReviewMarkConfiguration unit shall generate a Markdown review report listing each review-set and its current
+          status.
         justification: |
           The tool must generate a Markdown review report document that lists every
           review-set with its current status (Current, Stale, Missing, or Failed).
@@ -94,8 +94,8 @@ sections:
           - ReviewMarkConfiguration_PublishReviewReport_MissingReview_HasIssues
 
       - id: ReviewMark-Config-ReportMarkdownDepth
-        title: The ReviewMarkConfiguration unit shall apply the markdownDepth parameter to control
-          the heading level in generated review report documents, rejecting values above 5.
+        title: The ReviewMarkConfiguration unit shall apply the markdownDepth parameter to control the heading level in generated
+          review report documents, rejecting values above 5.
         justification: |
           The heading depth controls the section heading level in the generated report document
           and must be within the supported range (1–5) so that subheadings do not exceed
@@ -105,8 +105,8 @@ sections:
           - ReviewMarkConfiguration_PublishReviewReport_MarkdownDepthAbove5_Throws
 
       - id: ReviewMark-Config-Elaboration
-        title: The ReviewMarkConfiguration unit shall generate Markdown elaboration for a named
-          review set, including its ID, fingerprint, and file list.
+        title: The ReviewMarkConfiguration unit shall generate Markdown elaboration for a named review set, including its
+          ID, fingerprint, and file list.
         justification: |
           The tool must generate a Markdown elaboration document for a named review-set,
           containing the review-set ID, title, fingerprint, and all matched files listed
@@ -118,8 +118,8 @@ sections:
           - ReviewMarkConfiguration_ElaborateReviewSet_ContainsFullFingerprint
 
       - id: ReviewMark-Config-ElaborationMarkdownDepth
-        title: The ReviewMarkConfiguration unit shall apply the markdownDepth parameter to control
-          the heading level in generated elaboration documents, rejecting values above 5.
+        title: The ReviewMarkConfiguration unit shall apply the markdownDepth parameter to control the heading level in generated
+          elaboration documents, rejecting values above 5.
         justification: |
           The heading depth controls the heading level in the generated elaboration document
           and must be within the supported range (1–5) so that subheadings do not exceed

@@ -26,23 +26,22 @@ namespace DemaConsulting.ReviewMark.Tests.SelfTest;
 /// <summary>
 ///     Unit tests for the <see cref="Validation" /> class.
 /// </summary>
-[TestClass]
 public class ValidationTests
 {
     /// <summary>
     ///     Test that Run throws ArgumentNullException when context is null.
     /// </summary>
-    [TestMethod]
+    [Fact]
     public void Validation_Run_NullContext_ThrowsArgumentNullException()
     {
         // Act & Assert
-        Assert.ThrowsExactly<ArgumentNullException>(() => Validation.Run(null!));
+        Assert.Throws<ArgumentNullException>(() => Validation.Run(null!));
     }
 
     /// <summary>
     ///     Test that Run writes a validation header containing system information.
     /// </summary>
-    [TestMethod]
+    [Fact]
     public void Validation_Run_WritesValidationHeader()
     {
         // Arrange
@@ -71,7 +70,7 @@ public class ValidationTests
     /// <summary>
     ///     Test that Run writes a summary with a total test count.
     /// </summary>
-    [TestMethod]
+    [Fact]
     public void Validation_Run_WritesSummaryWithTotalTests()
     {
         // Arrange
@@ -100,7 +99,7 @@ public class ValidationTests
     /// <summary>
     ///     Test that Run returns a zero exit code when all tests pass.
     /// </summary>
-    [TestMethod]
+    [Fact]
     public void Validation_Run_AllTestsPass_ExitCodeIsZero()
     {
         // Arrange
@@ -115,7 +114,7 @@ public class ValidationTests
             Validation.Run(context);
 
             // Assert — exit code is zero (no errors)
-            Assert.AreEqual(0, context.ExitCode);
+            Assert.Equal(0, context.ExitCode);
         }
         finally
         {
@@ -126,7 +125,7 @@ public class ValidationTests
     /// <summary>
     ///     Test that Run writes results to a TRX file when --results is provided with a .trx extension.
     /// </summary>
-    [TestMethod]
+    [Fact]
     public void Validation_Run_WithTrxResultsFile_WritesFile()
     {
         // Arrange
@@ -144,9 +143,9 @@ public class ValidationTests
                 Validation.Run(context);
 
                 // Assert — results file exists and has content
-                Assert.IsTrue(File.Exists(resultsFile), "TRX results file was not created");
+                Assert.True(File.Exists(resultsFile), "TRX results file was not created");
                 var content = File.ReadAllText(resultsFile);
-                Assert.IsFalse(string.IsNullOrWhiteSpace(content), "TRX results file is empty");
+                Assert.False(string.IsNullOrWhiteSpace(content), "TRX results file is empty");
                 Assert.Contains("TestRun", content);
             }
             finally
@@ -166,7 +165,7 @@ public class ValidationTests
     /// <summary>
     ///     Test that Run writes results to a JUnit XML file when --results is provided with a .xml extension.
     /// </summary>
-    [TestMethod]
+    [Fact]
     public void Validation_Run_WithXmlResultsFile_WritesFile()
     {
         // Arrange
@@ -184,9 +183,9 @@ public class ValidationTests
                 Validation.Run(context);
 
                 // Assert — results file exists and has content
-                Assert.IsTrue(File.Exists(resultsFile), "XML results file was not created");
+                Assert.True(File.Exists(resultsFile), "XML results file was not created");
                 var content = File.ReadAllText(resultsFile);
-                Assert.IsFalse(string.IsNullOrWhiteSpace(content), "XML results file is empty");
+                Assert.False(string.IsNullOrWhiteSpace(content), "XML results file is empty");
                 Assert.Contains("testsuites", content);
             }
             finally
@@ -206,7 +205,7 @@ public class ValidationTests
     /// <summary>
     ///     Test that Run creates the parent directory when --results specifies a path with a non-existent parent.
     /// </summary>
-    [TestMethod]
+    [Fact]
     public void Validation_Run_WithResultsFileInNewDirectory_CreatesDirectory()
     {
         // Arrange — use TestDirectory as the root; the 'output' subdirectory does not exist yet
@@ -225,8 +224,8 @@ public class ValidationTests
             Validation.Run(context);
 
             // Assert — directory and results file were created
-            Assert.IsTrue(Directory.Exists(subDir), "Parent directory was not created");
-            Assert.IsTrue(File.Exists(resultsFile), "TRX results file was not created in new directory");
+            Assert.True(Directory.Exists(subDir), "Parent directory was not created");
+            Assert.True(File.Exists(resultsFile), "TRX results file was not created in new directory");
         }
         finally
         {
@@ -238,7 +237,7 @@ public class ValidationTests
     ///     Test that Run calls WriteError and does not create a file when the results
     ///     file has an unsupported extension.
     /// </summary>
-    [TestMethod]
+    [Fact]
     public void Validation_Run_WithUnsupportedResultsFileExtension_WritesError()
     {
         // Arrange — use a .csv extension which is not supported
@@ -259,9 +258,9 @@ public class ValidationTests
             Validation.Run(context);
 
             // Assert — no results file is created and the context received a write-error call
-            Assert.IsFalse(File.Exists(resultsFile), "Results file should not be created for unsupported extension");
-            Assert.AreNotEqual(0, context.ExitCode, "Exit code should be non-zero after a write-error call");
-            Assert.IsFalse(string.IsNullOrWhiteSpace(errWriter.ToString()), "Error output should contain a message for unsupported extension");
+            Assert.False(File.Exists(resultsFile), "Results file should not be created for unsupported extension");
+            Assert.NotEqual(0, context.ExitCode);
+            Assert.False(string.IsNullOrWhiteSpace(errWriter.ToString()), "Error output should contain a message for unsupported extension");
         }
         finally
         {

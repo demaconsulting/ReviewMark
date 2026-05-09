@@ -26,7 +26,6 @@ namespace DemaConsulting.ReviewMark.Tests;
 /// <summary>
 ///     Unit tests for the Program class.
 /// </summary>
-[TestClass]
 public class ProgramTests
 {
     /// <summary>
@@ -36,7 +35,7 @@ public class ProgramTests
     /// <summary>
     ///     Test that Run with version flag displays version only.
     /// </summary>
-    [TestMethod]
+    [Fact]
     public void Program_Run_WithVersionFlag_DisplaysVersionOnly()
     {
         // Arrange
@@ -52,7 +51,7 @@ public class ProgramTests
 
             // Assert — output is exactly the version string; copyright and banner text are absent
             var output = outWriter.ToString();
-            Assert.AreEqual(Program.Version, output.Trim());
+            Assert.Equal(Program.Version, output.Trim());
             Assert.DoesNotContain("Copyright", output);
             Assert.DoesNotContain("ReviewMark version", output);
         }
@@ -65,7 +64,7 @@ public class ProgramTests
     /// <summary>
     ///     Test that Run with help flag displays usage information.
     /// </summary>
-    [TestMethod]
+    [Fact]
     public void Program_Run_WithHelpFlag_DisplaysUsageInformation()
     {
         // Arrange
@@ -95,7 +94,7 @@ public class ProgramTests
     /// <summary>
     ///     Test that Run with validate flag runs validation.
     /// </summary>
-    [TestMethod]
+    [Fact]
     public void Program_Run_WithValidateFlag_RunsValidation()
     {
         // Arrange
@@ -122,7 +121,7 @@ public class ProgramTests
     /// <summary>
     ///     Test that Run with no arguments displays default behavior.
     /// </summary>
-    [TestMethod]
+    [Fact]
     public void Program_Run_NoArguments_DisplaysDefaultBehavior()
     {
         // Arrange
@@ -150,20 +149,20 @@ public class ProgramTests
     /// <summary>
     ///     Test that version property returns non-empty version string.
     /// </summary>
-    [TestMethod]
+    [Fact]
     public void Program_Version_ReturnsNonEmptyString()
     {
         // Act
         var version = Program.Version;
 
         // Assert — Version is a non-empty, non-whitespace string
-        Assert.IsFalse(string.IsNullOrWhiteSpace(version));
+        Assert.False(string.IsNullOrWhiteSpace(version));
     }
 
     /// <summary>
     ///     Test that Run with --help flag includes --elaborate in the usage information.
     /// </summary>
-    [TestMethod]
+    [Fact]
     public void Program_Run_WithHelpFlag_IncludesElaborateOption()
     {
         // Arrange
@@ -190,7 +189,7 @@ public class ProgramTests
     /// <summary>
     ///     Test that Run with --elaborate flag outputs the review set elaboration to the console.
     /// </summary>
-    [TestMethod]
+    [Fact]
     public void Program_Run_WithElaborateFlag_OutputsElaboration()
     {
         // Arrange — create temp directory with a definition file and source file
@@ -234,7 +233,7 @@ public class ProgramTests
             Assert.Contains("Core-Logic", output);
             Assert.Contains("Fingerprint", output);
             Assert.Contains("Files", output);
-            Assert.AreEqual(0, context.ExitCode);
+            Assert.Equal(0, context.ExitCode);
         }
         finally
         {
@@ -245,7 +244,7 @@ public class ProgramTests
     /// <summary>
     ///     Test that Run with --elaborate and an unknown review-set ID exits with a non-zero code.
     /// </summary>
-    [TestMethod]
+    [Fact]
     public void Program_Run_WithElaborateFlag_UnknownId_ReportsError()
     {
         // Arrange — create temp directory with a definition file
@@ -282,7 +281,7 @@ public class ProgramTests
             Program.Run(context);
 
             // Assert — non-zero exit code when the review-set ID is not found
-            Assert.AreEqual(1, context.ExitCode);
+            Assert.Equal(1, context.ExitCode);
         }
         finally
         {
@@ -293,7 +292,7 @@ public class ProgramTests
     /// <summary>
     ///     Test that Run with --help flag includes --lint in the usage information.
     /// </summary>
-    [TestMethod]
+    [Fact]
     public void Program_Run_WithHelpFlag_IncludesLintOption()
     {
         // Arrange
@@ -320,7 +319,7 @@ public class ProgramTests
     /// <summary>
     ///     Test that Run with --lint flag on a valid definition file reports success.
     /// </summary>
-    [TestMethod]
+    [Fact]
     public void Program_Run_WithLintFlag_ValidConfig_ReportsSuccess()
     {
         // Arrange — create temp directory with a valid definition file
@@ -354,14 +353,14 @@ public class ProgramTests
 
         // Assert — exit code is zero and log contains no output (no issues, no banner)
         var logContent = File.ReadAllText(logFile);
-        Assert.AreEqual(0, exitCode);
-        Assert.AreEqual(string.Empty, logContent, $"Expected empty log but got: {logContent}");
+        Assert.Equal(0, exitCode);
+        Assert.Equal(string.Empty, logContent);
     }
 
     /// <summary>
     ///     Test that Run with --lint flag does not print banner or copyright text.
     /// </summary>
-    [TestMethod]
+    [Fact]
     public void Program_Run_WithLintFlag_ValidConfig_SuppressesBanner()
     {
         // Arrange — create temp directory with a valid definition file
@@ -395,8 +394,8 @@ public class ProgramTests
 
             // Assert — successful lint output is fully silent
             var output = outWriter.ToString();
-            Assert.AreEqual(string.Empty, output);
-            Assert.AreEqual(0, context.ExitCode);
+            Assert.Equal(string.Empty, output);
+            Assert.Equal(0, context.ExitCode);
         }
         finally
         {
@@ -407,7 +406,7 @@ public class ProgramTests
     /// <summary>
     ///     Test that Run with --lint flag on a missing definition file reports an error.
     /// </summary>
-    [TestMethod]
+    [Fact]
     public void Program_Run_WithLintFlag_MissingConfig_ReportsError()
     {
         // Arrange — use a non-existent definition file
@@ -425,7 +424,7 @@ public class ProgramTests
 
         // Assert — non-zero exit code and log contains an error mentioning the missing file
         var logContent = File.ReadAllText(logFile);
-        Assert.AreEqual(1, exitCode);
+        Assert.Equal(1, exitCode);
         Assert.Contains("error:", logContent);
         Assert.Contains("nonexistent.yaml", logContent);
     }
@@ -433,7 +432,7 @@ public class ProgramTests
     /// <summary>
     ///     Test that Run with --lint flag detects duplicate review set IDs and reports an error.
     /// </summary>
-    [TestMethod]
+    [Fact]
     public void Program_Run_WithLintFlag_DuplicateIds_ReportsError()
     {
         // Arrange — create temp directory with a definition file containing duplicate IDs
@@ -471,7 +470,7 @@ public class ProgramTests
 
         // Assert — non-zero exit code and log contains a clear duplicate-ID error message
         var logContent = File.ReadAllText(logFile);
-        Assert.AreEqual(1, exitCode);
+        Assert.Equal(1, exitCode);
         Assert.Contains("error:", logContent);
         Assert.Contains("duplicate ID", logContent);
         Assert.Contains("Core-Logic", logContent);
@@ -480,7 +479,7 @@ public class ProgramTests
     /// <summary>
     ///     Test that Run with --lint flag detects unknown evidence-source type and reports an error.
     /// </summary>
-    [TestMethod]
+    [Fact]
     public void Program_Run_WithLintFlag_UnknownSourceType_ReportsError()
     {
         // Arrange — create temp directory with a definition file having an unknown source type
@@ -511,7 +510,7 @@ public class ProgramTests
 
         // Assert — non-zero exit code and log contains a clear unsupported-type error message
         var logContent = File.ReadAllText(logFile);
-        Assert.AreEqual(1, exitCode);
+        Assert.Equal(1, exitCode);
         Assert.Contains("error:", logContent);
         Assert.Contains("ftp", logContent);
         Assert.Contains("not supported", logContent);
@@ -520,7 +519,7 @@ public class ProgramTests
     /// <summary>
     ///     Test that Run with --lint flag reports a clear error for corrupted (invalid) YAML.
     /// </summary>
-    [TestMethod]
+    [Fact]
     public void Program_Run_WithLintFlag_CorruptedYaml_ReportsError()
     {
         // Arrange — create a definition file with invalid YAML syntax
@@ -542,7 +541,7 @@ public class ProgramTests
 
         // Assert — non-zero exit code and log contains an error naming the definition file and a line number
         var logContent = File.ReadAllText(logFile);
-        Assert.AreEqual(1, exitCode);
+        Assert.Equal(1, exitCode);
         Assert.Contains("error:", logContent);
         Assert.Contains("definition.yaml:", logContent);
     }
@@ -550,7 +549,7 @@ public class ProgramTests
     /// <summary>
     ///     Test that Run with --lint flag reports a clear error when required fields are missing.
     /// </summary>
-    [TestMethod]
+    [Fact]
     public void Program_Run_WithLintFlag_MissingEvidenceSource_ReportsError()
     {
         // Arrange — create a definition file with no evidence-source block
@@ -578,7 +577,7 @@ public class ProgramTests
 
         // Assert — non-zero exit code and log names the file and the missing field
         var logContent = File.ReadAllText(logFile);
-        Assert.AreEqual(1, exitCode);
+        Assert.Equal(1, exitCode);
         Assert.Contains("error:", logContent);
         Assert.Contains("definition.yaml", logContent);
         Assert.Contains("evidence-source", logContent);
@@ -588,7 +587,7 @@ public class ProgramTests
     ///     Test that Run with --lint flag reports ALL errors in one pass when the file has
     ///     multiple detectable issues (missing evidence-source AND duplicate review IDs).
     /// </summary>
-    [TestMethod]
+    [Fact]
     public void Program_Run_WithLintFlag_MultipleErrors_ReportsAll()
     {
         // Arrange — create a definition file that is missing evidence-source AND has duplicate IDs
@@ -621,7 +620,7 @@ public class ProgramTests
         // Assert — non-zero exit code and log contains BOTH the missing evidence-source error
         // AND the duplicate ID error, proving all errors are accumulated in one pass.
         var logContent = File.ReadAllText(logFile);
-        Assert.AreEqual(1, exitCode);
+        Assert.Equal(1, exitCode);
         Assert.Contains("evidence-source", logContent);
         Assert.Contains("duplicate ID", logContent);
         Assert.Contains("Core-Logic", logContent);
@@ -630,7 +629,7 @@ public class ProgramTests
     /// <summary>
     ///     Test that Run with --definition flag pointing to an invalid config reports lint errors and exits with code 1.
     /// </summary>
-    [TestMethod]
+    [Fact]
     public void Program_Run_WithDefinitionFlag_InvalidConfig_ReportsLintError()
     {
         // Arrange — create a definition file with no evidence-source block
@@ -659,7 +658,7 @@ public class ProgramTests
 
         // Assert — non-zero exit code and log contains error mentioning evidence-source
         var logContent = File.ReadAllText(logFile);
-        Assert.AreEqual(1, exitCode);
+        Assert.Equal(1, exitCode);
         Assert.Contains("error:", logContent);
         Assert.Contains("evidence-source", logContent);
     }
@@ -667,7 +666,7 @@ public class ProgramTests
     /// <summary>
     ///     Test that Run sets exit code 1 when --enforce is set and the report has review issues.
     /// </summary>
-    [TestMethod]
+    [Fact]
     public void Program_HandleIssues_WithEnforce_SetsExitCode1()
     {
         // Arrange — empty index means the report will have review issues (no current evidence)
@@ -705,7 +704,7 @@ public class ProgramTests
             Program.Run(context);
 
             // Assert — exit code is 1 when --enforce is set and review-set has no current evidence
-            Assert.AreEqual(1, context.ExitCode);
+            Assert.Equal(1, context.ExitCode);
         }
         finally
         {
@@ -716,7 +715,7 @@ public class ProgramTests
     /// <summary>
     ///     Test that Run emits a warning but exits with code 0 when review issues exist without --enforce.
     /// </summary>
-    [TestMethod]
+    [Fact]
     public void Program_HandleIssues_WithoutEnforce_EmitsWarning()
     {
         // Arrange — empty index means the report will have review issues; without --enforce
@@ -753,7 +752,7 @@ public class ProgramTests
             Program.Run(context);
 
             // Assert — exit code is 0 and output contains "Warning:" when --enforce is not set
-            Assert.AreEqual(0, context.ExitCode);
+            Assert.Equal(0, context.ExitCode);
             Assert.Contains("Warning:", outWriter.ToString());
         }
         finally

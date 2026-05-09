@@ -10,8 +10,8 @@ sections:
   - title: Context Unit Requirements
     requirements:
       - id: ReviewMark-Context-Parsing
-        title: The Context unit shall parse command-line arguments into a structured representation
-          of the requested operation and its options.
+        title: The Context unit shall parse command-line arguments into a structured representation of the requested operation
+          and its options.
         justification: |
           All downstream processing reads options from the parsed representation rather than
           directly from the raw argument array. Arguments are processed sequentially,
@@ -81,8 +81,8 @@ sections:
           - Context_Create_LogFlag_InvalidPath_ThrowsInvalidOperationException
 
       - id: ReviewMark-Context-Output
-        title: The Context unit shall provide unified output and error logging, respecting
-          the --silent flag and optional --log file.
+        title: The Context unit shall provide unified output and error logging, respecting the --silent flag and optional
+          --log file.
         justification: |
           All output goes through the Context so that the --silent flag is honoured and
           optionally duplicated to a log file opened by the --log flag. Error output must

@@ -27,14 +27,12 @@ namespace DemaConsulting.ReviewMark.Tests.SelfTest;
 /// <summary>
 ///     Subsystem integration tests for the SelfTest subsystem.
 /// </summary>
-[TestClass]
-[DoNotParallelize]
 public class SelfTestTests
 {
     /// <summary>
     ///     Test that running self-validation passes all tests and exits with code zero.
     /// </summary>
-    [TestMethod]
+    [Fact]
     public void SelfTest_Run_AllTestsPass_ExitCodeIsZero()
     {
         // Arrange
@@ -49,7 +47,7 @@ public class SelfTestTests
             Validation.Run(context);
 
             // Assert
-            Assert.AreEqual(0, context.ExitCode);
+            Assert.Equal(0, context.ExitCode);
             var outString = outWriter.ToString();
             Assert.Contains("Total Tests:", outString);
             Assert.Contains("Passed:", outString);
@@ -64,7 +62,7 @@ public class SelfTestTests
     /// <summary>
     ///     Test that running self-validation with --results creates a TRX results file.
     /// </summary>
-    [TestMethod]
+    [Fact]
     public void SelfTest_Run_GeneratesResultsFile()
     {
         // Arrange
@@ -82,11 +80,10 @@ public class SelfTestTests
                 Validation.Run(context);
 
                 // Assert
-                Assert.IsTrue(File.Exists(resultsFile), "Results file was not created");
+                Assert.True(File.Exists(resultsFile), "Results file was not created");
                 var content = File.ReadAllText(resultsFile);
                 var doc = XDocument.Parse(content);
-                Assert.AreEqual("TestRun", doc.Root?.Name.LocalName,
-                    "Expected the root XML element to be <TestRun>");
+                Assert.Equal("TestRun", doc.Root?.Name.LocalName);
             }
             finally
             {
@@ -108,7 +105,7 @@ public class SelfTestTests
     ///     test uses an unsupported results-file format (.csv) to trigger a controlled WriteError
     ///     within the validation run, exercising the same exit-code mechanism as a test failure.
     /// </summary>
-    [TestMethod]
+    [Fact]
     public void SelfTest_Run_UnsupportedResultsFormat_ExitCodeIsNonZero()
     {
         // Arrange — an unsupported results file extension causes WriteResultsFile to call
@@ -127,7 +124,7 @@ public class SelfTestTests
             Validation.Run(context);
 
             // Assert — exit code is non-zero when the validation process calls WriteError
-            Assert.AreNotEqual(0, context.ExitCode);
+            Assert.NotEqual(0, context.ExitCode);
         }
         finally
         {

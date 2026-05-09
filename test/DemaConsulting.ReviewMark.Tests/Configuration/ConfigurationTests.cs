@@ -27,19 +27,17 @@ namespace DemaConsulting.ReviewMark.Tests.Configuration;
 ///     Subsystem integration tests for the Configuration subsystem
 ///     (ReviewMarkConfiguration + GlobMatcher working together).
 /// </summary>
-[TestClass]
-public class ConfigurationTests
+public sealed class ConfigurationTests : IDisposable
 {
     /// <summary>
     ///     Unique temporary directory created before each test and deleted after.
     /// </summary>
-    private string _testDirectory = string.Empty;
+    private readonly string _testDirectory;
 
     /// <summary>
-    ///     Creates a fresh GUID-based temporary directory before each test.
+    ///     Initializes a new instance of <see cref="ConfigurationTests" />.
     /// </summary>
-    [TestInitialize]
-    public void TestInitialize()
+    public ConfigurationTests()
     {
         _testDirectory = PathHelpers.SafePathCombine(
             Path.GetTempPath(),
@@ -47,22 +45,21 @@ public class ConfigurationTests
         Directory.CreateDirectory(_testDirectory);
     }
 
-    /// <summary>
-    ///     Deletes the temporary directory and all its contents after each test.
-    /// </summary>
-    [TestCleanup]
-    public void TestCleanup()
+    /// <inheritdoc />
+    public void Dispose()
     {
         if (Directory.Exists(_testDirectory))
         {
             Directory.Delete(_testDirectory, recursive: true);
         }
+
+        GC.SuppressFinalize(this);
     }
 
     /// <summary>
     ///     Test that loading a configuration with needs-review glob patterns correctly resolves matching files.
     /// </summary>
-    [TestMethod]
+    [Fact]
     public void Configuration_LoadConfig_ResolvesNeedsReviewFiles()
     {
         // Arrange
@@ -92,15 +89,15 @@ public class ConfigurationTests
         var result = ReviewMarkConfiguration.Load(definitionFile);
 
         // Assert
-        Assert.IsNotNull(result.Configuration);
+        Assert.NotNull(result.Configuration);
         var files = result.Configuration.GetNeedsReviewFiles(_testDirectory);
-        Assert.HasCount(2, files);
+        Assert.Equal(2, files.Count());
     }
 
     /// <summary>
     ///     Test that modifying a file changes the review-set fingerprint.
     /// </summary>
-    [TestMethod]
+    [Fact]
     public void Configuration_LoadConfig_FingerprintReflectsFileContent()
     {
         // Arrange
@@ -128,23 +125,23 @@ public class ConfigurationTests
 
         // Act — load before and after modifying the source file
         var result1 = ReviewMarkConfiguration.Load(definitionFile);
-        Assert.IsNotNull(result1.Configuration);
+        Assert.NotNull(result1.Configuration);
         var fingerprint1 = result1.Configuration.Reviews[0].GetFingerprint(_testDirectory);
 
         File.WriteAllText(sourceFile, "class Main { void Modified() {} }");
 
         var result2 = ReviewMarkConfiguration.Load(definitionFile);
-        Assert.IsNotNull(result2.Configuration);
+        Assert.NotNull(result2.Configuration);
         var fingerprint2 = result2.Configuration.Reviews[0].GetFingerprint(_testDirectory);
 
         // Assert — fingerprints differ after content change
-        Assert.AreNotEqual(fingerprint1, fingerprint2);
+        Assert.NotEqual(fingerprint1, fingerprint2);
     }
 
     /// <summary>
     ///     Test that generating a review plan succeeds and includes the review set ID.
     /// </summary>
-    [TestMethod]
+    [Fact]
     public void Configuration_LoadConfig_PlanGenerationSucceeds()
     {
         // Arrange
@@ -171,7 +168,7 @@ public class ConfigurationTests
 
         // Act
         var result = ReviewMarkConfiguration.Load(definitionFile);
-        Assert.IsNotNull(result.Configuration);
+        Assert.NotNull(result.Configuration);
         var planResult = result.Configuration.PublishReviewPlan(_testDirectory);
 
         // Assert
@@ -181,7 +178,7 @@ public class ConfigurationTests
     /// <summary>
     ///     Test that generating a review report succeeds and includes the review set ID.
     /// </summary>
-    [TestMethod]
+    [Fact]
     public void Configuration_LoadConfig_ReportGenerationSucceeds()
     {
         // Arrange
@@ -208,7 +205,7 @@ public class ConfigurationTests
 
         // Act
         var result = ReviewMarkConfiguration.Load(definitionFile);
-        Assert.IsNotNull(result.Configuration);
+        Assert.NotNull(result.Configuration);
         var index = ReviewIndex.Load(result.Configuration.EvidenceSource);
         var reportResult = result.Configuration.PublishReviewReport(index, _testDirectory);
 
@@ -219,7 +216,7 @@ public class ConfigurationTests
     /// <summary>
     ///     Test that elaborating a review-set succeeds and includes the review set ID, fingerprint, and file list.
     /// </summary>
-    [TestMethod]
+    [Fact]
     public void Configuration_LoadConfig_ElaborationSucceeds()
     {
         // Arrange
@@ -246,7 +243,7 @@ public class ConfigurationTests
 
         // Act
         var result = ReviewMarkConfiguration.Load(definitionFile);
-        Assert.IsNotNull(result.Configuration);
+        Assert.NotNull(result.Configuration);
         var elaborateResult = result.Configuration.ElaborateReviewSet("Core-Logic", _testDirectory);
 
         // Assert — elaborated markdown contains the review ID, a fingerprint, and the file list
@@ -259,7 +256,7 @@ public class ConfigurationTests
     /// <summary>
     ///     Test that elaborating a review-set with an unknown ID throws ArgumentException.
     /// </summary>
-    [TestMethod]
+    [Fact]
     public void Configuration_LoadConfig_ElaborateUnknownId_ThrowsArgumentException()
     {
         // Arrange
@@ -282,17 +279,17 @@ public class ConfigurationTests
 
         // Act
         var result = ReviewMarkConfiguration.Load(definitionFile);
-        Assert.IsNotNull(result.Configuration);
+        Assert.NotNull(result.Configuration);
 
         // Assert — unknown review-set ID throws ArgumentException
-        Assert.ThrowsExactly<ArgumentException>(() =>
+        Assert.Throws<ArgumentException>(() =>
             result.Configuration.ElaborateReviewSet("Unknown-Id", _testDirectory));
     }
 
     /// <summary>
     ///     Test that renaming a file in a review-set does not change its fingerprint.
     /// </summary>
-    [TestMethod]
+    [Fact]
     public void Configuration_LoadConfig_FingerprintIsRenameInvariant()
     {
         // Arrange — create a source file and record its fingerprint
@@ -319,7 +316,7 @@ public class ConfigurationTests
             """);
 
         var result1 = ReviewMarkConfiguration.Load(definitionFile);
-        Assert.IsNotNull(result1.Configuration);
+        Assert.NotNull(result1.Configuration);
         var fingerprint1 = result1.Configuration.Reviews[0].GetFingerprint(_testDirectory);
 
         // Act — rename the file (same content, different name)
@@ -327,18 +324,18 @@ public class ConfigurationTests
         File.Move(originalFile, renamedFile);
 
         var result2 = ReviewMarkConfiguration.Load(definitionFile);
-        Assert.IsNotNull(result2.Configuration);
+        Assert.NotNull(result2.Configuration);
         var fingerprint2 = result2.Configuration.Reviews[0].GetFingerprint(_testDirectory);
 
         // Assert — fingerprint is the same after rename (content-based, not name-based)
-        Assert.AreEqual(fingerprint1, fingerprint2);
+        Assert.Equal(fingerprint1, fingerprint2);
     }
 
     /// <summary>
     ///     Test that loading a malformed YAML configuration returns a null Configuration
     ///     with at least one issue reported.
     /// </summary>
-    [TestMethod]
+    [Fact]
     public void Configuration_LoadConfig_MalformedYaml_ReturnsIssues()
     {
         // Arrange — write a YAML file with invalid structure (indentation that breaks parsing)
@@ -351,7 +348,7 @@ public class ConfigurationTests
         var result = ReviewMarkConfiguration.Load(definitionFile);
 
         // Assert — configuration is null and at least one issue was reported
-        Assert.IsNull(result.Configuration);
-        Assert.IsNotEmpty(result.Issues);
+        Assert.Null(result.Configuration);
+        Assert.NotEmpty(result.Issues);
     }
 }

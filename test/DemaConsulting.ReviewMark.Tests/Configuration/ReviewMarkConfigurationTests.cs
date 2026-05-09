@@ -28,8 +28,7 @@ namespace DemaConsulting.ReviewMark.Tests.Configuration;
 ///     Unit tests for <see cref="ReviewMarkConfiguration" />, <see cref="EvidenceSource" />,
 ///     and <see cref="ReviewSet" />.
 /// </summary>
-[TestClass]
-public class ReviewMarkConfigurationTests
+public sealed class ReviewMarkConfigurationTests : IDisposable
 {
     /// <summary>
     ///     Sample minimal YAML used by several parse tests.
@@ -50,34 +49,32 @@ public class ReviewMarkConfigurationTests
     /// <summary>
     ///     Unique temporary directory created before each test and deleted after.
     /// </summary>
-    private string _testDirectory = string.Empty;
+    private readonly string _testDirectory;
 
     /// <summary>
-    ///     Creates a fresh GUID-based temporary directory before each test.
+    ///     Initializes a new instance of <see cref="ReviewMarkConfigurationTests" />.
     /// </summary>
-    [TestInitialize]
-    public void TestInitialize()
+    public ReviewMarkConfigurationTests()
     {
         _testDirectory = PathHelpers.SafePathCombine(Path.GetTempPath(), $"ReviewMarkConfigurationTests_{Guid.NewGuid()}");
         Directory.CreateDirectory(_testDirectory);
     }
 
-    /// <summary>
-    ///     Deletes the temporary directory and all its contents after each test.
-    /// </summary>
-    [TestCleanup]
-    public void TestCleanup()
+    /// <inheritdoc />
+    public void Dispose()
     {
         if (Directory.Exists(_testDirectory))
         {
             Directory.Delete(_testDirectory, recursive: true);
         }
+
+        GC.SuppressFinalize(this);
     }
 
     /// <summary>
     ///     Test that passing null yaml throws <see cref="ArgumentNullException" />.
     /// </summary>
-    [TestMethod]
+    [Fact]
     public void ReviewMarkConfiguration_Parse_NullYaml_ThrowsArgumentNullException()
     {
         // Arrange
@@ -85,7 +82,7 @@ public class ReviewMarkConfigurationTests
 
         // Act & Assert
 #pragma warning disable CS8604 // Possible null reference argument — intentional for this test
-        Assert.ThrowsExactly<ArgumentNullException>(() =>
+        Assert.Throws<ArgumentNullException>(() =>
             ReviewMarkConfiguration.Parse(yaml!));
 #pragma warning restore CS8604
     }
@@ -93,20 +90,20 @@ public class ReviewMarkConfigurationTests
     /// <summary>
     ///     Test that valid YAML is parsed without throwing.
     /// </summary>
-    [TestMethod]
+    [Fact]
     public void ReviewMarkConfiguration_Parse_ValidYaml_ReturnsConfiguration()
     {
         // Act
         var config = ReviewMarkConfiguration.Parse(MinimalYaml);
 
         // Assert — a non-null configuration is returned from valid YAML
-        Assert.IsNotNull(config);
+        Assert.NotNull(config);
     }
 
     /// <summary>
     ///     Test that needs-review patterns are parsed correctly.
     /// </summary>
-    [TestMethod]
+    [Fact]
     public void ReviewMarkConfiguration_Parse_NeedsReviewPatterns_ParsedCorrectly()
     {
         // Arrange
@@ -124,50 +121,50 @@ public class ReviewMarkConfigurationTests
         var config = ReviewMarkConfiguration.Parse(yaml);
 
         // Assert — all three patterns are present and in order
-        Assert.HasCount(3, config.NeedsReviewPatterns);
-        Assert.AreEqual("**/*.cs", config.NeedsReviewPatterns[0]);
-        Assert.AreEqual("**/*.yaml", config.NeedsReviewPatterns[1]);
-        Assert.AreEqual("!**/obj/**", config.NeedsReviewPatterns[2]);
+        Assert.Equal(3, config.NeedsReviewPatterns.Count());
+        Assert.Equal("**/*.cs", config.NeedsReviewPatterns[0]);
+        Assert.Equal("**/*.yaml", config.NeedsReviewPatterns[1]);
+        Assert.Equal("!**/obj/**", config.NeedsReviewPatterns[2]);
     }
 
     /// <summary>
     ///     Test that the evidence-source block is parsed correctly.
     /// </summary>
-    [TestMethod]
+    [Fact]
     public void ReviewMarkConfiguration_Parse_EvidenceSource_ParsedCorrectly()
     {
         // Act
         var config = ReviewMarkConfiguration.Parse(MinimalYaml);
 
         // Assert — evidence-source type, location, and absent credentials are parsed correctly
-        Assert.AreEqual("url", config.EvidenceSource.Type);
-        Assert.AreEqual("https://reviews.example.com/", config.EvidenceSource.Location);
-        Assert.IsNull(config.EvidenceSource.UsernameEnv);
-        Assert.IsNull(config.EvidenceSource.PasswordEnv);
+        Assert.Equal("url", config.EvidenceSource.Type);
+        Assert.Equal("https://reviews.example.com/", config.EvidenceSource.Location);
+        Assert.Null(config.EvidenceSource.UsernameEnv);
+        Assert.Null(config.EvidenceSource.PasswordEnv);
     }
 
     /// <summary>
     ///     Test that the reviews list is parsed correctly.
     /// </summary>
-    [TestMethod]
+    [Fact]
     public void ReviewMarkConfiguration_Parse_Reviews_ParsedCorrectly()
     {
         // Act
         var config = ReviewMarkConfiguration.Parse(MinimalYaml);
 
         // Assert — one review set with expected id, title, and path
-        Assert.HasCount(1, config.Reviews);
+        Assert.Single(config.Reviews);
         var review = config.Reviews[0];
-        Assert.AreEqual("Core-Logic", review.Id);
-        Assert.AreEqual("Review of core business logic", review.Title);
-        Assert.HasCount(1, review.Paths);
-        Assert.AreEqual("src/**/*.cs", review.Paths[0]);
+        Assert.Equal("Core-Logic", review.Id);
+        Assert.Equal("Review of core business logic", review.Title);
+        Assert.Single(review.Paths);
+        Assert.Equal("src/**/*.cs", review.Paths[0]);
     }
 
     /// <summary>
     ///     Test that evidence-source credentials are parsed correctly when present.
     /// </summary>
-    [TestMethod]
+    [Fact]
     public void ReviewMarkConfiguration_Parse_EvidenceSourceWithCredentials_ParsedCorrectly()
     {
         // Arrange
@@ -184,14 +181,14 @@ public class ReviewMarkConfigurationTests
         var config = ReviewMarkConfiguration.Parse(yaml);
 
         // Assert — credential environment variable names are parsed correctly
-        Assert.AreEqual("REVIEWMARK_USER", config.EvidenceSource.UsernameEnv);
-        Assert.AreEqual("REVIEWMARK_TOKEN", config.EvidenceSource.PasswordEnv);
+        Assert.Equal("REVIEWMARK_USER", config.EvidenceSource.UsernameEnv);
+        Assert.Equal("REVIEWMARK_TOKEN", config.EvidenceSource.PasswordEnv);
     }
 
     /// <summary>
     ///     Test that GetNeedsReviewFiles returns files matching the needs-review patterns.
     /// </summary>
-    [TestMethod]
+    [Fact]
     public void ReviewMarkConfiguration_GetNeedsReviewFiles_ReturnsMatchingFiles()
     {
         // Arrange — a configuration with a .cs pattern; one .cs and one .txt file in the test directory
@@ -210,14 +207,14 @@ public class ReviewMarkConfigurationTests
         var files = config.GetNeedsReviewFiles(_testDirectory);
 
         // Assert — only the .cs file is returned
-        Assert.HasCount(1, files);
+        Assert.Single(files);
         Assert.Contains("Program.cs", files);
     }
 
     /// <summary>
     ///     Test that the fingerprint is identical when the same content is present in two directories.
     /// </summary>
-    [TestMethod]
+    [Fact]
     public void ReviewSet_GetFingerprint_SameContent_ReturnsSameFingerprint()
     {
         // Arrange — two subdirectories with identical file content
@@ -237,13 +234,13 @@ public class ReviewMarkConfigurationTests
         var fp2 = reviewSet.GetFingerprint(dir2);
 
         // Assert — identical content produces identical fingerprints
-        Assert.AreEqual(fp1, fp2);
+        Assert.Equal(fp1, fp2);
     }
 
     /// <summary>
     ///     Test that the fingerprint changes when file content changes.
     /// </summary>
-    [TestMethod]
+    [Fact]
     public void ReviewSet_GetFingerprint_DifferentContent_ReturnsDifferentFingerprint()
     {
         // Arrange — two subdirectories with different file content
@@ -261,13 +258,13 @@ public class ReviewMarkConfigurationTests
         var fp2 = reviewSet.GetFingerprint(dir2);
 
         // Assert — different content produces different fingerprints
-        Assert.AreNotEqual(fp1, fp2);
+        Assert.NotEqual(fp1, fp2);
     }
 
     /// <summary>
     ///     Test that renaming a file does not change the fingerprint (content-based, not path-based).
     /// </summary>
-    [TestMethod]
+    [Fact]
     public void ReviewSet_GetFingerprint_RenameFile_ReturnsSameFingerprint()
     {
         // Arrange — two subdirectories where one file differs only in name but has identical content
@@ -288,13 +285,13 @@ public class ReviewMarkConfigurationTests
         var fp2 = reviewSet.GetFingerprint(dir2);
 
         // Assert — renaming should not affect the content-based fingerprint
-        Assert.AreEqual(fp1, fp2);
+        Assert.Equal(fp1, fp2);
     }
 
     /// <summary>
     ///     Test that Load returns null configuration with an error issue when the file does not exist.
     /// </summary>
-    [TestMethod]
+    [Fact]
     public void ReviewMarkConfiguration_Load_NonExistentFile_ReturnsNullConfigWithErrorIssue()
     {
         // Arrange — a path within the test directory that does not exist
@@ -304,15 +301,15 @@ public class ReviewMarkConfigurationTests
         var result = ReviewMarkConfiguration.Load(nonExistentPath);
 
         // Assert — configuration is null and one error issue is reported
-        Assert.IsNull(result.Configuration);
-        Assert.HasCount(1, result.Issues);
-        Assert.AreEqual(LintSeverity.Error, result.Issues[0].Severity);
+        Assert.Null(result.Configuration);
+        Assert.Single(result.Issues);
+        Assert.Equal(LintSeverity.Error, result.Issues[0].Severity);
     }
 
     /// <summary>
     ///     Test that Load returns null configuration with an error issue naming file and line when YAML is invalid.
     /// </summary>
-    [TestMethod]
+    [Fact]
     public void ReviewMarkConfiguration_Load_InvalidYaml_ReturnsNullConfigWithErrorIssue()
     {
         // Arrange — write a configuration file with invalid YAML syntax
@@ -323,9 +320,9 @@ public class ReviewMarkConfigurationTests
         var result = ReviewMarkConfiguration.Load(configPath);
 
         // Assert — configuration is null, one error issue naming file and line
-        Assert.IsNull(result.Configuration);
-        Assert.HasCount(1, result.Issues);
-        Assert.AreEqual(LintSeverity.Error, result.Issues[0].Severity);
+        Assert.Null(result.Configuration);
+        Assert.Single(result.Issues);
+        Assert.Equal(LintSeverity.Error, result.Issues[0].Severity);
         Assert.Contains(".reviewmark.yaml", result.Issues[0].Location);
         Assert.Contains("at line", result.Issues[0].Description);
     }
@@ -334,7 +331,7 @@ public class ReviewMarkConfigurationTests
     ///     Test that Load returns null configuration with an error issue naming the file and missing field
     ///     when required fields are missing.
     /// </summary>
-    [TestMethod]
+    [Fact]
     public void ReviewMarkConfiguration_Load_MissingEvidenceSource_ReturnsNullConfigWithErrorIssue()
     {
         // Arrange — write a valid YAML file that is missing the required evidence-source block
@@ -353,9 +350,9 @@ public class ReviewMarkConfigurationTests
         var result = ReviewMarkConfiguration.Load(configPath);
 
         // Assert — configuration is null and error mentions evidence-source
-        Assert.IsNull(result.Configuration);
-        Assert.HasCount(1, result.Issues);
-        Assert.AreEqual(LintSeverity.Error, result.Issues[0].Severity);
+        Assert.Null(result.Configuration);
+        Assert.Single(result.Issues);
+        Assert.Equal(LintSeverity.Error, result.Issues[0].Severity);
         Assert.Contains("evidence-source", result.Issues[0].Description);
     }
 
@@ -363,7 +360,7 @@ public class ReviewMarkConfigurationTests
     ///     Test that Load returns all issues from a file with multiple detectable errors
     ///     (missing evidence-source AND duplicate review IDs) without stopping at the first.
     /// </summary>
-    [TestMethod]
+    [Fact]
     public void ReviewMarkConfiguration_Load_MultipleErrors_ReturnsAllIssues()
     {
         // Arrange — write a YAML file missing evidence-source and containing duplicate IDs
@@ -386,26 +383,17 @@ public class ReviewMarkConfigurationTests
         var result = ReviewMarkConfiguration.Load(configPath);
 
         // Assert — configuration is null and both errors are reported
-        Assert.IsNull(result.Configuration);
-        Assert.HasCount(2, result.Issues);
-        Assert.DoesNotContain(
-            (LintIssue i) => i.Severity != LintSeverity.Error,
-            result.Issues,
-            "Expected all issues to have error severity.");
-        Assert.Contains(
-            (LintIssue i) => i.Description.Contains("evidence-source"),
-            result.Issues,
-            "Expected an error about missing evidence-source.");
-        Assert.Contains(
-            (LintIssue i) => i.Description.Contains("duplicate ID") && i.Description.Contains("Core-Logic"),
-            result.Issues,
-            "Expected an error about duplicate ID 'Core-Logic'.");
+        Assert.Null(result.Configuration);
+        Assert.Equal(2, result.Issues.Count());
+        Assert.DoesNotContain(result.Issues, (LintIssue i) => i.Severity != LintSeverity.Error);
+        Assert.Contains(result.Issues, (LintIssue i) => i.Description.Contains("evidence-source"));
+        Assert.Contains(result.Issues, (LintIssue i) => i.Description.Contains("duplicate ID") && i.Description.Contains("Core-Logic"));
     }
 
     /// <summary>
     ///     Test that Load resolves a relative fileshare location against the config file's directory.
     /// </summary>
-    [TestMethod]
+    [Fact]
     public void ReviewMarkConfiguration_Load_FileshareRelativeLocation_ResolvesToAbsolutePath()
     {
         // Arrange — write a config file with a relative fileshare location
@@ -427,16 +415,16 @@ public class ReviewMarkConfigurationTests
         var result = ReviewMarkConfiguration.Load(configPath);
 
         // Assert — relative location is resolved to an absolute path under the config directory
-        Assert.IsNotNull(result.Configuration);
-        Assert.IsTrue(Path.IsPathRooted(result.Configuration.EvidenceSource.Location));
-        Assert.AreEqual(PathHelpers.SafePathCombine(_testDirectory, "index.json"), result.Configuration.EvidenceSource.Location);
+        Assert.NotNull(result.Configuration);
+        Assert.True(Path.IsPathRooted(result.Configuration.EvidenceSource.Location));
+        Assert.Equal(PathHelpers.SafePathCombine(_testDirectory, "index.json"), result.Configuration.EvidenceSource.Location);
     }
 
     /// <summary>
     ///     Test that an evidence-source with type <c>none</c> is parsed correctly
     ///     and produces an empty <see cref="EvidenceSource.Location" />.
     /// </summary>
-    [TestMethod]
+    [Fact]
     public void ReviewMarkConfiguration_Parse_NoneEvidenceSource_ParsedCorrectly()
     {
         // Arrange
@@ -454,15 +442,15 @@ public class ReviewMarkConfigurationTests
         var config = ReviewMarkConfiguration.Parse(yaml);
 
         // Assert — type is 'none' and location is empty
-        Assert.AreEqual("none", config.EvidenceSource.Type);
-        Assert.AreEqual(string.Empty, config.EvidenceSource.Location);
+        Assert.Equal("none", config.EvidenceSource.Type);
+        Assert.Equal(string.Empty, config.EvidenceSource.Location);
     }
 
     /// <summary>
     ///     Test that an evidence-source with type <c>none</c> does not require a
     ///     <c>location</c> field.
     /// </summary>
-    [TestMethod]
+    [Fact]
     public void ReviewMarkConfiguration_Parse_NoneEvidenceSource_NoLocationRequired()
     {
         // Arrange — YAML with a none source and no location field
@@ -473,14 +461,14 @@ public class ReviewMarkConfigurationTests
 
         // Act & Assert — parsing must succeed without throwing
         var config = ReviewMarkConfiguration.Parse(yaml);
-        Assert.AreEqual("none", config.EvidenceSource.Type);
+        Assert.Equal("none", config.EvidenceSource.Type);
     }
 
     /// <summary>
     ///     Test that Load does not report an issue when the evidence-source type is <c>none</c>
     ///     and no <c>location</c> field is present.
     /// </summary>
-    [TestMethod]
+    [Fact]
     public void ReviewMarkConfiguration_Load_NoneEvidenceSource_NoIssues()
     {
         // Arrange — write a valid config with a none evidence source
@@ -499,8 +487,8 @@ public class ReviewMarkConfigurationTests
         var result = ReviewMarkConfiguration.Load(configPath);
 
         // Assert — no issues and configuration is non-null for a valid none source
-        Assert.IsNotNull(result.Configuration);
-        Assert.HasCount(0, result.Issues);
+        Assert.NotNull(result.Configuration);
+        Assert.Empty(result.Issues);
     }
 
     // -------------------------------------------------------------------------
@@ -511,7 +499,7 @@ public class ReviewMarkConfigurationTests
     ///     Test that PublishReviewPlan returns no issues and a table row when all
     ///     needs-review files are covered by a review set.
     /// </summary>
-    [TestMethod]
+    [Fact]
     public void ReviewMarkConfiguration_PublishReviewPlan_AllCovered_NoIssues()
     {
         // Arrange — config whose review set covers every .cs file; create one .cs file
@@ -524,7 +512,7 @@ public class ReviewMarkConfigurationTests
         var result = config.PublishReviewPlan(_testDirectory);
 
         // Assert — no uncovered files means no issues; the coverage table is present
-        Assert.IsFalse(result.HasIssues);
+        Assert.False(result.HasIssues);
         Assert.Contains("# Review Coverage", result.Markdown);
         Assert.Contains("| Core-Logic |", result.Markdown);
         Assert.Contains("All files requiring review are covered by a review-set.", result.Markdown);
@@ -535,7 +523,7 @@ public class ReviewMarkConfigurationTests
     ///     Test that PublishReviewPlan sets HasIssues and lists uncovered files
     ///     when at least one needs-review file is not matched by any review set.
     /// </summary>
-    [TestMethod]
+    [Fact]
     public void ReviewMarkConfiguration_PublishReviewPlan_UncoveredFiles_HasIssues()
     {
         // Arrange — config covers only src/**/*.cs; Uncovered.cs at the root is not covered
@@ -549,7 +537,7 @@ public class ReviewMarkConfigurationTests
         var result = config.PublishReviewPlan(_testDirectory);
 
         // Assert — the uncovered file triggers HasIssues and appears in the Markdown
-        Assert.IsTrue(result.HasIssues, "HasIssues should be true when uncovered files exist");
+        Assert.True(result.HasIssues, "HasIssues should be true when uncovered files exist");
         Assert.Contains("Coverage", result.Markdown);
         Assert.Contains("`Uncovered.cs`", result.Markdown);
     }
@@ -558,7 +546,7 @@ public class ReviewMarkConfigurationTests
     ///     Test that PublishReviewPlan honours the markdownDepth parameter when
     ///     building heading levels, including subheadings for uncovered files.
     /// </summary>
-    [TestMethod]
+    [Fact]
     public void ReviewMarkConfiguration_PublishReviewPlan_MarkdownDepth_UsedForHeadings()
     {
         // Arrange — depth 2; create an uncovered file so the subheading also appears
@@ -584,7 +572,7 @@ public class ReviewMarkConfigurationTests
     ///     Test that PublishReviewReport returns no issues and marks the review as
     ///     current when the index fingerprint matches the computed fingerprint.
     /// </summary>
-    [TestMethod]
+    [Fact]
     public void ReviewMarkConfiguration_PublishReviewReport_CurrentReview_NoIssues()
     {
         // Arrange — create the source file so the fingerprint can be computed
@@ -617,7 +605,7 @@ public class ReviewMarkConfigurationTests
         var result = config.PublishReviewReport(index, _testDirectory);
 
         // Assert — matching fingerprint means "Current"; no issues
-        Assert.IsFalse(result.HasIssues, "HasIssues should be false when all reviews are current");
+        Assert.False(result.HasIssues, "HasIssues should be false when all reviews are current");
         Assert.Contains("# Review Status", result.Markdown);
         Assert.Contains("\u2705 Current", result.Markdown);
         Assert.Contains("Referenced Documents", result.Markdown);
@@ -628,7 +616,7 @@ public class ReviewMarkConfigurationTests
     ///     Test that PublishReviewReport sets HasIssues and marks the review as
     ///     stale when the index fingerprint does not match the current fingerprint.
     /// </summary>
-    [TestMethod]
+    [Fact]
     public void ReviewMarkConfiguration_PublishReviewReport_StaleReview_HasIssues()
     {
         // Arrange — create the source file; write an index with an outdated fingerprint
@@ -657,7 +645,7 @@ public class ReviewMarkConfigurationTests
         var result = config.PublishReviewReport(index, _testDirectory);
 
         // Assert — mismatched fingerprint means "Stale"; HasIssues is true
-        Assert.IsTrue(result.HasIssues, "HasIssues should be true when a review is stale");
+        Assert.True(result.HasIssues, "HasIssues should be true when a review is stale");
         Assert.Contains("\u26a0 Stale", result.Markdown);
         Assert.Contains("CR-2025-089.pdf", result.Markdown);
     }
@@ -666,7 +654,7 @@ public class ReviewMarkConfigurationTests
     ///     Test that PublishReviewReport sets HasIssues and marks the review as
     ///     failed when the index has a matching fingerprint but a non-passing result.
     /// </summary>
-    [TestMethod]
+    [Fact]
     public void ReviewMarkConfiguration_PublishReviewReport_FailedReview_HasIssues()
     {
         // Arrange — create the source file so the fingerprint can be computed
@@ -699,7 +687,7 @@ public class ReviewMarkConfigurationTests
         var result = config.PublishReviewReport(index, _testDirectory);
 
         // Assert — matching fingerprint with a failing result means "Failed"; HasIssues is true
-        Assert.IsTrue(result.HasIssues, "HasIssues should be true when a review has failed");
+        Assert.True(result.HasIssues, "HasIssues should be true when a review has failed");
         Assert.Contains("\u274c Failed", result.Markdown);
         Assert.Contains("CR-2026-014.pdf", result.Markdown);
     }
@@ -708,7 +696,7 @@ public class ReviewMarkConfigurationTests
     ///     Test that PublishReviewReport sets HasIssues and marks the review as
     ///     missing when the index contains no entry for a review set.
     /// </summary>
-    [TestMethod]
+    [Fact]
     public void ReviewMarkConfiguration_PublishReviewReport_MissingReview_HasIssues()
     {
         // Arrange — config with one review set; empty index has no evidence
@@ -722,7 +710,7 @@ public class ReviewMarkConfigurationTests
         var result = config.PublishReviewReport(index, _testDirectory);
 
         // Assert — no evidence in the index means "Missing"; HasIssues is true
-        Assert.IsTrue(result.HasIssues, "HasIssues should be true when a review has no evidence");
+        Assert.True(result.HasIssues, "HasIssues should be true when a review has no evidence");
         Assert.Contains("\u274c Missing", result.Markdown);
     }
 
@@ -730,7 +718,7 @@ public class ReviewMarkConfigurationTests
     ///     Test that PublishReviewReport honours the markdownDepth parameter when
     ///     building heading levels.
     /// </summary>
-    [TestMethod]
+    [Fact]
     public void ReviewMarkConfiguration_PublishReviewReport_MarkdownDepth_UsedForHeadings()
     {
         // Arrange — depth 2 should produce "## Review Status"
@@ -751,7 +739,7 @@ public class ReviewMarkConfigurationTests
     ///     Test that PublishReviewPlan throws when markdownDepth exceeds 5,
     ///     since subheadings at depth+1 would exceed the maximum Markdown heading level of 6.
     /// </summary>
-    [TestMethod]
+    [Fact]
     public void ReviewMarkConfiguration_PublishReviewPlan_MarkdownDepthAbove5_Throws()
     {
         // Arrange
@@ -761,7 +749,7 @@ public class ReviewMarkConfigurationTests
         File.WriteAllText(PathHelpers.SafePathCombine(srcDir, "A.cs"), "class A {}");
 
         // Act & Assert — depth 6 should throw because subheadings would require level 7
-        Assert.ThrowsExactly<ArgumentOutOfRangeException>(
+        Assert.Throws<ArgumentOutOfRangeException>(
             () => config.PublishReviewPlan(_testDirectory, markdownDepth: 6));
     }
 
@@ -769,7 +757,7 @@ public class ReviewMarkConfigurationTests
     ///     Test that PublishReviewReport throws when markdownDepth exceeds 5,
     ///     since subheadings at depth+1 would exceed the maximum Markdown heading level of 6.
     /// </summary>
-    [TestMethod]
+    [Fact]
     public void ReviewMarkConfiguration_PublishReviewReport_MarkdownDepthAbove5_Throws()
     {
         // Arrange
@@ -780,7 +768,7 @@ public class ReviewMarkConfigurationTests
         var index = ReviewIndex.Empty();
 
         // Act & Assert — depth 6 should throw because subheadings would require level 7
-        Assert.ThrowsExactly<ArgumentOutOfRangeException>(
+        Assert.Throws<ArgumentOutOfRangeException>(
             () => config.PublishReviewReport(index, _testDirectory, markdownDepth: 6));
     }
 
@@ -792,7 +780,7 @@ public class ReviewMarkConfigurationTests
     ///     Test that ElaborateReviewSet returns the review ID, fingerprint, and file list
     ///     when given a valid review-set ID.
     /// </summary>
-    [TestMethod]
+    [Fact]
     public void ReviewMarkConfiguration_ElaborateReviewSet_ValidId_ReturnsElaboration()
     {
         // Arrange — create a source file so files and fingerprint can be computed
@@ -805,7 +793,7 @@ public class ReviewMarkConfigurationTests
         var result = config.ElaborateReviewSet("Core-Logic", _testDirectory);
 
         // Assert — result contains the review ID, title, a Fingerprint field, and the file listing
-        Assert.IsNotNull(result);
+        Assert.NotNull(result);
         Assert.Contains("# Core-Logic", result.Markdown);
         Assert.Contains("| ID | Core-Logic |", result.Markdown);
         Assert.Contains("| Title | Review of core business logic |", result.Markdown);
@@ -818,7 +806,7 @@ public class ReviewMarkConfigurationTests
     ///     Test that ElaborateReviewSet throws ArgumentException when the
     ///     review-set ID does not exist in the configuration.
     /// </summary>
-    [TestMethod]
+    [Fact]
     public void ReviewMarkConfiguration_ElaborateReviewSet_UnknownId_ThrowsArgumentException()
     {
         // Arrange
@@ -828,7 +816,7 @@ public class ReviewMarkConfigurationTests
         File.WriteAllText(PathHelpers.SafePathCombine(srcDir, "A.cs"), "class A {}");
 
         // Act & Assert — an unknown review-set ID should throw ArgumentException
-        Assert.ThrowsExactly<ArgumentException>(() =>
+        Assert.Throws<ArgumentException>(() =>
             config.ElaborateReviewSet("NonExistent", _testDirectory));
     }
 
@@ -836,7 +824,7 @@ public class ReviewMarkConfigurationTests
     ///     Test that ElaborateReviewSet throws ArgumentException when the
     ///     review-set ID is null or whitespace.
     /// </summary>
-    [TestMethod]
+    [Fact]
     public void ReviewMarkConfiguration_ElaborateReviewSet_NullId_ThrowsArgumentException()
     {
         // Arrange
@@ -844,7 +832,7 @@ public class ReviewMarkConfigurationTests
 
         // Act & Assert — null review-set ID should throw
 #pragma warning disable CS8625 // Cannot convert null literal to non-nullable reference type — intentional
-        Assert.ThrowsExactly<ArgumentNullException>(() =>
+        Assert.Throws<ArgumentNullException>(() =>
             config.ElaborateReviewSet(null!, _testDirectory));
 #pragma warning restore CS8625
     }
@@ -853,7 +841,7 @@ public class ReviewMarkConfigurationTests
     ///     Test that ElaborateReviewSet honours the markdownDepth parameter for
     ///     both the main heading and the Files subheading.
     /// </summary>
-    [TestMethod]
+    [Fact]
     public void ReviewMarkConfiguration_ElaborateReviewSet_MarkdownDepth_UsedForHeadings()
     {
         // Arrange — depth 2; create a source file
@@ -873,7 +861,7 @@ public class ReviewMarkConfigurationTests
     /// <summary>
     ///     Test that ElaborateReviewSet throws when markdownDepth exceeds 5.
     /// </summary>
-    [TestMethod]
+    [Fact]
     public void ReviewMarkConfiguration_ElaborateReviewSet_MarkdownDepthAbove5_Throws()
     {
         // Arrange
@@ -883,14 +871,14 @@ public class ReviewMarkConfigurationTests
         File.WriteAllText(PathHelpers.SafePathCombine(srcDir, "A.cs"), "class A {}");
 
         // Act & Assert — depth 6 should throw
-        Assert.ThrowsExactly<ArgumentOutOfRangeException>(
+        Assert.Throws<ArgumentOutOfRangeException>(
             () => config.ElaborateReviewSet("Core-Logic", _testDirectory, markdownDepth: 6));
     }
 
     /// <summary>
     ///     Test that ElaborateReviewSet includes the full (non-abbreviated) fingerprint.
     /// </summary>
-    [TestMethod]
+    [Fact]
     public void ReviewMarkConfiguration_ElaborateReviewSet_ContainsFullFingerprint()
     {
         // Arrange — create a source file so the fingerprint can be computed
@@ -907,13 +895,13 @@ public class ReviewMarkConfigurationTests
 
         // Assert — the full 64-character hex fingerprint appears in the Markdown (not abbreviated)
         Assert.Contains(expectedFingerprint, result.Markdown);
-        Assert.AreEqual(64, expectedFingerprint.Length);
+        Assert.Equal(64, expectedFingerprint.Length);
     }
 
     /// <summary>
     ///     Test that Load on a valid file returns configuration and no issues.
     /// </summary>
-    [TestMethod]
+    [Fact]
     public void ReviewMarkConfiguration_Load_ValidFile_ReturnsConfigurationAndNoIssues()
     {
         // Arrange — write a valid configuration file
@@ -924,14 +912,14 @@ public class ReviewMarkConfigurationTests
         var result = ReviewMarkConfiguration.Load(configPath);
 
         // Assert — configuration is non-null and no issues are reported
-        Assert.IsNotNull(result.Configuration);
-        Assert.HasCount(0, result.Issues);
+        Assert.NotNull(result.Configuration);
+        Assert.Empty(result.Issues);
     }
 
     /// <summary>
     ///     Test that ReportIssues routes errors to WriteError and warnings to WriteLine via Context.
     /// </summary>
-    [TestMethod]
+    [Fact]
     public void ReviewMarkLoadResult_ReportIssues_RoutesIssuesToContext()
     {
         // Arrange — a result with one warning and one error; capture output via a log file
@@ -952,7 +940,7 @@ public class ReviewMarkConfigurationTests
         }
 
         // Assert — error sets exit code; both messages appear in the log
-        Assert.AreEqual(1, exitCode);
+        Assert.Equal(1, exitCode);
         var log = File.ReadAllText(logFile);
         Assert.Contains("warning", log);
         Assert.Contains("A warning message", log);
@@ -963,7 +951,7 @@ public class ReviewMarkConfigurationTests
     /// <summary>
     ///     Test that Load returns a lint error when a review set has only whitespace entries in its paths list.
     /// </summary>
-    [TestMethod]
+    [Fact]
     public void ReviewMarkConfiguration_Load_WhitespaceOnlyPaths_ReturnsLintError()
     {
         // Arrange — write a config with a review set whose paths list contains only a whitespace string
@@ -982,9 +970,9 @@ public class ReviewMarkConfigurationTests
         var result = ReviewMarkConfiguration.Load(configPath);
 
         // Assert — whitespace-only paths list should produce a lint error naming the review set
-        Assert.IsNull(result.Configuration);
-        Assert.HasCount(1, result.Issues);
-        Assert.AreEqual(LintSeverity.Error, result.Issues[0].Severity);
+        Assert.Null(result.Configuration);
+        Assert.Single(result.Issues);
+        Assert.Equal(LintSeverity.Error, result.Issues[0].Severity);
         Assert.Contains("paths", result.Issues[0].Description);
     }
 }
