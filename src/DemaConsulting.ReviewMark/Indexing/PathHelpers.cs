@@ -37,6 +37,17 @@ internal static class PathHelpers
     /// </exception>
     /// <exception cref="NotSupportedException">Thrown when a supplied path contains an unsupported format.</exception>
     /// <exception cref="PathTooLongException">Thrown when the combined or resolved path exceeds the system-defined maximum length.</exception>
+    /// <remarks>
+    ///     This method guards against path-traversal attacks arising from untrusted <c>file</c>
+    ///     fields in evidence-index documents. By verifying that the fully-resolved combined path
+    ///     remains inside <paramref name="basePath" />, it prevents an attacker-controlled relative
+    ///     path (e.g. <c>../../etc/sensitive</c> or an absolute path) from escaping the intended
+    ///     directory scope.
+    ///     <para>
+    ///     The method is stateless and holds no shared mutable state, making it safe for concurrent
+    ///     use from multiple threads.
+    ///     </para>
+    /// </remarks>
     internal static string SafePathCombine(string basePath, string relativePath)
     {
         // Validate inputs

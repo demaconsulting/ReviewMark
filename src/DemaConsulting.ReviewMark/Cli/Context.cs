@@ -23,6 +23,23 @@ namespace DemaConsulting.ReviewMark.Cli;
 /// <summary>
 ///     Context class that handles command-line arguments and program output.
 /// </summary>
+/// <remarks>
+///     <para>
+///         <see cref="Context" /> is the primary configuration carrier passed to all processing
+///         subsystems. It encapsulates the parsed command-line options and provides unified output
+///         and error-logging channels that respect the <c>--silent</c> flag and optional
+///         <c>--log</c> file.
+///     </para>
+///     <para>
+///         The class implements <see cref="IDisposable" /> to manage the lifecycle of the log file
+///         stream. Callers must dispose the <see cref="Context" /> after use (typically via a
+///         <c>using</c> statement) to ensure the log file is flushed and closed.
+///     </para>
+///     <para>
+///         <see cref="Context" /> is not thread-safe. It is intended to be created once in
+///         <c>Program.Main</c> and passed sequentially through the processing pipeline.
+///     </para>
+/// </remarks>
 internal sealed class Context : IDisposable
 {
     /// <summary>
@@ -155,6 +172,7 @@ internal sealed class Context : IDisposable
     /// <param name="args">Command-line arguments.</param>
     /// <returns>A new Context instance.</returns>
     /// <exception cref="ArgumentException">Thrown when arguments are invalid.</exception>
+    /// <exception cref="InvalidOperationException">Thrown when the log file specified by <c>--log</c> cannot be opened (e.g., parent directory does not exist or access is denied).</exception>
     public static Context Create(string[] args)
     {
         // Validate input
@@ -419,7 +437,7 @@ internal sealed class Context : IDisposable
                     return index + 1;
 
                 default:
-                    throw new ArgumentException($"Unsupported argument '{arg}'", nameof(args));
+                    throw new ArgumentException($"Unknown argument '{arg}'");
             }
         }
 
@@ -480,6 +498,10 @@ internal sealed class Context : IDisposable
     ///     Writes an error message to the error console and log file (if logging is enabled).
     /// </summary>
     /// <param name="message">The error message to write.</param>
+    /// <remarks>
+    /// Calling this method permanently sets an internal error flag, causing
+    /// <see cref="ExitCode"/> to return 1 for the remainder of the process lifetime.
+    /// </remarks>
     public void WriteError(string message)
     {
         // Mark that we have encountered errors

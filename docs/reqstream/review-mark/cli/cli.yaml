@@ -16,18 +16,19 @@ sections:
           downstream processing reads from a single, validated source of truth. This approach
           is used consistently across DEMA Consulting DotNet Tools.
         tests:
-          - Cli_VersionFlag_OutputsVersionOnly
+          - Cli_Context_NoArgs_Parsed
         children: [ReviewMark-Context-Parsing]
 
       - id: ReviewMark-Cmd-ExecutionState
-        title: The CLI subsystem shall maintain execution state (output channels, exit code)
+        title: >-
+          The CLI subsystem shall maintain execution state (output channels, exit code)
           for the duration of the operation.
         justification: |
           A single context object owns stdout, the optional log file, and the process exit
           code so that all output from any subsystem is routed consistently and the final
           exit code reflects all errors encountered during the run.
         tests:
-          - Cli_VersionFlag_OutputsVersionOnly
+          - Cli_ExitCode_ErrorReported_ReturnsNonZeroExitCode
         children: [ReviewMark-Context-Output]
 
       - id: ReviewMark-Cmd-Version
@@ -36,7 +37,7 @@ sections:
           Users need to quickly identify the version of the tool they are using for
           troubleshooting and compatibility verification.
         tests:
-          - Cli_VersionFlag_OutputsVersionOnly
+          - Cli_VersionFlag_FlagSupplied_OutputsVersionOnly
         children: [ReviewMark-Program-Dispatch]
 
       - id: ReviewMark-Cmd-Help
@@ -45,7 +46,7 @@ sections:
           Users need access to command-line usage documentation without requiring
           external resources.
         tests:
-          - Cli_HelpFlag_OutputsUsageInformation
+          - Cli_HelpFlag_FlagSupplied_OutputsUsageInformation
         children: [ReviewMark-Program-Dispatch]
 
       - id: ReviewMark-Cmd-Silent
@@ -54,7 +55,7 @@ sections:
           Enables automated scripts and CI/CD pipelines to run the tool without
           cluttering output logs.
         tests:
-          - Cli_SilentFlag_SuppressesOutput
+          - Cli_SilentFlag_FlagSupplied_SuppressesOutput
         children: [ReviewMark-Context-Output]
 
       - id: ReviewMark-Cmd-Validate
@@ -63,7 +64,7 @@ sections:
           Provides a built-in mechanism to verify the tool is functioning correctly
           in the deployment environment.
         tests:
-          - Cli_ValidateFlag_RunsValidation
+          - Cli_ValidateFlag_FlagSupplied_RunsValidation
         children: [ReviewMark-Program-Dispatch, ReviewMark-Validation-Run]
 
       - id: ReviewMark-Cmd-Results
@@ -71,7 +72,7 @@ sections:
         justification: |
           Enables integration with CI/CD systems that expect standard test result formats.
         tests:
-          - Cli_ResultsFlag_GeneratesTrxFile
+          - Cli_ResultsFlag_FlagSupplied_GeneratesTrxFile
         children: [ReviewMark-Validation-ResultsFile]
 
       - id: ReviewMark-Cmd-Log
@@ -79,8 +80,8 @@ sections:
         justification: |
           Provides persistent logging for debugging and audit trails.
         tests:
-          - Cli_LogFlag_WritesOutputToFile
-        children: [ReviewMark-Context-Output]
+          - Cli_LogFlag_FlagSupplied_WritesOutputToFile
+        children: [ReviewMark-Context-Output, ReviewMark-Context-LogFileError]
 
       - id: ReviewMark-Cmd-Depth
         title: The tool shall support --depth flag to set the default Markdown heading depth.
@@ -88,7 +89,9 @@ sections:
           Allows users to specify a default Markdown heading depth on the command line.
           Default depth is 1 when not specified.
         tests:
-          - Cli_DepthFlag_SetsDefaultHeadingDepth
+          - Cli_DepthFlag_FlagSupplied_SetsDefaultHeadingDepth
+          - Cli_DepthFlag_BelowMinimum_ThrowsArgumentException
+          - Cli_DepthFlag_AboveMaximum_ThrowsArgumentException
         children: [ReviewMark-Context-Parsing]
 
       - id: ReviewMark-Cmd-ErrorOutput
@@ -106,7 +109,7 @@ sections:
           Providing clear feedback for invalid arguments helps users quickly correct
           mistakes and prevents silent misconfiguration.
         tests:
-          - Cli_InvalidArgs_ReturnsNonZeroExitCode
+          - Cli_InvalidArgs_UnknownArgSupplied_ReturnsNonZeroExitCode
         children: [ReviewMark-Context-Parsing]
 
       - id: ReviewMark-Cmd-ExitCode
@@ -115,7 +118,7 @@ sections:
           Callers (scripts, CI/CD pipelines) must be able to detect failure conditions
           programmatically via the process exit code.
         tests:
-          - Cli_ExitCode_ReturnsNonZeroOnError
+          - Cli_ExitCode_ErrorReported_ReturnsNonZeroExitCode
         children: [ReviewMark-Context-Output]
 
       - id: ReviewMark-Cmd-Definition
@@ -124,7 +127,7 @@ sections:
           Users must be able to specify the path to the .reviewmark.yaml definition file,
           which configures needs-review patterns, evidence source, and review set definitions.
         tests:
-          - Cli_DefinitionFlag_LoadsSpecifiedFile
+          - Cli_DefinitionFlag_FlagSupplied_LoadsSpecifiedFile
         children: [ReviewMark-Config-Loading, ReviewMark-Program-Dispatch]
 
       - id: ReviewMark-Cmd-Plan
@@ -133,7 +136,7 @@ sections:
           Enables automated generation of a review plan document that lists all review sets
           and coverage status, suitable for inclusion in release documentation.
         tests:
-          - Cli_PlanFlag_GeneratesReviewPlan
+          - Cli_PlanFlag_FlagSupplied_GeneratesReviewPlan
         children: [ReviewMark-Config-Reading, ReviewMark-Program-Dispatch]
 
       - id: ReviewMark-Cmd-PlanDepth
@@ -143,7 +146,9 @@ sections:
           Markdown document, overriding --depth when specified. Default depth is 1 when
           neither --plan-depth nor --depth is specified.
         tests:
-          - Cli_PlanDepthFlag_SetsHeadingDepth
+          - Cli_PlanDepthFlag_FlagSupplied_SetsHeadingDepth
+          - Cli_DepthFlag_BelowMinimum_ThrowsArgumentException
+          - Cli_DepthFlag_AboveMaximum_ThrowsArgumentException
         children: [ReviewMark-Context-Parsing]
 
       - id: ReviewMark-Cmd-Report
@@ -152,7 +157,7 @@ sections:
           Enables automated generation of a review report document showing the current
           status of each review set against the evidence index, suitable for release documentation.
         tests:
-          - Cli_ReportFlag_GeneratesReviewReport
+          - Cli_ReportFlag_FlagSupplied_GeneratesReviewReport
         children: [ReviewMark-Config-Reading, ReviewMark-Program-Dispatch]
 
       - id: ReviewMark-Cmd-ReportDepth
@@ -162,7 +167,9 @@ sections:
           Markdown document, overriding --depth when specified. Default depth is 1 when
           neither --report-depth nor --depth is specified.
         tests:
-          - Cli_ReportDepthFlag_SetsHeadingDepth
+          - Cli_ReportDepthFlag_FlagSupplied_SetsHeadingDepth
+          - Cli_DepthFlag_BelowMinimum_ThrowsArgumentException
+          - Cli_DepthFlag_AboveMaximum_ThrowsArgumentException
         children: [ReviewMark-Context-Parsing]
 
       - id: ReviewMark-Cmd-Index
@@ -172,7 +179,7 @@ sections:
           files, reading embedded metadata from each PDF's Keywords field to populate
           the index with review IDs, fingerprints, dates, results, and file names.
         tests:
-          - Cli_IndexFlag_CreatesIndexJson
+          - Cli_IndexFlag_FlagSupplied_CreatesIndexJson
         children: [ReviewMark-Index-PdfParsing, ReviewMark-Program-Dispatch]
 
       - id: ReviewMark-Cmd-Enforce
@@ -182,7 +189,7 @@ sections:
           stale, or missing, or when files requiring review are not covered by any review-set.
           Without --enforce the tool generates the plan and report but exits with code 0.
         tests:
-          - Cli_EnforceFlag_ExitsNonZeroWhenNotCurrent
+          - Cli_EnforceFlag_FlagSupplied_ExitsNonZeroWhenNotCurrent
         children: [ReviewMark-Program-Dispatch]
 
       - id: ReviewMark-Cmd-Dir
@@ -192,7 +199,7 @@ sections:
           the process working directory, enabling consistent scripting and CI/CD usage
           without requiring a cd command before invoking the tool.
         tests:
-          - Cli_DirFlag_SetsWorkingDirectory
+          - Cli_DirFlag_FlagSupplied_SetsWorkingDirectory
         children: [ReviewMark-Program-Dispatch]
 
       - id: ReviewMark-Cmd-Elaborate
@@ -216,5 +223,6 @@ sections:
           location of any issues. Suppressing the banner and summary output on success
           (silence-on-success) makes lint suitable for direct use in scripts and CI pipelines.
         tests:
-          - Cli_LintFlag_ReportsSuccess
+          - Cli_LintFlag_ValidConfig_ReportsSuccess
+          - Cli_LintFlag_InvalidConfig_ReportsIssueMessages
         children: [ReviewMark-Config-Loading, ReviewMark-Program-Dispatch, ReviewMark-Program-LintVerbosity]

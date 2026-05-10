@@ -22,41 +22,37 @@ using System.Net.Http;
 using System.Text;
 using DemaConsulting.ReviewMark.Configuration;
 using DemaConsulting.ReviewMark.Indexing;
-using PdfSharp.Pdf;
 
 namespace DemaConsulting.ReviewMark.Tests.Indexing;
 
 /// <summary>
 ///     Unit tests for the <see cref="ReviewIndex" /> class and <see cref="ReviewEvidence" /> record.
 /// </summary>
-[TestClass]
-public class IndexTests
+public sealed class IndexTests : IDisposable
 {
     /// <summary>
     ///     Unique temporary directory created before each test and deleted after.
     /// </summary>
-    private string _testDirectory = string.Empty;
+    private readonly string _testDirectory;
 
     /// <summary>
-    ///     Creates a fresh GUID-based temporary directory before each test.
+    ///     Initializes a new instance of <see cref="IndexTests" />.
     /// </summary>
-    [TestInitialize]
-    public void TestInitialize()
+    public IndexTests()
     {
         _testDirectory = PathHelpers.SafePathCombine(Path.GetTempPath(), $"IndexTests_{Guid.NewGuid()}");
         Directory.CreateDirectory(_testDirectory);
     }
 
-    /// <summary>
-    ///     Deletes the temporary directory and all its contents after each test.
-    /// </summary>
-    [TestCleanup]
-    public void TestCleanup()
+    /// <inheritdoc />
+    public void Dispose()
     {
         if (Directory.Exists(_testDirectory))
         {
             Directory.Delete(_testDirectory, recursive: true);
         }
+
+        GC.SuppressFinalize(this);
     }
 
     // -------------------------------------------------------------------------
@@ -130,20 +126,18 @@ public class IndexTests
     ///     Test that <see cref="ReviewIndex.Empty" /> returns an index that reports no
     ///     evidence for any query, proving the factory method creates a truly empty index.
     /// </summary>
-    [TestMethod]
+    [Fact]
     public void ReviewIndex_Empty_ReturnsEmptyIndex()
     {
         // Act
         var index = ReviewIndex.Empty();
 
         // Assert — all query operations report empty/no results
-        Assert.IsNotNull(index, "Empty() should return a non-null instance.");
-        Assert.IsNull(index.GetEvidence("any-id", "any-fingerprint"),
-            "GetEvidence should return null on an empty index.");
-        Assert.IsFalse(index.HasId("any-id"),
+        Assert.NotNull(index);
+        Assert.Null(index.GetEvidence("any-id", "any-fingerprint"));
+        Assert.False(index.HasId("any-id"),
             "HasId should return false on an empty index.");
-        Assert.IsEmpty(index.GetAllForId("any-id"),
-            "GetAllForId should return an empty list on an empty index.");
+        Assert.Empty(index.GetAllForId("any-id"));
     }
 
     // -------------------------------------------------------------------------
@@ -155,7 +149,7 @@ public class IndexTests
     ///     <see cref="ReviewIndex.Load(EvidenceSource)" /> throws
     ///     <see cref="ArgumentNullException" />.
     /// </summary>
-    [TestMethod]
+    [Fact]
     public void ReviewIndex_Load_EvidenceSource_NullSource_ThrowsArgumentNullException()
     {
         // Arrange
@@ -163,7 +157,7 @@ public class IndexTests
 
         // Act & Assert
 #pragma warning disable CS8604 // Possible null reference argument — intentional for this test
-        Assert.ThrowsExactly<ArgumentNullException>(() =>
+        Assert.Throws<ArgumentNullException>(() =>
             ReviewIndex.Load(nullSource!));
 #pragma warning restore CS8604
     }
@@ -173,7 +167,7 @@ public class IndexTests
     ///     <see cref="ReviewIndex.Load(EvidenceSource)" /> throws
     ///     <see cref="InvalidOperationException" />.
     /// </summary>
-    [TestMethod]
+    [Fact]
     public void ReviewIndex_Load_EvidenceSource_UnknownType_ThrowsInvalidOperationException()
     {
         // Arrange — a source with an unsupported type value
@@ -184,7 +178,7 @@ public class IndexTests
             PasswordEnv: null);
 
         // Act & Assert
-        Assert.ThrowsExactly<InvalidOperationException>(() =>
+        Assert.Throws<InvalidOperationException>(() =>
             ReviewIndex.Load(source));
     }
 
@@ -192,7 +186,7 @@ public class IndexTests
     ///     Test that loading a file with invalid JSON via a <c>fileshare</c>
     ///     <see cref="EvidenceSource" /> throws <see cref="InvalidOperationException" />.
     /// </summary>
-    [TestMethod]
+    [Fact]
     public void ReviewIndex_Load_EvidenceSource_Fileshare_InvalidJson_ThrowsInvalidOperationException()
     {
         // Arrange — write non-JSON content to a temp file
@@ -201,7 +195,7 @@ public class IndexTests
         var source = new EvidenceSource("fileshare", path, null, null);
 
         // Act & Assert — invalid JSON content should cause an InvalidOperationException
-        Assert.ThrowsExactly<InvalidOperationException>(() =>
+        Assert.Throws<InvalidOperationException>(() =>
             ReviewIndex.Load(source));
     }
 
@@ -209,7 +203,7 @@ public class IndexTests
     ///     Test that loading a file with an empty reviews array via a <c>fileshare</c>
     ///     <see cref="EvidenceSource" /> returns an empty index.
     /// </summary>
-    [TestMethod]
+    [Fact]
     public void ReviewIndex_Load_EvidenceSource_Fileshare_EmptyReviews_ReturnsEmptyIndex()
     {
         // Arrange — JSON with an empty reviews array
@@ -219,8 +213,8 @@ public class IndexTests
         var index = LoadIndexFromJson(json);
 
         // Assert — empty index should report no evidence for any id
-        Assert.IsNotNull(index);
-        Assert.IsFalse(index.HasId("any-id"),
+        Assert.NotNull(index);
+        Assert.False(index.HasId("any-id"),
             "HasId should return false on an empty index.");
     }
 
@@ -228,7 +222,7 @@ public class IndexTests
     ///     Test that loading a valid JSON file with two entries via a <c>fileshare</c>
     ///     <see cref="EvidenceSource" /> returns a fully populated index.
     /// </summary>
-    [TestMethod]
+    [Fact]
     public void ReviewIndex_Load_EvidenceSource_Fileshare_ValidJson_ReturnsPopulatedIndex()
     {
         // Arrange — JSON containing two distinct review evidence entries
@@ -258,27 +252,27 @@ public class IndexTests
 
         // Assert — both entries are retrievable by their respective ids and fingerprints
         var evidence1 = index.GetEvidence("Core-Logic", "abc123");
-        Assert.IsNotNull(evidence1, "First entry should be findable.");
-        Assert.AreEqual("Core-Logic", evidence1.Id);
-        Assert.AreEqual("abc123", evidence1.Fingerprint);
-        Assert.AreEqual("2026-02-14", evidence1.Date);
-        Assert.AreEqual("pass", evidence1.Result);
-        Assert.AreEqual("CR-2026-014 Core Logic Review.pdf", evidence1.File);
+        Assert.NotNull(evidence1);
+        Assert.Equal("Core-Logic", evidence1.Id);
+        Assert.Equal("abc123", evidence1.Fingerprint);
+        Assert.Equal("2026-02-14", evidence1.Date);
+        Assert.Equal("pass", evidence1.Result);
+        Assert.Equal("CR-2026-014 Core Logic Review.pdf", evidence1.File);
 
         var evidence2 = index.GetEvidence("UI-Layer", "def456");
-        Assert.IsNotNull(evidence2, "Second entry should be findable.");
-        Assert.AreEqual("UI-Layer", evidence2.Id);
-        Assert.AreEqual("def456", evidence2.Fingerprint);
-        Assert.AreEqual("2026-03-01", evidence2.Date);
-        Assert.AreEqual("pass", evidence2.Result);
-        Assert.AreEqual("CR-2026-021 UI Layer Review.pdf", evidence2.File);
+        Assert.NotNull(evidence2);
+        Assert.Equal("UI-Layer", evidence2.Id);
+        Assert.Equal("def456", evidence2.Fingerprint);
+        Assert.Equal("2026-03-01", evidence2.Date);
+        Assert.Equal("pass", evidence2.Result);
+        Assert.Equal("CR-2026-021 UI Layer Review.pdf", evidence2.File);
     }
 
     /// <summary>
     ///     Test that entries missing required fields (id or fingerprint) are silently
     ///     skipped when loading via a <c>fileshare</c> <see cref="EvidenceSource" />.
     /// </summary>
-    [TestMethod]
+    [Fact]
     public void ReviewIndex_Load_EvidenceSource_Fileshare_MissingRequiredFields_SkipsInvalidEntries()
     {
         // Arrange — JSON containing three entries:
@@ -316,9 +310,9 @@ public class IndexTests
 
         // Assert — only the valid entry is present; the two incomplete entries are skipped
         var validEvidence = index.GetEvidence("Valid-Entry", "fp-valid");
-        Assert.IsNotNull(validEvidence, "The valid entry should be present in the index.");
+        Assert.NotNull(validEvidence);
 
-        Assert.IsFalse(index.HasId("No-Fingerprint"),
+        Assert.False(index.HasId("No-Fingerprint"),
             "Entry missing 'fingerprint' should not appear in the index.");
     }
 
@@ -327,7 +321,7 @@ public class IndexTests
     ///     source loads the index from the path given in
     ///     <see cref="EvidenceSource.Location" />.
     /// </summary>
-    [TestMethod]
+    [Fact]
     public void ReviewIndex_Load_EvidenceSource_Fileshare_LoadsFromFile()
     {
         // Arrange — write a valid index JSON file to the temp directory
@@ -358,9 +352,9 @@ public class IndexTests
 
         // Assert — the entry written to disk is present in the loaded index
         var evidence = index.GetEvidence("Core-Logic", "abc123");
-        Assert.IsNotNull(evidence, "Evidence loaded via fileshare source should be present.");
-        Assert.AreEqual("Core-Logic", evidence.Id);
-        Assert.AreEqual("abc123", evidence.Fingerprint);
+        Assert.NotNull(evidence);
+        Assert.Equal("Core-Logic", evidence.Id);
+        Assert.Equal("abc123", evidence.Fingerprint);
     }
 
     /// <summary>
@@ -368,7 +362,7 @@ public class IndexTests
     ///     source pointing at a non-existent file throws
     ///     <see cref="InvalidOperationException" />.
     /// </summary>
-    [TestMethod]
+    [Fact]
     public void ReviewIndex_Load_EvidenceSource_Fileshare_NonExistentFile_ThrowsInvalidOperationException()
     {
         // Arrange — a path to a file that does not exist
@@ -380,7 +374,7 @@ public class IndexTests
             PasswordEnv: null);
 
         // Act & Assert
-        Assert.ThrowsExactly<InvalidOperationException>(() =>
+        Assert.Throws<InvalidOperationException>(() =>
             ReviewIndex.Load(source));
     }
 
@@ -388,7 +382,7 @@ public class IndexTests
     ///     Test that <see cref="ReviewIndex.Load(EvidenceSource, HttpClient)" /> with a
     ///     <c>url</c> source and a 200 OK response correctly deserializes the index.
     /// </summary>
-    [TestMethod]
+    [Fact]
     public void ReviewIndex_Load_EvidenceSource_Url_SuccessResponse_LoadsIndex()
     {
         // Arrange — canned JSON served by a fake HTTP handler
@@ -425,9 +419,9 @@ public class IndexTests
 
         // Assert
         var evidence = index.GetEvidence("UI-Layer", "def456");
-        Assert.IsNotNull(evidence, "Evidence returned via URL source should be present.");
-        Assert.AreEqual("UI-Layer", evidence.Id);
-        Assert.AreEqual("def456", evidence.Fingerprint);
+        Assert.NotNull(evidence);
+        Assert.Equal("UI-Layer", evidence.Id);
+        Assert.Equal("def456", evidence.Fingerprint);
     }
 
     /// <summary>
@@ -435,7 +429,7 @@ public class IndexTests
     ///     <c>url</c> source and a non-success HTTP status code throws
     ///     <see cref="InvalidOperationException" />.
     /// </summary>
-    [TestMethod]
+    [Fact]
     public void ReviewIndex_Load_EvidenceSource_Url_NotFoundResponse_ThrowsInvalidOperationException()
     {
         // Arrange — fake handler returns HTTP 404
@@ -450,7 +444,7 @@ public class IndexTests
             PasswordEnv: null);
 
         // Act & Assert — a 404 should be reported as an InvalidOperationException
-        Assert.ThrowsExactly<InvalidOperationException>(() =>
+        Assert.Throws<InvalidOperationException>(() =>
             ReviewIndex.Load(source, httpClient));
     }
 
@@ -459,7 +453,7 @@ public class IndexTests
     ///     <c>url</c> source returning invalid JSON throws
     ///     <see cref="InvalidOperationException" />.
     /// </summary>
-    [TestMethod]
+    [Fact]
     public void ReviewIndex_Load_EvidenceSource_Url_InvalidJson_ThrowsInvalidOperationException()
     {
         // Arrange — fake handler returns HTTP 200 with malformed JSON
@@ -477,7 +471,7 @@ public class IndexTests
             PasswordEnv: null);
 
         // Act & Assert — malformed JSON should produce an InvalidOperationException
-        Assert.ThrowsExactly<InvalidOperationException>(() =>
+        Assert.Throws<InvalidOperationException>(() =>
             ReviewIndex.Load(source, httpClient));
     }
 
@@ -486,7 +480,7 @@ public class IndexTests
     ///     <see cref="ReviewIndex.Load(EvidenceSource, HttpClient)" /> throws
     ///     <see cref="ArgumentNullException" />.
     /// </summary>
-    [TestMethod]
+    [Fact]
     public void ReviewIndex_Load_EvidenceSource_NullHttpClient_ThrowsArgumentNullException()
     {
         // Arrange
@@ -499,7 +493,7 @@ public class IndexTests
 
         // Act & Assert
 #pragma warning disable CS8604 // Possible null reference argument — intentional for this test
-        Assert.ThrowsExactly<ArgumentNullException>(() =>
+        Assert.Throws<ArgumentNullException>(() =>
             ReviewIndex.Load(source, nullClient!));
 #pragma warning restore CS8604
     }
@@ -509,7 +503,7 @@ public class IndexTests
     ///     source returns an empty <see cref="ReviewIndex" /> without accessing any file
     ///     or network resource.
     /// </summary>
-    [TestMethod]
+    [Fact]
     public void ReviewIndex_Load_EvidenceSource_None_ReturnsEmptyIndex()
     {
         // Arrange
@@ -523,14 +517,14 @@ public class IndexTests
         var index = ReviewIndex.Load(source);
 
         // Assert — a none source always returns an empty index
-        Assert.IsNull(index.GetEvidence("any-id", "any-fingerprint"));
+        Assert.Null(index.GetEvidence("any-id", "any-fingerprint"));
     }
 
     /// <summary>
     ///     Test that <see cref="ReviewIndex.Load(EvidenceSource, HttpClient)" /> with a <c>none</c>
     ///     source returns an empty <see cref="ReviewIndex" /> without making any HTTP request.
     /// </summary>
-    [TestMethod]
+    [Fact]
     public void ReviewIndex_Load_EvidenceSource_None_HttpClientOverload_ReturnsEmptyIndex()
     {
         // Arrange — use a fake handler that fails if actually called
@@ -547,7 +541,7 @@ public class IndexTests
         var index = ReviewIndex.Load(source, httpClient);
 
         // Assert — a none source always returns an empty index without touching the handler
-        Assert.IsNull(index.GetEvidence("any-id", "any-fingerprint"));
+        Assert.Null(index.GetEvidence("any-id", "any-fingerprint"));
     }
 
     // -------------------------------------------------------------------------
@@ -558,7 +552,7 @@ public class IndexTests
     ///     Test that passing a null stream to <see cref="ReviewIndex.Save(Stream)" />
     ///     throws <see cref="ArgumentNullException" />.
     /// </summary>
-    [TestMethod]
+    [Fact]
     public void ReviewIndex_Save_Stream_NullStream_ThrowsArgumentNullException()
     {
         // Arrange
@@ -567,32 +561,50 @@ public class IndexTests
 
         // Act & Assert
 #pragma warning disable CS8604 // Possible null reference argument — intentional for this test
-        Assert.ThrowsExactly<ArgumentNullException>(() =>
+        Assert.Throws<ArgumentNullException>(() =>
             index.Save(nullStream!));
 #pragma warning restore CS8604
     }
 
     /// <summary>
-    ///     Test that passing a null or empty path to <see cref="ReviewIndex.Save(string)" />
+    ///     Test that passing an empty path to <see cref="ReviewIndex.Save(string)" />
     ///     throws <see cref="ArgumentException" />.
     /// </summary>
-    [TestMethod]
-    public void ReviewIndex_Save_File_NullPath_ThrowsArgumentException()
+    [Fact]
+    public void ReviewIndex_Save_File_EmptyPath_ThrowsArgumentException()
     {
         // Arrange
         var index = ReviewIndex.Empty();
         var emptyPath = string.Empty;
 
         // Act & Assert — an empty path is invalid and should throw
-        Assert.ThrowsExactly<ArgumentException>(() =>
+        Assert.Throws<ArgumentException>(() =>
             index.Save(emptyPath));
+    }
+
+    /// <summary>
+    ///     Test that passing a null path to <see cref="ReviewIndex.Save(string)" />
+    ///     throws <see cref="ArgumentException" />.
+    /// </summary>
+    [Fact]
+    public void ReviewIndex_Save_File_NullPath_ThrowsArgumentException()
+    {
+        // Arrange
+        var index = ReviewIndex.Empty();
+        string? nullPath = null;
+
+        // Act & Assert — a null path is invalid and should throw
+#pragma warning disable CS8604 // Possible null reference argument — intentional for this test
+        Assert.Throws<ArgumentException>(() =>
+            index.Save(nullPath!));
+#pragma warning restore CS8604
     }
 
     /// <summary>
     ///     Test that saving an index to a <see cref="MemoryStream" /> and reloading it
     ///     produces an index with exactly the same entries.
     /// </summary>
-    [TestMethod]
+    [Fact]
     public void ReviewIndex_Save_RoundTrip_PreservesAllEntries()
     {
         // Arrange — build an index from JSON with two entries
@@ -625,20 +637,20 @@ public class IndexTests
 
         // Assert — every original entry is present in the reloaded index with identical field values
         var alpha = reloaded.GetEvidence("Alpha", "fp-alpha");
-        Assert.IsNotNull(alpha, "Alpha entry should survive the round-trip.");
-        Assert.AreEqual("Alpha", alpha.Id);
-        Assert.AreEqual("fp-alpha", alpha.Fingerprint);
-        Assert.AreEqual("2026-04-01", alpha.Date);
-        Assert.AreEqual("pass", alpha.Result);
-        Assert.AreEqual("alpha.pdf", alpha.File);
+        Assert.NotNull(alpha);
+        Assert.Equal("Alpha", alpha.Id);
+        Assert.Equal("fp-alpha", alpha.Fingerprint);
+        Assert.Equal("2026-04-01", alpha.Date);
+        Assert.Equal("pass", alpha.Result);
+        Assert.Equal("alpha.pdf", alpha.File);
 
         var beta = reloaded.GetEvidence("Beta", "fp-beta");
-        Assert.IsNotNull(beta, "Beta entry should survive the round-trip.");
-        Assert.AreEqual("Beta", beta.Id);
-        Assert.AreEqual("fp-beta", beta.Fingerprint);
-        Assert.AreEqual("2026-04-02", beta.Date);
-        Assert.AreEqual("fail", beta.Result);
-        Assert.AreEqual("beta.pdf", beta.File);
+        Assert.NotNull(beta);
+        Assert.Equal("Beta", beta.Id);
+        Assert.Equal("fp-beta", beta.Fingerprint);
+        Assert.Equal("2026-04-02", beta.Date);
+        Assert.Equal("fail", beta.Result);
+        Assert.Equal("beta.pdf", beta.File);
     }
 
     // -------------------------------------------------------------------------
@@ -649,14 +661,14 @@ public class IndexTests
     ///     Test that scanning an empty directory with a PDF glob pattern returns an
     ///     empty index.
     /// </summary>
-    [TestMethod]
+    [Fact]
     public void ReviewIndex_Scan_NoMatchingFiles_LeavesIndexEmpty()
     {
         // Act — scan with a PDF glob pattern; no files exist so nothing should be indexed
         var index = ReviewIndex.Scan(_testDirectory, ["**/*.pdf"]);
 
         // Assert — the index should be empty when no PDFs are found
-        Assert.IsFalse(index.HasId("any-id"),
+        Assert.False(index.HasId("any-id"),
             "Index should be empty when no PDFs are found.");
     }
 
@@ -664,47 +676,37 @@ public class IndexTests
     ///     Test that scanning a directory containing a PDF with valid Keywords metadata
     ///     populates the index with the corresponding evidence entry.
     /// </summary>
-    [TestMethod]
+    [Fact]
     public void ReviewIndex_Scan_PdfWithValidMetadata_PopulatesIndex()
     {
         // Arrange — create a PDF with all required keywords
         var pdfPath = PathHelpers.SafePathCombine(_testDirectory, "valid-review.pdf");
-        using (var document = new PdfDocument())
-        {
-            document.AddPage();
-            document.Info.Keywords = "id=Core-Logic fingerprint=abc123 date=2026-03-08 result=pass";
-            document.Save(pdfPath);
-        }
+        PdfTestHelper.CreateMinimalPdf(pdfPath, "id=Core-Logic fingerprint=abc123 date=2026-03-08 result=pass");
 
         // Act
         var index = ReviewIndex.Scan(_testDirectory, ["**/*.pdf"]);
 
         // Assert — the entry is retrievable and all fields match the PDF keywords
         var evidence = index.GetEvidence("Core-Logic", "abc123");
-        Assert.IsNotNull(evidence, "Evidence should be present after scanning a valid PDF.");
-        Assert.AreEqual("Core-Logic", evidence.Id);
-        Assert.AreEqual("abc123", evidence.Fingerprint);
-        Assert.AreEqual("2026-03-08", evidence.Date);
-        Assert.AreEqual("pass", evidence.Result);
+        Assert.NotNull(evidence);
+        Assert.Equal("Core-Logic", evidence.Id);
+        Assert.Equal("abc123", evidence.Fingerprint);
+        Assert.Equal("2026-03-08", evidence.Date);
+        Assert.Equal("pass", evidence.Result);
         // GlobMatcher returns forward-slash paths; the File field reflects that
-        Assert.AreEqual("valid-review.pdf", evidence.File);
+        Assert.Equal("valid-review.pdf", evidence.File);
     }
 
     /// <summary>
     ///     Test that a PDF with a fingerprint keyword but no id keyword is skipped
     ///     and the warning callback is invoked.
     /// </summary>
-    [TestMethod]
+    [Fact]
     public void ReviewIndex_Scan_PdfWithMissingId_SkipsWithWarning()
     {
         // Arrange — create a PDF that has fingerprint but no id
         var pdfPath = PathHelpers.SafePathCombine(_testDirectory, "missing-id.pdf");
-        using (var document = new PdfDocument())
-        {
-            document.AddPage();
-            document.Info.Keywords = "fingerprint=abc123 date=2026-03-08 result=pass";
-            document.Save(pdfPath);
-        }
+        PdfTestHelper.CreateMinimalPdf(pdfPath, "fingerprint=abc123 date=2026-03-08 result=pass");
 
         var warnings = new List<string>();
 
@@ -712,8 +714,8 @@ public class IndexTests
         var index = ReviewIndex.Scan(_testDirectory, ["**/*.pdf"], onWarning: msg => warnings.Add(msg));
 
         // Assert — the file is skipped and at least one warning is emitted; no entry in the index
-        Assert.IsNotEmpty(warnings, "A warning should be emitted for a PDF missing 'id'.");
-        Assert.IsFalse(index.HasId("any-id"),
+        Assert.NotEmpty(warnings);
+        Assert.False(index.HasId("any-id"),
             "No entry should be added when the 'id' keyword is missing.");
     }
 
@@ -721,17 +723,12 @@ public class IndexTests
     ///     Test that a PDF with an id keyword but no fingerprint keyword is skipped
     ///     and the warning callback is invoked.
     /// </summary>
-    [TestMethod]
+    [Fact]
     public void ReviewIndex_Scan_PdfWithMissingFingerprint_SkipsWithWarning()
     {
         // Arrange — create a PDF that has id but no fingerprint
         var pdfPath = PathHelpers.SafePathCombine(_testDirectory, "missing-fingerprint.pdf");
-        using (var document = new PdfDocument())
-        {
-            document.AddPage();
-            document.Info.Keywords = "id=Core-Logic date=2026-03-08 result=pass";
-            document.Save(pdfPath);
-        }
+        PdfTestHelper.CreateMinimalPdf(pdfPath, "id=Core-Logic date=2026-03-08 result=pass");
 
         var warnings = new List<string>();
 
@@ -739,8 +736,8 @@ public class IndexTests
         var index = ReviewIndex.Scan(_testDirectory, ["**/*.pdf"], onWarning: msg => warnings.Add(msg));
 
         // Assert — the file is skipped and at least one warning is emitted; no entry in the index
-        Assert.IsNotEmpty(warnings, "A warning should be emitted for a PDF missing 'fingerprint'.");
-        Assert.IsFalse(index.HasId("Core-Logic"),
+        Assert.NotEmpty(warnings);
+        Assert.False(index.HasId("Core-Logic"),
             "No entry should be added when the 'fingerprint' keyword is missing.");
     }
 
@@ -748,17 +745,12 @@ public class IndexTests
     ///     Test that a PDF with no keywords at all is skipped and the warning callback
     ///     is invoked.
     /// </summary>
-    [TestMethod]
+    [Fact]
     public void ReviewIndex_Scan_PdfWithNoKeywords_SkipsWithWarning()
     {
         // Arrange — create a PDF with an empty Keywords field
         var pdfPath = PathHelpers.SafePathCombine(_testDirectory, "no-keywords.pdf");
-        using (var document = new PdfDocument())
-        {
-            document.AddPage();
-            document.Info.Keywords = string.Empty;
-            document.Save(pdfPath);
-        }
+        PdfTestHelper.CreateMinimalPdf(pdfPath, string.Empty);
 
         var warnings = new List<string>();
 
@@ -766,8 +758,8 @@ public class IndexTests
         var index = ReviewIndex.Scan(_testDirectory, ["**/*.pdf"], onWarning: msg => warnings.Add(msg));
 
         // Assert — the file is skipped and at least one warning is emitted; index remains empty
-        Assert.IsNotEmpty(warnings, "A warning should be emitted for a PDF with no keywords.");
-        Assert.IsFalse(index.HasId("any-id"),
+        Assert.NotEmpty(warnings);
+        Assert.False(index.HasId("any-id"),
             "No entry should be added when a PDF has no keywords.");
     }
 
@@ -775,17 +767,12 @@ public class IndexTests
     ///     Test that a PDF with id and fingerprint but no date keyword is skipped
     ///     and the warning callback is invoked.
     /// </summary>
-    [TestMethod]
+    [Fact]
     public void ReviewIndex_Scan_PdfWithMissingDate_SkipsWithWarning()
     {
         // Arrange — create a PDF that has id and fingerprint but no date
         var pdfPath = PathHelpers.SafePathCombine(_testDirectory, "missing-date.pdf");
-        using (var document = new PdfDocument())
-        {
-            document.AddPage();
-            document.Info.Keywords = "id=Core-Logic fingerprint=abc123 result=pass";
-            document.Save(pdfPath);
-        }
+        PdfTestHelper.CreateMinimalPdf(pdfPath, "id=Core-Logic fingerprint=abc123 result=pass");
 
         var warnings = new List<string>();
 
@@ -793,8 +780,8 @@ public class IndexTests
         var index = ReviewIndex.Scan(_testDirectory, ["**/*.pdf"], onWarning: msg => warnings.Add(msg));
 
         // Assert — the file is skipped and at least one warning is emitted; no entry in the index
-        Assert.IsNotEmpty(warnings, "A warning should be emitted for a PDF missing 'date'.");
-        Assert.IsFalse(index.HasId("Core-Logic"),
+        Assert.NotEmpty(warnings);
+        Assert.False(index.HasId("Core-Logic"),
             "No entry should be added when the 'date' keyword is missing.");
     }
 
@@ -802,17 +789,12 @@ public class IndexTests
     ///     Test that a PDF with id, fingerprint, and date but no result keyword is skipped
     ///     and the warning callback is invoked.
     /// </summary>
-    [TestMethod]
+    [Fact]
     public void ReviewIndex_Scan_PdfWithMissingResult_SkipsWithWarning()
     {
         // Arrange — create a PDF that has id, fingerprint, and date but no result
         var pdfPath = PathHelpers.SafePathCombine(_testDirectory, "missing-result.pdf");
-        using (var document = new PdfDocument())
-        {
-            document.AddPage();
-            document.Info.Keywords = "id=Core-Logic fingerprint=abc123 date=2026-03-08";
-            document.Save(pdfPath);
-        }
+        PdfTestHelper.CreateMinimalPdf(pdfPath, "id=Core-Logic fingerprint=abc123 date=2026-03-08");
 
         var warnings = new List<string>();
 
@@ -820,8 +802,8 @@ public class IndexTests
         var index = ReviewIndex.Scan(_testDirectory, ["**/*.pdf"], onWarning: msg => warnings.Add(msg));
 
         // Assert — the file is skipped and at least one warning is emitted; no entry in the index
-        Assert.IsNotEmpty(warnings, "A warning should be emitted for a PDF missing 'result'.");
-        Assert.IsFalse(index.HasId("Core-Logic"),
+        Assert.NotEmpty(warnings);
+        Assert.False(index.HasId("Core-Logic"),
             "No entry should be added when the 'result' keyword is missing.");
     }
 
@@ -829,44 +811,34 @@ public class IndexTests
     ///     Test that scanning a directory with two PDFs, each with distinct metadata,
     ///     populates the index with both entries.
     /// </summary>
-    [TestMethod]
+    [Fact]
     public void ReviewIndex_Scan_MultiplePdfs_PopulatesAllEntries()
     {
         // Arrange — create two PDFs with different ids and fingerprints
         var pdf1Path = PathHelpers.SafePathCombine(_testDirectory, "review-alpha.pdf");
-        using (var doc1 = new PdfDocument())
-        {
-            doc1.AddPage();
-            doc1.Info.Keywords = "id=Alpha fingerprint=fp-alpha date=2026-05-01 result=pass";
-            doc1.Save(pdf1Path);
-        }
+        PdfTestHelper.CreateMinimalPdf(pdf1Path, "id=Alpha fingerprint=fp-alpha date=2026-05-01 result=pass");
 
         var pdf2Path = PathHelpers.SafePathCombine(_testDirectory, "review-beta.pdf");
-        using (var doc2 = new PdfDocument())
-        {
-            doc2.AddPage();
-            doc2.Info.Keywords = "id=Beta fingerprint=fp-beta date=2026-05-02 result=pass";
-            doc2.Save(pdf2Path);
-        }
+        PdfTestHelper.CreateMinimalPdf(pdf2Path, "id=Beta fingerprint=fp-beta date=2026-05-02 result=pass");
 
         // Act
         var index = ReviewIndex.Scan(_testDirectory, ["**/*.pdf"]);
 
         // Assert — both entries are present in the index
         var alpha = index.GetEvidence("Alpha", "fp-alpha");
-        Assert.IsNotNull(alpha, "Alpha entry should be indexed after scanning.");
-        Assert.AreEqual("Alpha", alpha.Id);
+        Assert.NotNull(alpha);
+        Assert.Equal("Alpha", alpha.Id);
 
         var beta = index.GetEvidence("Beta", "fp-beta");
-        Assert.IsNotNull(beta, "Beta entry should be indexed after scanning.");
-        Assert.AreEqual("Beta", beta.Id);
+        Assert.NotNull(beta);
+        Assert.Equal("Beta", beta.Id);
     }
 
     /// <summary>
     ///     Test that <see cref="ReviewIndex.Scan" /> always returns a fresh index
     ///     that does not include entries from any separately loaded index.
     /// </summary>
-    [TestMethod]
+    [Fact]
     public void ReviewIndex_Scan_ClearsExistingEntries()
     {
         // Arrange — load an index with a pre-existing entry
@@ -884,13 +856,13 @@ public class IndexTests
             }
             """;
         var existingIndex = LoadIndexFromJson(json);
-        Assert.IsTrue(existingIndex.HasId("Old-Entry"), "Pre-condition: Old-Entry should be present in the loaded index.");
+        Assert.True(existingIndex.HasId("Old-Entry"), "Pre-condition: Old-Entry should be present in the loaded index.");
 
         // Act — scan is a static factory; it always creates a fresh index independent of any prior index
         var scannedIndex = ReviewIndex.Scan(_testDirectory, ["**/*.pdf"]);
 
         // Assert — the scanned index does not contain entries from the separately loaded index
-        Assert.IsFalse(scannedIndex.HasId("Old-Entry"),
+        Assert.False(scannedIndex.HasId("Old-Entry"),
             "Scan should return a fresh index containing only scanned PDFs.");
     }
 
@@ -903,7 +875,7 @@ public class IndexTests
     ///     <see cref="ReviewEvidence" /> when the id and fingerprint both match an
     ///     existing entry.
     /// </summary>
-    [TestMethod]
+    [Fact]
     public void ReviewIndex_GetEvidence_ExistingEntry_ReturnsEvidence()
     {
         // Arrange
@@ -926,19 +898,19 @@ public class IndexTests
         var evidence = index.GetEvidence("Core-Logic", "abc123");
 
         // Assert — the returned evidence has every field populated from the JSON
-        Assert.IsNotNull(evidence, "Evidence should be found for a matching id and fingerprint.");
-        Assert.AreEqual("Core-Logic", evidence.Id);
-        Assert.AreEqual("abc123", evidence.Fingerprint);
-        Assert.AreEqual("2026-02-14", evidence.Date);
-        Assert.AreEqual("pass", evidence.Result);
-        Assert.AreEqual("review.pdf", evidence.File);
+        Assert.NotNull(evidence);
+        Assert.Equal("Core-Logic", evidence.Id);
+        Assert.Equal("abc123", evidence.Fingerprint);
+        Assert.Equal("2026-02-14", evidence.Date);
+        Assert.Equal("pass", evidence.Result);
+        Assert.Equal("review.pdf", evidence.File);
     }
 
     /// <summary>
     ///     Test that <see cref="ReviewIndex.GetEvidence" /> returns <c>null</c> when the
     ///     id exists in the index but the fingerprint does not match any entry for that id.
     /// </summary>
-    [TestMethod]
+    [Fact]
     public void ReviewIndex_GetEvidence_WrongFingerprint_ReturnsNull()
     {
         // Arrange
@@ -961,14 +933,14 @@ public class IndexTests
         var evidence = index.GetEvidence("Core-Logic", "wrong-fingerprint");
 
         // Assert — no match means null is returned
-        Assert.IsNull(evidence, "GetEvidence should return null when the fingerprint does not match.");
+        Assert.Null(evidence);
     }
 
     /// <summary>
     ///     Test that <see cref="ReviewIndex.GetEvidence" /> returns <c>null</c> when the
     ///     given id is not present in the index at all.
     /// </summary>
-    [TestMethod]
+    [Fact]
     public void ReviewIndex_GetEvidence_UnknownId_ReturnsNull()
     {
         // Arrange — an index with one entry
@@ -991,14 +963,14 @@ public class IndexTests
         var evidence = index.GetEvidence("Unknown-Id", "fp-known");
 
         // Assert — unknown id always returns null
-        Assert.IsNull(evidence, "GetEvidence should return null for an unknown id.");
+        Assert.Null(evidence);
     }
 
     /// <summary>
     ///     Test that <see cref="ReviewIndex.HasId" /> returns <c>true</c> when at least
     ///     one evidence entry exists for the given id.
     /// </summary>
-    [TestMethod]
+    [Fact]
     public void ReviewIndex_HasId_ExistingId_ReturnsTrue()
     {
         // Arrange
@@ -1021,14 +993,14 @@ public class IndexTests
         var result = index.HasId("Core-Logic");
 
         // Assert — the id was loaded so HasId must return true
-        Assert.IsTrue(result, "HasId should return true for an id that exists in the index.");
+        Assert.True(result, "HasId should return true for an id that exists in the index.");
     }
 
     /// <summary>
     ///     Test that <see cref="ReviewIndex.HasId" /> returns <c>false</c> when no entry
     ///     exists for the given id.
     /// </summary>
-    [TestMethod]
+    [Fact]
     public void ReviewIndex_HasId_UnknownId_ReturnsFalse()
     {
         // Arrange — an index with one known entry
@@ -1051,14 +1023,14 @@ public class IndexTests
         var result = index.HasId("Unknown-Id");
 
         // Assert — the id was never loaded so HasId must return false
-        Assert.IsFalse(result, "HasId should return false for an id that is not in the index.");
+        Assert.False(result, "HasId should return false for an id that is not in the index.");
     }
 
     /// <summary>
     ///     Test that <see cref="ReviewIndex.GetAllForId" /> returns all evidence entries
     ///     when the same id has multiple associated fingerprints.
     /// </summary>
-    [TestMethod]
+    [Fact]
     public void ReviewIndex_GetAllForId_ExistingId_ReturnsAllEntries()
     {
         // Arrange — two entries share the same id but have different fingerprints
@@ -1088,19 +1060,18 @@ public class IndexTests
         var entries = index.GetAllForId("Core-Logic");
 
         // Assert — both entries for "Core-Logic" are returned
-        Assert.HasCount(2, entries,
-            "GetAllForId should return exactly two entries for the id with two fingerprints.");
+        Assert.Equal(2, entries.Count());
 
         var fingerprints = entries.Select(e => e.Fingerprint).ToHashSet();
-        Assert.Contains("fp-v1", fingerprints, "fp-v1 entry should be included.");
-        Assert.Contains("fp-v2", fingerprints, "fp-v2 entry should be included.");
+        Assert.Contains("fp-v1", fingerprints);
+        Assert.Contains("fp-v2", fingerprints);
     }
 
     /// <summary>
     ///     Test that <see cref="ReviewIndex.GetAllForId" /> returns an empty list when
     ///     no entries exist for the given id.
     /// </summary>
-    [TestMethod]
+    [Fact]
     public void ReviewIndex_GetAllForId_UnknownId_ReturnsEmptyList()
     {
         // Arrange — an index with a single known entry
@@ -1123,8 +1094,7 @@ public class IndexTests
         var entries = index.GetAllForId("Unknown-Id");
 
         // Assert — an unknown id produces an empty list, not null
-        Assert.IsNotNull(entries, "GetAllForId should never return null.");
-        Assert.IsEmpty(entries,
-            "GetAllForId should return an empty list for an id that is not in the index.");
+        Assert.NotNull(entries);
+        Assert.Empty(entries);
     }
 }

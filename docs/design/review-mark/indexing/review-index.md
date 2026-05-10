@@ -1,13 +1,13 @@
-# ReviewIndex
+### ReviewIndex
 
-## Purpose
+#### Purpose
 
 The `ReviewIndex` software unit manages the loading, querying, and creation of the review
 evidence index. It abstracts the evidence store behind a uniform interface so that
 the rest of the tool does not need to know whether evidence is stored on a fileshare,
 served over HTTP, or absent entirely.
 
-## ReviewEvidence Record
+#### ReviewEvidence Record
 
 `ReviewEvidence` is an immutable record that holds the in-memory representation of a
 single review record once the index has been loaded or scanned.
@@ -24,7 +24,7 @@ The `ReviewIndex` holds these records in a two-level
 `Dictionary<string, Dictionary<string, ReviewEvidence>>` keyed first by `Id` and
 then by `Fingerprint`, which enables O(1) lookup by both fields simultaneously.
 
-## Evidence Index Format
+#### Evidence Index Format
 
 The evidence index is a JSON file (`index.json`) containing an array of review records.
 Each record has the following fields:
@@ -37,7 +37,7 @@ Each record has the following fields:
 | `result` | string | Review outcome (`pass` or `fail`) |
 | `file` | string | Relative path to the PDF evidence file |
 
-## ReviewIndex.Load(EvidenceSource)
+#### ReviewIndex.Load(EvidenceSource)
 
 `ReviewIndex.Load(EvidenceSource)` selects a loading strategy based on the evidence
 source type (see below). For `url` sources, the tool constructs an `HttpClient`
@@ -53,7 +53,7 @@ This overload is **not** exposed for test injection; see
 - **`url`** — Downloads `index.json` from the specified HTTP or HTTPS URL, with optional
   Basic-auth credentials read from environment variables
 
-### Error Behavior
+##### Error Behavior
 
 - **`fileshare` — file missing or unreadable**: If the file at the specified path does not
   exist or cannot be read, an `InvalidOperationException` is thrown with a message
@@ -67,7 +67,7 @@ This overload is **not** exposed for test injection; see
 - **`url` — malformed response**: If the response body is not valid evidence-index JSON,
   an `InvalidOperationException` is thrown with a message describing the parse failure.
 
-## ReviewIndex.Load(EvidenceSource, HttpClient)
+#### ReviewIndex.Load(EvidenceSource, HttpClient)
 
 `ReviewIndex.Load(EvidenceSource, HttpClient)` is an internally-visible overload that
 accepts a caller-supplied `HttpClient`. It is exposed to allow unit tests to inject a
@@ -75,7 +75,7 @@ fake `HttpMessageHandler` when testing `url`-type evidence sources, avoiding rea
 network calls. The behavior is identical to the single-argument overload except that
 the caller provides the `HttpClient` instead of having one created internally.
 
-## ReviewIndex.Scan()
+#### ReviewIndex.Scan()
 
 `ReviewIndex.Scan(directory, paths, onWarning)` scans a directory for PDF files matching
 the given glob patterns. For each PDF file found, it reads embedded metadata to
@@ -89,12 +89,12 @@ The caller (e.g., `Program`) is responsible for choosing an output path and call
 `Save(...)` on the returned index to produce `index.json` as part of the `--index`
 workflow.
 
-## ReviewIndex.Empty()
+#### ReviewIndex.Empty()
 
 `ReviewIndex.Empty()` returns an index with no records. It is used when the evidence
 source type is `none`, resulting in all review-sets being reported as Missing.
 
-## ReviewIndex.Save()
+#### ReviewIndex.Save()
 
 `ReviewIndex` provides two overloads for persisting the index to `index.json` format:
 
@@ -105,20 +105,20 @@ Both overloads serialize all `ReviewEvidence` records in the index to JSON forma
 The `Save(string filePath)` overload is used by the `--index` workflow in `Program`
 to write the output file after scanning.
 
-## ReviewIndex.GetEvidence()
+#### ReviewIndex.GetEvidence()
 
 `ReviewIndex.GetEvidence(string id, string fingerprint)` returns the `ReviewEvidence`
 record whose `Id` matches `id` and whose `Fingerprint` matches `fingerprint`, or `null`
 if no such record exists.
 
-## ReviewIndex.HasId()
+#### ReviewIndex.HasId()
 
 `ReviewIndex.HasId(string id)` returns `true` if the index contains at least one record
 with the given `id`, regardless of fingerprint. Returns `false` if no record exists for
 the id.
 
-## ReviewIndex.GetAllForId()
+#### ReviewIndex.GetAllForId()
 
 `ReviewIndex.GetAllForId(string id)` returns all `ReviewEvidence` records that have the
-given `id`, as an enumerable collection. Returns an empty collection if no records exist
-for the id.
+given `id`, as a read-only indexed collection (`IReadOnlyList<ReviewEvidence>`). Returns an
+empty collection if no records exist for the id.

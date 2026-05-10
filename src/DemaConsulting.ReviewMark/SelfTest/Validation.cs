@@ -50,6 +50,13 @@ internal static partial class Validation
     ///     Runs self-validation tests and optionally writes results to a file.
     /// </summary>
     /// <param name="context">The context containing command line arguments and program state.</param>
+    /// <remarks>
+    ///     When one or more validation tests fail, or when the results file cannot be written
+    ///     (for example because the file extension is unsupported or an I/O error occurs),
+    ///     this method calls <see cref="Context.WriteError" />, which sets
+    ///     <see cref="Context.ExitCode" /> to a non-zero value. Callers can therefore detect
+    ///     failure by inspecting <see cref="Context.ExitCode" /> after <see cref="Run" /> returns.
+    /// </remarks>
     public static void Run(Context context)
     {
         // Validate input

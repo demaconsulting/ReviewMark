@@ -78,24 +78,72 @@ The design documentation follows the same hierarchy under `docs/design/review-ma
 ```text
 docs/design/
 ├── introduction.md                     — this document (software structure and folder layout)
+├── review-mark.md                      — system-level design
 └── review-mark/
-    ├── review-mark.md                  — system-level design
     ├── program.md                      — Program unit design
+    ├── cli.md                          — Cli subsystem overview
     ├── cli/
-    │   ├── cli.md                      — Cli subsystem overview
     │   └── context.md                  — Context unit design
+    ├── configuration.md                — Configuration subsystem overview
     ├── configuration/
-    │   ├── configuration.md            — Configuration subsystem overview
     │   ├── review-mark-configuration.md — ReviewMarkConfiguration unit design
     │   └── glob-matcher.md             — GlobMatcher unit design
+    ├── indexing.md                     — Indexing subsystem overview
     ├── indexing/
-    │   ├── indexing.md                 — Indexing subsystem overview
     │   ├── review-index.md             — ReviewIndex unit design
     │   └── path-helpers.md             — PathHelpers unit design
+    ├── self-test.md                    — SelfTest subsystem overview
     └── self-test/
-        ├── self-test.md                — SelfTest subsystem overview
         └── validation.md               — Validation unit design
 ```
+
+## Companion Artifact Structure
+
+Design documents are companion artifacts to requirements, source code, and tests.
+The list below shows how each artifact type maps to the same software structure:
+
+- **System** — Req: `docs/reqstream/review-mark.yaml`,
+  Design: `docs/design/review-mark.md`,
+  Tests: `test/.../IntegrationTests.cs`
+- **Program** — Req: `docs/reqstream/review-mark/program.yaml`,
+  Design: `docs/design/review-mark/program.md`,
+  Source: `src/.../Program.cs`, Tests: `test/.../ProgramTests.cs`
+- **Cli subsystem** — Req: `docs/reqstream/review-mark/cli/cli.yaml`,
+  Design: `docs/design/review-mark/cli.md`,
+  Source: `src/.../Cli/`
+- **Context** — Req: `docs/reqstream/review-mark/cli/context.yaml`,
+  Design: `docs/design/review-mark/cli/context.md`,
+  Source: `src/.../Cli/Context.cs`, Tests: `test/.../ContextTests.cs`
+- **Configuration subsystem** —
+  Req: `docs/reqstream/review-mark/configuration/configuration.yaml`,
+  Design: `docs/design/review-mark/configuration.md`,
+  Source: `src/.../Configuration/`
+- **ReviewMarkConfiguration** —
+  Req: `docs/reqstream/review-mark/configuration/review-mark-configuration.yaml`,
+  Design: `docs/design/review-mark/configuration/review-mark-configuration.md`,
+  Source: `src/.../Configuration/ReviewMarkConfiguration.cs`,
+  Tests: `test/.../ReviewMarkConfigurationTests.cs`
+- **GlobMatcher** — Req: `docs/reqstream/review-mark/configuration/glob-matcher.yaml`,
+  Design: `docs/design/review-mark/configuration/glob-matcher.md`,
+  Source: `src/.../Configuration/GlobMatcher.cs`,
+  Tests: `test/.../GlobMatcherTests.cs`
+- **Indexing subsystem** — Req: `docs/reqstream/review-mark/indexing/indexing.yaml`,
+  Design: `docs/design/review-mark/indexing.md`,
+  Source: `src/.../Indexing/`
+- **ReviewIndex** — Req: `docs/reqstream/review-mark/indexing/review-index.yaml`,
+  Design: `docs/design/review-mark/indexing/review-index.md`,
+  Source: `src/.../Indexing/ReviewIndex.cs`, Tests: `test/.../IndexingTests.cs`
+- **PathHelpers** — Req: `docs/reqstream/review-mark/indexing/path-helpers.yaml`,
+  Design: `docs/design/review-mark/indexing/path-helpers.md`,
+  Source: `src/.../Indexing/PathHelpers.cs`, Tests: `test/.../IndexingTests.cs`
+- **SelfTest subsystem** — Req: `docs/reqstream/review-mark/self-test/self-test.yaml`,
+  Design: `docs/design/review-mark/self-test.md`,
+  Source: `src/.../SelfTest/`
+- **Validation** — Req: `docs/reqstream/review-mark/self-test/validation.yaml`,
+  Design: `docs/design/review-mark/self-test/validation.md`,
+  Source: `src/.../SelfTest/Validation.cs`, Tests: `test/.../ValidationTests.cs`
+
+Requirement IDs referenced in the design chapters match identifiers in the ReqStream YAML files under `docs/reqstream/`.
 
 ## Document Conventions
 
@@ -109,10 +157,6 @@ Throughout this document:
 
 ## References
 
-- [ReviewMark System Design][arch]
-- [ReviewMark User Guide][guide]
-- [ReviewMark Repository][repo]
-
-[arch]: review-mark/review-mark.md
-[guide]: ../user_guide/introduction.md
-[repo]: https://github.com/demaconsulting/ReviewMark
+- See *ReviewMark System Design* (`docs/design/review-mark.md`) for the system-level design.
+- See the *ReviewMark User Guide* (`docs/user_guide/introduction.md`) for usage information.
+- See the ReviewMark repository at `https://github.com/demaconsulting/ReviewMark`.

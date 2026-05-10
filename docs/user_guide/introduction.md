@@ -237,6 +237,18 @@ The following command-line options are supported:
 | `--enforce`               | Exit with non-zero code if there are review issues                             |
 | `--elaborate <id>`        | Print a Markdown elaboration of the specified review set                       |
 
+## Unknown and Invalid Arguments
+
+If an unrecognized or malformed argument is supplied, ReviewMark writes a descriptive
+error message to stderr in the format `Error: {message}` and exits with code 1. No
+output is produced to stdout. For example:
+
+```bash
+reviewmark --unknown-flag
+# Error: Unknown argument '--unknown-flag'
+# (exit code 1)
+```
+
 ## Working Directory (`--dir`)
 
 `--dir` sets the root directory used for operations that do not have an explicit path

@@ -11,10 +11,13 @@ sections:
           - id: ReviewMark-OTS-VersionMark
             title: VersionMark shall publish captured tool-version information.
             justification: |
-              DemaConsulting.VersionMark reads version metadata for each dotnet tool used in the
-              pipeline and writes a versions markdown document included in the release artifacts.
-              It runs in the same CI pipeline that produces the TRX test results, so a successful
-              pipeline run is evidence that VersionMark executed without error.
+              Compliance traceability and audit evidence require that the versions of all
+              tools used in the build pipeline are documented in the release artifacts.
+              DemaConsulting.VersionMark captures version metadata for each pipeline tool
+              and publishes a human-readable versions document included in the build notes.
+              This provides auditors and reviewers with a permanent record of which tool
+              versions were used to produce each release, satisfying traceability obligations
+              without manual data-entry.
             tags: [ots]
             tests:
               - VersionMark_CapturesVersions

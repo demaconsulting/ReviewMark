@@ -45,8 +45,9 @@ sections:
           - GlobMatcher_GetMatchingFiles_NullPatterns_ThrowsArgumentNullException
 
       - id: ReviewMark-GlobMatcher-EmptyBaseDirectoryRejection
-        title: The GlobMatcher shall reject an empty or whitespace-only baseDirectory parameter
-          with an ArgumentException.
+        title: >-
+          The GlobMatcher shall reject an empty or whitespace-only baseDirectory
+          parameter with an ArgumentException.
         justification: |
           When baseDirectory is empty or contains only whitespace, the operation must be
           rejected with an ArgumentException so callers receive a clear diagnostic rather

@@ -11,17 +11,17 @@ resource-path:
 input-files:
   - docs/design/title.txt
   - docs/design/introduction.md
-  - docs/design/review-mark/review-mark.md
+  - docs/design/review-mark.md
   - docs/design/review-mark/program.md
-  - docs/design/review-mark/cli/cli.md
+  - docs/design/review-mark/cli.md
   - docs/design/review-mark/cli/context.md
-  - docs/design/review-mark/configuration/configuration.md
-  - docs/design/review-mark/configuration/glob-matcher.md
+  - docs/design/review-mark/configuration.md
   - docs/design/review-mark/configuration/review-mark-configuration.md
-  - docs/design/review-mark/indexing/indexing.md
+  - docs/design/review-mark/configuration/glob-matcher.md
+  - docs/design/review-mark/indexing.md
   - docs/design/review-mark/indexing/review-index.md
   - docs/design/review-mark/indexing/path-helpers.md
-  - docs/design/review-mark/self-test/self-test.md
+  - docs/design/review-mark/self-test.md
   - docs/design/review-mark/self-test/validation.md
 template: template.html
 

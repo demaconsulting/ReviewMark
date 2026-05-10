@@ -23,7 +23,9 @@ using Microsoft.Extensions.FileSystemGlobbing;
 namespace DemaConsulting.ReviewMark.Configuration;
 
 /// <summary>
-///     Provides glob-based file matching utilities.
+///     Resolves glob patterns against the file system for the Configuration subsystem.
+///     Patterns prefixed with <c>!</c> are exclusions; all others are inclusions.
+///     Patterns are applied in order, allowing a later include to re-add files removed by an earlier exclude.
 /// </summary>
 internal static class GlobMatcher
 {
@@ -40,6 +42,9 @@ internal static class GlobMatcher
     ///     A sorted list of relative file paths (using forward slashes), relative to
     ///     <paramref name="baseDirectory" />, sorted by <see cref="StringComparer.Ordinal" />.
     /// </returns>
+    /// <remarks>
+    ///     This method is stateless and thread-safe; each call creates its own internal state.
+    /// </remarks>
     /// <exception cref="ArgumentNullException">
     ///     Thrown when <paramref name="baseDirectory" /> or <paramref name="patterns" /> is <c>null</c>.
     /// </exception>

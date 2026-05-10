@@ -23,6 +23,7 @@ using System.Net.Http;
 using System.Text;
 using DemaConsulting.ReviewMark.Configuration;
 using DemaConsulting.ReviewMark.Indexing;
+using DemaConsulting.ReviewMark.Tests;
 
 namespace DemaConsulting.ReviewMark.Tests.Indexing;
 
@@ -30,19 +31,17 @@ namespace DemaConsulting.ReviewMark.Tests.Indexing;
 ///     Subsystem integration tests for the Indexing subsystem
 ///     (ReviewIndex + PathHelpers working together).
 /// </summary>
-[TestClass]
-public class IndexingTests
+public sealed class IndexingTests : IDisposable
 {
     /// <summary>
     ///     Unique temporary directory created before each test and deleted after.
     /// </summary>
-    private string _testDirectory = string.Empty;
+    private readonly string _testDirectory;
 
     /// <summary>
-    ///     Creates a fresh GUID-based temporary directory before each test.
+    ///     Initializes a new instance of <see cref="IndexingTests" />.
     /// </summary>
-    [TestInitialize]
-    public void TestInitialize()
+    public IndexingTests()
     {
         _testDirectory = PathHelpers.SafePathCombine(
             Path.GetTempPath(),
@@ -50,23 +49,22 @@ public class IndexingTests
         Directory.CreateDirectory(_testDirectory);
     }
 
-    /// <summary>
-    ///     Deletes the temporary directory and all its contents after each test.
-    /// </summary>
-    [TestCleanup]
-    public void TestCleanup()
+    /// <inheritdoc />
+    public void Dispose()
     {
         if (Directory.Exists(_testDirectory))
         {
             Directory.Delete(_testDirectory, recursive: true);
         }
+
+        GC.SuppressFinalize(this);
     }
 
     /// <summary>
     ///     Test that SafePathCombine with a subdirectory segment resolves to a valid index path
     ///     that can be loaded by ReviewIndex.
     /// </summary>
-    [TestMethod]
+    [Fact]
     public void Indexing_SafePathCombine_WithIndexPath_LoadsIndex()
     {
         // Arrange
@@ -95,15 +93,15 @@ public class IndexingTests
         var index = ReviewIndex.Load(source);
 
         // Assert
-        Assert.IsTrue(index.HasId("Test-Review"));
+        Assert.True(index.HasId("Test-Review"));
         var evidence = index.GetEvidence("Test-Review", "abc123");
-        Assert.IsNotNull(evidence);
+        Assert.NotNull(evidence);
     }
 
     /// <summary>
     ///     Test that a ReviewIndex can be saved and reloaded with all entries preserved.
     /// </summary>
-    [TestMethod]
+    [Fact]
     public void Indexing_ReviewIndex_SaveAndLoad_RoundTrip()
     {
         // Arrange
@@ -140,16 +138,16 @@ public class IndexingTests
         var index2 = ReviewIndex.Load(source2);
 
         // Assert — all entries survive the round-trip
-        Assert.IsTrue(index2.HasId("Review-Alpha"));
-        Assert.IsTrue(index2.HasId("Review-Beta"));
-        Assert.IsNotNull(index2.GetEvidence("Review-Alpha", "fp001"));
-        Assert.IsNotNull(index2.GetEvidence("Review-Beta", "fp002"));
+        Assert.True(index2.HasId("Review-Alpha"));
+        Assert.True(index2.HasId("Review-Beta"));
+        Assert.NotNull(index2.GetEvidence("Review-Alpha", "fp001"));
+        Assert.NotNull(index2.GetEvidence("Review-Beta", "fp002"));
     }
 
     /// <summary>
     ///     Test that Load with a none-type EvidenceSource returns an empty index immediately.
     /// </summary>
-    [TestMethod]
+    [Fact]
     public void Indexing_ReviewIndex_Load_WithNoneSource_ReturnsEmptyIndex()
     {
         // Arrange
@@ -159,13 +157,13 @@ public class IndexingTests
         var index = ReviewIndex.Load(source);
 
         // Assert — none source always produces an empty index; no file system access occurs
-        Assert.IsFalse(index.HasId("any-id"));
+        Assert.False(index.HasId("any-id"));
     }
 
     /// <summary>
     ///     Test that Load with a url-type EvidenceSource and a fake HttpClient returns a populated index.
     /// </summary>
-    [TestMethod]
+    [Fact]
     public void Indexing_ReviewIndex_Load_WithUrlSource_ReturnsPopulatedIndex()
     {
         // Arrange — build a fake handler that returns a fixed JSON index payload
@@ -191,17 +189,17 @@ public class IndexingTests
         var index = ReviewIndex.Load(source, httpClient);
 
         // Assert — the entry from the JSON payload is present in the loaded index
-        Assert.IsTrue(index.HasId("Url-Review"));
+        Assert.True(index.HasId("Url-Review"));
         var evidence = index.GetEvidence("Url-Review", "fp-url-001");
-        Assert.IsNotNull(evidence);
-        Assert.AreEqual("Url-Review", evidence.Id);
-        Assert.AreEqual("fp-url-001", evidence.Fingerprint);
+        Assert.NotNull(evidence);
+        Assert.Equal("Url-Review", evidence.Id);
+        Assert.Equal("fp-url-001", evidence.Fingerprint);
     }
 
     /// <summary>
     ///     Test that SafePathCombine throws for path traversal inputs, preventing directory escapes.
     /// </summary>
-    [TestMethod]
+    [Fact]
     public void Indexing_SafePathCombine_WithTraversalInputs_Throws()
     {
         // Arrange
@@ -209,18 +207,18 @@ public class IndexingTests
         Directory.CreateDirectory(evidenceDir);
 
         // Act & Assert — double-dot traversal must be rejected
-        Assert.ThrowsExactly<ArgumentException>(() =>
+        Assert.Throws<ArgumentException>(() =>
             PathHelpers.SafePathCombine(evidenceDir, "../../../etc/sensitive"));
 
         // Act & Assert — absolute path must be rejected
-        Assert.ThrowsExactly<ArgumentException>(() =>
+        Assert.Throws<ArgumentException>(() =>
             PathHelpers.SafePathCombine(evidenceDir, Path.GetTempPath()));
     }
 
     /// <summary>
     ///     Test that Scan with no PDF files in the target directory returns an empty index.
     /// </summary>
-    [TestMethod]
+    [Fact]
     public void Indexing_ReviewIndex_Scan_WithNoPdfs_ReturnsEmptyIndex()
     {
         // Arrange — create a directory with no PDF files
@@ -232,37 +230,32 @@ public class IndexingTests
         var index = ReviewIndex.Scan(_testDirectory, ["evidence/**/*.pdf"]);
 
         // Assert — index is empty because no PDFs are present
-        Assert.IsFalse(index.HasId("any-id"));
+        Assert.False(index.HasId("any-id"));
     }
 
     /// <summary>
     ///     Test that Scan with a PDF containing valid Keywords metadata returns a populated index.
     /// </summary>
-    [TestMethod]
+    [Fact]
     public void Indexing_ReviewIndex_Scan_WithValidPdf_ReturnsPopulatedIndex()
     {
         // Arrange — create a PDF with all required keyword fields in the Keywords metadata
         var evidenceDir = PathHelpers.SafePathCombine(_testDirectory, "evidence");
         Directory.CreateDirectory(evidenceDir);
         var pdfPath = PathHelpers.SafePathCombine(evidenceDir, "review-evidence.pdf");
-        using (var document = new PdfSharp.Pdf.PdfDocument())
-        {
-            document.AddPage();
-            document.Info.Keywords = "id=Core-Logic fingerprint=abc123 date=2026-04-01 result=pass";
-            document.Save(pdfPath);
-        }
+        PdfTestHelper.CreateMinimalPdf(pdfPath, "id=Core-Logic fingerprint=abc123 date=2026-04-01 result=pass");
 
         // Act — scan the evidence directory for PDF files
         var index = ReviewIndex.Scan(_testDirectory, ["evidence/**/*.pdf"]);
 
         // Assert — the evidence entry is present with all fields correctly extracted
-        Assert.IsTrue(index.HasId("Core-Logic"));
+        Assert.True(index.HasId("Core-Logic"));
         var evidence = index.GetEvidence("Core-Logic", "abc123");
-        Assert.IsNotNull(evidence);
-        Assert.AreEqual("Core-Logic", evidence.Id);
-        Assert.AreEqual("abc123", evidence.Fingerprint);
-        Assert.AreEqual("2026-04-01", evidence.Date);
-        Assert.AreEqual("pass", evidence.Result);
+        Assert.NotNull(evidence);
+        Assert.Equal("Core-Logic", evidence.Id);
+        Assert.Equal("abc123", evidence.Fingerprint);
+        Assert.Equal("2026-04-01", evidence.Date);
+        Assert.Equal("pass", evidence.Result);
     }
 
     /// <summary>

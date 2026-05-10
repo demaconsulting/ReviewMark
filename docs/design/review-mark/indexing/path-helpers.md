@@ -1,6 +1,6 @@
-# PathHelpers
+### PathHelpers
 
-## Overview
+#### Overview
 
 `PathHelpers` is a static utility class that provides a safe path-combination method. It
 protects callers against path-traversal attacks by verifying the resolved combined path stays
@@ -8,9 +8,9 @@ within the base directory. Note that `Path.GetFullPath` normalizes `.`/`..` segm
 not resolve symlinks or reparse points, so this check guards against string-level traversal
 only.
 
-## Class Structure
+#### Class Structure
 
-### SafePathCombine Method
+##### SafePathCombine Method
 
 ```csharp
 internal static string SafePathCombine(string basePath, string relativePath)
@@ -30,7 +30,7 @@ the base directory.
    or `Path.AltDirectorySeparatorChar`, or is itself rooted (absolute), which would indicate
    the combined path escapes the base directory.
 
-## Design Decisions
+#### Design Decisions
 
 - **`Path.GetRelativePath` for containment check**: Using `GetRelativePath` to verify
   containment handles root paths (e.g. `/`, `C:\`), platform case-sensitivity, and
@@ -52,7 +52,7 @@ the base directory.
   - `PathTooLongException` — thrown when the combined path exceeds the platform path-length
     limit. These are passed through to the caller without wrapping.
 
-## Security Rationale
+#### Security Rationale
 
 Evidence index files may be loaded from external sources (file shares or URLs).
 The `file` field in each index record is supplied by the evidence store and must

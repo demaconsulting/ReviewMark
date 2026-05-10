@@ -14,22 +14,36 @@ language: en
 
 # Project-specific technical terms and tool names
 words:
+  - behaviour
+  - behaviours
   - buildmark
   - Dema
   - fileassert
   - fileshare
+  - hotspots
   - mstest
+  - nendobj
+  - nstartxref
   - pandoc
+  - parallelisation
   - Pdfs
+  - planfile
+  - Qube
+  - recognised
+  - reportfile
   - reqstream
   - reviewmark
   - Sarif
   - sarifmark
   - selftest
   - sonarmark
+  - summarising
+  - unrecognised
+  - unreviewed
   - versionmark
   - weasy
   - weasyprint
+  - xunit
   - yamlfix
 
 # Exclude common build artifacts, dependencies, and vendored third-party code
@@ -40,6 +54,7 @@ ignorePaths:
   - "**/thirdparty/**"
   - "**/third-party/**"
   - "**/3rd-party/**"
+  - "**/generated/**"
   - "**/AGENT_REPORT_*.md"
   - "**/.agent-logs/**"
   - "**/bin/**"

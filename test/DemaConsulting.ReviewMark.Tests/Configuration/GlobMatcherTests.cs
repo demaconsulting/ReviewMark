@@ -19,47 +19,43 @@
 // SOFTWARE.
 
 using DemaConsulting.ReviewMark.Configuration;
-using DemaConsulting.ReviewMark.Indexing;
 
 namespace DemaConsulting.ReviewMark.Tests.Configuration;
 
 /// <summary>
 ///     Unit tests for the <see cref="GlobMatcher" /> class.
 /// </summary>
-[TestClass]
-public class GlobMatcherTests
+public sealed class GlobMatcherTests : IDisposable
 {
     /// <summary>
     ///     Unique temporary directory created before each test and deleted after.
     /// </summary>
-    private string _testDirectory = string.Empty;
+    private readonly string _testDirectory;
 
     /// <summary>
-    ///     Creates a fresh GUID-based temporary directory before each test.
+    ///     Initializes a new instance of <see cref="GlobMatcherTests" />.
     /// </summary>
-    [TestInitialize]
-    public void TestInitialize()
+    public GlobMatcherTests()
     {
-        _testDirectory = PathHelpers.SafePathCombine(Path.GetTempPath(), $"GlobMatcherTests_{Guid.NewGuid()}");
+        _testDirectory = Path.Combine(Path.GetTempPath(), $"GlobMatcherTests_{Guid.NewGuid()}");
         Directory.CreateDirectory(_testDirectory);
     }
 
-    /// <summary>
-    ///     Deletes the temporary directory and all its contents after each test.
-    /// </summary>
-    [TestCleanup]
-    public void TestCleanup()
+    /// <inheritdoc />
+    public void Dispose()
     {
         if (Directory.Exists(_testDirectory))
         {
             Directory.Delete(_testDirectory, recursive: true);
         }
+
+        GC.SuppressFinalize(this);
     }
 
     /// <summary>
     ///     Test that passing a null base directory throws <see cref="ArgumentNullException" />.
     /// </summary>
-    [TestMethod]
+    [Fact]
     public void GlobMatcher_GetMatchingFiles_NullBaseDirectory_ThrowsArgumentNullException()
     {
         // Arrange
@@ -68,7 +64,7 @@ public class GlobMatcherTests
 
         // Act & Assert
 #pragma warning disable CS8604 // Possible null reference argument — intentional for this test
-        Assert.ThrowsExactly<ArgumentNullException>(() =>
+        Assert.Throws<ArgumentNullException>(() =>
             GlobMatcher.GetMatchingFiles(baseDirectory!, patterns));
 #pragma warning restore CS8604
     }
@@ -76,7 +72,7 @@ public class GlobMatcherTests
     /// <summary>
     ///     Test that passing null patterns throws <see cref="ArgumentNullException" />.
     /// </summary>
-    [TestMethod]
+    [Fact]
     public void GlobMatcher_GetMatchingFiles_NullPatterns_ThrowsArgumentNullException()
     {
         // Arrange
@@ -84,7 +80,7 @@ public class GlobMatcherTests
 
         // Act & Assert
 #pragma warning disable CS8604 // Possible null reference argument — intentional for this test
-        Assert.ThrowsExactly<ArgumentNullException>(() =>
+        Assert.Throws<ArgumentNullException>(() =>
             GlobMatcher.GetMatchingFiles(_testDirectory, patterns!));
 #pragma warning restore CS8604
     }
@@ -92,7 +88,7 @@ public class GlobMatcherTests
     /// <summary>
     ///     Test that passing an empty base directory throws <see cref="ArgumentException" />.
     /// </summary>
-    [TestMethod]
+    [Fact]
     public void GlobMatcher_GetMatchingFiles_EmptyBaseDirectory_ThrowsArgumentException()
     {
         // Arrange
@@ -100,14 +96,14 @@ public class GlobMatcherTests
         IReadOnlyList<string> patterns = ["**/*.cs"];
 
         // Act & Assert
-        Assert.ThrowsExactly<ArgumentException>(() =>
+        Assert.Throws<ArgumentException>(() =>
             GlobMatcher.GetMatchingFiles(baseDirectory, patterns));
     }
 
     /// <summary>
     ///     Test that passing a whitespace-only base directory throws <see cref="ArgumentException" />.
     /// </summary>
-    [TestMethod]
+    [Fact]
     public void GlobMatcher_GetMatchingFiles_WhitespaceBaseDirectory_ThrowsArgumentException()
     {
         // Arrange
@@ -115,14 +111,14 @@ public class GlobMatcherTests
         IReadOnlyList<string> patterns = ["**/*.cs"];
 
         // Act & Assert
-        Assert.ThrowsExactly<ArgumentException>(() =>
+        Assert.Throws<ArgumentException>(() =>
             GlobMatcher.GetMatchingFiles(baseDirectory, patterns));
     }
 
     /// <summary>
     ///     Test that an empty patterns list returns an empty result.
     /// </summary>
-    [TestMethod]
+    [Fact]
     public void GlobMatcher_GetMatchingFiles_EmptyPatterns_ReturnsEmptyList()
     {
         // Arrange
@@ -132,25 +128,25 @@ public class GlobMatcherTests
         var result = GlobMatcher.GetMatchingFiles(_testDirectory, patterns);
 
         // Assert
-        Assert.IsEmpty(result);
+        Assert.Empty(result);
     }
 
     /// <summary>
     ///     Test that a single include pattern returns all files matching that pattern.
     /// </summary>
-    [TestMethod]
+    [Fact]
     public void GlobMatcher_GetMatchingFiles_SingleIncludePattern_ReturnsMatchingFiles()
     {
         // Arrange — create two .cs files and one .txt file in the test directory
-        File.WriteAllText(PathHelpers.SafePathCombine(_testDirectory, "Alpha.cs"), "class Alpha {}");
-        File.WriteAllText(PathHelpers.SafePathCombine(_testDirectory, "Beta.cs"), "class Beta {}");
-        File.WriteAllText(PathHelpers.SafePathCombine(_testDirectory, "readme.txt"), "readme");
+        File.WriteAllText(Path.Combine(_testDirectory, "Alpha.cs"), "class Alpha {}");
+        File.WriteAllText(Path.Combine(_testDirectory, "Beta.cs"), "class Beta {}");
+        File.WriteAllText(Path.Combine(_testDirectory, "readme.txt"), "readme");
 
         // Act — only match .cs files
         var result = GlobMatcher.GetMatchingFiles(_testDirectory, ["**/*.cs"]);
 
         // Assert — both .cs files are returned; the .txt file is not
-        Assert.HasCount(2, result);
+        Assert.Equal(2, result.Count);
         Assert.Contains("Alpha.cs", result);
         Assert.Contains("Beta.cs", result);
     }
@@ -158,39 +154,39 @@ public class GlobMatcherTests
     /// <summary>
     ///     Test that an exclude pattern removes matching files from the result.
     /// </summary>
-    [TestMethod]
+    [Fact]
     public void GlobMatcher_GetMatchingFiles_ExcludePattern_ExcludesMatchingFiles()
     {
         // Arrange — create files in the root and a subdirectory that should be excluded
-        var genDir = PathHelpers.SafePathCombine(_testDirectory, "Generated");
+        var genDir = Path.Combine(_testDirectory, "Generated");
         Directory.CreateDirectory(genDir);
-        File.WriteAllText(PathHelpers.SafePathCombine(_testDirectory, "Real.cs"), "class Real {}");
-        File.WriteAllText(PathHelpers.SafePathCombine(genDir, "Generated.cs"), "class Generated {}");
+        File.WriteAllText(Path.Combine(_testDirectory, "Real.cs"), "class Real {}");
+        File.WriteAllText(Path.Combine(genDir, "Generated.cs"), "class Generated {}");
 
         // Act — include everything but exclude the Generated subdirectory
         var result = GlobMatcher.GetMatchingFiles(_testDirectory, ["**/*.cs", "!Generated/**"]);
 
         // Assert — only Real.cs is returned
-        Assert.HasCount(1, result);
+        Assert.Single(result);
         Assert.Contains("Real.cs", result);
     }
 
     /// <summary>
     ///     Test that multiple include patterns return all files matching any of the patterns.
     /// </summary>
-    [TestMethod]
+    [Fact]
     public void GlobMatcher_GetMatchingFiles_MultipleIncludePatterns_ReturnsAllMatching()
     {
         // Arrange — create .cs, .yaml, and .txt files in the test directory
-        File.WriteAllText(PathHelpers.SafePathCombine(_testDirectory, "Program.cs"), "class Program {}");
-        File.WriteAllText(PathHelpers.SafePathCombine(_testDirectory, "config.yaml"), "key: value");
-        File.WriteAllText(PathHelpers.SafePathCombine(_testDirectory, "readme.txt"), "readme");
+        File.WriteAllText(Path.Combine(_testDirectory, "Program.cs"), "class Program {}");
+        File.WriteAllText(Path.Combine(_testDirectory, "config.yaml"), "key: value");
+        File.WriteAllText(Path.Combine(_testDirectory, "readme.txt"), "readme");
 
         // Act — match both .cs and .yaml files
         var result = GlobMatcher.GetMatchingFiles(_testDirectory, ["**/*.cs", "**/*.yaml"]);
 
         // Assert — both .cs and .yaml files are included; .txt is not
-        Assert.HasCount(2, result);
+        Assert.Equal(2, result.Count);
         Assert.Contains("Program.cs", result);
         Assert.Contains("config.yaml", result);
     }
@@ -198,55 +194,55 @@ public class GlobMatcherTests
     /// <summary>
     ///     Test that a combination of include and exclude patterns returns only the filtered files.
     /// </summary>
-    [TestMethod]
+    [Fact]
     public void GlobMatcher_GetMatchingFiles_IncludeAndExclude_ReturnsFilteredFiles()
     {
         // Arrange — create files in src and obj subdirectories
-        var srcDir = PathHelpers.SafePathCombine(_testDirectory, "src");
-        var objDir = PathHelpers.SafePathCombine(_testDirectory, "obj");
+        var srcDir = Path.Combine(_testDirectory, "src");
+        var objDir = Path.Combine(_testDirectory, "obj");
         Directory.CreateDirectory(srcDir);
         Directory.CreateDirectory(objDir);
-        File.WriteAllText(PathHelpers.SafePathCombine(srcDir, "Main.cs"), "class Main {}");
-        File.WriteAllText(PathHelpers.SafePathCombine(objDir, "Main.obj.cs"), "// generated");
+        File.WriteAllText(Path.Combine(srcDir, "Main.cs"), "class Main {}");
+        File.WriteAllText(Path.Combine(objDir, "Main.obj.cs"), "// generated");
 
         // Act — include all .cs, exclude obj directory
         var result = GlobMatcher.GetMatchingFiles(_testDirectory, ["**/*.cs", "!obj/**"]);
 
         // Assert — only src/Main.cs is returned
-        Assert.HasCount(1, result);
+        Assert.Single(result);
         Assert.Contains("src/Main.cs", result);
     }
 
     /// <summary>
     ///     Test that a pattern that does not match any files returns an empty list.
     /// </summary>
-    [TestMethod]
+    [Fact]
     public void GlobMatcher_GetMatchingFiles_NoMatchingFiles_ReturnsEmptyList()
     {
         // Arrange — create a .txt file (no .cs files)
-        File.WriteAllText(PathHelpers.SafePathCombine(_testDirectory, "notes.txt"), "notes");
+        File.WriteAllText(Path.Combine(_testDirectory, "notes.txt"), "notes");
 
         // Act — search for .cs files (none exist)
         var result = GlobMatcher.GetMatchingFiles(_testDirectory, ["**/*.cs"]);
 
         // Assert — empty list because no .cs files are present
-        Assert.IsEmpty(result);
+        Assert.Empty(result);
     }
 
     /// <summary>
     ///     Test that an include pattern appearing after an exclude re-adds previously excluded files.
     /// </summary>
-    [TestMethod]
+    [Fact]
     public void GlobMatcher_GetMatchingFiles_ReIncludeAfterExclude_ReturnsReIncludedFiles()
     {
         // Arrange — create files in src and Generated directories
-        var srcDir = PathHelpers.SafePathCombine(_testDirectory, "src");
-        var genDir = PathHelpers.SafePathCombine(_testDirectory, "Generated");
+        var srcDir = Path.Combine(_testDirectory, "src");
+        var genDir = Path.Combine(_testDirectory, "Generated");
         Directory.CreateDirectory(srcDir);
         Directory.CreateDirectory(genDir);
-        File.WriteAllText(PathHelpers.SafePathCombine(srcDir, "Real.cs"), "class Real {}");
-        File.WriteAllText(PathHelpers.SafePathCombine(genDir, "Other.cs"), "class Other {}");
-        File.WriteAllText(PathHelpers.SafePathCombine(genDir, "Special.cs"), "class Special {}");
+        File.WriteAllText(Path.Combine(srcDir, "Real.cs"), "class Real {}");
+        File.WriteAllText(Path.Combine(genDir, "Other.cs"), "class Other {}");
+        File.WriteAllText(Path.Combine(genDir, "Special.cs"), "class Special {}");
 
         // Act — include all .cs, exclude Generated/, then re-include Generated/Special.cs
         var result = GlobMatcher.GetMatchingFiles(
@@ -254,7 +250,7 @@ public class GlobMatcherTests
             ["**/*.cs", "!Generated/**", "Generated/Special.cs"]);
 
         // Assert — src/Real.cs and Generated/Special.cs are present; Generated/Other.cs is not
-        Assert.HasCount(2, result);
+        Assert.Equal(2, result.Count);
         Assert.Contains("src/Real.cs", result);
         Assert.Contains("Generated/Special.cs", result);
         Assert.DoesNotContain("Generated/Other.cs", result);
@@ -264,19 +260,19 @@ public class GlobMatcherTests
     ///     Test that returned relative paths use forward slashes as separators,
     ///     regardless of the host operating system's directory separator.
     /// </summary>
-    [TestMethod]
+    [Fact]
     public void GlobMatcher_GetMatchingFiles_FileInSubdirectory_UsesForwardSlashSeparator()
     {
         // Arrange — create a file inside a subdirectory so the result contains a separator
-        var subDir = PathHelpers.SafePathCombine(_testDirectory, "SubFolder");
+        var subDir = Path.Combine(_testDirectory, "SubFolder");
         Directory.CreateDirectory(subDir);
-        File.WriteAllText(PathHelpers.SafePathCombine(subDir, "Alpha.cs"), "class Alpha {}");
+        File.WriteAllText(Path.Combine(subDir, "Alpha.cs"), "class Alpha {}");
 
         // Act
         var result = GlobMatcher.GetMatchingFiles(_testDirectory, ["**/*.cs"]);
 
         // Assert — path uses a forward slash, not the platform directory separator
-        Assert.HasCount(1, result);
-        Assert.AreEqual("SubFolder/Alpha.cs", result[0]);
+        Assert.Single(result);
+        Assert.Equal("SubFolder/Alpha.cs", result[0]);
     }
 }

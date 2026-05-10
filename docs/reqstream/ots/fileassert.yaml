@@ -9,13 +9,16 @@ sections:
       - title: FileAssert Requirements
         requirements:
           - id: ReviewMark-OTS-FileAssert
-            title: FileAssert shall validate generated documents against acceptance criteria.
+            title: FileAssert shall be operationally available and confirmed functional through self-validation.
             justification: |
-              DemaConsulting.FileAssert validates HTML and PDF documents produced during the
-              build, asserting that each document exists, has a non-trivial size, is structurally
-              valid, and contains expected content. It provides OTS evidence for Pandoc and
-              WeasyPrint and independently confirms file assertion is functioning. Self-validation
-              proves the tool itself is operational before ReqStream consumes the results.
+              The documentation build pipeline produces HTML and PDF artifacts from multiple tools.
+              Without automated assertion, undetected truncation, empty files, or missing content
+              could pass unnoticed into release evidence. FileAssert provides a reliable,
+              reproducible gate that confirms each generated document exists, is structurally
+              valid, and contains expected content. Its secondary role is providing OTS evidence
+              for Pandoc and WeasyPrint by asserting their respective outputs. Self-validation
+              through --validate confirms FileAssert itself is operational before ReqStream
+              consumes the assertion results.
             tags: [ots]
             tests:
               - FileAssert_VersionDisplay

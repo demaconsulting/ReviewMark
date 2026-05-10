@@ -1,18 +1,18 @@
-# Program
+## Program
 
-## Purpose
+### Purpose
 
 The `Program` software unit is the main entry point of the ReviewMark tool. It is
 responsible for constructing the execution context, dispatching to the appropriate
 processing logic based on parsed flags, and returning a meaningful exit code to the
 calling process.
 
-## Version Property
+### Version Property
 
 `Program.Version` returns the tool version string. The version is embedded at build
 time from the assembly metadata and follows semantic versioning conventions.
 
-## Main() Method
+### Main() Method
 
 `Program.Main(string[] args)` is the process entry point. It:
 
@@ -34,7 +34,7 @@ when the log file cannot be opened, or by `RunDefinitionLogic` when a plan or
 report file cannot be written. Other exceptions propagate as unhandled, which
 terminates the process with a runtime-generated error exit code.
 
-## Run() Dispatch Logic
+### Run() Dispatch Logic
 
 `Program.Run(Context)` evaluates the parsed flags in the following priority order,
 executing the first matching action and returning:
@@ -50,19 +50,19 @@ The application banner (step 2) is always printed unless `--version` or `--lint`
 specified. Only one top-level action is performed per invocation. Actions later in the
 priority order are not reached if an earlier flag is set.
 
-## PrintBanner()
+### PrintBanner()
 
 `Program.PrintBanner(Context)` writes the application name, version, and copyright
 notice to the console via `Context.WriteLine()`. The banner is printed for every
 invocation except `--version` and `--lint`.
 
-## PrintHelp()
+### PrintHelp()
 
 `Program.PrintHelp(Context)` writes usage information to the console via
 `Context.WriteLine()`. The help text lists all supported flags and arguments with brief
 descriptions.
 
-## RunLintLogic()
+### RunLintLogic()
 
 `Program.RunLintLogic(Context)` validates the definition file and reports issues:
 
@@ -81,7 +81,7 @@ No banner and no summary message are printed. Successful lint produces no output
 (silence means the definition file is valid). This keeps the output clean for
 integration with linting scripts and CI pipelines.
 
-## RunToolLogic()
+### RunToolLogic()
 
 `Program.RunToolLogic(Context)` is called when none of the early-exit flags
 (`--version`, `--help`, `--validate`, `--lint`) are set. It:
@@ -95,7 +95,7 @@ integration with linting scripts and CI pipelines.
 4. If neither index nor definition actions are requested, prints a usage hint
    via `context.WriteLine()`.
 
-## RunIndexLogic()
+### RunIndexLogic()
 
 `Program.RunIndexLogic(Context, string directory)` scans PDF files using
 `ReviewIndex.Scan(directory, context.IndexPaths)` and writes the resulting
@@ -105,7 +105,10 @@ to `context.WriteLine()`. Progress messages `"Scanning PDF evidence files..."`
 and `"Index written to {indexFile}"` are emitted via `context.WriteLine()`
 before and after the scan respectively.
 
-## RunDefinitionLogic()
+If `ReviewIndex.Scan()` throws an unexpected exception, it propagates unhandled to
+`Main()`, which writes `"Unexpected error: {message}"` to `Console.Error` and rethrows.
+
+### RunDefinitionLogic()
 
 `Program.RunDefinitionLogic(Context, string directory, string definitionFile)`
 handles the definition-based workflow:
@@ -119,10 +122,10 @@ handles the definition-based workflow:
    generates the Review Report Markdown, and writes it to the specified file.
 6. If `--elaborate` is set, calls `config.ElaborateReviewSet()` and writes the
    result to the console via `context.WriteLine()`; catches `ArgumentException`
-   for unknown IDs and calls `context.WriteError()` with the exception message,
+   for unknown IDs and calls `context.WriteError($"Error: {ex.Message}")` with the formatted message,
    which sets the exit code to 1.
 
-## HandleIssues()
+### HandleIssues()
 
 `Program.HandleIssues(Context, bool hasIssues, string message)` translates a
 boolean issue flag into a context message:

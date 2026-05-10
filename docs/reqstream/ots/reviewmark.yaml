@@ -1,0 +1,63 @@
+---
+# ReviewMark OTS Software Requirements
+#
+# Requirements for the ReviewMark file-review evidence management tool.
+
+sections:
+  - title: OTS Software Requirements
+    sections:
+      - title: ReviewMark Requirements
+        requirements:
+          - id: ReviewMark-OTS-ReviewMark-Scan
+            title: >-
+              ReviewMark shall scan file evidence stores and produce a report of review
+              status for all governed files.
+            justification: |
+              Audit and compliance processes require up-to-date visibility into which project
+              files have been formally reviewed and which have not. ReviewMark provides this
+              traceability by scanning the configured evidence source against the set of governed
+              files and generating a report of current review status, making review gaps
+              immediately visible without manual inspection.
+            tags: [ots]
+            tests:
+              - ReviewMark_ValidateFlag_Invoked_RunsValidation
+
+          - id: ReviewMark-OTS-ReviewMark-Enforce
+            title: >-
+              ReviewMark shall enforce that all governed files have current review
+              records, failing the build when any are missing or outdated.
+            justification: |
+              Shipping artifacts that have not been formally reviewed exposes the project to
+              regulatory and quality risk. ReviewMark's --enforce flag makes unreviewed or
+              outdated files a build-breaking condition, ensuring the CI pipeline cannot succeed
+              unless every governed file has a current review record. This provides automated
+              compliance assurance without relying on manual checks.
+            tags: [ots]
+            tests:
+              - ReviewMark_EnforceFlag_WithNoEvidence_ReturnsNonZero
+
+          - id: ReviewMark-OTS-ReviewMark-Elaborate
+            title: >-
+              ReviewMark shall generate a review plan document listing all review-sets
+              and the files governed by each.
+            justification: |
+              Formal review processes require a documented plan before review work begins,
+              listing which files fall under each review-set scope. ReviewMark generates this
+              plan automatically from the configuration, ensuring the plan is always consistent
+              with the current file set and reducing the risk of omitted files.
+            tags: [ots]
+            tests:
+              - ReviewMark_PlanFlag_WithDefinitionFile_GeneratesReviewPlan
+
+          - id: ReviewMark-OTS-ReviewMark-Report
+            title: >-
+              ReviewMark shall generate a review report document summarising the
+              evidence status for each review-set.
+            justification: |
+              Audit evidence must show not only that reviews were planned but that they were
+              completed and the outcomes recorded. ReviewMark produces a review report from the
+              evidence source, summarising the status of each review-set and providing a
+              consolidated view of review completeness for release sign-off.
+            tags: [ots]
+            tests:
+              - ReviewMark_ReportFlag_WithDefinitionFile_GeneratesReviewReport
