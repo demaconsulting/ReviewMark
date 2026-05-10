@@ -245,7 +245,7 @@ output is produced to stdout. For example:
 
 ```bash
 reviewmark --unknown-flag
-# Error: Unknown argument: --unknown-flag
+# Error: Unsupported argument '--unknown-flag'
 # (exit code 1)
 ```
 

@@ -297,7 +297,7 @@ content; `GetFingerprint` called on each.
 
 **Requirement coverage**: `ReviewMark-Config-ReportMarkdownDepthValidation`
 
-##### ReviewMarkConfiguration_ElaborateReviewSet_NullId_ThrowsArgumentException
+##### ReviewMarkConfiguration_ElaborateReviewSet_NullId_ThrowsArgumentNullException
 
 **Scenario**: `ElaborateReviewSet` is called with null as the ID.
 
@@ -381,7 +381,7 @@ content; `GetFingerprint` called on each.
 - **ReviewMark-Config-ReportMarkdownDepthValidation**: ReviewMarkConfiguration_PublishReviewReport_MarkdownDepthAbove5_Throws
 - **ReviewMark-Config-Elaboration**: ReviewMarkConfiguration_ElaborateReviewSet_ValidId_ReturnsElaboration, ReviewMarkConfiguration_ElaborateReviewSet_ContainsFullFingerprint
 - **ReviewMark-Config-ElaborationNullRejection**:
-  ReviewMarkConfiguration_ElaborateReviewSet_NullId_ThrowsArgumentException,
+  ReviewMarkConfiguration_ElaborateReviewSet_NullId_ThrowsArgumentNullException,
   ReviewMarkConfiguration_ElaborateReviewSet_WhitespaceId_ThrowsArgumentException
 - **ReviewMark-Config-ElaborationUnknownIdRejection**: ReviewMarkConfiguration_ElaborateReviewSet_UnknownId_ThrowsArgumentException
 - **ReviewMark-Config-ElaborationMarkdownDepth**: ReviewMarkConfiguration_ElaborateReviewSet_MarkdownDepth_UsedForHeadings

@@ -437,7 +437,7 @@ internal sealed class Context : IDisposable
                     return index + 1;
 
                 default:
-                    throw new ArgumentException($"Unsupported argument '{arg}'", nameof(args));
+                    throw new ArgumentException($"Unsupported argument '{arg}'");
             }
         }
 

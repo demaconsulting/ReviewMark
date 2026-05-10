@@ -831,7 +831,7 @@ public sealed class ReviewMarkConfigurationTests : IDisposable
     ///     review-set ID is null or whitespace.
     /// </summary>
     [Fact]
-    public void ReviewMarkConfiguration_ElaborateReviewSet_NullId_ThrowsArgumentException()
+    public void ReviewMarkConfiguration_ElaborateReviewSet_NullId_ThrowsArgumentNullException()
     {
         // Arrange
         var config = ReviewMarkConfiguration.Parse(MinimalYaml);

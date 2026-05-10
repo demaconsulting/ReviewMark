@@ -156,7 +156,7 @@ sections:
           (ArgumentNullException for null, ArgumentException for whitespace/empty) so callers
           receive clear diagnostics at the point of the invalid call.
         tests:
-          - ReviewMarkConfiguration_ElaborateReviewSet_NullId_ThrowsArgumentException
+          - ReviewMarkConfiguration_ElaborateReviewSet_NullId_ThrowsArgumentNullException
           - ReviewMarkConfiguration_ElaborateReviewSet_WhitespaceId_ThrowsArgumentException
 
       - id: ReviewMark-Config-ElaborationUnknownIdRejection
