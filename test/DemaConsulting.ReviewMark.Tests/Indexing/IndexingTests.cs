@@ -23,6 +23,7 @@ using System.Net.Http;
 using System.Text;
 using DemaConsulting.ReviewMark.Configuration;
 using DemaConsulting.ReviewMark.Indexing;
+using DemaConsulting.ReviewMark.Tests;
 
 namespace DemaConsulting.ReviewMark.Tests.Indexing;
 
