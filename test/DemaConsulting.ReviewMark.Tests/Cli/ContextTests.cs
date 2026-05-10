@@ -200,7 +200,7 @@ public class ContextTests
     {
         // Act & Assert
         var exception = Assert.Throws<ArgumentException>(() => Context.Create(["--unknown"]));
-        Assert.Contains("Unsupported argument", exception.Message);
+        Assert.Contains("Unknown argument", exception.Message);
     }
 
     /// <summary>
