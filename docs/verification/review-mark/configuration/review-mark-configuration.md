@@ -16,6 +16,19 @@ configuration model properties and generated Markdown output.
 unit tests exercise the full stack with real temporary files rather than mocks, because
 the integration is simple and deterministic.
 
+#### Test Environment
+
+N/A - standard test environment. Tests parse inline YAML strings or write temporary YAML
+definition files in-process; no external services or network access are required.
+Temporary files and directories are created and deleted within each test.
+
+#### Acceptance Criteria
+
+All ReviewMarkConfiguration unit tests pass with zero failures. Every `ReviewMark-Config-*`
+requirement is covered by at least one passing test scenario. Null inputs, non-existent
+files, invalid YAML, missing evidence-source blocks, and duplicate review-set IDs all
+produce the specified exception or error-level load result.
+
 #### Test Scenarios
 
 ##### ReviewMarkConfiguration_Parse_NullYaml_ThrowsArgumentNullException
@@ -361,6 +374,7 @@ content; `GetFingerprint` called on each.
   ReviewMarkConfiguration_Load_FileshareRelativeLocation_ResolvesToAbsolutePath
 - **ReviewMark-Config-Loading**:
   ReviewMarkConfiguration_Load_ValidFile_ReturnsConfigurationAndNoIssues,
+  ReviewMarkConfiguration_Load_MissingEvidenceSource_ReturnsNullConfigWithErrorIssue,
   ReviewMarkConfiguration_Load_MultipleErrors_ReturnsAllIssues,
   ReviewMarkConfiguration_Load_NoneEvidenceSource_NoIssues,
   ReviewMarkLoadResult_ReportIssues_RoutesIssuesToContext,

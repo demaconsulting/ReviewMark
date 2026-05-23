@@ -15,6 +15,19 @@ inspect the resulting properties and exit codes, and verify output written to ca
 `Context` has no dependencies on other tool units. All dependencies are real .NET BCL
 types; no mocking is needed at this level.
 
+#### Test Environment
+
+N/A - standard test environment. `Context` depends only on .NET BCL types; no file-system
+fixtures are needed beyond the optional log-file scenarios, which create and delete
+temporary files in-process. Tests run on any platform supporting .NET 8, 9, or 10.
+
+#### Acceptance Criteria
+
+All Context unit tests pass with zero failures. Every `ReviewMark-Context-*` requirement
+is covered by at least one passing test scenario. All flag-parsing edge cases (null input,
+empty string, out-of-range depth, missing argument value) produce the correct exception
+type and message.
+
 #### Test Scenarios
 
 ##### Context_Create_NoArguments_ReturnsDefaultContext

@@ -1,5 +1,7 @@
 ## VersionMark
 
+### Verification Approach
+
 **Component**: DemaConsulting.VersionMark
 **Role**: Captures tool version metadata and publishes a versions markdown document.
 **Acceptance approach**: Automated build pipeline verification.
@@ -37,8 +39,14 @@ the versions markdown report correctly.
   `build.yaml`, confirmed by the "Publish Tool Versions" step that generates
   `docs/build_notes/generated/versions.md`.
 
-Both scenarios together confirm `ReviewMark-OTS-VersionMark`: VersionMark correctly
-captures tool version information across all pipeline jobs and publishes it as a
-human-readable markdown report included in the release artifacts.
+### Requirements Coverage
 
-**Requirement coverage**: `ReviewMark-OTS-VersionMark`
+- **ReviewMark-OTS-VersionMark-Capture**: VersionMark shall capture tool version metadata.
+  - `VersionMark_CapturesVersions`: verifies VersionMark captures version metadata for each
+    pipeline tool and writes a JSON capture file without error.
+    - `VersionMark_CapturesVersions`
+- **ReviewMark-OTS-VersionMark-Report**: VersionMark shall generate a markdown versions
+  report.
+  - `VersionMark_GeneratesMarkdownReport`: verifies VersionMark aggregates captured version
+    JSON files and generates a markdown versions report.
+    - `VersionMark_GeneratesMarkdownReport`

@@ -1,8 +1,8 @@
 ---
-title: ReviewMark Review Plan
+title: "DemaConsulting.ReviewMark Code Review Plan"
 subtitle: File Review Plan for ReviewMark
 author: DEMA Consulting
-description: File Review Plan for ReviewMark
+description: "Code Review Plan for DemaConsulting.ReviewMark"
 lang: en-US
 keywords:
   - ReviewMark

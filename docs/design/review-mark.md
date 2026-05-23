@@ -3,6 +3,24 @@
 This section describes the high-level behavior of the ReviewMark system and the workflow
 that connects its subsystems.
 
+## Architecture
+
+ReviewMark is organized as a single system composed of four subsystems and one standalone
+unit:
+
+| Item | Type | Responsibility |
+| ---- | ---- | -------------- |
+| Program | Unit | Process entry point; dispatches to subsystems based on CLI flags |
+| Cli | Subsystem | Command-line argument parsing and output channel ownership |
+| Configuration | Subsystem | YAML configuration loading, validation, and review-set processing |
+| Indexing | Subsystem | Review evidence loading, PDF scanning, and path utilities |
+| SelfTest | Subsystem | Built-in self-validation test suite |
+
+There is no system-level source code beyond `Program.cs`. All processing logic is
+contained within the subsystems. `Program.Main()` creates a `Context` and delegates
+all work through `Program.Run()`, which dispatches to the appropriate subsystem based
+on the parsed command-line flags.
+
 ## Overview
 
 ReviewMark automates the evidence-gathering step of software review processes used in
@@ -36,6 +54,17 @@ ReviewMark supports three evidence source types, configured in `.reviewmark.yaml
 | `none` | No evidence store; all review-sets are treated as missing |
 | `fileshare` | Evidence index loaded from a local or network file path |
 | `url` | Evidence index loaded from an HTTP or HTTPS URL |
+
+### Credentials
+
+For `url` sources that require authentication, an optional `credentials` key may be added to the
+`evidence-source` block. Its two sub-keys specify the names of environment variables that supply
+HTTP Basic Auth credentials at runtime; secrets are never stored in the definition file:
+
+| Key            | Required | Description                                                             |
+| -------------- | -------- | ----------------------------------------------------------------------- |
+| `username-env` | Yes      | Name of the environment variable holding the HTTP Basic Auth username   |
+| `password-env` | Yes      | Name of the environment variable holding the HTTP Basic Auth password   |
 
 ## Output Documents
 
@@ -149,7 +178,7 @@ The following flags are recognized at the system design level:
 | `--report-depth <#>` | Override the Markdown heading depth for the report document (default: `--depth` value) |
 | `--elaborate <id>` | Print a Markdown elaboration for the named review set (ID, title, fingerprint, and file list) |
 | `--enforce` | Exit with code 1 if the plan has uncovered files or any review-set is non-current |
-| `--index <pattern>` | Scan PDF evidence files matching the glob pattern and write an `index.json` file to `--dir` |
+| `--index <pattern>` | Scan PDF evidence files matching the glob pattern and write an `index.json` file to `--dir`; may be repeated to cover multiple patterns |
 
 ## External Interfaces
 
@@ -157,6 +186,53 @@ The command-line interface is the sole external interface of the ReviewMark syst
 All inputs are supplied as command-line arguments to the `reviewmark` executable, and all
 outputs are written to stdout, stderr, and optionally to files. There is no network
 listener, no REST API, and no graphical interface.
+
+## Dependencies
+
+ReviewMark depends on the following OTS software items:
+
+- **YamlDotNet**: provides YAML deserialization used by the Configuration subsystem to parse
+  `.reviewmark.yaml` (see _YamlDotNet Integration Design_)
+- **PDFsharp**: provides PDF document reading used by the Indexing subsystem to extract metadata
+  from evidence PDF files (see _PDFsharp Integration Design_)
+- **DemaConsulting.TestResults**: provides TRX and JUnit XML test-results serialization used by
+  the SelfTest subsystem (see _DemaConsulting.TestResults Integration Design_)
+- **Microsoft.Extensions.FileSystemGlobbing**: provides glob-pattern file matching used by the
+  `GlobMatcher` unit in the Configuration subsystem (see
+  _Microsoft.Extensions.FileSystemGlobbing Integration Design_)
+
+No shared packages are used.
+
+## Risk Control Measures
+
+N/A — ReviewMark is a standalone command-line tool that runs in a single process with no
+concurrent threads beyond those managed by the .NET runtime. There are no software items
+that require runtime segregation from each other. The evidence store is read-only during
+normal operation; the only files written by the tool are the output documents and, when
+`--index` is used, `index.json`. No risk-control-motivated isolation mechanisms are required.
+
+## Data Flow
+
+The high-level data flow through the system is:
+
+1. **Input**: `string[] args` from the OS shell → parsed by `Context.Create()` into structured flags and paths
+2. **Configuration**: `ReviewMarkConfiguration.Load()` reads `.reviewmark.yaml` from disk and resolves glob patterns via `GlobMatcher` into sorted file lists
+3. **Evidence**: `ReviewIndex.Load()` reads or downloads the evidence index, populating an in-memory lookup keyed by `(id, fingerprint)`
+4. **Processing**: `PublishReviewPlan()` or `PublishReviewReport()` combines the resolved file lists with the evidence index to compute status and generate Markdown output
+5. **Output**: Generated Markdown is written to files on disk; status messages and errors are written to stdout/stderr via `Context`
+
+For the `--index` workflow, the flow is: glob patterns → `GlobMatcher` → sorted PDF paths
+→ `ReviewIndex.Scan()` → metadata extraction → serialized `index.json`.
+
+## Design Constraints
+
+- **Platform**: Targets .NET 8, .NET 9, and .NET 10; must run on Windows, macOS, and Linux
+- **Distribution**: Distributed as a .NET global tool via NuGet; no external runtime dependencies beyond the .NET SDK
+- **Output format**: All generated documents are Markdown; no binary output is produced except `index.json` written by `--index`
+- **No GUI**: The sole external interface is the command-line; no interactive or graphical interface is provided
+- **Deterministic fingerprints**: The SHA-256 fingerprint algorithm must be content-based and platform-independent so that the same files produce the same fingerprint on any operating system
+- **Fingerprint rename stability**: Fingerprints are stable across renames or moves that keep the same set of file contents; only adding, removing, or modifying file content changes the fingerprint
+- **Exit code semantics**: Exit code 0 always means success; exit code 1 always means failure or enforcement violation; no other exit codes are used
 
 ## Exit Codes and Error Handling
 

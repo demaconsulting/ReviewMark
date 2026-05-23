@@ -4,7 +4,7 @@ This document describes the unit-level verification design for the `ReviewIndex`
 It defines the test scenarios, dependency usage, and requirement coverage for
 `Indexing/ReviewIndex.cs`.
 
-#### Verification Approach
+#### Verification Strategy
 
 `ReviewIndex` is verified with unit tests in `IndexTests.cs`. Tests exercise all source
 types (none, fileshare, url), JSON round-trip serialization, PDF metadata extraction
@@ -17,6 +17,20 @@ types (none, fileshare, url), JSON round-trip serialization, PDF metadata extrac
 | Temporary JSON files    | Controlled fileshare evidence without real review PDFs     |
 | `FakeHttpMessageHandler`| Returns fixed JSON for URL source tests                    |
 | Temporary PDF files     | Real minimal PDF fixtures used for Scan metadata tests     |
+
+#### Test Environment
+
+N/A - standard test environment. Temporary JSON and minimal PDF fixture files are created
+in-process for fileshare and scan tests. URL-source tests use an in-process
+`FakeHttpMessageHandler`; no real network access is required. Temporary files are removed
+after each test.
+
+#### Acceptance Criteria
+
+All ReviewIndex unit tests pass with zero failures. Every `ReviewMark-Index-*` and
+`ReviewMark-EvidenceSource-*` requirement is covered by at least one passing test
+scenario. Null inputs, missing files, malformed JSON, unsupported source types, and HTTP
+error responses all produce the specified exception types.
 
 #### Test Scenarios
 
@@ -41,7 +55,7 @@ types (none, fileshare, url), JSON round-trip serialization, PDF metadata extrac
 ##### ReviewIndex_Load_EvidenceSource_UnknownType_ThrowsInvalidOperationException
 
 **Scenario**: `ReviewIndex.Load` is called with an evidence source whose type is not
-recognised (e.g. `"unknown-type"`).
+recognized (e.g. `"unknown-type"`).
 
 **Expected**: `InvalidOperationException` is thrown.
 
@@ -55,7 +69,7 @@ recognised (e.g. `"unknown-type"`).
 
 **Expected**: Returns an empty index with no entries.
 
-**Requirement coverage**: `ReviewMark-Index-EvidenceSource`, `ReviewMark-EvidenceSource-None`
+**Requirement coverage**: `ReviewMark-Index-EvidenceSource`, `ReviewMark-Index-EvidenceSource-None`
 
 ##### ReviewIndex_Load_EvidenceSource_None_HttpClientOverload_ReturnsEmptyIndex
 
@@ -64,7 +78,7 @@ source and a fake HTTP client that would fail if actually contacted.
 
 **Expected**: Returns an empty index without making any HTTP request.
 
-**Requirement coverage**: `ReviewMark-Index-EvidenceSource`, `ReviewMark-EvidenceSource-None`
+**Requirement coverage**: `ReviewMark-Index-EvidenceSource`, `ReviewMark-Index-EvidenceSource-None`
 
 ##### ReviewIndex_Load_EvidenceSource_Fileshare_LoadsFromFile
 
@@ -73,7 +87,7 @@ index JSON file written to a temporary path.
 
 **Expected**: Returns an index containing the entry from the JSON file.
 
-**Requirement coverage**: `ReviewMark-Index-EvidenceSource`
+**Requirement coverage**: `ReviewMark-Index-LoadFromFile`
 
 ##### ReviewIndex_Load_EvidenceSource_Fileshare_ValidJson_ReturnsPopulatedIndex
 
@@ -82,7 +96,7 @@ index JSON file containing two distinct review evidence entries.
 
 **Expected**: Returns a populated index with both entries; all fields match the JSON.
 
-**Requirement coverage**: `ReviewMark-Index-EvidenceSource`
+**Requirement coverage**: `ReviewMark-Index-LoadFromFile`
 
 ##### ReviewIndex_Load_EvidenceSource_Fileshare_NonExistentFile_ThrowsInvalidOperationException
 
@@ -92,7 +106,7 @@ index JSON file containing two distinct review evidence entries.
 
 **Boundary / error path**: Missing file handling.
 
-**Requirement coverage**: `ReviewMark-Index-EvidenceSource`
+**Requirement coverage**: `ReviewMark-Index-LoadFromFile`
 
 ##### ReviewIndex_Load_EvidenceSource_Fileshare_InvalidJson_ThrowsInvalidOperationException
 
@@ -103,7 +117,7 @@ containing invalid JSON content.
 
 **Boundary / error path**: Malformed JSON content.
 
-**Requirement coverage**: `ReviewMark-Index-EvidenceSource`
+**Requirement coverage**: `ReviewMark-Index-LoadFromFile`
 
 ##### ReviewIndex_Load_EvidenceSource_Fileshare_EmptyReviews_ReturnsEmptyIndex
 
@@ -114,7 +128,7 @@ file whose `reviews` array is empty.
 
 **Boundary / error path**: Empty reviews array.
 
-**Requirement coverage**: `ReviewMark-Index-EvidenceSource`
+**Requirement coverage**: `ReviewMark-Index-LoadFromFile`
 
 ##### ReviewIndex_Load_EvidenceSource_Fileshare_MissingRequiredFields_SkipsInvalidEntries
 
@@ -126,7 +140,7 @@ incomplete entries are silently skipped.
 
 **Boundary / error path**: Partial / incomplete entry handling.
 
-**Requirement coverage**: `ReviewMark-Index-EvidenceSource`
+**Requirement coverage**: `ReviewMark-Index-LoadFromFile`
 
 ##### ReviewIndex_Load_EvidenceSource_Url_SuccessResponse_LoadsIndex
 
@@ -135,7 +149,7 @@ a 200 OK with valid index JSON.
 
 **Expected**: Returns a populated index.
 
-**Requirement coverage**: `ReviewMark-Index-EvidenceSource`
+**Requirement coverage**: `ReviewMark-Index-LoadFromStream`
 
 ##### ReviewIndex_Load_EvidenceSource_Url_NotFoundResponse_ThrowsInvalidOperationException
 
@@ -146,7 +160,7 @@ HTTP 404.
 
 **Boundary / error path**: HTTP error response.
 
-**Requirement coverage**: `ReviewMark-Index-EvidenceSource`
+**Requirement coverage**: `ReviewMark-Index-LoadFromStream`
 
 ##### ReviewIndex_Load_EvidenceSource_Url_InvalidJson_ThrowsInvalidOperationException
 
@@ -157,7 +171,7 @@ HTTP 404.
 
 **Boundary / error path**: Malformed HTTP response body.
 
-**Requirement coverage**: `ReviewMark-Index-EvidenceSource`
+**Requirement coverage**: `ReviewMark-Index-LoadFromStream`
 
 ##### ReviewIndex_Load_EvidenceSource_NullHttpClient_ThrowsArgumentNullException
 
@@ -364,19 +378,17 @@ separately loaded index.
 
 - **ReviewMark-Index-EvidenceSource**: ReviewIndex_Load_EvidenceSource_NullSource_ThrowsArgumentNullException,
   ReviewIndex_Load_EvidenceSource_UnknownType_ThrowsInvalidOperationException,
-  ReviewIndex_Load_EvidenceSource_None_ReturnsEmptyIndex,
-  ReviewIndex_Load_EvidenceSource_None_HttpClientOverload_ReturnsEmptyIndex,
-  ReviewIndex_Load_EvidenceSource_Fileshare_LoadsFromFile,
+  ReviewIndex_Load_EvidenceSource_NullHttpClient_ThrowsArgumentNullException
+- **ReviewMark-Index-LoadFromFile**: ReviewIndex_Load_EvidenceSource_Fileshare_LoadsFromFile,
   ReviewIndex_Load_EvidenceSource_Fileshare_ValidJson_ReturnsPopulatedIndex,
   ReviewIndex_Load_EvidenceSource_Fileshare_NonExistentFile_ThrowsInvalidOperationException,
   ReviewIndex_Load_EvidenceSource_Fileshare_InvalidJson_ThrowsInvalidOperationException,
   ReviewIndex_Load_EvidenceSource_Fileshare_EmptyReviews_ReturnsEmptyIndex,
-  ReviewIndex_Load_EvidenceSource_Fileshare_MissingRequiredFields_SkipsInvalidEntries,
-  ReviewIndex_Load_EvidenceSource_Url_SuccessResponse_LoadsIndex,
+  ReviewIndex_Load_EvidenceSource_Fileshare_MissingRequiredFields_SkipsInvalidEntries
+- **ReviewMark-Index-LoadFromStream**: ReviewIndex_Load_EvidenceSource_Url_SuccessResponse_LoadsIndex,
   ReviewIndex_Load_EvidenceSource_Url_NotFoundResponse_ThrowsInvalidOperationException,
-  ReviewIndex_Load_EvidenceSource_Url_InvalidJson_ThrowsInvalidOperationException,
-  ReviewIndex_Load_EvidenceSource_NullHttpClient_ThrowsArgumentNullException
-- **ReviewMark-EvidenceSource-None**: ReviewIndex_Load_EvidenceSource_None_ReturnsEmptyIndex,
+  ReviewIndex_Load_EvidenceSource_Url_InvalidJson_ThrowsInvalidOperationException
+- **ReviewMark-Index-EvidenceSource-None**: ReviewIndex_Load_EvidenceSource_None_ReturnsEmptyIndex,
   ReviewIndex_Load_EvidenceSource_None_HttpClientOverload_ReturnsEmptyIndex
 - **ReviewMark-Index-Empty**: ReviewIndex_Empty_ReturnsEmptyIndex
 - **ReviewMark-Index-PdfParsing**: ReviewIndex_Scan_NoMatchingFiles_LeavesIndexEmpty,

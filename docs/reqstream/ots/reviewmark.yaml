@@ -20,7 +20,7 @@ sections:
               immediately visible without manual inspection.
             tags: [ots]
             tests:
-              - ReviewMark_ValidateFlag_Invoked_RunsValidation
+              - ReviewMark_ReportFlag_WithDefinitionFile_GeneratesReviewReport
 
           - id: ReviewMark-OTS-ReviewMark-Enforce
             title: >-
@@ -36,7 +36,7 @@ sections:
             tests:
               - ReviewMark_EnforceFlag_WithNoEvidence_ReturnsNonZero
 
-          - id: ReviewMark-OTS-ReviewMark-Elaborate
+          - id: ReviewMark-OTS-ReviewMark-Plan
             title: >-
               ReviewMark shall generate a review plan document listing all review-sets
               and the files governed by each.
@@ -51,12 +51,12 @@ sections:
 
           - id: ReviewMark-OTS-ReviewMark-Report
             title: >-
-              ReviewMark shall generate a review report document summarising the
+              ReviewMark shall generate a review report document summarizing the
               evidence status for each review-set.
             justification: |
               Audit evidence must show not only that reviews were planned but that they were
               completed and the outcomes recorded. ReviewMark produces a review report from the
-              evidence source, summarising the status of each review-set and providing a
+              evidence source, summarizing the status of each review-set and providing a
               consolidated view of review completeness for release sign-off.
             tags: [ots]
             tests:

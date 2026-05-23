@@ -11,27 +11,37 @@ sections:
     requirements:
       - id: ReviewMark-Indexing-LoadEvidence
         title: >-
-          The tool shall load review evidence from a configured EvidenceSource
-          supporting none, fileshare, and url types.
+          The tool shall load review evidence from a fileshare or url EvidenceSource.
         justification: |
-          The Indexing subsystem must support multiple evidence source types to accommodate
-          different deployment environments. The 'none' type allows the tool to operate
-          during initial project setup without an evidence store. The 'fileshare' type
-          supports loading from a local or network file path. The 'url' type supports
-          downloading evidence over HTTP(S), enabling centralized evidence stores accessible
-          from any CI/CD environment.
+          The Indexing subsystem must support loading evidence from remote or local
+          file-based stores (fileshare and url types) so that plan and report generation
+          can determine the review status of each review-set. Missing files, unreadable
+          files, and HTTP failures must each produce a clear error so the operator can
+          diagnose and correct the evidence configuration without inspecting raw exceptions.
         tests:
           - Indexing_SafePathCombine_WithIndexPath_LoadsIndex
-          - Indexing_ReviewIndex_SaveAndLoad_RoundTrip
-          - Indexing_ReviewIndex_Load_WithNoneSource_ReturnsEmptyIndex
           - Indexing_ReviewIndex_Load_WithUrlSource_ReturnsPopulatedIndex
+          - Indexing_ReviewIndex_Load_MissingFile_ThrowsInvalidOperationException
+          - Indexing_ReviewIndex_Load_MalformedJson_ThrowsInvalidOperationException
         children:
           - ReviewMark-Index-EvidenceSource
-          - ReviewMark-EvidenceSource-None
-          - ReviewMark-Index-Empty
           - ReviewMark-Index-GetEvidence
           - ReviewMark-Index-HasId
           - ReviewMark-Index-GetAllForId
+
+      - id: ReviewMark-Indexing-CreateEvidence
+        title: >-
+          The tool shall create a new empty index when the EvidenceSource type is 'none'.
+        justification: |
+          When a project is first starting out, the evidence source can be set to 'none'
+          until an evidence store is provisioned. In this case the Indexing subsystem must
+          return an empty index immediately without accessing the file system or network,
+          allowing the tool to operate during initial repository setup without error.
+        tests:
+          - Indexing_ReviewIndex_Load_WithNoneSource_ReturnsEmptyIndex
+        children:
+          - ReviewMark-Index-EvidenceSource-None
+          - ReviewMark-Index-Empty
 
       - id: ReviewMark-Indexing-ScanPdfEvidence
         title: The tool shall scan PDF evidence files and extract embedded review metadata to build an index.

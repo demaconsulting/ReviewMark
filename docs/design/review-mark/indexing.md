@@ -21,6 +21,32 @@ each review-set is Current, Stale, Missing, or Failed.
 | ReviewIndex   | `Indexing/ReviewIndex.cs`      | Review evidence loader and query engine              |
 | PathHelpers   | `Indexing/PathHelpers.cs`      | File path utilities (safe path combination)          |
 
+### Interfaces
+
+The Indexing subsystem exposes the following public API (all members are `internal` to the
+assembly):
+
+`ReviewIndex` static factory methods:
+
+- **`ReviewIndex.Empty()`** → `ReviewIndex`
+- **`ReviewIndex.Load(EvidenceSource)`** → `ReviewIndex`
+- **`ReviewIndex.Load(EvidenceSource, HttpClient)`** → `ReviewIndex` (testable overload)
+- **`ReviewIndex.Scan(string dir, IReadOnlyList<string> paths, Action<string>? onWarning)`** → `ReviewIndex`
+
+`ReviewIndex` instance methods:
+
+- **`Save(string filePath)`**, **`Save(Stream stream)`**
+- **`HasId(string id)`** → `bool`
+- **`GetEvidence(string id, string fingerprint)`** → `ReviewEvidence?`
+- **`GetAllForId(string id)`** → `IReadOnlyList<ReviewEvidence>`
+
+`PathHelpers`:
+
+- **`SafePathCombine(string basePath, string relativePath)`** → `string`
+
+The Indexing subsystem has no dependency on the Configuration subsystem at the API level;
+`GlobMatcher` is used internally by `ReviewIndex.Scan()` but is not re-exported.
+
 ### Cross-Unit Interaction and Data Flow
 
 `ReviewIndex` is the primary unit of the subsystem. It depends on `GlobMatcher`
@@ -108,3 +134,20 @@ During a typical review plan or report generation run:
   and are skipped; the scan continues with remaining files.
 - `SafePathCombine` throws `ArgumentException` for any path segment containing
   traversal sequences (`..`) or absolute paths.
+
+### Design
+
+`ReviewIndex` is the primary unit. It owns all evidence-store interaction and exposes a
+uniform query interface regardless of the evidence source type. The source-type dispatch
+(`none`, `fileshare`, `url`) is encapsulated within `Load()`; callers are unaware of how
+the index was populated.
+
+`PathHelpers` is a pure utility unit with no instance state and no dependencies on other
+units. Its sole function — `SafePathCombine` — is called by `ReviewIndex` when
+constructing the file path of a matched PDF during scanning.
+
+The two-level `Dictionary<string, Dictionary<string, ReviewEvidence>>` storage keyed by
+`(id, fingerprint)` enables O(1) evidence lookup, matching the primary query pattern in
+`PublishReviewReport()`. The testable `Load(EvidenceSource, HttpClient)` overload and the
+`Save(Stream)` overload allow unit tests to exercise loading and saving without real
+network or file-system access.

@@ -15,6 +15,11 @@ This user guide covers:
 - Command-line options reference
 - Practical examples for various scenarios
 
+## References
+
+- [ReviewMark releases](https://github.com/demaconsulting/ReviewMark/releases)
+- [Continuous Compliance](https://github.com/demaconsulting/ContinuousCompliance)
+
 # Continuous Compliance
 
 This tool follows the [Continuous Compliance][continuous-compliance] methodology, which ensures
@@ -406,6 +411,10 @@ evidence-source:
   location: \\reviews.example.com\evidence\index.json
 ```
 
+> **Note**: The `\\server\share\` syntax above is Windows UNC notation. On Linux and macOS,
+> mount the network share first (for example via NFS or CIFS) and reference the mounted path
+> instead, e.g. `location: /mnt/reviews/evidence/index.json`.
+
 #### URL
 
 ```yaml
@@ -541,10 +550,14 @@ The `--index` flag may be repeated to cover evidence organized across multiple s
 reviewmark --dir \\reviews.example.com\evidence\ --index "2025/**/*.pdf" --index "2026/**/*.pdf"
 ```
 
+> **Note**: The `\\server\share\` path syntax above is Windows UNC notation. On Linux and macOS,
+> mount the network share first (for example via NFS or CIFS) and use the resulting mount point
+> instead, e.g. `--dir /mnt/reviews/evidence/`.
+
 ## Step 6 — Generate the Review Report
 
 Run ReviewMark with both `--plan` and `--report` to produce the Review Report alongside the plan.
-The report shows the status of each review set — Current, Stale, Failed, or Missing — and lists
+The report shows the status of each review set — Current, Stale, Missing, or Failed — and lists
 the referenced evidence documents.
 
 ```bash

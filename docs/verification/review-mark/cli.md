@@ -1,6 +1,6 @@
 ## Cli
 
-### Verification Approach
+### Verification Strategy
 
 The Cli subsystem is verified through `CliTests.cs`, which exercises the `Context`
 class and `Program.Run` together with controlled argument arrays and output capture.
@@ -13,6 +13,19 @@ end-to-end behavior including parsing, dispatching, output, and exit code.
 | --------------- | ------------------------------------------------------------------- |
 | `StringWriter`  | Captures context output for assertion without console side effects  |
 | Temporary files | Provide controlled configuration inputs for plan/report operations  |
+
+### Test Environment
+
+Tests run under xUnit on .NET 8, 9, and 10 across Windows, Linux, and macOS. No external
+services or network access are required. `StringWriter` instances capture console output
+in-process; temporary YAML definition and output files are created in the OS temporary
+directory and deleted on test completion.
+
+### Acceptance Criteria
+
+All Cli subsystem tests pass with zero failures. Every `ReviewMark-Cmd-*` requirement is
+covered by at least one passing test scenario. Error paths produce non-zero exit codes or
+throw the specified exception types.
 
 ### Test Scenarios
 
@@ -80,7 +93,7 @@ end-to-end behavior including parsing, dispatching, output, and exit code.
 
 **Boundary / error path**: Depth value below minimum of 1.
 
-**Requirement coverage**: `ReviewMark-Cmd-Depth`, `ReviewMark-Cmd-PlanDepth`, `ReviewMark-Cmd-ReportDepth`
+**Requirement coverage**: `ReviewMark-Cmd-Depth`
 
 #### Cli_DepthFlag_AboveMaximum_ThrowsArgumentException
 
@@ -90,11 +103,56 @@ end-to-end behavior including parsing, dispatching, output, and exit code.
 
 **Boundary / error path**: Depth value above maximum of 5.
 
-**Requirement coverage**: `ReviewMark-Cmd-Depth`, `ReviewMark-Cmd-PlanDepth`, `ReviewMark-Cmd-ReportDepth`
+**Requirement coverage**: `ReviewMark-Cmd-Depth`
+
+#### Cli_PlanDepthFlag_BelowMinimum_ThrowsArgumentException
+
+**Scenario**: `Context.Create` is called with `["--plan-depth", "0"]`.
+
+**Expected**: `ArgumentException` is thrown.
+
+**Boundary / error path**: Plan-depth value below minimum of 1.
+
+**Requirement coverage**: `ReviewMark-Cmd-PlanDepth`
+
+#### Cli_PlanDepthFlag_AboveMaximum_ThrowsArgumentException
+
+**Scenario**: `Context.Create` is called with `["--plan-depth", "6"]`.
+
+**Expected**: `ArgumentException` is thrown.
+
+**Boundary / error path**: Plan-depth value above maximum of 5.
+
+**Requirement coverage**: `ReviewMark-Cmd-PlanDepth`
+
+#### Cli_ReportDepthFlag_BelowMinimum_ThrowsArgumentException
+
+**Scenario**: `Context.Create` is called with `["--report-depth", "0"]`.
+
+**Expected**: `ArgumentException` is thrown.
+
+**Boundary / error path**: Report-depth value below minimum of 1.
+
+**Requirement coverage**: `ReviewMark-Cmd-ReportDepth`
+
+#### Cli_ReportDepthFlag_AboveMaximum_ThrowsArgumentException
+
+**Scenario**: `Context.Create` is called with `["--report-depth", "6"]`.
+
+**Expected**: `ArgumentException` is thrown.
+
+**Boundary / error path**: Report-depth value above maximum of 5.
+
+**Requirement coverage**: `ReviewMark-Cmd-ReportDepth`
 
 #### Cli_ErrorOutput_UnknownArg_WritesToStderr
 
 **Scenario**: CLI is invoked with `--unknown-arg-xyz`.
+
+> **Note**: `Program.Main` is invoked via reflection because it is the only code path that
+> catches `ArgumentException` and writes the error message to stderr. This test and
+> `Cli_InvalidArgs_UnknownArgSupplied_ReturnsNonZeroExitCode` share the same `UnknownArgArray`
+> input but test distinct observable behaviors: stderr output vs exit code.
 
 **Expected**: Error message appears on stderr; exit code is non-zero.
 
@@ -103,6 +161,11 @@ end-to-end behavior including parsing, dispatching, output, and exit code.
 #### Cli_InvalidArgs_UnknownArgSupplied_ReturnsNonZeroExitCode
 
 **Scenario**: CLI is invoked with an unknown argument.
+
+> **Note**: `Program.Main` is invoked via reflection because it is the only code path that
+> catches `ArgumentException` and returns the non-zero exit code. This test shares the same
+> `UnknownArgArray` input as `Cli_ErrorOutput_UnknownArg_WritesToStderr` but tests the
+> distinct observable behavior of exit code rather than stderr output.
 
 **Expected**: Exit code is non-zero.
 
@@ -186,7 +249,7 @@ end-to-end behavior including parsing, dispatching, output, and exit code.
 
 **Expected**: No output (silence on success); exit code is 0.
 
-**Requirement coverage**: `ReviewMark-Cmd-Lint`
+**Requirement coverage**: `ReviewMark-Cmd-LintSilence`
 
 #### Cli_LintFlag_InvalidConfig_ReportsIssueMessages
 
@@ -206,7 +269,7 @@ end-to-end behavior including parsing, dispatching, output, and exit code.
 
 #### Cli_ExitCode_ErrorReported_ReturnsNonZeroExitCode
 
-**Scenario**: CLI is invoked with an invalid argument.
+**Scenario**: A Context is created with no arguments; WriteError() is called directly. Expected: context.ExitCode is non-zero.
 
 **Expected**: Exit code is 1.
 
@@ -233,17 +296,16 @@ end-to-end behavior including parsing, dispatching, output, and exit code.
 - **`ReviewMark-Cmd-Plan`**: `Cli_PlanFlag_FlagSupplied_GeneratesReviewPlan`
 - **`ReviewMark-Cmd-PlanDepth`**:
   `Cli_PlanDepthFlag_FlagSupplied_SetsHeadingDepth`,
-  `Cli_DepthFlag_BelowMinimum_ThrowsArgumentException`,
-  `Cli_DepthFlag_AboveMaximum_ThrowsArgumentException`
+  `Cli_PlanDepthFlag_BelowMinimum_ThrowsArgumentException`,
+  `Cli_PlanDepthFlag_AboveMaximum_ThrowsArgumentException`
 - **`ReviewMark-Cmd-Report`**: `Cli_ReportFlag_FlagSupplied_GeneratesReviewReport`
 - **`ReviewMark-Cmd-ReportDepth`**:
   `Cli_ReportDepthFlag_FlagSupplied_SetsHeadingDepth`,
-  `Cli_DepthFlag_BelowMinimum_ThrowsArgumentException`,
-  `Cli_DepthFlag_AboveMaximum_ThrowsArgumentException`
+  `Cli_ReportDepthFlag_BelowMinimum_ThrowsArgumentException`,
+  `Cli_ReportDepthFlag_AboveMaximum_ThrowsArgumentException`
 - **`ReviewMark-Cmd-Index`**: `Cli_IndexFlag_FlagSupplied_CreatesIndexJson`
 - **`ReviewMark-Cmd-Enforce`**: `Cli_EnforceFlag_FlagSupplied_ExitsNonZeroWhenNotCurrent`
 - **`ReviewMark-Cmd-Dir`**: `Cli_DirFlag_FlagSupplied_SetsWorkingDirectory`
 - **`ReviewMark-Cmd-Elaborate`**: `Cli_ElaborateFlag_ValidId_OutputsElaboration`
-- **`ReviewMark-Cmd-Lint`**:
-  `Cli_LintFlag_ValidConfig_ReportsSuccess`,
-  `Cli_LintFlag_InvalidConfig_ReportsIssueMessages`
+- **`ReviewMark-Cmd-Lint`**: `Cli_LintFlag_InvalidConfig_ReportsIssueMessages`
+- **`ReviewMark-Cmd-LintSilence`**: `Cli_LintFlag_ValidConfig_ReportsSuccess`

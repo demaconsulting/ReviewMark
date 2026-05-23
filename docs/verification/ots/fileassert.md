@@ -1,5 +1,7 @@
 ## FileAssert
 
+### Verification Approach
+
 **Component**: DemaConsulting.FileAssert
 **Role**: Validates that required files are present and well-formed as part of the CI build.
 **Acceptance approach**: Automated build pipeline verification.
@@ -22,7 +24,13 @@ correctly.
   display its help text, proving the CLI interface is correctly wired.
   CI Evidence: Same "Run FileAssert self-validation" step, same TRX file.
 
-Both scenarios together confirm `ReviewMark-OTS-FileAssert`: FileAssert is present,
-operational, and able to perform its assertion role in the pipeline.
+### Requirements Coverage
 
-**Requirement coverage**: `ReviewMark-OTS-FileAssert`
+- **ReviewMark-OTS-FileAssert**: FileAssert shall confirm operational availability by
+  successfully completing self-validation.
+  - *FileAssert_VersionDisplay*: verifies FileAssert is correctly installed and displays its
+    version, confirming operational availability.
+    - `FileAssert_VersionDisplay`
+  - *FileAssert_HelpDisplay*: verifies the FileAssert CLI interface is correctly wired and
+    displays its help text.
+    - `FileAssert_HelpDisplay`

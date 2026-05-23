@@ -1,6 +1,6 @@
 ### PathHelpers
 
-#### Overview
+#### Purpose
 
 `PathHelpers` is a static utility class that provides a safe path-combination method. It
 protects callers against path-traversal attacks by verifying the resolved combined path stays
@@ -8,7 +8,19 @@ within the base directory. Note that `Path.GetFullPath` normalizes `.`/`..` segm
 not resolve symlinks or reparse points, so this check guards against string-level traversal
 only.
 
-#### Class Structure
+#### Interfaces
+
+`PathHelpers` exposes a single static method:
+
+- **`PathHelpers.SafePathCombine(string basePath, string relativePath)`** → `string` —
+  combines `basePath` and `relativePath`, throwing `ArgumentException` if the result
+  escapes the base directory
+
+Throws `ArgumentNullException` for null inputs and `ArgumentException` for traversal
+attempts. Platform exceptions (`NotSupportedException`, `PathTooLongException`) propagate
+to the caller.
+
+#### Key Methods
 
 ##### SafePathCombine Method
 
@@ -30,7 +42,7 @@ the base directory.
    or `Path.AltDirectorySeparatorChar`, or is itself rooted (absolute), which would indicate
    the combined path escapes the base directory.
 
-#### Design Decisions
+##### Design Decisions
 
 - **`Path.GetRelativePath` for containment check**: Using `GetRelativePath` to verify
   containment handles root paths (e.g. `/`, `C:\`), platform case-sensitivity, and
@@ -52,10 +64,47 @@ the base directory.
   - `PathTooLongException` — thrown when the combined path exceeds the platform path-length
     limit. These are passed through to the caller without wrapping.
 
-#### Security Rationale
+##### Security Rationale
 
 Evidence index files may be loaded from external sources (file shares or URLs).
 The `file` field in each index record is supplied by the evidence store and must
 be treated as untrusted input. Without path validation, a maliciously crafted
 index could direct the tool to read or reference files outside the intended
 evidence directory. `SafePathCombine` eliminates this attack surface.
+
+#### Data Model
+
+N/A — static utility class with no instance state.
+
+#### Error Handling
+
+| Exception | Condition | Handling |
+| --------- | --------- | -------- |
+| `ArgumentNullException` | `basePath` or `relativePath` is `null` | Thrown immediately via `ArgumentNullException.ThrowIfNull` |
+| `ArgumentException` | Resolved path escapes the base directory | Thrown with a message identifying `relativePath` as the problematic parameter |
+| `NotSupportedException` | Path contains an unsupported format (e.g., colon in a non-root position on Windows) | Propagated to the caller without wrapping |
+| `PathTooLongException` | Combined path exceeds the platform path-length limit | Propagated to the caller without wrapping |
+
+#### Interactions
+
+**Called by:**
+
+- `ReviewIndex.Scan()` (Indexing subsystem) — calls `SafePathCombine()` to validate each
+  PDF file path before use, preventing directory-traversal attacks from maliciously crafted
+  index records
+
+**Dependencies:**
+
+- No dependencies on other ReviewMark units or subsystems
+
+#### Design
+
+The containment check uses `Path.GetRelativePath()` after resolving both paths to absolute
+form with `Path.GetFullPath()`. This post-combine approach handles all traversal patterns —
+`../`, embedded `/../`, absolute-path overrides, and platform edge cases — without fragile
+pre-combine string inspection. The check treats `..` as escaping only when it is the
+complete relative result or is followed by a directory separator, avoiding false positives
+for valid in-base names such as `..data`.
+
+`PathHelpers` has no instance state and no dependencies on other units. It is called by
+`ReviewIndex.Scan()` to validate the file path of each matched PDF.

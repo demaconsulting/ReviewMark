@@ -9,6 +9,8 @@
 [![Security][badge-security]][link-security]
 [![NuGet][badge-nuget]][link-nuget]
 
+## Overview
+
 DEMA Consulting tool for automated file-review evidence management in regulated environments.
 
 ## Features
@@ -17,7 +19,7 @@ DEMA Consulting tool for automated file-review evidence management in regulated 
 - 📂 **Evidence Querying** - Queries URL or file-share evidence stores via an `index.json` catalogue
 - 📋 **Coverage Reporting** - Review plan shows which files are covered and flags uncovered files
 - 📊 **Status Reporting** - Review report shows whether each review-set is Current, Stale, Missing, or Failed
-- 🔍 **Review Elaboration** - `--elaborate` prints the ID, fingerprint, and file list for a review set
+- 🔍 **Review Elaboration** - `--elaborate` prints the ID, title, fingerprint, and file list for a review set
 - 🔎 **Configuration Linting** - `--lint` validates the definition file and reports all structural and semantic issues
 - 🚦 **Enforcement** - `--enforce` exits non-zero if any review-set is stale, missing, or failed, or any file is uncovered
 - 🔄 **Re-indexing** - `--index` scans PDF evidence files and writes an up-to-date `index.json`
@@ -109,7 +111,23 @@ reviewmark --lint --definition path/to/definition.yaml
 
 # Silent mode with logging
 reviewmark --silent --log output.log
+
+# Generate review plan and report (typical CI/CD usage)
+reviewmark --plan docs/review/review-plan.md --report docs/review/review-report.md
+
+# Generate review plan and report, and enforce compliance
+reviewmark --plan docs/review/review-plan.md --report docs/review/review-report.md --enforce
+
+# Index PDF evidence files matching a glob pattern
+reviewmark --dir \\reviews.example.com\evidence\ --index "**/*.pdf"
+
+# Index evidence organized across multiple year sub-directories
+reviewmark --dir \\reviews.example.com\evidence\ --index "2025/**/*.pdf" --index "2026/**/*.pdf"
 ```
+
+> **Note**: The `\\server\share\` path syntax above is Windows UNC notation. On Linux and macOS,
+> mount the network share first (for example via NFS or CIFS) and use the resulting mount point
+> instead, e.g. `--dir /mnt/reviews/evidence/`.
 
 ## Command-Line Options
 
@@ -194,6 +212,25 @@ Generated documentation includes:
 - **Requirements**: Functional and non-functional requirements
 - **Requirements Justifications**: Detailed requirement rationale
 - **Trace Matrix**: Requirements to test traceability
+
+## Building
+
+```pwsh
+pwsh ./build.ps1
+```
+
+## User Guide
+
+The ReviewMark User Guide is available on the [ReviewMark releases page](https://github.com/demaconsulting/ReviewMark/releases).
+
+## Contributing
+
+See [CONTRIBUTING.md](https://github.com/demaconsulting/ReviewMark/blob/main/CONTRIBUTING.md) for guidelines.
+
+## Support
+
+- [Report a bug or request a feature](https://github.com/demaconsulting/ReviewMark/issues)
+- [Ask a question or start a discussion](https://github.com/demaconsulting/ReviewMark/discussions)
 
 ## License
 

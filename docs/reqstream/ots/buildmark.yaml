@@ -8,7 +8,7 @@ sections:
     sections:
       - title: BuildMark Requirements
         requirements:
-          - id: ReviewMark-OTS-BuildMark
+          - id: BuildMark-Core-GenerateBuildNotes
             title: BuildMark shall generate build-notes documentation from GitHub Actions metadata.
             justification: |
               Release artifacts must include auditable build documentation identifying which

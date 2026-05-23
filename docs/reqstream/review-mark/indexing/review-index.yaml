@@ -10,30 +10,61 @@ sections:
   - title: Index Unit Requirements
     requirements:
       - id: ReviewMark-Index-EvidenceSource
-        title: The tool shall load a ReviewIndex from an EvidenceSource supporting none, fileshare, and url types.
+        title: >-
+          The tool shall dispatch to the appropriate evidence loader based on the
+          EvidenceSource type and reject null or unsupported source types.
         justification: |
-          The tool must be able to load review evidence index data from the EvidenceSource
-          specified in its configuration. Three source types are supported: `none` returns an
-          empty index immediately (useful during initial project setup), `fileshare` loads
-          the index JSON from a local or network file path, and `url` downloads it over
-          HTTP(S) with optional Basic-auth credentials read from environment variables.
+          The ReviewIndex.Load method must validate its inputs and route loading to the
+          correct strategy based on the evidence source type. Null sources must be rejected
+          immediately with ArgumentNullException. Unrecognized source types must fail with
+          a clear InvalidOperationException so callers receive actionable diagnostics.
+          The three supported source types (none, fileshare, url) are each handled by a
+          dedicated atomic child requirement.
         tests:
           - ReviewIndex_Load_EvidenceSource_NullSource_ThrowsArgumentNullException
           - ReviewIndex_Load_EvidenceSource_UnknownType_ThrowsInvalidOperationException
-          - ReviewIndex_Load_EvidenceSource_None_ReturnsEmptyIndex
-          - ReviewIndex_Load_EvidenceSource_None_HttpClientOverload_ReturnsEmptyIndex
+          - ReviewIndex_Load_EvidenceSource_NullHttpClient_ThrowsArgumentNullException
+        children:
+          - ReviewMark-Index-LoadFromFile
+          - ReviewMark-Index-LoadFromStream
+          - ReviewMark-Index-EvidenceSource-None
+
+      - id: ReviewMark-Index-LoadFromFile
+        title: >-
+          The tool shall load a ReviewIndex from a fileshare EvidenceSource by reading
+          the index JSON from the specified file path.
+        justification: |
+          When the evidence source type is 'fileshare', the tool must read index.json from
+          the path specified in EvidenceSource.Location and deserialize it into a ReviewIndex.
+          Missing files, unreadable files, and malformed JSON must each produce an
+          InvalidOperationException with a message identifying the path and the underlying
+          failure, so callers receive actionable diagnostics without needing to inspect raw
+          I/O exceptions.
+        tests:
           - ReviewIndex_Load_EvidenceSource_Fileshare_LoadsFromFile
           - ReviewIndex_Load_EvidenceSource_Fileshare_NonExistentFile_ThrowsInvalidOperationException
           - ReviewIndex_Load_EvidenceSource_Fileshare_InvalidJson_ThrowsInvalidOperationException
           - ReviewIndex_Load_EvidenceSource_Fileshare_EmptyReviews_ReturnsEmptyIndex
           - ReviewIndex_Load_EvidenceSource_Fileshare_ValidJson_ReturnsPopulatedIndex
           - ReviewIndex_Load_EvidenceSource_Fileshare_MissingRequiredFields_SkipsInvalidEntries
+
+      - id: ReviewMark-Index-LoadFromStream
+        title: >-
+          The tool shall load a ReviewIndex from a url EvidenceSource by downloading
+          the index JSON over HTTP(S).
+        justification: |
+          When the evidence source type is 'url', the tool must issue an HTTP GET request
+          to the URL in EvidenceSource.Location and deserialize the response body as
+          index JSON. Non-success HTTP responses and malformed JSON responses must each
+          produce an InvalidOperationException identifying the URL and the failure reason.
+          A testable overload accepting a caller-supplied HttpClient enables unit tests to
+          verify URL-source behavior without real network access.
+        tests:
           - ReviewIndex_Load_EvidenceSource_Url_SuccessResponse_LoadsIndex
           - ReviewIndex_Load_EvidenceSource_Url_NotFoundResponse_ThrowsInvalidOperationException
           - ReviewIndex_Load_EvidenceSource_Url_InvalidJson_ThrowsInvalidOperationException
-          - ReviewIndex_Load_EvidenceSource_NullHttpClient_ThrowsArgumentNullException
 
-      - id: ReviewMark-EvidenceSource-None
+      - id: ReviewMark-Index-EvidenceSource-None
         title: The tool shall support a 'none' evidence source type that provides no review evidence.
         justification: |
           When a project is first starting out, it should be able to set the evidence-source

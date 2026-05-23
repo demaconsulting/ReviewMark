@@ -743,7 +743,8 @@ internal sealed class ReviewMarkConfiguration
     ///     A <see cref="ReviewPlanResult" /> containing the Markdown text and a flag
     ///     indicating whether any files requiring review are uncovered.
     /// </returns>
-    /// <exception cref="ArgumentException">Thrown when <paramref name="directory" /> is null or whitespace.</exception>
+    /// <exception cref="ArgumentNullException">Thrown when <paramref name="directory" /> is null.</exception>
+    /// <exception cref="ArgumentException">Thrown when <paramref name="directory" /> is empty or whitespace.</exception>
     /// <exception cref="ArgumentOutOfRangeException">
     ///     Thrown when <paramref name="markdownDepth" /> is less than 1 or greater than 5
     ///     (subheadings at depth+1 would exceed the maximum Markdown heading level of 6).
@@ -833,7 +834,8 @@ internal sealed class ReviewMarkConfiguration
     ///     indicating whether any reviews are failed, stale, or missing.
     /// </returns>
     /// <exception cref="ArgumentNullException">Thrown when <paramref name="index" /> is <c>null</c>.</exception>
-    /// <exception cref="ArgumentException">Thrown when <paramref name="directory" /> is null or whitespace.</exception>
+    /// <exception cref="ArgumentNullException">Thrown when <paramref name="directory" /> is null.</exception>
+    /// <exception cref="ArgumentException">Thrown when <paramref name="directory" /> is empty or whitespace.</exception>
     /// <exception cref="ArgumentOutOfRangeException">
     ///     Thrown when <paramref name="markdownDepth" /> is less than 1 or greater than 5
     ///     (subheadings at depth+1 would exceed the maximum Markdown heading level of 6).

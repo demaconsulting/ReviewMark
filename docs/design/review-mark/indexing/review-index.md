@@ -1,11 +1,47 @@
 ### ReviewIndex
 
+#### Overview
+
+`ReviewIndex` manages the loading, querying, and building of the review evidence index.
+It abstracts the evidence store behind a uniform in-memory interface so that callers
+do not need to know whether evidence was loaded from a file share, downloaded over HTTP,
+built from PDF scans, or is simply absent.
+
+#### Interfaces
+
+Static factory methods:
+
+- **`ReviewIndex.Empty()`** → `ReviewIndex`
+- **`ReviewIndex.Load(EvidenceSource)`** → `ReviewIndex`
+- **`ReviewIndex.Load(EvidenceSource, HttpClient)`** → `ReviewIndex` (testable overload)
+- **`ReviewIndex.Scan(string dir, IReadOnlyList<string> paths, Action<string>? onWarning)`** → `ReviewIndex`
+
+Instance methods:
+
+- **`Save(string filePath)`**, **`Save(Stream stream)`**
+- **`HasId(string id)`** → `bool`
+- **`GetEvidence(string id, string fingerprint)`** → `ReviewEvidence?`
+- **`GetAllForId(string id)`** → `IReadOnlyList<ReviewEvidence>`
+
 #### Purpose
 
 The `ReviewIndex` software unit manages the loading, querying, and creation of the review
 evidence index. It abstracts the evidence store behind a uniform interface so that
 the rest of the tool does not need to know whether evidence is stored on a fileshare,
 served over HTTP, or absent entirely.
+
+#### Data Model
+
+`ReviewIndex` maintains a two-level dictionary as its sole instance state, keyed first
+by review-set `Id` and then by `Fingerprint`:
+
+| Field | Type | Description |
+| ----- | ---- | ----------- |
+| Internal store | `Dictionary<string, Dictionary<string, ReviewEvidence>>` | Evidence records indexed by `(Id, Fingerprint)` for O(1) lookup |
+
+The dictionary is populated during construction (via `Load()` or `Scan()`) and is
+read-only thereafter. See the ReviewEvidence Record and Evidence Index Format sections
+for the record-level data model.
 
 #### ReviewEvidence Record
 
@@ -37,7 +73,9 @@ Each record has the following fields:
 | `result` | string | Review outcome (`pass` or `fail`) |
 | `file` | string | Relative path to the PDF evidence file |
 
-#### ReviewIndex.Load(EvidenceSource)
+#### Key Methods
+
+##### ReviewIndex.Load(EvidenceSource)
 
 `ReviewIndex.Load(EvidenceSource)` selects a loading strategy based on the evidence
 source type (see below). For `url` sources, the tool constructs an `HttpClient`
@@ -67,7 +105,7 @@ This overload is **not** exposed for test injection; see
 - **`url` — malformed response**: If the response body is not valid evidence-index JSON,
   an `InvalidOperationException` is thrown with a message describing the parse failure.
 
-#### ReviewIndex.Load(EvidenceSource, HttpClient)
+##### ReviewIndex.Load(EvidenceSource, HttpClient)
 
 `ReviewIndex.Load(EvidenceSource, HttpClient)` is an internally-visible overload that
 accepts a caller-supplied `HttpClient`. It is exposed to allow unit tests to inject a
@@ -75,7 +113,7 @@ fake `HttpMessageHandler` when testing `url`-type evidence sources, avoiding rea
 network calls. The behavior is identical to the single-argument overload except that
 the caller provides the `HttpClient` instead of having one created internally.
 
-#### ReviewIndex.Scan()
+##### ReviewIndex.Scan()
 
 `ReviewIndex.Scan(directory, paths, onWarning)` scans a directory for PDF files matching
 the given glob patterns. For each PDF file found, it reads embedded metadata to
@@ -89,12 +127,12 @@ The caller (e.g., `Program`) is responsible for choosing an output path and call
 `Save(...)` on the returned index to produce `index.json` as part of the `--index`
 workflow.
 
-#### ReviewIndex.Empty()
+##### ReviewIndex.Empty()
 
 `ReviewIndex.Empty()` returns an index with no records. It is used when the evidence
 source type is `none`, resulting in all review-sets being reported as Missing.
 
-#### ReviewIndex.Save()
+##### ReviewIndex.Save()
 
 `ReviewIndex` provides two overloads for persisting the index to `index.json` format:
 
@@ -105,20 +143,65 @@ Both overloads serialize all `ReviewEvidence` records in the index to JSON forma
 The `Save(string filePath)` overload is used by the `--index` workflow in `Program`
 to write the output file after scanning.
 
-#### ReviewIndex.GetEvidence()
+##### ReviewIndex.GetEvidence()
 
 `ReviewIndex.GetEvidence(string id, string fingerprint)` returns the `ReviewEvidence`
 record whose `Id` matches `id` and whose `Fingerprint` matches `fingerprint`, or `null`
 if no such record exists.
 
-#### ReviewIndex.HasId()
+##### ReviewIndex.HasId()
 
 `ReviewIndex.HasId(string id)` returns `true` if the index contains at least one record
 with the given `id`, regardless of fingerprint. Returns `false` if no record exists for
 the id.
 
-#### ReviewIndex.GetAllForId()
+##### ReviewIndex.GetAllForId()
 
 `ReviewIndex.GetAllForId(string id)` returns all `ReviewEvidence` records that have the
 given `id`, as a read-only indexed collection (`IReadOnlyList<ReviewEvidence>`). Returns an
 empty collection if no records exist for the id.
+
+#### Error Handling
+
+| Exception | Source | Handling |
+| --------- | ------ | -------- |
+| `InvalidOperationException` | `Load()` — unrecognized source type, file-read failure, HTTP error, or malformed JSON response | Propagated to the caller (`Program.RunDefinitionLogic()` or `Program.RunIndexLogic()`) |
+| `ArgumentException` | `Save(string filePath)` — null or empty `filePath` | Propagated to the caller |
+| `InvalidOperationException` | `Save(string filePath)` — file write failure (I/O error, permissions, path not found) | Propagated to the caller |
+
+During `Scan()`, PDFs that cannot be opened or are missing required metadata fields trigger
+the `onWarning` callback with a descriptive message; no exception is propagated and scanning
+continues with remaining files.
+
+#### Interactions
+
+**Called by:**
+
+- `Program.RunDefinitionLogic()` — calls `ReviewIndex.Load(EvidenceSource)` to load the
+  evidence index for report generation
+- `Program.RunIndexLogic()` — calls `ReviewIndex.Scan()` to build the index from PDF files
+  and `Save(string)` to persist `index.json`
+- `ReviewMarkConfiguration.PublishReviewReport()` — calls `GetEvidence()` and `HasId()` for
+  each review-set to determine review status
+
+**Dependencies:**
+
+- `GlobMatcher` (Configuration subsystem) — called by `Scan()` to resolve PDF evidence glob
+  patterns into file paths
+- `PathHelpers` (Indexing subsystem) — called by `Scan()` for safe path combination when
+  constructing the absolute path of each matched PDF file
+- `PDFsharp` (OTS) — used by `Scan()` to open PDF files and read the `Keywords` metadata
+  field containing the review record data
+
+#### Design
+
+The two-level `Dictionary<string, Dictionary<string, ReviewEvidence>>` storage keyed by
+`(id, fingerprint)` enables O(1) evidence lookup, matching the primary query pattern in
+`PublishReviewReport()`. Source-type dispatch is encapsulated in `Load()`: the `none`,
+`fileshare`, and `url` cases are handled internally, and all three paths produce an
+identical `ReviewIndex` interface for callers.
+
+The testable `Load(EvidenceSource, HttpClient)` overload accepts a caller-supplied
+`HttpClient`, allowing unit tests to inject a fake `HttpMessageHandler` without real
+network calls. The `Save(Stream)` overload similarly enables unit tests to capture
+output without writing to disk.

@@ -108,6 +108,12 @@ internal sealed record ReviewEvidence(
 ///     content fingerprint. Supports loading from and saving to the
 ///     <c>index.json</c> file, and rebuilding the index from scanned PDF evidence.
 /// </summary>
+/// <remarks>
+///     <c>ReviewIndex</c> is immutable after construction: the internal evidence dictionary
+///     is populated during construction via a static factory method and is never modified
+///     afterward.  Instances are therefore safe to share across threads without
+///     external synchronization.
+/// </remarks>
 internal sealed class ReviewIndex
 {
     // ---------------------------------------------------------------------------
@@ -274,7 +280,7 @@ internal sealed class ReviewIndex
     /// <exception cref="ArgumentNullException">
     ///     Thrown when <paramref name="stream" /> is <c>null</c>.
     /// </exception>
-    /// <exception cref="ArgumentException">
+    /// <exception cref="InvalidOperationException">
     ///     Thrown when the stream does not contain valid JSON.
     /// </exception>
     private static ReviewIndex LoadFromStream(Stream stream)
@@ -290,7 +296,7 @@ internal sealed class ReviewIndex
         }
         catch (JsonException ex)
         {
-            throw new ArgumentException($"Invalid JSON content in review index: {ex.Message}", nameof(stream), ex);
+            throw new InvalidOperationException($"Invalid JSON content in review index: {ex.Message}", ex);
         }
 
         // Build and populate a new index from the deserialized model
@@ -387,7 +393,7 @@ internal sealed class ReviewIndex
             {
                 return LoadFromStream(stream);
             }
-            catch (ArgumentException ex)
+            catch (InvalidOperationException ex) when (ex.InnerException is JsonException)
             {
                 throw new InvalidOperationException(
                     $"Failed to parse review index downloaded from '{url}': {ex.Message}", ex);

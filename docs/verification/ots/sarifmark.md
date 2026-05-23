@@ -1,5 +1,7 @@
 ## SarifMark
 
+### Verification Approach
+
 **Component**: DemaConsulting.SarifMark
 **Role**: Generates markdown reports from SARIF static analysis output files.
 **Acceptance approach**: Automated build pipeline verification.
@@ -14,7 +16,7 @@ it as a markdown quality report at `docs/code_quality/generated/codeql-quality.m
 non-zero exit from either step fails the CI build, providing evidence that SarifMark
 read the SARIF file and generated the report correctly.
 
-### Test scenario coverage
+### Test Scenario Coverage
 
 - **`SarifMark_SarifReading`** — SarifMark successfully reads a SARIF file from CodeQL
   code scanning and parses it without error. CI Evidence: "Run SarifMark self-validation"
@@ -26,7 +28,13 @@ read the SARIF file and generated the report correctly.
   Report with SarifMark" step in the `build-docs` job of `build.yaml`, confirmed by the
   subsequent FileAssert validation.
 
-Both scenarios together confirm `ReviewMark-OTS-SarifMark`: SarifMark correctly reads
-SARIF input produced by CodeQL and renders it as a human-readable markdown report.
+### Requirements Coverage
 
-**Requirement coverage**: `ReviewMark-OTS-SarifMark`
+- **ReviewMark-OTS-SarifMark**: SarifMark shall convert CodeQL SARIF results into a
+  markdown report.
+  - `SarifMark_SarifReading`: verifies SarifMark successfully reads a CodeQL SARIF file and
+    parses it without error.
+    - `SarifMark_SarifReading`
+  - `SarifMark_MarkdownReportGeneration`: verifies SarifMark generates a markdown quality
+    report from a CodeQL SARIF input.
+    - `SarifMark_MarkdownReportGeneration`

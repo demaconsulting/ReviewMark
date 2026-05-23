@@ -21,9 +21,29 @@ tool.
 
 ### Dependencies
 
-- **Cli** (Subsystem) — `Program.Main` creates a `Context` instance via `Context.Create(args)`
-  and passes it to `Program.Run(Context)`. `Context` is a passive data carrier; the Cli
-  subsystem has no dependency on Program.
+N/A — the Cli subsystem has no dependencies on other ReviewMark subsystems or units.
+`Context.Create()` accesses the file system only to open the optional log file; it does
+not call back into the Configuration, Indexing, or SelfTest subsystems.
+
+### Callers
+
+- `Program.Main()` is the sole caller of `Context.Create(args)`. The resulting `Context`
+  instance is passed to all downstream subsystems as a read-only configuration carrier and
+  output channel.
+
+### Interfaces
+
+The Cli subsystem exposes a single public type, `Context`, through the following entry point:
+
+- **`Context.Create(string[] args)`** → `Context` — factory method that parses the argument
+  array and returns a fully initialized context; throws `ArgumentException` for unrecognized
+  or malformed arguments
+
+`Program.Main()` is the sole caller of `Context.Create()`. The resulting `Context` instance
+is passed to all downstream subsystems as a read-only configuration carrier and output
+channel. `Context` also exposes output methods (`WriteLine`, `WriteError`) and
+`IDisposable.Dispose()` to callers in other subsystems that need to write output or release
+the log file handle.
 
 ### Supported Flags
 
@@ -68,3 +88,15 @@ names the flag and describes what is expected.
 
 Integer arguments (`--depth`, `--plan-depth`, `--report-depth`) require a positive
 integer value in the range 1–5. Values outside this range cause an `ArgumentException`.
+
+### Design
+
+The `Context` unit owns all argument-parsing logic through its private `ArgumentParser`
+inner class. Sequential processing of the argument array allows flags and value arguments
+to be interleaved naturally. Once created, `Context` is immutable with respect to its
+parsed properties; the only mutable state is the internal error flag set by `WriteError()`
+and the log file handle managed by `IDisposable`.
+
+The design keeps the Cli subsystem free of dependencies on other subsystems:
+`Context.Create()` does not load configuration files, access the file system beyond
+opening the optional log file, or call back into any processing subsystem.

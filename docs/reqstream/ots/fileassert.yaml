@@ -9,7 +9,7 @@ sections:
       - title: FileAssert Requirements
         requirements:
           - id: ReviewMark-OTS-FileAssert
-            title: FileAssert shall be operationally available and confirmed functional through self-validation.
+            title: FileAssert shall confirm operational availability by successfully completing self-validation.
             justification: |
               The documentation build pipeline produces HTML and PDF artifacts from multiple tools.
               Without automated assertion, undetected truncation, empty files, or missing content

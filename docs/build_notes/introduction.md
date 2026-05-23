@@ -13,9 +13,10 @@ in this build.
 
 This build notes report covers:
 
-- Version information and commit details
-- Changes and new features implemented
+- Version information and commit details for this release
+- Changes and new features implemented since the previous version
 - Bugs fixed in this release
+- Versions of all tools used in the build and compliance pipeline
 
 ## Generation Source
 
@@ -31,3 +32,7 @@ This document is intended for:
 - Users evaluating what has changed in this release
 - Project stakeholders tracking progress
 - Contributors understanding recent changes
+
+## References
+
+- [ReviewMark releases](https://github.com/demaconsulting/ReviewMark/releases)

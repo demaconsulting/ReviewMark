@@ -1,5 +1,7 @@
 ## xUnit
 
+### Verification Approach
+
 **Component**: xunit.v3 + xunit.runner.visualstudio (<https://xunit.net/>)
 **Role**: Test framework for all ReviewMark unit and integration tests.
 **Acceptance approach**: Established industry use and automated test coverage.
@@ -20,10 +22,10 @@ the framework.
 
 ### Test scenario coverage
 
-The following test methods, linked in `ReviewMark-OTS-xUnit-Execute` and
-`ReviewMark-OTS-xUnit-Report`, provide evidence that xUnit discovers tests, runs them,
-and reports results in TRX format. Any test passing through xUnit proves the framework
-performs all three behaviours correctly.
+#### xUnitTestExecution
+
+Evidence that xUnit discovers and executes all test methods in the ReviewMark test suite.
+Any passing test confirms the framework performs discovery and execution correctly.
 
 - **`Context_Create_NoArguments_ReturnsDefaultContext`** — Parsing an empty argument list
   returns a default-initialized context.
@@ -39,12 +41,47 @@ performs all three behaviours correctly.
   the results file path in the context.
 - **`Context_Create_LogFlag_OpensLogFile`** — Parsing `--log <file>` opens the specified
   log file in the context.
-- **`Context_Create_UnknownArgument_ThrowsArgumentException`** — Parsing an unrecognised
+- **`Context_Create_UnknownArgument_ThrowsArgumentException`** — Parsing an unrecognized
   argument raises an `ArgumentException`.
 - **`Context_Create_ShortVersionFlag_SetsVersionTrue`** — Parsing `-v` (short form) sets
   the version flag to true in the context.
 
-CI evidence source for all scenarios: `dotnet test` step in the `build` matrix job of
-`build.yaml`, writing TRX result files to `artifacts/`.
+CI evidence source: `dotnet test` step in the `build` matrix job of `build.yaml`, writing
+TRX result files to `artifacts/`.
 
-**Requirement coverage**: `ReviewMark-OTS-xUnit-Execute`, `ReviewMark-OTS-xUnit-Report`
+#### xUnitTrxReporting
+
+Evidence that xUnit produces well-formed TRX output consumed by ReqStream for requirements
+traceability. The same test methods listed under `xUnitTestExecution` provide this evidence:
+each `dotnet test` run writes TRX files to `artifacts/` that ReqStream subsequently
+processes during a successful `--enforce` run.
+
+CI evidence source: `dotnet test` step in the `build` matrix job of `build.yaml`, writing
+TRX result files to `artifacts/`.
+
+### Requirements Coverage
+
+- **ReviewMark-OTS-xUnit-Execute**: xUnit shall execute unit tests.
+  - *xUnitTestExecution*: verifies xUnit discovers and executes all test methods in the
+    ReviewMark test suite, with any passing test constituting evidence of correct execution.
+    - `Context_Create_NoArguments_ReturnsDefaultContext`
+    - `Context_Create_VersionFlag_SetsVersionTrue`
+    - `Context_Create_HelpFlag_SetsHelpTrue`
+    - `Context_Create_SilentFlag_SetsSilentTrue`
+    - `Context_Create_ValidateFlag_SetsValidateTrue`
+    - `Context_Create_ResultsFlag_SetsResultsFile`
+    - `Context_Create_LogFlag_OpensLogFile`
+    - `Context_Create_UnknownArgument_ThrowsArgumentException`
+    - `Context_Create_ShortVersionFlag_SetsVersionTrue`
+- **ReviewMark-OTS-xUnit-Report**: xUnit shall report test results in TRX format.
+  - *xUnitTrxReporting*: verifies xUnit produces well-formed TRX output consumed by
+    ReqStream for requirements traceability, confirmed by a successful `--enforce` run.
+    - `Context_Create_NoArguments_ReturnsDefaultContext`
+    - `Context_Create_VersionFlag_SetsVersionTrue`
+    - `Context_Create_HelpFlag_SetsHelpTrue`
+    - `Context_Create_SilentFlag_SetsSilentTrue`
+    - `Context_Create_ValidateFlag_SetsValidateTrue`
+    - `Context_Create_ResultsFlag_SetsResultsFile`
+    - `Context_Create_LogFlag_OpensLogFile`
+    - `Context_Create_UnknownArgument_ThrowsArgumentException`
+    - `Context_Create_ShortVersionFlag_SetsVersionTrue`

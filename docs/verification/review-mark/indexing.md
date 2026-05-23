@@ -1,6 +1,6 @@
 ## Indexing
 
-### Verification Approach
+### Verification Strategy
 
 The Indexing subsystem is verified through `IndexingTests.cs`, which exercises
 `ReviewIndex` and `PathHelpers` working together with actual temporary directories.
@@ -17,6 +17,19 @@ clean isolation between tests.
 | Temporary directory      | Isolated filesystem prevents test interference                 |
 | Fake JSON index file     | Provides controlled evidence index without real PDF evidence   |
 | `FakeHttpMessageHandler` | Returns fixed JSON payload for URL-source tests                |
+
+### Test Environment
+
+Tests run under xUnit on .NET 8, 9, and 10 across Windows, Linux, and macOS. Each test
+creates a fresh isolated temporary directory in the constructor and deletes it in
+`Dispose`. URL-source tests use an in-process `FakeHttpMessageHandler`; no real network
+access is required. Real minimal PDF fixtures are used for `Scan` metadata tests.
+
+### Acceptance Criteria
+
+All Indexing subsystem tests pass with zero failures. Every `ReviewMark-Indexing-*`
+requirement is covered by at least one passing test scenario. Path traversal attempts and
+malformed inputs produce the specified exception types.
 
 ### Test Scenarios
 
@@ -43,7 +56,7 @@ clean isolation between tests.
 
 **Expected**: Returns an empty index immediately; no file system access occurs.
 
-**Requirement coverage**: `ReviewMark-Indexing-LoadEvidence`
+**Requirement coverage**: `ReviewMark-Indexing-CreateEvidence`
 
 #### Indexing_ReviewIndex_Load_WithUrlSource_ReturnsPopulatedIndex
 
@@ -84,11 +97,36 @@ with all required keyword metadata fields (`id`, `fingerprint`, `date`, `result`
 
 **Requirement coverage**: `ReviewMark-Indexing-ScanPdfEvidence`
 
+##### Indexing_ReviewIndex_Load_MissingFile_ThrowsInvalidOperationException
+
+**Scenario**: `ReviewIndex.Load` is called with a `fileshare` source whose file path
+does not exist on disk.
+
+**Expected**: `InvalidOperationException` is thrown with a message identifying the missing
+path.
+
+**Boundary / error path**: Missing evidence file.
+
+**Requirement coverage**: `ReviewMark-Indexing-LoadEvidence`
+
+##### Indexing_ReviewIndex_Load_MalformedJson_ThrowsInvalidOperationException
+
+**Scenario**: `ReviewIndex.Load` is called with a `fileshare` source pointing to a file
+that contains malformed (non-JSON) content.
+
+**Expected**: `InvalidOperationException` is thrown describing the parse failure.
+
+**Boundary / error path**: Malformed JSON content.
+
+**Requirement coverage**: `ReviewMark-Indexing-LoadEvidence`
+
 ### Requirements Coverage
 
 - **ReviewMark-Indexing-LoadEvidence**: Indexing_SafePathCombine_WithIndexPath_LoadsIndex,
-  Indexing_ReviewIndex_SaveAndLoad_RoundTrip, Indexing_ReviewIndex_Load_WithNoneSource_ReturnsEmptyIndex,
-  Indexing_ReviewIndex_Load_WithUrlSource_ReturnsPopulatedIndex
+  Indexing_ReviewIndex_Load_WithUrlSource_ReturnsPopulatedIndex,
+  Indexing_ReviewIndex_Load_MissingFile_ThrowsInvalidOperationException,
+  Indexing_ReviewIndex_Load_MalformedJson_ThrowsInvalidOperationException
+- **ReviewMark-Indexing-CreateEvidence**: Indexing_ReviewIndex_Load_WithNoneSource_ReturnsEmptyIndex
 - **ReviewMark-Indexing-Save**: Indexing_ReviewIndex_SaveAndLoad_RoundTrip
 - **ReviewMark-Indexing-SafePathCombine**: Indexing_SafePathCombine_WithIndexPath_LoadsIndex,
   Indexing_SafePathCombine_WithTraversalInputs_Throws

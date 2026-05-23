@@ -239,8 +239,8 @@ public class IntegrationTests
             _dllPath,
             "--unknown");
 
-        // Assert — unknown argument produces a non-zero exit code and an error message
-        Assert.NotEqual(0, exitCode);
+        // Assert — unknown argument produces exit code 1 and an error message
+        Assert.Equal(1, exitCode);
         Assert.Contains("Error", output);
     }
 
@@ -385,8 +385,8 @@ public class IntegrationTests
                 reportFile,
                 "--enforce");
 
-            // Assert — non-zero because evidence source is 'none' so no reviews are current
-            Assert.NotEqual(0, exitCode);
+            // Assert — exit code is 1 because evidence source is 'none' so no reviews are current
+            Assert.Equal(1, exitCode);
         }
         finally
         {
@@ -576,6 +576,144 @@ public class IntegrationTests
     }
 
     /// <summary>
+    ///     Test that --plan-depth flag overrides the heading depth for the plan document only,
+    ///     leaving the report at the global --depth.
+    /// </summary>
+    /// <remarks>Links to ReviewMark-System-PlanDepth.</remarks>
+    [Fact]
+    public void ReviewMark_PlanDepthFlag_Invoked_OverridesPlanHeadingOnly()
+    {
+        // Arrange
+        var defFile = Path.Combine(Path.GetTempPath(), Path.ChangeExtension(Path.GetRandomFileName(), ".yaml"));
+        var planFile = Path.Combine(Path.GetTempPath(), Path.ChangeExtension(Path.GetRandomFileName(), ".md"));
+        var reportFile = Path.Combine(Path.GetTempPath(), Path.ChangeExtension(Path.GetRandomFileName(), ".md"));
+
+        try
+        {
+            File.WriteAllText(defFile, """
+                needs-review:
+                  - "src/**/*.cs"
+                evidence-source:
+                  type: none
+                reviews:
+                  - id: Test-Review
+                    title: Test review
+                    paths:
+                      - "src/**/*.cs"
+                """);
+
+            // Act — global depth is 1, plan-depth overrides to 2
+            var exitCode = Runner.Run(
+                out _,
+                "dotnet",
+                _dllPath,
+                "--definition",
+                defFile,
+                "--plan",
+                planFile,
+                "--report",
+                reportFile,
+                "--depth",
+                "1",
+                "--plan-depth",
+                "2");
+
+            // Assert — exit succeeds; plan uses ## (depth 2), report stays at # (depth 1)
+            Assert.Equal(0, exitCode);
+            Assert.True(File.Exists(planFile), "Plan file was not created");
+            Assert.True(File.Exists(reportFile), "Report file was not created");
+            var planContent = File.ReadAllText(planFile);
+            var reportContent = File.ReadAllText(reportFile);
+            Assert.Contains("## Review Coverage", planContent);
+            Assert.DoesNotContain("## Review Status", reportContent);
+        }
+        finally
+        {
+            if (File.Exists(defFile))
+            {
+                File.Delete(defFile);
+            }
+            if (File.Exists(planFile))
+            {
+                File.Delete(planFile);
+            }
+            if (File.Exists(reportFile))
+            {
+                File.Delete(reportFile);
+            }
+        }
+    }
+
+    /// <summary>
+    ///     Test that --report-depth flag overrides the heading depth for the report document only,
+    ///     leaving the plan at the global --depth.
+    /// </summary>
+    /// <remarks>Links to ReviewMark-System-ReportDepth.</remarks>
+    [Fact]
+    public void ReviewMark_ReportDepthFlag_Invoked_OverridesReportHeadingOnly()
+    {
+        // Arrange
+        var defFile = Path.Combine(Path.GetTempPath(), Path.ChangeExtension(Path.GetRandomFileName(), ".yaml"));
+        var planFile = Path.Combine(Path.GetTempPath(), Path.ChangeExtension(Path.GetRandomFileName(), ".md"));
+        var reportFile = Path.Combine(Path.GetTempPath(), Path.ChangeExtension(Path.GetRandomFileName(), ".md"));
+
+        try
+        {
+            File.WriteAllText(defFile, """
+                needs-review:
+                  - "src/**/*.cs"
+                evidence-source:
+                  type: none
+                reviews:
+                  - id: Test-Review
+                    title: Test review
+                    paths:
+                      - "src/**/*.cs"
+                """);
+
+            // Act — global depth is 1, report-depth overrides to 2
+            var exitCode = Runner.Run(
+                out _,
+                "dotnet",
+                _dllPath,
+                "--definition",
+                defFile,
+                "--plan",
+                planFile,
+                "--report",
+                reportFile,
+                "--depth",
+                "1",
+                "--report-depth",
+                "2");
+
+            // Assert — exit succeeds; report uses ## (depth 2), plan stays at # (depth 1)
+            Assert.Equal(0, exitCode);
+            Assert.True(File.Exists(planFile), "Plan file was not created");
+            Assert.True(File.Exists(reportFile), "Report file was not created");
+            var planContent = File.ReadAllText(planFile);
+            var reportContent = File.ReadAllText(reportFile);
+            Assert.Contains("## Review Status", reportContent);
+            Assert.DoesNotContain("## Review Coverage", planContent);
+        }
+        finally
+        {
+            if (File.Exists(defFile))
+            {
+                File.Delete(defFile);
+            }
+            if (File.Exists(planFile))
+            {
+                File.Delete(planFile);
+            }
+            if (File.Exists(reportFile))
+            {
+                File.Delete(reportFile);
+            }
+        }
+    }
+
+    /// <summary>
     ///     Test that --depth flag sets the heading depth in the self-validation report.
     /// </summary>
     [Fact]
@@ -641,6 +779,48 @@ public class IntegrationTests
     }
 
     /// <summary>
+    ///     Test that --lint with an invalid config file reports issue messages and no version banner.
+    /// </summary>
+    [Fact]
+    public void ReviewMark_LintFlag_WithInvalidConfig_ReportsOnlyIssueMessages()
+    {
+        // Arrange — create a temp file with malformed YAML (invalid content triggers lint errors)
+        var defFile = Path.Combine(Path.GetTempPath(), Path.ChangeExtension(Path.GetRandomFileName(), ".yaml"));
+
+        try
+        {
+            File.WriteAllText(defFile, """
+                {{{this is not valid yaml
+                """);
+
+            // Act
+            var exitCode = Runner.Run(
+                out var output,
+                "dotnet",
+                _dllPath,
+                "--definition",
+                defFile,
+                "--lint");
+
+            // Assert — non-zero exit code because the config is invalid
+            Assert.Equal(1, exitCode);
+
+            // Assert — at least one issue message appears in output
+            Assert.Contains("error:", output);
+
+            // Assert — version banner is NOT present (lint mode suppresses the banner)
+            Assert.DoesNotContain("ReviewMark version", output);
+        }
+        finally
+        {
+            if (File.Exists(defFile))
+            {
+                File.Delete(defFile);
+            }
+        }
+    }
+
+    /// <summary>
     ///     Test that an invalid log file path causes Main() to return a non-zero exit code.
     /// </summary>
     [Fact]
@@ -662,5 +842,32 @@ public class IntegrationTests
         // Assert — non-zero exit code and error message on stderr (captured by Runner)
         Assert.NotEqual(0, exitCode);
         Assert.Contains("Error", output);
+    }
+
+    /// <summary>
+    ///     Test that multiple --index flags accumulate evidence across all specified paths.
+    /// </summary>
+    [Fact]
+    public void ReviewMark_IndexFlag_WithRepeat_ScansAllPaths()
+    {
+        // Arrange — create a temp directory to index (with no PDF files)
+        using var tempDir = new TestDirectory();
+        var indexFile = Path.Combine(tempDir.DirectoryPath, "index.json");
+
+        // Act — supply two --index glob patterns pointing to the same empty directory
+        var exitCode = Runner.Run(
+            out _,
+            "dotnet",
+            _dllPath,
+            "--dir",
+            tempDir.DirectoryPath,
+            "--index",
+            Path.Combine(tempDir.DirectoryPath, "sub1", "**", "*.pdf"),
+            "--index",
+            Path.Combine(tempDir.DirectoryPath, "sub2", "**", "*.pdf"));
+
+        // Assert — exits successfully and produces a single merged index.json
+        Assert.Equal(0, exitCode);
+        Assert.True(File.Exists(indexFile), "index.json was not created");
     }
 }

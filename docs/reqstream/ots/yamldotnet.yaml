@@ -1,0 +1,47 @@
+---
+# YamlDotNet OTS Software Requirements
+#
+# Requirements for the YamlDotNet YAML deserialization library.
+
+sections:
+  - title: OTS Software Requirements
+    sections:
+      - title: YamlDotNet Requirements
+        requirements:
+          - id: ReviewMark-OTS-YamlDotNet-Deserialize
+            title: >-
+              YamlDotNet shall deserialize .reviewmark.yaml configuration files into typed C# objects.
+            justification: |
+              ReviewMark reads its configuration from a .reviewmark.yaml file. YamlDotNet provides
+              the deserialization path from raw YAML text to strongly-typed C# objects, removing the
+              need for a hand-written YAML parser. Correct deserialization is required for all
+              subsequent configuration-driven behavior.
+            tags: [ots]
+            tests:
+              - Deserializer_Deserialize_WellFormedYaml_MapsToTypedObject
+              - ReviewMarkConfiguration_Parse_ValidYaml_ReturnsConfiguration
+              - ReviewMarkConfiguration_Parse_NeedsReviewPatterns_ParsedCorrectly
+              - ReviewMarkConfiguration_Parse_EvidenceSource_ParsedCorrectly
+              - ReviewMarkConfiguration_Parse_Reviews_ParsedCorrectly
+              - ReviewMarkConfiguration_Parse_NoneEvidenceSource_ParsedCorrectly
+          - id: ReviewMark-OTS-YamlDotNet-ErrorHandling
+            title: >-
+              YamlDotNet shall raise a YamlException on malformed YAML input.
+            justification: |
+              ReviewMark must report a descriptive error when the configuration file is malformed.
+              YamlDotNet's YamlException is caught at the Configuration subsystem boundary and
+              converted to a user-visible error message, preventing silent misconfiguration.
+            tags: [ots]
+            tests:
+              - Deserializer_Deserialize_MalformedYaml_ThrowsYamlException
+              - ReviewMarkConfiguration_Load_InvalidYaml_ReturnsNullConfigWithErrorIssue
+          - id: ReviewMark-OTS-YamlDotNet-UnknownKeys
+            title: >-
+              YamlDotNet shall silently ignore unrecognized YAML keys without raising an error.
+            justification: |
+              ReviewMark uses IgnoreUnmatchedProperties to allow forward-compatible configuration
+              extensions. Unknown YAML keys introduced in future configuration versions must not
+              cause deserialization failures in older tool versions.
+            tags: [ots]
+            tests:
+              - Deserializer_Deserialize_UnknownKeys_DoesNotThrow

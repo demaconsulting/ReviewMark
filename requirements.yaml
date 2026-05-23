@@ -23,3 +23,7 @@ includes:
   - docs/reqstream/ots/pandoc.yaml
   - docs/reqstream/ots/weasyprint.yaml
   - docs/reqstream/ots/fileassert.yaml
+  - docs/reqstream/ots/dema-consulting-test-results.yaml
+  - docs/reqstream/ots/microsoft-extensions-file-system-globbing.yaml
+  - docs/reqstream/ots/pdfsharp.yaml
+  - docs/reqstream/ots/yamldotnet.yaml

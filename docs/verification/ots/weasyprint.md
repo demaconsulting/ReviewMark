@@ -1,12 +1,14 @@
 ## WeasyPrint
 
+### Verification Approach
+
 **Component**: WeasyPrint (<https://weasyprint.org/>)
 **Role**: Converts HTML documents to PDF as part of the documentation build pipeline.
 **Acceptance approach**: FileAssert integration tests validating each PDF output.
 
 WeasyPrint is a widely adopted open-source HTML/CSS-to-PDF converter used in the build
 pipeline. ReviewMark does not embed WeasyPrint; it is an external build dependency.
-Correct WeasyPrint behaviour is confirmed by FileAssert integration tests in the GitHub
+Correct WeasyPrint behavior is confirmed by FileAssert integration tests in the GitHub
 Actions CI workflow (`build.yaml`), which run within the `build-docs` job on the
 `windows-latest` runner. Each document group has a dedicated WeasyPrint PDF generation
 step followed by a FileAssert validation step that asserts the PDF file exists, contains
@@ -54,8 +56,27 @@ well-formed PDF with correct metadata, at least one page, and expected document 
   and text containing "User Guide". CI Evidence: "Assert User Guide Documents with
   FileAssert" step → `artifacts/fileassert-user-guide.trx`.
 
-All seven scenarios together confirm `ReviewMark-OTS-WeasyPrint`: WeasyPrint correctly
-converts HTML documents to well-formed, metadata-correct PDFs across all document types
-in the release artifact set.
+### Requirements Coverage
 
-**Requirement coverage**: `ReviewMark-OTS-WeasyPrint`
+- **ReviewMark-OTS-WeasyPrint**: WeasyPrint shall convert HTML documents to valid PDF.
+  - `WeasyPrint_BuildNotesPdf`: verifies WeasyPrint generates `ReviewMark Build Notes.pdf`
+    with correct metadata (Title, Author, Subject) and expected document content.
+    - `WeasyPrint_BuildNotesPdf`
+  - `WeasyPrint_CodeQualityPdf`: verifies WeasyPrint generates `ReviewMark Code Quality.pdf`
+    with correct metadata and expected document content.
+    - `WeasyPrint_CodeQualityPdf`
+  - `WeasyPrint_ReviewPlanPdf`: verifies WeasyPrint generates `ReviewMark Review Plan.pdf`
+    with correct metadata and expected document content.
+    - `WeasyPrint_ReviewPlanPdf`
+  - `WeasyPrint_ReviewReportPdf`: verifies WeasyPrint generates `ReviewMark Review Report.pdf`
+    with correct metadata and expected document content.
+    - `WeasyPrint_ReviewReportPdf`
+  - `WeasyPrint_DesignPdf`: verifies WeasyPrint generates `ReviewMark Software Design.pdf`
+    with correct metadata and at least the expected page count and document content.
+    - `WeasyPrint_DesignPdf`
+  - `WeasyPrint_VerificationPdf`: verifies WeasyPrint generates `ReviewMark Software
+    Verification Design.pdf` with correct metadata and expected document content.
+    - `WeasyPrint_VerificationPdf`
+  - `WeasyPrint_UserGuidePdf`: verifies WeasyPrint generates `ReviewMark User Guide.pdf`
+    with correct metadata and expected document content.
+    - `WeasyPrint_UserGuidePdf`

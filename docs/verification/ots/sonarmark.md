@@ -1,7 +1,9 @@
 ## SonarMark
 
+### Verification Approach
+
 **Component**: DemaConsulting.SonarMark
-**Role**: Generates markdown reports from SonarCloud/SonarQube analysis results.
+**Role**: Generates markdown reports from SonarCloud analysis results.
 **Acceptance approach**: Automated build pipeline verification.
 
 SonarMark is maintained by DemaConsulting and is used as a build tool in the CI/CD
@@ -35,7 +37,18 @@ hotspots retrieval, and markdown report generation.
   Same "Run SonarMark self-validation" step and the "Generate SonarCloud Quality Report"
   step in the `build-docs` job, confirmed by successful report generation.
 
-All four scenarios together confirm `ReviewMark-OTS-SonarMark`: SonarMark correctly
-retrieves SonarCloud analysis data and renders it as a human-readable markdown report.
+### Requirements Coverage
 
-**Requirement coverage**: `ReviewMark-OTS-SonarMark`
+- **ReviewMark-OTS-SonarMark**: SonarMark shall generate a SonarCloud quality report.
+  - `SonarMark_QualityGateRetrieval`: verifies SonarMark retrieves quality-gate status from a
+    SonarCloud project.
+    - `SonarMark_QualityGateRetrieval`
+  - `SonarMark_IssuesRetrieval`: verifies SonarMark retrieves the list of open issues from a
+    SonarCloud project.
+    - `SonarMark_IssuesRetrieval`
+  - `SonarMark_HotSpotsRetrieval`: verifies SonarMark retrieves the list of security hotspots
+    from a SonarCloud project.
+    - `SonarMark_HotSpotsRetrieval`
+  - `SonarMark_MarkdownReportGeneration`: verifies SonarMark generates a markdown quality
+    report from retrieved SonarCloud data.
+    - `SonarMark_MarkdownReportGeneration`

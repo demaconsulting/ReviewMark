@@ -259,6 +259,37 @@ public sealed class IndexingTests : IDisposable
     }
 
     /// <summary>
+    ///     Test that loading from a fileshare source whose file does not exist throws
+    ///     <see cref="InvalidOperationException" /> with a meaningful message.
+    /// </summary>
+    [Fact]
+    public void Indexing_ReviewIndex_Load_MissingFile_ThrowsInvalidOperationException()
+    {
+        // Arrange — construct a path that does not exist on disk
+        var missingPath = PathHelpers.SafePathCombine(_testDirectory, "evidence/missing-index.json");
+        var source = new EvidenceSource("fileshare", missingPath, null, null);
+
+        // Act & Assert — a missing file must surface as InvalidOperationException
+        Assert.Throws<InvalidOperationException>(() => ReviewIndex.Load(source));
+    }
+
+    /// <summary>
+    ///     Test that loading from a fileshare source whose file contains malformed JSON
+    ///     throws <see cref="InvalidOperationException" /> with a meaningful message.
+    /// </summary>
+    [Fact]
+    public void Indexing_ReviewIndex_Load_MalformedJson_ThrowsInvalidOperationException()
+    {
+        // Arrange — write non-JSON content to a temp file
+        var jsonPath = PathHelpers.SafePathCombine(_testDirectory, "malformed.json");
+        File.WriteAllText(jsonPath, "this is not valid json {{{");
+        var source = new EvidenceSource("fileshare", jsonPath, null, null);
+
+        // Act & Assert — malformed JSON must surface as InvalidOperationException
+        Assert.Throws<InvalidOperationException>(() => ReviewIndex.Load(source));
+    }
+
+    /// <summary>
     ///     Minimal fake HTTP message handler that returns a fixed JSON response body.
     /// </summary>
     private sealed class FakeHttpMessageHandler(string content) : HttpMessageHandler

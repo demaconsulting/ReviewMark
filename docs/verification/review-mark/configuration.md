@@ -1,6 +1,6 @@
 ## Configuration
 
-### Verification Approach
+### Verification Strategy
 
 The Configuration subsystem is verified through `ConfigurationTests.cs`, which exercises
 `ReviewMarkConfiguration` and `GlobMatcher` working together with actual temporary file
@@ -16,6 +16,19 @@ test operates in a clean environment.
 | ------------------- | ------------------------------------------------------------- |
 | Temporary directory | Isolated filesystem prevents test interference                |
 | Temporary YAML file | Controlled definition file with known configuration content   |
+
+### Test Environment
+
+Tests run under xUnit on .NET 8, 9, and 10 across Windows, Linux, and macOS. Each test
+creates a fresh temporary directory with controlled definition files and source files in
+the test constructor and deletes it in `Dispose`, ensuring clean isolation. No external
+services or network access are required.
+
+### Acceptance Criteria
+
+All Configuration subsystem tests pass with zero failures. Every `ReviewMark-Configuration-*`
+requirement is covered by at least one passing test scenario. Malformed YAML and unknown
+review-set IDs produce the specified exception or error result.
 
 ### Test Scenarios
 
@@ -60,7 +73,7 @@ files exist in `src/`.
 
 **Requirement coverage**: `ReviewMark-Configuration-Elaboration`
 
-#### Configuration_LoadConfig_ElaborateUnknownId_ThrowsArgumentException
+#### Configuration_ElaborateReviewSet_UnknownId_ThrowsArgumentException
 
 **Scenario**: A valid configuration file is loaded and `ElaborateReviewSet` is called with an ID that does not exist.
 
@@ -95,5 +108,5 @@ files exist in `src/`.
 - **ReviewMark-Configuration-PlanGeneration**: Configuration_PlanGeneration_ValidConfig_Succeeds
 - **ReviewMark-Configuration-ReportGeneration**: Configuration_ReportGeneration_ValidConfig_Succeeds
 - **ReviewMark-Configuration-Elaboration**: Configuration_Elaboration_ValidId_Succeeds
-- **ReviewMark-Configuration-ElaborateUnknownId**: Configuration_LoadConfig_ElaborateUnknownId_ThrowsArgumentException
+- **ReviewMark-Configuration-ElaborateUnknownId**: Configuration_ElaborateReviewSet_UnknownId_ThrowsArgumentException
 - **ReviewMark-Configuration-MalformedYaml**: Configuration_LoadConfig_MalformedYaml_ReturnsIssues

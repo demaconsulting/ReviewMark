@@ -19,6 +19,20 @@ It defines the test scenarios, dependency usage, and requirement coverage for
 | Captured `Console.Out`       | Allows tests to assert on human-readable output               |
 | Temporary files/directories  | Results file tests need a real writable path                  |
 
+#### Test Environment
+
+N/A - standard test environment. Tests capture `Console.Out` via `StringWriter` and create
+temporary results files in-process. The real built ReviewMark assembly must be present at
+the output path for `Validation.Run` to launch its internal test suite. Tests run on any
+platform supporting .NET 8, 9, or 10.
+
+#### Acceptance Criteria
+
+All Validation unit tests pass with zero failures. Every `ReviewMark-Validation-*`
+requirement is covered by at least one passing test scenario. Unsupported results file
+extensions produce a non-zero exit code and an appropriate error message. The parent
+directory of a results path is created automatically when it does not already exist.
+
 #### Test Scenarios
 
 ##### Validation_Run_NullContext_ThrowsArgumentNullException

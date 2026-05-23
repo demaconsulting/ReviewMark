@@ -1,5 +1,7 @@
 ## BuildMark
 
+### Verification Approach
+
 **Component**: DemaConsulting.BuildMark
 **Role**: Provides the `buildmark` CLI tool used in the build pipeline.
 **Acceptance approach**: Established industry use and automated build pipeline verification.
@@ -17,4 +19,10 @@ that BuildMark executed without error and produced its expected markdown output.
   CI Evidence: "Run BuildMark self-validation" step in the `build-docs` job of
   `build.yaml`, writing results to `artifacts/buildmark-self-validation.trx`.
 
-**Requirement coverage**: `ReviewMark-OTS-BuildMark`
+### Requirements Coverage
+
+- **BuildMark-Core-GenerateBuildNotes**: BuildMark shall generate build-notes documentation from
+  GitHub Actions metadata.
+  - *BuildMark_MarkdownReportGeneration*: verifies BuildMark queries the GitHub Actions API
+    and produces a markdown build-notes document from workflow run metadata.
+    - `BuildMark_MarkdownReportGeneration`

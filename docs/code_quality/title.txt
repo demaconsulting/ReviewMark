@@ -7,6 +7,7 @@ lang: en-US
 keywords:
   - ReviewMark
   - Code Quality
+  - Static Analysis
   - Analysis
   - .NET
   - Documentation

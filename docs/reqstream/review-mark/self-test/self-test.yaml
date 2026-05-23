@@ -23,19 +23,30 @@ sections:
           - SelfTest_Run_AllTestsPass_ExitCodeIsZero
         children: [ReviewMark-Validation-Run]
 
-      - id: ReviewMark-SelfTest-ResultsOutput
+      - id: ReviewMark-SelfTest-ResultsOutput-Trx
         title: >-
-          The tool shall write self-validation results to a TRX (MSTest) or JUnit XML
-          file when --results is provided.
+          The tool shall write self-validation results to a TRX (MSTest) file
+          when --results is provided with a .trx extension.
         justification: |
           CI/CD pipelines and requirements traceability tools (such as ReqStream) consume
-          test result files in standard formats. By supporting both TRX (MSTest) and JUnit
-          XML output, the SelfTest subsystem enables self-validation results to be fed
-          directly into pipeline tooling and traceability reports without additional
-          conversion steps, satisfying audit trail requirements.
+          TRX test result files. By supporting TRX output, the SelfTest subsystem enables
+          self-validation results to be fed directly into pipeline tooling and traceability
+          reports without additional conversion steps, satisfying audit trail requirements.
         tests:
-          - SelfTest_Run_GeneratesResultsFile
-          - SelfTest_Run_GeneratesJUnitResultsFile
+          - SelfTest_Run_WithTrxResultsFile_WritesFile
+        children: [ReviewMark-Validation-ResultsFile]
+
+      - id: ReviewMark-SelfTest-ResultsOutput-Junit
+        title: >-
+          The tool shall write self-validation results to a JUnit XML file
+          when --results is provided with a .xml extension.
+        justification: |
+          CI/CD pipelines and requirements traceability tools consume JUnit XML test result
+          files. By supporting JUnit XML output, the SelfTest subsystem enables
+          self-validation results to be fed directly into pipeline tooling without
+          additional conversion steps, satisfying audit trail requirements.
+        tests:
+          - SelfTest_Run_WithJUnitResultsFile_WritesFile
         children: [ReviewMark-Validation-ResultsFile]
 
       - id: ReviewMark-SelfTest-ExitCodeOnFailure

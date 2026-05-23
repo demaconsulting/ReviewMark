@@ -1,5 +1,7 @@
 ## ReqStream
 
+### Verification Approach
+
 **Component**: DemaConsulting.ReqStream
 **Role**: Traces requirements from YAML definition files and validates coverage against test evidence.
 **Acceptance approach**: Automated build pipeline verification.
@@ -15,7 +17,7 @@ proves both that ReqStream is operational and that all requirements are covered.
 ### Test scenario coverage
 
 - **`ReqStream_EnforcementMode`** — ReqStream's self-validation confirms enforcement mode
-  behaviour: when run with `--enforce`, ReqStream exits non-zero if any requirement lacks
+  behavior: when run with `--enforce`, ReqStream exits non-zero if any requirement lacks
   linked test evidence, making uncovered requirements a build-breaking condition.
   CI Evidence: "Run ReqStream self-validation" step in the `build-docs` job of
   `build.yaml`, writing results to `artifacts/reqstream-self-validation.trx`.
@@ -25,4 +27,10 @@ FileAssert, BuildMark, and OTS self-validation results) provides additional runt
 evidence that ReqStream correctly processed `requirements.yaml` and found all requirements
 covered by passing tests.
 
-**Requirement coverage**: `ReviewMark-OTS-ReqStream`
+### Requirements Coverage
+
+- **ReviewMark-OTS-ReqStream**: ReqStream shall enforce that every requirement is linked to
+  passing test evidence.
+  - *ReqStream_EnforcementMode*: verifies ReqStream exits non-zero when any requirement lacks
+    linked test evidence, making uncovered requirements a build-breaking condition.
+    - `ReqStream_EnforcementMode`

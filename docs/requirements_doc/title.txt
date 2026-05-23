@@ -1,8 +1,8 @@
 ---
-title: ReviewMark Requirements
+title: DemaConsulting.ReviewMark Requirements Document
 subtitle: Requirements Specification for the ReviewMark
 author: DEMA Consulting
-description: Requirements Specification for the ReviewMark
+description: Requirements Document for DemaConsulting.ReviewMark
 lang: en-US
 keywords:
   - ReviewMark

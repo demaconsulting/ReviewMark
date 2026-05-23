@@ -6,6 +6,31 @@ The SelfTest subsystem provides a self-validation framework that allows ReviewMa
 qualify itself as a tool for use in regulated environments. It executes a built-in suite
 of integration tests against a temporary working directory and reports the results.
 
+### Interfaces
+
+The SelfTest subsystem exposes a single public entry point:
+
+- **`Validation.Run(Context context)`** — executes the full self-validation suite;
+  writes results to the console and, if `Context.ResultsFile` is set, to a TRX or
+  JUnit XML file; calls `Context.WriteError()` if any test fails
+
+`Validation.Run()` consumes the Configuration and Indexing subsystems internally to
+construct valid runtime environments for each test case, and uses `Context` for output.
+It does not expose any other types or methods to callers.
+
+### Design
+
+The `Validation` unit is the sole component of the SelfTest subsystem. It executes each
+test case sequentially against a temporary working directory, isolating test cases from
+one another and from the caller's environment.
+
+Result output uses the `DemaConsulting.TestResults` library, which abstracts TRX and
+JUnit XML serialization; `Validation` selects the format by inspecting the file extension
+of `Context.ResultsFile`. Failures in test infrastructure propagate as unhandled
+exceptions to `Program.Main()`, where the third-tier exception handler catches and
+rethrows them. Result-file I/O failures are caught and logged via `WriteError()`, setting
+a non-zero exit code without stopping the remaining tests.
+
 ### Responsibilities
 
 - Orchestrate the execution of the built-in validation test suite

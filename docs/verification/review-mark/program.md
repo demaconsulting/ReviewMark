@@ -13,6 +13,20 @@ for output capture, calls `Program.Run`, and then asserts on captured output and
 | `Context`         | Constructed with controlled arguments and output capture       |
 | `StringWriter`    | Replaces `Console.Out`/`Console.Error` for assertion           |
 
+### Test Environment
+
+Tests run under xUnit on .NET 8, 9, and 10 across Windows, Linux, and macOS. Console
+streams are redirected to `StringWriter` instances in-process. Temporary YAML definition
+files are created as needed and removed after each test. No external services or network
+access are required.
+
+### Acceptance Criteria
+
+All Program unit tests pass with zero failures. Every `ReviewMark-Program-*` requirement
+is covered by at least one passing test scenario. Correct dispatch is verified for every
+supported flag; lint error paths produce non-zero exit codes and the expected error
+messages.
+
 ### Test Scenarios
 
 #### Program_Run_WithVersionFlag_DisplaysVersionOnly
@@ -171,19 +185,21 @@ the definition is missing `evidence-source`.
 
 #### Program_HandleIssues_WithEnforce_SetsExitCode1
 
-**Scenario**: `Program.HandleIssues` is called with enforce=true and a non-empty issue list.
+**Scenario**: `Program.Run` is called with `--report` and an empty evidence index, which triggers
+HandleIssues via the report path with enforce=true.
 
 **Expected**: Context exit code is set to 1.
 
-**Requirement coverage**: `ReviewMark-Program-HandleIssues`
+**Requirement coverage**: `ReviewMark-Program-HandleIssues-Enforce`
 
 #### Program_HandleIssues_WithoutEnforce_EmitsWarning
 
-**Scenario**: `Program.HandleIssues` is called with enforce=false and a non-empty issue list.
+**Scenario**: `Program.Run` is called with `--report` and an empty evidence index, which triggers
+HandleIssues via the report path with enforce=false.
 
 **Expected**: A warning is written to output; exit code remains 0.
 
-**Requirement coverage**: `ReviewMark-Program-HandleIssues`
+**Requirement coverage**: `ReviewMark-Program-HandleIssues-Warn`
 
 ### Requirements Coverage
 
@@ -207,5 +223,5 @@ the definition is missing `evidence-source`.
   Program_Run_WithLintFlag_CorruptedYaml_ReportsError,
   Program_Run_WithLintFlag_MissingEvidenceSource_ReportsError,
   Program_Run_WithLintFlag_MultipleErrors_ReportsAll
-- **ReviewMark-Program-HandleIssues**: Program_HandleIssues_WithEnforce_SetsExitCode1,
-  Program_HandleIssues_WithoutEnforce_EmitsWarning
+- **ReviewMark-Program-HandleIssues-Enforce**: Program_HandleIssues_WithEnforce_SetsExitCode1
+- **ReviewMark-Program-HandleIssues-Warn**: Program_HandleIssues_WithoutEnforce_EmitsWarning

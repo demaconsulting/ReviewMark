@@ -8,17 +8,26 @@ sections:
     sections:
       - title: VersionMark Requirements
         requirements:
-          - id: ReviewMark-OTS-VersionMark
-            title: VersionMark shall publish captured tool-version information.
+          - id: ReviewMark-OTS-VersionMark-Capture
+            title: VersionMark shall capture tool version metadata.
             justification: |
               Compliance traceability and audit evidence require that the versions of all
               tools used in the build pipeline are documented in the release artifacts.
               DemaConsulting.VersionMark captures version metadata for each pipeline tool
-              and publishes a human-readable versions document included in the build notes.
-              This provides auditors and reviewers with a permanent record of which tool
-              versions were used to produce each release, satisfying traceability obligations
-              without manual data-entry.
+              and writes a JSON capture file. This provides auditors and reviewers with a
+              permanent record of which tool versions were used to produce each release,
+              satisfying traceability obligations without manual data-entry.
             tags: [ots]
             tests:
               - VersionMark_CapturesVersions
+          - id: ReviewMark-OTS-VersionMark-Report
+            title: VersionMark shall generate a markdown versions report.
+            justification: |
+              The build notes release artifact must include a human-readable summary of all
+              tool versions captured during the pipeline run. DemaConsulting.VersionMark
+              aggregates the JSON capture files produced by each pipeline stage and publishes
+              a single markdown versions document included in the build notes. This satisfies
+              the audit requirement for a consolidated, human-readable version record.
+            tags: [ots]
+            tests:
               - VersionMark_GeneratesMarkdownReport

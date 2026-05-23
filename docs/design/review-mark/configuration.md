@@ -22,7 +22,7 @@ file-pattern-matching capability used to resolve glob patterns into concrete fil
 | ReviewMarkConfiguration | `Configuration/ReviewMarkConfiguration.cs` | YAML parser and review-set processor |
 | GlobMatcher | `Configuration/GlobMatcher.cs` | File pattern matching using glob syntax |
 
-### Interfaces / API
+### Interfaces
 
 `ReviewMarkConfiguration.Load(string path)` is the primary entry point. It reads and
 deserializes the YAML file at `path`, lints the result, and returns a
@@ -66,3 +66,29 @@ When `Configuration` is non-null, callers may invoke the following methods:
   match any review-set in the configuration.
 - File-system failures during glob pattern expansion (e.g., the working directory does
   not exist) propagate as `IOException` or `UnauthorizedAccessException` to the caller.
+
+### Design
+
+`ReviewMarkConfiguration` is the central orchestrator within the Configuration subsystem.
+It holds the parsed configuration state and coordinates the two units:
+
+- `GlobMatcher` is called by `ReviewMarkConfiguration` to expand the `needs-review` and
+  per-review-set `paths` glob patterns into sorted file lists. `GlobMatcher` has no
+  knowledge of `ReviewMarkConfiguration`; the dependency is one-directional.
+- `ReviewMarkConfiguration` owns the SHA-256 fingerprinting algorithm, the Review Plan
+  and Review Report generation, and the elaboration logic. None of these functions require
+  knowledge of the Indexing subsystem; the `ReviewIndex` is passed in as a parameter to
+  `PublishReviewReport()`.
+
+The `Load()` method performs both parsing and linting in a single file read, keeping the
+I/O surface minimal. Lint issues are accumulated into a list rather than thrown as
+exceptions, allowing callers to distinguish parse failures from semantic warnings.
+
+### Test Dependencies
+
+Integration-level Configuration subsystem tests (in `ConfigurationTests.cs`) may use
+`ReviewIndex` from the Indexing subsystem to construct realistic evidence fixtures when
+exercising `PublishReviewReport()`. This is an intentional cross-subsystem dependency
+limited to the test layer; the production `ReviewMarkConfiguration` code accepts
+`ReviewIndex` only as a parameter and has no static import dependency on the Indexing
+subsystem.

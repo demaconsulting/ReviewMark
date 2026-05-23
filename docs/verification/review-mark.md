@@ -1,6 +1,6 @@
 # ReviewMark
 
-## Verification Approach
+## Verification Strategy
 
 ReviewMark is verified at the system level through a set of integration tests in
 `IntegrationTests.cs` that exercise the full CLI pipeline by launching the ReviewMark
@@ -21,6 +21,25 @@ for unknown arguments.
 | Temporary YAML files   | Created in-process to provide controlled definition inputs      |
 | Temporary directories  | Isolated filesystem state prevents test interference            |
 | `Runner.Run`           | Runs DLL as subprocess; captures stdout/stderr for assertion    |
+
+## Test Environment
+
+ReviewMark integration tests run under xUnit on .NET 8, 9, and 10 across Windows, Linux,
+and macOS. No external services or network access are required. The test suite is
+self-contained: temporary YAML definition files and directories are created in-process,
+and the `Runner.cs` helper launches `DemaConsulting.ReviewMark.dll` as a subprocess via
+`dotnet`, so the built output assembly must be present before any integration test is run.
+Test parallelization is explicitly disabled
+(`[assembly: CollectionBehavior(DisableTestParallelization = true)]`) because each
+integration test launches a `dotnet` subprocess and parallel execution would cause
+subprocess contention.
+
+## Acceptance Criteria
+
+All automated integration tests pass with zero failures. Every system-level requirement
+(`ReviewMark-System-*`) is covered by at least one passing test scenario. The tool exits
+with code 0 for all well-formed invocations and exits with a non-zero code for any error
+condition or enforcement failure.
 
 ## Test Scenarios (System-Level)
 
@@ -81,6 +100,16 @@ for unknown arguments.
 **Expected**: Exit code is 0; log file is created; log file contains "ReviewMark version".
 
 **Requirement coverage**: `ReviewMark-System-Log`
+
+### ReviewMark_LogFlag_WithInvalidPath_ReturnsNonZero
+
+**Scenario**: The tool is invoked with `--log <path>` where the path cannot be written (e.g., a
+directory that does not exist).
+
+**Expected**: Exit code is non-zero; the tool handles the write failure gracefully without an
+unhandled exception.
+
+**Requirement coverage**: N/A — defensive error-handling test.
 
 ### ReviewMark_UnknownArgument_Provided_ReturnsNonZeroAndError
 
@@ -169,6 +198,44 @@ the definition file defines a review set named `Test-Review`.
 
 **Requirement coverage**: `ReviewMark-System-LintValidation`, `ReviewMark-System-LintSilenceOnSuccess`
 
+### ReviewMark_LintFlag_WithInvalidConfig_ReportsOnlyIssueMessages
+
+**Scenario**: The tool is invoked with `--lint --definition <file>` where the definition file
+contains invalid configuration (e.g., an unknown evidence-source type or missing required block).
+
+**Expected**: Exit code is non-zero; console output contains issue messages; the application
+banner is absent (lint mode suppresses the banner even on failure).
+
+**Requirement coverage**: `ReviewMark-System-LintValidation`
+
+### ReviewMark_PlanDepthFlag_Invoked_OverridesPlanHeadingOnly
+
+**Scenario**: The tool is invoked with `--definition <file> --plan <planfile> --plan-depth 2`.
+
+**Expected**: Exit code is 0; plan file contains `## Review Coverage`; plan heading depth
+reflects the `--plan-depth` override independently of any default or `--depth` value.
+
+**Requirement coverage**: `ReviewMark-System-PlanDepth`
+
+### ReviewMark_ReportDepthFlag_Invoked_OverridesReportHeadingOnly
+
+**Scenario**: The tool is invoked with `--definition <file> --report <reportfile> --report-depth 2`.
+
+**Expected**: Exit code is 0; report file contains `## Review Status`; report heading depth
+reflects the `--report-depth` override independently of any default or `--depth` value.
+
+**Requirement coverage**: `ReviewMark-System-ReportDepth`
+
+### ReviewMark_IndexFlag_WithRepeat_ScansAllPaths
+
+**Scenario**: The tool is invoked with `--index` specified multiple times, each pointing to a
+different directory glob (e.g., `--index <dir1>/**/*.pdf --index <dir2>/**/*.pdf`).
+
+**Expected**: Exit code is 0; `index.json` contains entries from all specified paths — no path
+is silently ignored when `--index` is repeated.
+
+**Requirement coverage**: `ReviewMark-System-IndexScan-Repeat`
+
 ## Requirements Coverage
 
 - **ReviewMark-System-Version**: ReviewMark_VersionFlag_Invoked_OutputsVersion
@@ -186,6 +253,10 @@ the definition file defines a review set named `Test-Review`.
 - **ReviewMark-System-WorkingDirectory**: ReviewMark_DirFlag_Invoked_OverridesWorkingDirectory
 - **ReviewMark-System-Elaborate**: ReviewMark_ElaborateFlag_WithValidId_OutputsElaboration
 - **ReviewMark-System-Depth**: ReviewMark_DepthFlag_Invoked_SetsDefaultHeadingDepth, ReviewMark_DepthFlag_WithValidate_SetsValidationHeadingDepth
-- **ReviewMark-System-LintValidation**: ReviewMark_LintFlag_WithValidConfig_ProducesNoOutput
+- **ReviewMark-System-LintValidation**: ReviewMark_LintFlag_WithValidConfig_ProducesNoOutput,
+  ReviewMark_LintFlag_WithInvalidConfig_ReportsOnlyIssueMessages
 - **ReviewMark-System-LintSilenceOnSuccess**: ReviewMark_LintFlag_WithValidConfig_ProducesNoOutput
 - **ReviewMark-System-Definition**: ReviewMark_PlanFlag_WithDefinitionFile_GeneratesReviewPlan, ReviewMark_ReportFlag_WithDefinitionFile_GeneratesReviewReport
+- **ReviewMark-System-PlanDepth**: ReviewMark_PlanDepthFlag_Invoked_OverridesPlanHeadingOnly
+- **ReviewMark-System-ReportDepth**: ReviewMark_ReportDepthFlag_Invoked_OverridesReportHeadingOnly
+- **ReviewMark-System-IndexScan-Repeat**: ReviewMark_IndexFlag_WithRepeat_ScansAllPaths

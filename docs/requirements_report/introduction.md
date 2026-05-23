@@ -25,3 +25,8 @@ This document is intended for:
 - Quality assurance teams validating requirements coverage
 - Project stakeholders reviewing test coverage
 - Auditors verifying requirements traceability
+
+## References
+
+- See the *ReviewMark Requirements* document for the full requirements specification.
+- See the [ReviewMark releases](https://github.com/demaconsulting/ReviewMark/releases) for compiled documentation artifacts.

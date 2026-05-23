@@ -147,8 +147,8 @@ sections:
           neither --plan-depth nor --depth is specified.
         tests:
           - Cli_PlanDepthFlag_FlagSupplied_SetsHeadingDepth
-          - Cli_DepthFlag_BelowMinimum_ThrowsArgumentException
-          - Cli_DepthFlag_AboveMaximum_ThrowsArgumentException
+          - Cli_PlanDepthFlag_BelowMinimum_ThrowsArgumentException
+          - Cli_PlanDepthFlag_AboveMaximum_ThrowsArgumentException
         children: [ReviewMark-Context-Parsing]
 
       - id: ReviewMark-Cmd-Report
@@ -168,8 +168,8 @@ sections:
           neither --report-depth nor --depth is specified.
         tests:
           - Cli_ReportDepthFlag_FlagSupplied_SetsHeadingDepth
-          - Cli_DepthFlag_BelowMinimum_ThrowsArgumentException
-          - Cli_DepthFlag_AboveMaximum_ThrowsArgumentException
+          - Cli_ReportDepthFlag_BelowMinimum_ThrowsArgumentException
+          - Cli_ReportDepthFlag_AboveMaximum_ThrowsArgumentException
         children: [ReviewMark-Context-Parsing]
 
       - id: ReviewMark-Cmd-Index
@@ -214,15 +214,20 @@ sections:
         children: [ReviewMark-Config-Reading, ReviewMark-Program-Dispatch]
 
       - id: ReviewMark-Cmd-Lint
-        title: >-
-          The tool shall support --lint flag to validate the definition file, printing only
-          issue messages on failure and producing no output on success.
+        title: The CLI shall validate the definition file and report issue messages on failure.
         justification: |
           Users need a way to verify that the .reviewmark.yaml configuration file is valid
           before running the main tool, providing clear error messages about the cause and
-          location of any issues. Suppressing the banner and summary output on success
-          (silence-on-success) makes lint suitable for direct use in scripts and CI pipelines.
+          location of any issues.
         tests:
-          - Cli_LintFlag_ValidConfig_ReportsSuccess
           - Cli_LintFlag_InvalidConfig_ReportsIssueMessages
         children: [ReviewMark-Config-Loading, ReviewMark-Program-Dispatch, ReviewMark-Program-LintVerbosity]
+
+      - id: ReviewMark-Cmd-LintSilence
+        title: The CLI shall produce no output when validation succeeds.
+        justification: |
+          Suppressing the banner and summary output on success (silence-on-success) makes
+          lint suitable for direct use in scripts and CI pipelines.
+        tests:
+          - Cli_LintFlag_ValidConfig_ReportsSuccess
+        children: [ReviewMark-Program-LintVerbosity]

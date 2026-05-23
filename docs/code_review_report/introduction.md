@@ -1,6 +1,6 @@
 # Introduction
 
-This document contains the review report for the ReviewMark project.
+This document records the completed formal code reviews for DemaConsulting.ReviewMark.
 
 ## Purpose
 
@@ -30,3 +30,7 @@ This document is intended for:
 - Quality assurance teams validating review currency
 - Project stakeholders reviewing compliance status
 - Auditors verifying that all reviews remain valid for the current release
+
+## References
+
+- See the [ReviewMark releases](https://github.com/demaconsulting/ReviewMark/releases) for compiled documentation artifacts.

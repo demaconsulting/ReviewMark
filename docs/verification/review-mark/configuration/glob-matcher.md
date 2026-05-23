@@ -15,6 +15,18 @@ pattern combinations, and assert on the returned file lists.
 `GlobMatcher` has no dependencies on other tool units. All file system operations use
 real temporary directories; no mocking is required.
 
+#### Test Environment
+
+N/A - standard test environment. Tests create temporary directories with controlled file
+layouts in-process using the OS temporary directory; no external tools, services, or
+network access are required. Temporary directories are deleted after each test.
+
+#### Acceptance Criteria
+
+All GlobMatcher unit tests pass with zero failures. Every `ReviewMark-GlobMatcher-*`
+requirement is covered by at least one passing test scenario. Null inputs, empty strings,
+and whitespace base directories produce the correct exception types.
+
 #### Test Scenarios
 
 ##### GlobMatcher_GetMatchingFiles_SingleIncludePattern_ReturnsMatchingFiles

@@ -9,14 +9,14 @@
 # - NEVER add a misspelled word to the 'words' list
 # - PROPOSE only genuine technical terms/names as needed
 
-version: "0.2"
+version: '0.2'
+
 language: en
 
 # Project-specific technical terms and tool names
 words:
-  - behaviour
-  - behaviours
   - buildmark
+  - CIFS
   - Dema
   - fileassert
   - fileshare
@@ -25,38 +25,36 @@ words:
   - nendobj
   - nstartxref
   - pandoc
-  - parallelisation
+  - pdfsharp
   - Pdfs
   - planfile
+  - postconditions
   - Qube
-  - recognised
   - reportfile
   - reqstream
+  - rethrowing
   - reviewmark
   - Sarif
   - sarifmark
   - selftest
   - sonarmark
-  - summarising
-  - unrecognised
   - unreviewed
   - versionmark
   - weasy
   - weasyprint
   - xunit
   - yamlfix
+  - yamldotnet
 
-# Exclude common build artifacts, dependencies, and vendored third-party code
 ignorePaths:
-  - "**/.git/**"
-  - "**/node_modules/**"
-  - "**/.venv/**"
-  - "**/thirdparty/**"
-  - "**/third-party/**"
-  - "**/3rd-party/**"
-  - "**/generated/**"
-  - "**/AGENT_REPORT_*.md"
-  - "**/.agent-logs/**"
-  - "**/bin/**"
-  - "**/obj/**"
+  - '**/.git/**'
+  - '**/node_modules/**'
+  - '**/.venv/**'
+  - '**/thirdparty/**'
+  - '**/third-party/**'
+  - '**/3rd-party/**'
+  - '**/.agent-logs/**'
+  - '**/bin/**'
+  - '**/obj/**'
+  - '**/generated/**'
   - package-lock.json

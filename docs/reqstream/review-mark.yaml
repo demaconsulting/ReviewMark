@@ -52,7 +52,21 @@ sections:
           - ReviewMark_EnforceFlag_WithNoEvidence_ReturnsNonZero
         children:
           - ReviewMark-Cmd-Enforce
-          - ReviewMark-Program-HandleIssues
+          - ReviewMark-Program-HandleIssues-Enforce
+          - ReviewMark-Program-HandleIssues-Warn
+
+      - id: ReviewMark-System-Credentials
+        title: The tool shall support authenticated URL evidence sources via username-env and password-env credentials.
+        justification: |
+          Teams that host their evidence index on a secured HTTP(S) server must be able to
+          provide credentials so that ReviewMark can download the index without manual
+          intervention. Reading credentials from environment variables (username-env and
+          password-env) avoids storing secrets in the configuration file and integrates
+          cleanly with CI/CD secret management.
+        tests:
+          - ReviewMark_LintFlag_WithValidConfig_ProducesNoOutput
+        children:
+          - ReviewMark-Index-EvidenceSource
 
       - id: ReviewMark-System-IndexScan
         title: The tool shall scan PDF evidence files and write an index.json when the --index flag is provided.
@@ -67,6 +81,22 @@ sections:
           - ReviewMark-Cmd-Index
           - ReviewMark-Indexing-SafePathCombine
           - ReviewMark-Indexing-ScanPdfEvidence
+          - ReviewMark-Indexing-Save
+          - ReviewMark-Program-Index
+
+      - id: ReviewMark-System-IndexScan-Repeat
+        title: >-
+          The tool shall accept multiple --index flags in a single invocation to scan
+          evidence organized across multiple directories.
+        justification: |
+          Review evidence PDFs may be organized across several sub-directories. Supporting
+          repeated --index flags allows users to aggregate evidence from all relevant
+          locations into a single index.json without requiring separate tool invocations
+          or manual merging.
+        tests:
+          - ReviewMark_IndexFlag_WithRepeat_ScansAllPaths
+        children:
+          - ReviewMark-Cmd-Index
           - ReviewMark-Program-Index
 
       - id: ReviewMark-System-Validate
@@ -80,6 +110,8 @@ sections:
         children:
           - ReviewMark-Cmd-Validate
           - ReviewMark-SelfTest-Qualification
+          - ReviewMark-SelfTest-ExitCodeOnFailure
+          - ReviewMark-SelfTest-ConsoleSummary
 
       - id: ReviewMark-System-Version
         title: The tool shall display the version string when the --version flag is provided.
@@ -114,13 +146,14 @@ sections:
       - id: ReviewMark-System-Elaborate
         title: The tool shall print a Markdown elaboration of a review set when --elaborate is provided.
         justification: |
-          When preparing for a review, the reviewer needs the review set ID, its current
-          fingerprint, and the full sorted list of files to be reviewed.
+          When preparing for a review, the reviewer needs the review set ID, its title,
+          its current fingerprint, and the full sorted list of files to be reviewed.
         tests:
           - ReviewMark_ElaborateFlag_WithValidId_OutputsElaboration
         children:
           - ReviewMark-Cmd-Elaborate
           - ReviewMark-Configuration-Elaboration
+          - ReviewMark-Configuration-ElaborateUnknownId
 
       - id: ReviewMark-System-LintValidation
         title: The tool shall validate the definition file and report only issue messages when --lint is provided.
@@ -130,6 +163,7 @@ sections:
           summary) keeps the output suitable for direct use in linting scripts and CI pipelines.
         tests:
           - ReviewMark_LintFlag_WithValidConfig_ProducesNoOutput
+          - ReviewMark_LintFlag_WithInvalidConfig_ReportsIssueMessages
         children:
           - ReviewMark-Cmd-Lint
           - ReviewMark-Program-LintVerbosity
@@ -168,23 +202,43 @@ sections:
 
       - id: ReviewMark-System-Depth
         title: >-
-          The tool shall apply the --depth flag as the default Markdown heading
-          depth for all generated documents, unless overridden by --plan-depth
-          or --report-depth.
+          The tool shall apply the --depth flag as the default Markdown heading depth
+          for all generated documents.
         justification: |
           Allows users to set the heading depth once and have it apply to the review plan,
-          review report, and self-validation report, unless a more specific flag is provided.
-          Default depth is 1 when not specified.
-          Note: These three flags (--depth, --plan-depth, --report-depth) are grouped in a single
-          requirement because they form a coherent depth-override mechanism; the per-command flags
-          are only meaningful in the context of the default, and all three are tested together in
-          each depth test scenario.
+          review report, and self-validation report. Default depth is 1 when not specified.
         tests:
           - ReviewMark_DepthFlag_Invoked_SetsDefaultHeadingDepth
           - ReviewMark_DepthFlag_WithValidate_SetsValidationHeadingDepth
         children:
           - ReviewMark-Cmd-Depth
+
+      - id: ReviewMark-System-PlanDepth
+        title: >-
+          The tool shall apply the --plan-depth flag to override the Markdown heading depth
+          for the review plan document only.
+        justification: |
+          Allows the review plan to be embedded at any heading level within a larger Markdown
+          document, overriding the --depth default when specified. Default depth is 1 when
+          neither --plan-depth nor --depth is specified.
+        tests:
+          - ReviewMark_DepthFlag_Invoked_SetsDefaultHeadingDepth
+          - ReviewMark_PlanDepthFlag_Invoked_OverridesPlanHeadingOnly
+        children:
           - ReviewMark-Cmd-PlanDepth
+
+      - id: ReviewMark-System-ReportDepth
+        title: >-
+          The tool shall apply the --report-depth flag to override the Markdown heading depth
+          for the review report document only.
+        justification: |
+          Allows the review report to be embedded at any heading level within a larger Markdown
+          document, overriding the --depth default when specified. Default depth is 1 when
+          neither --report-depth nor --depth is specified.
+        tests:
+          - ReviewMark_DepthFlag_Invoked_SetsDefaultHeadingDepth
+          - ReviewMark_ReportDepthFlag_Invoked_OverridesReportHeadingOnly
+        children:
           - ReviewMark-Cmd-ReportDepth
 
       - id: ReviewMark-System-InvalidArgs
@@ -198,7 +252,8 @@ sections:
           - ReviewMark-Cmd-InvalidArgs
           - ReviewMark-Cmd-ErrorOutput
           - ReviewMark-Cmd-ExitCode
-          - ReviewMark-Program-EntryPoint
+          - ReviewMark-Program-ParseArguments
+          - ReviewMark-Program-ExitCode
 
       - id: ReviewMark-System-Results
         title: The tool shall write validation results to a standard test result file when --results is provided.
@@ -210,7 +265,8 @@ sections:
           - ReviewMark_ValidateFlag_WithXmlResultsPath_GeneratesJUnitFile
         children:
           - ReviewMark-Cmd-Results
-          - ReviewMark-SelfTest-ResultsOutput
+          - ReviewMark-SelfTest-ResultsOutput-Trx
+          - ReviewMark-SelfTest-ResultsOutput-Junit
 
       - id: ReviewMark-System-Definition
         title: The tool shall support a --definition flag to specify the path to the definition YAML file.
@@ -223,3 +279,36 @@ sections:
           - ReviewMark_PlanFlag_WithDefinitionFile_GeneratesReviewPlan
         children:
           - ReviewMark-Cmd-Definition
+          - ReviewMark-Configuration-MalformedYaml
+
+      - id: ReviewMark-System-CrossPlatform
+        title: The tool shall run on Windows, Linux, and macOS with .NET 8, 9, and 10.
+        justification: |
+          DEMA Consulting tools must run on all major operating systems and current .NET
+          runtimes so that teams can use ReviewMark regardless of their development or CI/CD
+          platform. Supporting .NET 8 (LTS), 9, and 10 ensures long-term compatibility and
+          access to the latest runtime features.
+        tests:
+          - ReviewMark_VersionFlag_Invoked_OutputsVersion
+        children:
+          - ReviewMark-Platform-Windows
+          - ReviewMark-Platform-Linux
+          - ReviewMark-Platform-MacOS
+          - ReviewMark-Platform-Net8
+          - ReviewMark-Platform-Net9
+          - ReviewMark-Platform-Net10
+
+      - id: ReviewMark-System-ExecutionContext
+        title: The tool shall parse command-line arguments into a structured execution context and maintain execution state
+          for the duration of the operation.
+        justification: |
+          All downstream processing must read from a single, validated source of truth
+          derived from the command-line arguments, and all output channels and exit-code
+          state must be managed consistently for the full duration of an invocation. This
+          ensures predictable, auditable behavior in both interactive and CI/CD environments.
+        tests:
+          - ReviewMark_VersionFlag_Invoked_OutputsVersion
+          - ReviewMark_UnknownArgument_Provided_ReturnsNonZeroAndError
+        children:
+          - ReviewMark-Cmd-Context
+          - ReviewMark-Cmd-ExecutionState

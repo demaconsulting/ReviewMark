@@ -1,5 +1,7 @@
 ## Pandoc
 
+### Verification Approach
+
 **Component**: Pandoc (<https://pandoc.org/>)
 **Role**: Converts Markdown source documents into valid HTML as part of the documentation
 build pipeline. WeasyPrint subsequently renders the HTML to PDF.
@@ -9,7 +11,7 @@ Pandoc is a widely adopted open-source universal document converter with over a 
 of active development, extensive automated testing, and broad production usage.
 
 ReviewMark does not embed Pandoc; it is an external build dependency. Correct Pandoc
-behaviour is confirmed by FileAssert integration tests in the GitHub Actions CI workflow
+behavior is confirmed by FileAssert integration tests in the GitHub Actions CI workflow
 (`build.yaml`), which run within the `build-docs` job. Each document group has a
 dedicated Pandoc HTML generation step followed by a FileAssert validation step that
 asserts the HTML file exists, contains a valid `<title>` element, and includes expected
@@ -46,7 +48,28 @@ content strings.
   "User Guide" content. CI Evidence: "Assert User Guide Documents with FileAssert"
   step → `artifacts/fileassert-user-guide.trx`.
 
-Each scenario directly satisfies `ReviewMark-OTS-Pandoc` by providing FileAssert-verified
-evidence that Pandoc converted Markdown to well-formed HTML containing expected content.
+### Requirements Coverage
 
-**Requirement coverage**: `ReviewMark-OTS-Pandoc`
+- **ReviewMark-Pandoc-ConvertMarkdown**: Pandoc shall convert Markdown documents to HTML
+  containing a valid title element and expected document content.
+  - *Pandoc_BuildNotesHtml*: verifies Pandoc generates `build_notes.html` with a valid title
+    element and expected "Build Notes" content.
+    - `Pandoc_BuildNotesHtml`
+  - *Pandoc_CodeQualityHtml*: verifies Pandoc generates `quality.html` with a valid title
+    element and expected "CodeQL" content.
+    - `Pandoc_CodeQualityHtml`
+  - *Pandoc_ReviewPlanHtml*: verifies Pandoc generates `plan.html` with a valid title element
+    and expected "Review Plan" content.
+    - `Pandoc_ReviewPlanHtml`
+  - *Pandoc_ReviewReportHtml*: verifies Pandoc generates `report.html` with a valid title
+    element and expected "Review Report" content.
+    - `Pandoc_ReviewReportHtml`
+  - *Pandoc_DesignHtml*: verifies Pandoc generates `design.html` with a valid title element
+    and expected "Design" content.
+    - `Pandoc_DesignHtml`
+  - *Pandoc_VerificationHtml*: verifies Pandoc generates `verification.html` with a valid
+    title element and expected "Verification" content.
+    - `Pandoc_VerificationHtml`
+  - *Pandoc_UserGuideHtml*: verifies Pandoc generates `user_guide.html` with a valid title
+    element and expected "User Guide" content.
+    - `Pandoc_UserGuideHtml`

@@ -106,5 +106,5 @@ sections:
           a clear message enables callers to detect and report the mistake immediately rather
           than silently producing empty output.
         tests:
-          - Configuration_LoadConfig_ElaborateUnknownId_ThrowsArgumentException
+          - Configuration_ElaborateReviewSet_UnknownId_ThrowsArgumentException
         children: [ReviewMark-Config-ElaborationUnknownIdRejection]

@@ -1,0 +1,27 @@
+---
+# PDFsharp OTS Software Requirements
+#
+# Requirements for the PDFsharp PDF import library.
+
+sections:
+  - title: OTS Software Requirements
+    sections:
+      - title: PDFsharp Requirements
+        requirements:
+          - id: ReviewMark-OTS-PDFsharp-ReadMetadata
+            title: >-
+              PDFsharp shall provide access to the Keywords metadata field of a PDF document opened in import mode.
+            justification: |
+              ReviewMark reads the review identifier and content fingerprint from the Keywords field
+              of each evidence PDF. PDFsharp's PdfDocumentOpenMode.Import provides lightweight
+              read-only access to the document information dictionary without loading full content
+              streams, allowing ReviewMark to scan large PDF collections efficiently.
+            tags: [ots]
+            tests:
+              - PdfReader_Open_ImportMode_ExposesKeywordsField
+              - PdfReader_Open_ImportMode_NoKeywords_ReturnsNullOrEmpty
+              - ReviewIndex_Scan_PdfWithValidMetadata_PopulatesIndex
+              - ReviewIndex_Scan_PdfWithNoKeywords_SkipsWithWarning
+              - ReviewIndex_Scan_PdfWithMissingId_SkipsWithWarning
+              - ReviewIndex_Scan_PdfWithMissingFingerprint_SkipsWithWarning
+              - ReviewIndex_Scan_MultiplePdfs_PopulatesAllEntries
