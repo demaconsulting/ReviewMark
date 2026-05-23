@@ -1,8 +1,8 @@
 ---
-title: ReviewMark
-subtitle: Build Notes
+title: ReviewMark Build Notes
+subtitle: Automated file-review evidence management
 author: DEMA Consulting
-description: Build notes for ReviewMark
+description: Build Notes for ReviewMark
 lang: en-US
 keywords:
   - ReviewMark
@@ -10,5 +10,5 @@ keywords:
   - Release Notes
   - C#
   - .NET
-  - Documentation
+  - Compliance
 ---

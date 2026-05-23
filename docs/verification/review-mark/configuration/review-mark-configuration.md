@@ -1,360 +1,96 @@
-### ReviewMarkConfiguration Verification
-
-This document describes the unit-level verification design for the `ReviewMarkConfiguration`
-unit. It defines the test scenarios, dependency usage, and requirement coverage for
-`Configuration/ReviewMarkConfiguration.cs`.
+### ReviewMarkConfiguration
 
 #### Verification Approach
 
-`ReviewMarkConfiguration` is verified with unit tests in `ReviewMarkConfigurationTests.cs`.
-Tests parse inline YAML strings or load from temporary files, then assert on the resulting
-configuration model properties and generated Markdown output.
-
-#### Dependencies
-
-`ReviewMarkConfiguration` depends on `GlobMatcher` for file resolution, but these
-unit tests exercise the full stack with real temporary files rather than mocks, because
-the integration is simple and deterministic.
+ReviewMarkConfiguration unit verification uses `ReviewMarkConfigurationTests.cs` with inline YAML strings, temporary configuration files, real `GlobMatcher` file resolution, and `ReviewIndex` fixtures where report generation requires evidence. The tests validate parsing, integrated linting, fingerprinting, Markdown generation, elaboration, and issue reporting through the unit's public surface rather than through mocks.
 
 #### Test Environment
 
-N/A - standard test environment. Tests parse inline YAML strings or write temporary YAML
-definition files in-process; no external services or network access are required.
-Temporary files and directories are created and deleted within each test.
+N/A - standard test environment. Tests run under xUnit on .NET 8, 9, and 10, create temporary YAML and source files in-process, and require no external services or network access.
 
 #### Acceptance Criteria
 
-All ReviewMarkConfiguration unit tests pass with zero failures. Every `ReviewMark-Config-*`
-requirement is covered by at least one passing test scenario. Null inputs, non-existent
-files, invalid YAML, missing evidence-source blocks, and duplicate review-set IDs all
-produce the specified exception or error-level load result.
+- All ReviewMarkConfiguration unit tests pass with zero failures.
+- Each `ReviewMark-Config-*` requirement is traced to at least one scenario and test method.
+- Configuration loading returns deterministic diagnostics, fingerprints remain content based, and generated Markdown honors the requested heading depth constraints.
 
 #### Test Scenarios
 
-##### ReviewMarkConfiguration_Parse_NullYaml_ThrowsArgumentNullException
+**ReviewMarkConfiguration_Parse_NullYaml_ThrowsArgumentNullException**: `ReviewMarkConfiguration.Parse` is called with null. Expected outcome: `ArgumentNullException` is thrown. Boundary or error path: Null input rejection. Requirement coverage: `ReviewMark-Config-Reading`. This scenario is tested by `ReviewMarkConfiguration_Parse_NullYaml_ThrowsArgumentNullException`.
 
-**Scenario**: `ReviewMarkConfiguration.Parse` is called with null.
+**ReviewMarkConfiguration_Parse_ValidYaml_ReturnsConfiguration**: `ReviewMarkConfiguration.Parse` is called with valid YAML. Expected outcome: Returns a non-null configuration object. Requirement coverage: `ReviewMark-Config-Reading`. This scenario is tested by `ReviewMarkConfiguration_Parse_ValidYaml_ReturnsConfiguration`.
 
-**Expected**: `ArgumentNullException` is thrown.
+**ReviewMarkConfiguration_Load_ValidFile_ReturnsConfigurationAndNoIssues**: `ReviewMarkConfiguration.Load` is called with a valid definition file. Expected outcome: Returns a result with non-null configuration and no issues. Requirement coverage: `ReviewMark-Config-Loading`. This scenario is tested by `ReviewMarkConfiguration_Load_ValidFile_ReturnsConfigurationAndNoIssues`.
 
-**Boundary / error path**: Null input rejection.
+**ReviewMarkConfiguration_Load_NonExistentFile_ReturnsNullConfigWithErrorIssue**: `ReviewMarkConfiguration.Load` is called with a path that does not exist. Expected outcome: Result has null configuration and at least one error-level issue. Boundary or error path: Missing file handling. Requirement coverage: `ReviewMark-Config-LoadingNullOnError`. This scenario is tested by `ReviewMarkConfiguration_Load_NonExistentFile_ReturnsNullConfigWithErrorIssue`.
 
-**Requirement coverage**: `ReviewMark-Config-Reading`
+**ReviewMarkConfiguration_Load_MissingEvidenceSource_ReturnsNullConfigWithErrorIssue**: `ReviewMarkConfiguration.Load` is called with a YAML missing `evidence-source`. Expected outcome: Result has null configuration and at least one error-level issue. Requirement coverage: `ReviewMark-Config-Loading`, `ReviewMark-Config-LoadingNullOnError`. This scenario is tested by `ReviewMarkConfiguration_Load_MissingEvidenceSource_ReturnsNullConfigWithErrorIssue`.
 
-##### ReviewMarkConfiguration_Parse_ValidYaml_ReturnsConfiguration
+**ReviewMarkConfiguration_PublishReviewPlan_AllCovered_NoIssues**: `PublishReviewPlan` is called when all needs-review files are covered. Expected outcome: Returned markdown contains plan content; no issues. Requirement coverage: `ReviewMark-Config-PlanGeneration`. This scenario is tested by `ReviewMarkConfiguration_PublishReviewPlan_AllCovered_NoIssues`.
 
-**Scenario**: `ReviewMarkConfiguration.Parse` is called with valid YAML.
+**ReviewMarkConfiguration_PublishReviewReport_CurrentReview_NoIssues**: `PublishReviewReport` is called with a current review in the index. Expected outcome: Report markdown shows "Current" status; no issues. Requirement coverage: `ReviewMark-Config-ReportGeneration`. This scenario is tested by `ReviewMarkConfiguration_PublishReviewReport_CurrentReview_NoIssues`.
 
-**Expected**: Returns a non-null configuration object.
+**ReviewMarkConfiguration_ElaborateReviewSet_ValidId_ReturnsElaboration**: `ElaborateReviewSet` is called with a valid review set ID. Expected outcome: Returns markdown containing the ID, fingerprint, and file list. Requirement coverage: `ReviewMark-Config-Elaboration`. This scenario is tested by `ReviewMarkConfiguration_ElaborateReviewSet_ValidId_ReturnsElaboration`.
 
-**Requirement coverage**: `ReviewMark-Config-Reading`
+**ReviewMarkConfiguration_ElaborateReviewSet_UnknownId_ThrowsArgumentException**: `ElaborateReviewSet` is called with an ID not in the configuration. Expected outcome: `ArgumentException` is thrown. Boundary or error path: Unknown review set ID. Requirement coverage: `ReviewMark-Config-ElaborationUnknownIdRejection`. This scenario is tested by `ReviewMarkConfiguration_ElaborateReviewSet_UnknownId_ThrowsArgumentException`.
 
-##### ReviewMarkConfiguration_Load_ValidFile_ReturnsConfigurationAndNoIssues
+**ReviewMarkConfiguration_Parse_NeedsReviewPatterns_ParsedCorrectly**: `ReviewMarkConfiguration.Parse` is called with YAML containing three `needs-review` patterns. Expected outcome: `NeedsReviewPatterns` contains all three patterns in order. Requirement coverage: `ReviewMark-Config-Reading`. This scenario is tested by `ReviewMarkConfiguration_Parse_NeedsReviewPatterns_ParsedCorrectly`.
 
-**Scenario**: `ReviewMarkConfiguration.Load` is called with a valid definition file.
+**ReviewMarkConfiguration_Parse_EvidenceSource_ParsedCorrectly**: `ReviewMarkConfiguration.Parse` is called with YAML containing a `url` evidence source. Expected outcome: `EvidenceSource.Type` is `"url"`, `Location` is set, credentials are null. Requirement coverage: `ReviewMark-Config-Reading`. This scenario is tested by `ReviewMarkConfiguration_Parse_EvidenceSource_ParsedCorrectly`.
 
-**Expected**: Returns a result with non-null configuration and no issues.
+**ReviewMarkConfiguration_Parse_Reviews_ParsedCorrectly**: `ReviewMarkConfiguration.Parse` is called with YAML containing one review. Expected outcome: `Reviews` has one entry with expected `Id`, `Title`, and `Paths`. Requirement coverage: `ReviewMark-Config-Reading`. This scenario is tested by `ReviewMarkConfiguration_Parse_Reviews_ParsedCorrectly`.
 
-**Requirement coverage**: `ReviewMark-Config-Loading`
+**ReviewMarkConfiguration_Parse_EvidenceSourceWithCredentials_ParsedCorrectly**: `ReviewMarkConfiguration.Parse` is called with YAML containing credential environment variable names. Expected outcome: `EvidenceSource.UsernameEnv` and `PasswordEnv` are set correctly. Requirement coverage: `ReviewMark-Config-Reading`. This scenario is tested by `ReviewMarkConfiguration_Parse_EvidenceSourceWithCredentials_ParsedCorrectly`.
 
-##### ReviewMarkConfiguration_Load_NonExistentFile_ReturnsNullConfigWithErrorIssue
+**ReviewMarkConfiguration_GetNeedsReviewFiles_ReturnsMatchingFiles**: `GetNeedsReviewFiles` is called on a configuration with a `.cs` pattern; one `.cs` and one `.txt` file exist. Expected outcome: Only the `.cs` file is returned. Requirement coverage: `ReviewMark-Config-Reading`. This scenario is tested by `ReviewMarkConfiguration_GetNeedsReviewFiles_ReturnsMatchingFiles`.
 
-**Scenario**: `ReviewMarkConfiguration.Load` is called with a path that does not exist.
+**ReviewSet_GetFingerprint_SameContent_ReturnsSameFingerprint**: Two directories with identical file content; `GetFingerprint` called on each. Expected outcome: Both fingerprints are equal. Requirement coverage: `ReviewMark-Config-Reading`. This scenario is tested by `ReviewSet_GetFingerprint_SameContent_ReturnsSameFingerprint`.
 
-**Expected**: Result has null configuration and at least one error-level issue.
+**ReviewSet_GetFingerprint_DifferentContent_ReturnsDifferentFingerprint**: Two directories with different file content; `GetFingerprint` called on each. Expected outcome: The fingerprints differ. Requirement coverage: `ReviewMark-Config-Reading`. This scenario is tested by `ReviewSet_GetFingerprint_DifferentContent_ReturnsDifferentFingerprint`.
 
-**Boundary / error path**: Missing file handling.
+**ReviewSet_GetFingerprint_RenameFile_ReturnsSameFingerprint**: Two directories where one file differs only in name but has identical content; `GetFingerprint` called on each. Expected outcome: Both fingerprints are equal (content-based, not path-based). Requirement coverage: `ReviewMark-Config-Reading`. This scenario is tested by `ReviewSet_GetFingerprint_RenameFile_ReturnsSameFingerprint`.
 
-**Requirement coverage**: `ReviewMark-Config-LoadingNullOnError`
+**ReviewMarkConfiguration_Load_InvalidYaml_ReturnsNullConfigWithErrorIssue**: `ReviewMarkConfiguration.Load` is called with a file containing invalid YAML syntax. Expected outcome: Result has null configuration and one error issue naming the file and line. Boundary or error path: Invalid YAML syntax. Requirement coverage: `ReviewMark-Config-Loading`, `ReviewMark-Config-LoadingNullOnError`. This scenario is tested by `ReviewMarkConfiguration_Load_InvalidYaml_ReturnsNullConfigWithErrorIssue`.
 
-##### ReviewMarkConfiguration_Load_MissingEvidenceSource_ReturnsNullConfigWithErrorIssue
+**ReviewMarkConfiguration_Load_MultipleErrors_ReturnsAllIssues**: `ReviewMarkConfiguration.Load` is called with a file missing `evidence-source` AND containing duplicate review IDs. Expected outcome: Result has null configuration and both errors are reported (does not stop at first). Requirement coverage: `ReviewMark-Config-Loading`. This scenario is tested by `ReviewMarkConfiguration_Load_MultipleErrors_ReturnsAllIssues`.
 
-**Scenario**: `ReviewMarkConfiguration.Load` is called with a YAML missing
-`evidence-source`.
+**ReviewMarkConfiguration_Load_FileshareRelativeLocation_ResolvesToAbsolutePath**: `ReviewMarkConfiguration.Load` is called with a config having a relative `fileshare` location. Expected outcome: The `EvidenceSource.Location` is resolved to an absolute path under the config file's directory. Requirement coverage: `ReviewMark-Config-Reading`. This scenario is tested by `ReviewMarkConfiguration_Load_FileshareRelativeLocation_ResolvesToAbsolutePath`.
 
-**Expected**: Result has null configuration and at least one error-level issue.
+**ReviewMarkConfiguration_Load_NoneEvidenceSource_NoIssues**: `ReviewMarkConfiguration.Load` is called with a config having `evidence-source: type: none`. Expected outcome: No issues; configuration is non-null. Requirement coverage: `ReviewMark-Config-Loading`. This scenario is tested by `ReviewMarkConfiguration_Load_NoneEvidenceSource_NoIssues`.
 
-**Requirement coverage**: `ReviewMark-Config-Loading`, `ReviewMark-Config-LoadingNullOnError`
+**ReviewMarkLoadResult_ReportIssues_RoutesIssuesToContext**: A `ReviewMarkLoadResult` with one warning and one error calls `ReportIssues` on a context. Expected outcome: Exit code is 1; both messages appear in the log. Requirement coverage: `ReviewMark-Config-Loading`. This scenario is tested by `ReviewMarkLoadResult_ReportIssues_RoutesIssuesToContext`.
 
-##### ReviewMarkConfiguration_PublishReviewPlan_AllCovered_NoIssues
+**ReviewMarkConfiguration_Load_WhitespaceOnlyPaths_ReturnsLintError**: `ReviewMarkConfiguration.Load` is called with a config whose review set paths list contains only whitespace. Expected outcome: Null configuration with a lint error referencing `"paths"`. Requirement coverage: `ReviewMark-Config-Loading`. This scenario is tested by `ReviewMarkConfiguration_Load_WhitespaceOnlyPaths_ReturnsLintError`.
 
-**Scenario**: `PublishReviewPlan` is called when all needs-review files are covered.
+**ReviewMarkConfiguration_Parse_NoneEvidenceSource_ParsedCorrectly**: `ReviewMarkConfiguration.Parse` is called with YAML containing `evidence-source: type: none`. Expected outcome: `EvidenceSource.Type` is `"none"` and `Location` is empty. Requirement coverage: `ReviewMark-Config-Reading`. This scenario is tested by `ReviewMarkConfiguration_Parse_NoneEvidenceSource_ParsedCorrectly`.
 
-**Expected**: Returned markdown contains plan content; no issues.
+**ReviewMarkConfiguration_Parse_NoneEvidenceSource_NoLocationRequired**: `ReviewMarkConfiguration.Parse` is called with YAML containing a `none` source and no `location` field. Expected outcome: Parsing succeeds without throwing; `EvidenceSource.Type` is `"none"`. Requirement coverage: `ReviewMark-Config-Reading`. This scenario is tested by `ReviewMarkConfiguration_Parse_NoneEvidenceSource_NoLocationRequired`.
 
-**Requirement coverage**: `ReviewMark-Config-PlanGeneration`
+**ReviewMarkConfiguration_PublishReviewPlan_UncoveredFiles_HasIssues**: `PublishReviewPlan` is called when at least one needs-review file is not covered by any review set. Expected outcome: `HasIssues` is true; the uncovered file appears in the Markdown. Requirement coverage: `ReviewMark-Config-PlanGeneration`. This scenario is tested by `ReviewMarkConfiguration_PublishReviewPlan_UncoveredFiles_HasIssues`.
 
-##### ReviewMarkConfiguration_PublishReviewReport_CurrentReview_NoIssues
+**ReviewMarkConfiguration_PublishReviewPlan_MarkdownDepth_UsedForHeadings**: `PublishReviewPlan` is called with `markdownDepth: 2`. Expected outcome: Main heading is at level 2; subheading at level 3. Requirement coverage: `ReviewMark-Config-PlanMarkdownDepth`. This scenario is tested by `ReviewMarkConfiguration_PublishReviewPlan_MarkdownDepth_UsedForHeadings`.
 
-**Scenario**: `PublishReviewReport` is called with a current review in the index.
+**ReviewMarkConfiguration_PublishReviewPlan_MarkdownDepthAbove5_Throws**: `PublishReviewPlan` is called with `markdownDepth: 6`. Expected outcome: `ArgumentOutOfRangeException` is thrown. Boundary or error path: Depth exceeds maximum. Requirement coverage: `ReviewMark-Config-PlanMarkdownDepthValidation`. This scenario is tested by `ReviewMarkConfiguration_PublishReviewPlan_MarkdownDepthAbove5_Throws`.
 
-**Expected**: Report markdown shows "Current" status; no issues.
+**ReviewMarkConfiguration_PublishReviewReport_StaleReview_HasIssues**: `PublishReviewReport` is called with an index having an outdated fingerprint. Expected outcome: `HasIssues` is true; Markdown shows "Stale". Requirement coverage: `ReviewMark-Config-ReportGeneration`. This scenario is tested by `ReviewMarkConfiguration_PublishReviewReport_StaleReview_HasIssues`.
 
-**Requirement coverage**: `ReviewMark-Config-ReportGeneration`
+**ReviewMarkConfiguration_PublishReviewReport_FailedReview_HasIssues**: `PublishReviewReport` is called with an index having a matching fingerprint but a failing result. Expected outcome: `HasIssues` is true; Markdown shows "Failed". Requirement coverage: `ReviewMark-Config-ReportGeneration`. This scenario is tested by `ReviewMarkConfiguration_PublishReviewReport_FailedReview_HasIssues`.
 
-##### ReviewMarkConfiguration_ElaborateReviewSet_ValidId_ReturnsElaboration
+**ReviewMarkConfiguration_PublishReviewReport_MissingReview_HasIssues**: `PublishReviewReport` is called with an empty index. Expected outcome: `HasIssues` is true; Markdown shows "Missing". Requirement coverage: `ReviewMark-Config-ReportGeneration`. This scenario is tested by `ReviewMarkConfiguration_PublishReviewReport_MissingReview_HasIssues`.
 
-**Scenario**: `ElaborateReviewSet` is called with a valid review set ID.
+**ReviewMarkConfiguration_PublishReviewReport_MarkdownDepth_UsedForHeadings**: `PublishReviewReport` is called with `markdownDepth: 2`. Expected outcome: Main heading starts with `" ## Review Status"`. Requirement coverage: `ReviewMark-Config-ReportMarkdownDepth`. This scenario is tested by `ReviewMarkConfiguration_PublishReviewReport_MarkdownDepth_UsedForHeadings`.
 
-**Expected**: Returns markdown containing the ID, fingerprint, and file list.
+**ReviewMarkConfiguration_PublishReviewReport_MarkdownDepthAbove5_Throws**: `PublishReviewReport` is called with `markdownDepth: 6`. Expected outcome: `ArgumentOutOfRangeException` is thrown. Boundary or error path: Depth exceeds maximum. Requirement coverage: `ReviewMark-Config-ReportMarkdownDepthValidation`. This scenario is tested by `ReviewMarkConfiguration_PublishReviewReport_MarkdownDepthAbove5_Throws`.
 
-**Requirement coverage**: `ReviewMark-Config-Elaboration`
+**ReviewMarkConfiguration_ElaborateReviewSet_NullId_ThrowsArgumentNullException**: `ElaborateReviewSet` is called with null as the ID. Expected outcome: `ArgumentNullException` is thrown. Boundary or error path: Null ID rejection. Requirement coverage: `ReviewMark-Config-ElaborationNullRejection`. This scenario is tested by `ReviewMarkConfiguration_ElaborateReviewSet_NullId_ThrowsArgumentNullException`.
 
-##### ReviewMarkConfiguration_ElaborateReviewSet_UnknownId_ThrowsArgumentException
+**ReviewMarkConfiguration_ElaborateReviewSet_WhitespaceId_ThrowsArgumentException**: `ElaborateReviewSet` is called with a whitespace-only string as the ID. Expected outcome: `ArgumentException` is thrown. Boundary or error path: Whitespace/empty ID rejection. Requirement coverage: `ReviewMark-Config-ElaborationNullRejection`. This scenario is tested by `ReviewMarkConfiguration_ElaborateReviewSet_WhitespaceId_ThrowsArgumentException`.
 
-**Scenario**: `ElaborateReviewSet` is called with an ID not in the configuration.
+**ReviewMarkConfiguration_ElaborateReviewSet_ContainsFullFingerprint**: `ElaborateReviewSet` is called with a valid ID and a source file present. Expected outcome: The full 64-character hex fingerprint appears in the Markdown. Requirement coverage: `ReviewMark-Config-Elaboration`. This scenario is tested by `ReviewMarkConfiguration_ElaborateReviewSet_ContainsFullFingerprint`.
 
-**Expected**: `ArgumentException` is thrown.
+**ReviewMarkConfiguration_ElaborateReviewSet_MarkdownDepth_UsedForHeadings**: `ElaborateReviewSet` is called with `markdownDepth: 2`. Expected outcome: Main heading starts with `" ## Core-Logic"`; Files subheading at level 3. Requirement coverage: `ReviewMark-Config-ElaborationMarkdownDepth`. This scenario is tested by `ReviewMarkConfiguration_ElaborateReviewSet_MarkdownDepth_UsedForHeadings`.
 
-**Boundary / error path**: Unknown review set ID.
-
-**Requirement coverage**: `ReviewMark-Config-ElaborationUnknownIdRejection`
-
-##### ReviewMarkConfiguration_Parse_NeedsReviewPatterns_ParsedCorrectly
-
-**Scenario**: `ReviewMarkConfiguration.Parse` is called with YAML containing three `needs-review` patterns.
-
-**Expected**: `NeedsReviewPatterns` contains all three patterns in order.
-
-**Requirement coverage**: `ReviewMark-Config-Reading`
-
-##### ReviewMarkConfiguration_Parse_EvidenceSource_ParsedCorrectly
-
-**Scenario**: `ReviewMarkConfiguration.Parse` is called with YAML containing a `url` evidence source.
-
-**Expected**: `EvidenceSource.Type` is `"url"`, `Location` is set, credentials are null.
-
-**Requirement coverage**: `ReviewMark-Config-Reading`
-
-##### ReviewMarkConfiguration_Parse_Reviews_ParsedCorrectly
-
-**Scenario**: `ReviewMarkConfiguration.Parse` is called with YAML containing one review.
-
-**Expected**: `Reviews` has one entry with expected `Id`, `Title`, and `Paths`.
-
-**Requirement coverage**: `ReviewMark-Config-Reading`
-
-##### ReviewMarkConfiguration_Parse_EvidenceSourceWithCredentials_ParsedCorrectly
-
-**Scenario**: `ReviewMarkConfiguration.Parse` is called with YAML containing credential environment variable names.
-
-**Expected**: `EvidenceSource.UsernameEnv` and `PasswordEnv` are set correctly.
-
-**Requirement coverage**: `ReviewMark-Config-Reading`
-
-##### ReviewMarkConfiguration_GetNeedsReviewFiles_ReturnsMatchingFiles
-
-**Scenario**: `GetNeedsReviewFiles` is called on a configuration with a `.cs` pattern; one `.cs` and one `.txt` file exist.
-
-**Expected**: Only the `.cs` file is returned.
-
-**Requirement coverage**: `ReviewMark-Config-Reading`
-
-##### ReviewSet_GetFingerprint_SameContent_ReturnsSameFingerprint
-
-**Scenario**: Two directories with identical file content; `GetFingerprint` called on each.
-
-**Expected**: Both fingerprints are equal.
-
-**Requirement coverage**: `ReviewMark-Config-Reading`
-
-##### ReviewSet_GetFingerprint_DifferentContent_ReturnsDifferentFingerprint
-
-**Scenario**: Two directories with different file content; `GetFingerprint` called on each.
-
-**Expected**: The fingerprints differ.
-
-**Requirement coverage**: `ReviewMark-Config-Reading`
-
-##### ReviewSet_GetFingerprint_RenameFile_ReturnsSameFingerprint
-
-**Scenario**: Two directories where one file differs only in name but has identical
-content; `GetFingerprint` called on each.
-
-**Expected**: Both fingerprints are equal (content-based, not path-based).
-
-**Requirement coverage**: `ReviewMark-Config-Reading`
-
-##### ReviewMarkConfiguration_Load_InvalidYaml_ReturnsNullConfigWithErrorIssue
-
-**Scenario**: `ReviewMarkConfiguration.Load` is called with a file containing invalid YAML syntax.
-
-**Expected**: Result has null configuration and one error issue naming the file and line.
-
-**Boundary / error path**: Invalid YAML syntax.
-
-**Requirement coverage**: `ReviewMark-Config-Loading`, `ReviewMark-Config-LoadingNullOnError`
-
-##### ReviewMarkConfiguration_Load_MultipleErrors_ReturnsAllIssues
-
-**Scenario**: `ReviewMarkConfiguration.Load` is called with a file missing
-`evidence-source` AND containing duplicate review IDs.
-
-**Expected**: Result has null configuration and both errors are reported (does not stop at first).
-
-**Requirement coverage**: `ReviewMark-Config-Loading`
-
-##### ReviewMarkConfiguration_Load_FileshareRelativeLocation_ResolvesToAbsolutePath
-
-**Scenario**: `ReviewMarkConfiguration.Load` is called with a config having a relative `fileshare` location.
-
-**Expected**: The `EvidenceSource.Location` is resolved to an absolute path under the config file's directory.
-
-**Requirement coverage**: `ReviewMark-Config-Reading`
-
-##### ReviewMarkConfiguration_Load_NoneEvidenceSource_NoIssues
-
-**Scenario**: `ReviewMarkConfiguration.Load` is called with a config having `evidence-source: type: none`.
-
-**Expected**: No issues; configuration is non-null.
-
-**Requirement coverage**: `ReviewMark-Config-Loading`
-
-##### ReviewMarkLoadResult_ReportIssues_RoutesIssuesToContext
-
-**Scenario**: A `ReviewMarkLoadResult` with one warning and one error calls `ReportIssues` on a context.
-
-**Expected**: Exit code is 1; both messages appear in the log.
-
-**Requirement coverage**: `ReviewMark-Config-Loading`
-
-##### ReviewMarkConfiguration_Load_WhitespaceOnlyPaths_ReturnsLintError
-
-**Scenario**: `ReviewMarkConfiguration.Load` is called with a config whose review set paths list contains only whitespace.
-
-**Expected**: Null configuration with a lint error referencing `"paths"`.
-
-**Requirement coverage**: `ReviewMark-Config-Loading`
-
-##### ReviewMarkConfiguration_Parse_NoneEvidenceSource_ParsedCorrectly
-
-**Scenario**: `ReviewMarkConfiguration.Parse` is called with YAML containing `evidence-source: type: none`.
-
-**Expected**: `EvidenceSource.Type` is `"none"` and `Location` is empty.
-
-**Requirement coverage**: `ReviewMark-Config-Reading`
-
-##### ReviewMarkConfiguration_Parse_NoneEvidenceSource_NoLocationRequired
-
-**Scenario**: `ReviewMarkConfiguration.Parse` is called with YAML containing a `none` source and no `location` field.
-
-**Expected**: Parsing succeeds without throwing; `EvidenceSource.Type` is `"none"`.
-
-**Requirement coverage**: `ReviewMark-Config-Reading`
-
-##### ReviewMarkConfiguration_PublishReviewPlan_UncoveredFiles_HasIssues
-
-**Scenario**: `PublishReviewPlan` is called when at least one needs-review file is not covered by any review set.
-
-**Expected**: `HasIssues` is true; the uncovered file appears in the Markdown.
-
-**Requirement coverage**: `ReviewMark-Config-PlanGeneration`
-
-##### ReviewMarkConfiguration_PublishReviewPlan_MarkdownDepth_UsedForHeadings
-
-**Scenario**: `PublishReviewPlan` is called with `markdownDepth: 2`.
-
-**Expected**: Main heading is at level 2; subheading at level 3.
-
-**Requirement coverage**: `ReviewMark-Config-PlanMarkdownDepth`
-
-##### ReviewMarkConfiguration_PublishReviewPlan_MarkdownDepthAbove5_Throws
-
-**Scenario**: `PublishReviewPlan` is called with `markdownDepth: 6`.
-
-**Expected**: `ArgumentOutOfRangeException` is thrown.
-
-**Boundary / error path**: Depth exceeds maximum.
-
-**Requirement coverage**: `ReviewMark-Config-PlanMarkdownDepthValidation`
-
-##### ReviewMarkConfiguration_PublishReviewReport_StaleReview_HasIssues
-
-**Scenario**: `PublishReviewReport` is called with an index having an outdated fingerprint.
-
-**Expected**: `HasIssues` is true; Markdown shows "Stale".
-
-**Requirement coverage**: `ReviewMark-Config-ReportGeneration`
-
-##### ReviewMarkConfiguration_PublishReviewReport_FailedReview_HasIssues
-
-**Scenario**: `PublishReviewReport` is called with an index having a matching fingerprint but a failing result.
-
-**Expected**: `HasIssues` is true; Markdown shows "Failed".
-
-**Requirement coverage**: `ReviewMark-Config-ReportGeneration`
-
-##### ReviewMarkConfiguration_PublishReviewReport_MissingReview_HasIssues
-
-**Scenario**: `PublishReviewReport` is called with an empty index.
-
-**Expected**: `HasIssues` is true; Markdown shows "Missing".
-
-**Requirement coverage**: `ReviewMark-Config-ReportGeneration`
-
-##### ReviewMarkConfiguration_PublishReviewReport_MarkdownDepth_UsedForHeadings
-
-**Scenario**: `PublishReviewReport` is called with `markdownDepth: 2`.
-
-**Expected**: Main heading starts with `"## Review Status"`.
-
-**Requirement coverage**: `ReviewMark-Config-ReportMarkdownDepth`
-
-##### ReviewMarkConfiguration_PublishReviewReport_MarkdownDepthAbove5_Throws
-
-**Scenario**: `PublishReviewReport` is called with `markdownDepth: 6`.
-
-**Expected**: `ArgumentOutOfRangeException` is thrown.
-
-**Boundary / error path**: Depth exceeds maximum.
-
-**Requirement coverage**: `ReviewMark-Config-ReportMarkdownDepthValidation`
-
-##### ReviewMarkConfiguration_ElaborateReviewSet_NullId_ThrowsArgumentNullException
-
-**Scenario**: `ElaborateReviewSet` is called with null as the ID.
-
-**Expected**: `ArgumentNullException` is thrown.
-
-**Boundary / error path**: Null ID rejection.
-
-**Requirement coverage**: `ReviewMark-Config-ElaborationNullRejection`
-
-##### ReviewMarkConfiguration_ElaborateReviewSet_WhitespaceId_ThrowsArgumentException
-
-**Scenario**: `ElaborateReviewSet` is called with a whitespace-only string as the ID.
-
-**Expected**: `ArgumentException` is thrown.
-
-**Boundary / error path**: Whitespace/empty ID rejection.
-
-**Requirement coverage**: `ReviewMark-Config-ElaborationNullRejection`
-
-##### ReviewMarkConfiguration_ElaborateReviewSet_ContainsFullFingerprint
-
-**Scenario**: `ElaborateReviewSet` is called with a valid ID and a source file present.
-
-**Expected**: The full 64-character hex fingerprint appears in the Markdown.
-
-**Requirement coverage**: `ReviewMark-Config-Elaboration`
-
-##### ReviewMarkConfiguration_ElaborateReviewSet_MarkdownDepth_UsedForHeadings
-
-**Scenario**: `ElaborateReviewSet` is called with `markdownDepth: 2`.
-
-**Expected**: Main heading starts with `"## Core-Logic"`; Files subheading at level 3.
-
-**Requirement coverage**: `ReviewMark-Config-ElaborationMarkdownDepth`
-
-##### ReviewMarkConfiguration_ElaborateReviewSet_MarkdownDepthAbove5_Throws
-
-**Scenario**: `ElaborateReviewSet` is called with `markdownDepth: 6`.
-
-**Expected**: `ArgumentOutOfRangeException` is thrown.
-
-**Boundary / error path**: Depth exceeds maximum.
-
-**Requirement coverage**: `ReviewMark-Config-ElaborationMarkdownDepthValidation`
+**ReviewMarkConfiguration_ElaborateReviewSet_MarkdownDepthAbove5_Throws**: `ElaborateReviewSet` is called with `markdownDepth: 6`. Expected outcome: `ArgumentOutOfRangeException` is thrown. Boundary or error path: Depth exceeds maximum. Requirement coverage: `ReviewMark-Config-ElaborationMarkdownDepthValidation`. This scenario is tested by `ReviewMarkConfiguration_ElaborateReviewSet_MarkdownDepthAbove5_Throws`.
 
 #### Requirements Coverage
 

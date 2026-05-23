@@ -1,8 +1,5 @@
 ---
-# DemaConsulting.TestResults OTS Software Requirements
-#
-# Requirements for the DemaConsulting.TestResults serialization library.
-
+# DemaConsulting.TestResults OTS requirements
 sections:
   - title: OTS Software Requirements
     sections:

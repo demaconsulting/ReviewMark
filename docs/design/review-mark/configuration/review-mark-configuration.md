@@ -2,277 +2,144 @@
 
 #### Purpose
 
-The `ReviewMarkConfiguration` software unit is responsible for parsing the
-`.reviewmark.yaml` configuration file and performing all review-set processing.
-It coordinates file enumeration, fingerprint computation, evidence lookup, and
-the generation of the Review Plan and Review Report compliance documents.
+`ReviewMarkConfiguration` is responsible for parsing the `.reviewmark.yaml` configuration
+file and performing all review-set processing. It coordinates file enumeration, fingerprint
+computation, evidence lookup, and the generation of Review Plan and Review Report
+compliance documents.
 
 #### Data Model
 
-The top-level public state of a loaded `ReviewMarkConfiguration` instance is:
+**Top-level properties on a loaded `ReviewMarkConfiguration` instance:**
 
 | Property | Type | Description |
 | -------- | ---- | ----------- |
 | `EvidenceSource` | `EvidenceSource` | Parsed evidence-source block (`Type`, `Location`, optional credential env-var names) |
 | `Reviews` | `IReadOnlyList<ReviewSet>` | Ordered list of review-set definitions |
 
-See the Configuration Model section for the YAML deserialization types and the Internal
-API Types section for the complete type inventory.
-
-#### Configuration Model
-
-The `.reviewmark.yaml` file is deserialized into the following model:
+**YAML deserialization types (internal, not part of public API):**
 
 | Class | Description |
 | ----- | ----------- |
-| `ReviewMarkYaml` | Root configuration object containing the evidence source and review list |
+| `ReviewMarkYaml` | Root configuration object; contains `NeedsReview` patterns, `EvidenceSource`, and `Reviews` list |
 | `EvidenceSourceYaml` | Describes how to locate the evidence index (`type`, `location`, optional `credentials`) |
-| `ReviewSetYaml` | Describes a single review-set (`id`, `title`, file patterns) |
+| `ReviewSetYaml` | Describes a single review-set (`id`, `title`, `paths`) |
+| `EvidenceCredentialsYaml` | Optional credentials block with `username-env` and `password-env` fields |
 
-##### Evidence Source Types
-
-The `type` field of `EvidenceSourceYaml` controls how the evidence index is located:
+**Evidence source types:**
 
 | Type | Description |
 | ---- | ----------- |
-| `none` | No evidence index. The `location` field is optional and ignored. All review-sets are reported as Missing. |
-| `fileshare` | The evidence index is read from the file path specified in `location`. |
-| `url` | The evidence index is downloaded from the HTTP or HTTPS URL specified in `location`. |
+| `none` | No evidence index; `location` is optional and ignored; all review-sets are Missing |
+| `fileshare` | Evidence index read from the file path in `location` |
+| `url` | Evidence index downloaded from the HTTP/HTTPS URL in `location` |
+
+**Result and internal API types:**
+
+| Type | Description |
+| ---- | ----------- |
+| `EvidenceSource` | Immutable record: `Type`, `Location`, `UsernameEnv`, `PasswordEnv` |
+| `ReviewSet` | Class with `Id`, `Title`, `Paths`, `GetFingerprint(dir)`, `GetFiles(dir)` |
+| `LintSeverity` | Enum: `Warning`, `Error` |
+| `LintIssue` | Record: `Location`, `Severity`, `Description`; `ToString()` formats as `{location}: {severity}: {description}` |
+| `ReviewMarkLoadResult` | Record: `Configuration` (null if error-level issues found), `Issues` |
+| `ReviewPlanResult` | Record: `Markdown`, `HasIssues` |
+| `ReviewReportResult` | Record: `Markdown`, `HasIssues` |
+| `ElaborateResult` | Record: `Markdown` |
 
 #### Key Methods
 
-##### ReviewMarkConfiguration.Load()
+**`ReviewMarkConfiguration.Load(string filePath)`** → `ReviewMarkLoadResult`
 
-`ReviewMarkConfiguration.Load(filePath)` is the unified loading mechanism that performs
-both configuration parsing and linting in a single pass. It returns a `ReviewMarkLoadResult`
-containing:
+- *Parameters*: `string filePath` — path to the `.reviewmark.yaml` file
+- *Returns*: `ReviewMarkLoadResult` — contains `Configuration` (null on error) and `Issues`
+- *Preconditions*: `filePath` is a valid file path
+- *Postconditions*: All detectable lint issues are in `Issues`; `Configuration` is non-null
+  only when no error-level issues were found
 
-- `Configuration`: the loaded `ReviewMarkConfiguration`, or `null` if any error-level issues
-  were detected.
-- `Issues`: a read-only list of `LintIssue` records, each with a `Location`, `Severity`
-  (`LintSeverity.Error` or `LintSeverity.Warning`), and `Description`.
+Reads the YAML file, then calls `ReviewMarkConfigurationHelpers.DeserializeRaw()` which
+deserializes via YamlDotNet with `NullNamingConvention` and `IgnoreUnmatchedProperties`,
+relying on `[YamlMember(Alias = "...")]` attributes for all key mappings. Validation is
+delegated to `ValidateEvidenceSource()` and `ValidateReviews()`, which accumulate issues
+into a shared list. Both parsing and linting are performed in a single file read.
 
-Errors result in a `null` configuration so callers can distinguish between a completely
-invalid file and a file with only warnings. `LintIssue.ToString()` formats each issue as
-`{location}: {severity}: {description}`, matching standard linting tool output conventions.
+**`ReviewMarkConfiguration.Parse(string yaml)`** → `ReviewMarkConfiguration`
 
-The method delegates validation to `ValidateEvidenceSource` and `ValidateReviews`, which
-accumulate issues into the shared `issues` list before `Load` decides whether to return a
-valid configuration or `null`.
+- *Parameters*: `string yaml` — YAML content to parse
+- *Returns*: A populated `ReviewMarkConfiguration` instance
+- *Preconditions*: `yaml` is non-null
+- *Postconditions*: Returns a fully populated configuration; throws on any parse or validation
+  error rather than accumulating issues
 
-##### Fingerprinting Algorithm
+Delegates to `ReviewMarkConfigurationHelpers.DeserializeRaw(yaml, filePath: null)` followed
+by `BuildConfiguration()`. Because no file path is provided, YAML errors surface as
+`ArgumentException` (not `InvalidOperationException`), preserving the unit-test contract.
+Missing required fields (no evidence-source block, empty reviews list) also result in
+`ArgumentException`. Used by unit tests to construct a `ReviewMarkConfiguration` directly
+from YAML strings without touching the file system.
 
-The fingerprint for a review-set uniquely identifies the exact content of its file-set.
-The algorithm is:
+**`ReviewMarkConfiguration.PublishReviewPlan(string dir, int depth = 1)`** → `ReviewPlanResult`
+
+Resolves `needs-review` patterns via `GlobMatcher.GetMatchingFiles()` and, for each file,
+identifies which review-sets provide coverage. Returns the Markdown document and a boolean
+indicating whether any files lack coverage. The `depth` parameter controls heading level.
+
+**`ReviewMarkConfiguration.PublishReviewReport(ReviewIndex index, string dir, int depth = 1)`**
+→ `ReviewReportResult`
+
+For each review-set: resolves its file list via `GlobMatcher`, computes the SHA-256
+fingerprint, calls `index.GetEvidence(id, fingerprint)` to determine status (Current,
+Stale, Missing, or Failed), and generates the report table. Returns the Markdown document
+and a boolean indicating whether any review-set is non-current.
+
+**`ReviewMarkConfiguration.ElaborateReviewSet(string id, string dir, int markdownDepth = 1)`**
+→ `ElaborateResult`
+
+Looks up the review-set with the given `id`, resolves its file list and fingerprint, and
+returns a Markdown document with a heading at `markdownDepth`, a metadata table (ID, Title,
+Fingerprint), and a file list subheading. Throws `ArgumentException` for unknown IDs;
+throws `ArgumentOutOfRangeException` when `markdownDepth > 5`.
+
+**Fingerprinting algorithm:**
 
 1. For each file in the review-set, read its contents and compute a SHA-256 hash.
-2. Convert each hash to a lowercase hex string, then collect all per-file hashes and sort them lexicographically.
+2. Convert each hash to a lowercase hex string; collect all per-file hashes and sort them
+   lexicographically.
 3. Concatenate the sorted hashes and compute a SHA-256 hash of the result.
-4. Return the final hash as a hex string — this is the review-set fingerprint.
+4. Return the final hash as a hex string.
 
-Sorting the per-file hashes before combining them ensures that the fingerprint is
-sensitive to content changes but not to the order in which files happen to be
-enumerated by the operating system.
+Sorting per-file hashes before combining ensures the fingerprint is insensitive to
+file enumeration order but sensitive to content changes.
 
-##### Review Plan Generation
+**`ValidateEvidenceSource()`** (internal): validates the `evidence-source` block; adds
+errors for null block, missing or unknown `type`, and missing `location` for non-`none`
+types.
 
-The Review Plan is generated by `ReviewMarkConfiguration.PublishReviewPlan()`. It produces
-a Markdown document that lists every file in the `needs-review` file-set and, for
-each file, identifies which review-sets provide coverage.
-
-- The `--plan-depth` argument controls the heading level used for sections
-
-##### Review Report Generation
-
-The Review Report is generated by `ReviewMarkConfiguration.PublishReviewReport()`. It
-produces a Markdown document that lists every review-set with its current status.
-
-For each review-set the report includes:
-
-- The review-set `id` and `title`
-- The current fingerprint of the file-set
-- The review status: `Current`, `Stale`, `Missing`, or `Failed`
-
-Status is determined by looking up the current fingerprint in the loaded evidence
-index to establish whether a passing, failing, stale, or missing review result exists.
-
-- The `--report-depth` argument controls the heading level used for sections
-
-##### ElaborateReviewSet
-
-`ReviewMarkConfiguration.ElaborateReviewSet(string id, string workingDirectory, int markdownDepth = 1)`
-returns an `ElaborateResult` containing a Markdown document that elaborates on the named review-set.
-
-The generated Markdown document contains:
-
-- A heading with the review-set ID (at the specified `markdownDepth`)
-- A metadata table with the following rows: `ID`, `Title`, and `Fingerprint`
-- A `Files` subheading (at `markdownDepth + 1`) with all matched files listed as inline code
-
-The `markdownDepth` parameter controls the heading level (1–5). If `markdownDepth` is greater
-than 5, the method throws `ArgumentOutOfRangeException`.
-
-The method throws `ArgumentNullException` for null input and `ArgumentException` for
-whitespace/empty input (both via `ArgumentException.ThrowIfNullOrWhiteSpace`), and
-`ArgumentException` when the ID does not match any review-set in the configuration.
-
-##### ValidateEvidenceSource
-
-`ReviewMarkConfigurationHelpers.ValidateEvidenceSource(string filePath, EvidenceSourceYaml? evidenceSource,
-ICollection<LintIssue> issues)`
-validates the `evidence-source` block and appends any detected issues to `issues`. It is a
-`internal static` method on the file-local `ReviewMarkConfigurationHelpers` type, called by
-`Load()`. Validation is exercised indirectly through `Load()` tests.
-
-Checks performed:
-
-- If `evidenceSource` is `null`, one `Error` is added
-  ("missing required 'evidence-source' block") and the method returns early.
-- If `type` is missing or whitespace, one `Error` is added.
-- If `type` is present but not one of `none`, `fileshare`, or `url`, one `Error` is added.
-- If `type` is not `none` and `location` is missing or whitespace, one `Error` is added.
-
-##### ValidateReviews
-
-`ReviewMarkConfigurationHelpers.ValidateReviews(string filePath, IReadOnlyList<ReviewSetYaml> reviews, ICollection<LintIssue> issues)`
-validates every entry in the `reviews` list and appends any detected issues to `issues`. It is a
-`internal static` method on the file-local `ReviewMarkConfigurationHelpers` type, called by
-`Load()`. Validation is exercised indirectly through `Load()` tests.
-
-The method iterates over `reviews` by index and for each entry checks:
-
-- Missing `id` — adds an `Error` referencing the zero-based index.
-- Duplicate `id` — adds an `Error` naming the duplicate ID.
-- Missing `title` — adds an `Error` referencing the zero-based index.
-- Missing or empty `paths` (no non-whitespace entries) — adds an `Error` referencing the zero-based index.
-
-##### Linting
-
-`ReviewMarkConfiguration.Load(filePath)` accumulates all detectable issues in a single pass
-without stopping at the first error. It delegates to `ValidateEvidenceSource` and
-`ValidateReviews`, which together cover:
-
-- Missing or invalid `evidence-source` block and fields
-- All review-set `id` values are unique
-- Each review-set has required `id`, `title`, and `paths` fields
-
-#### Internal API Types
-
-The following internal types are used by `ReviewMarkConfiguration` and related classes:
-
-##### EvidenceSource
-
-`EvidenceSource(string Type, string? Location, string? UsernameEnv, string? PasswordEnv)` — an
-immutable record that describes how to locate the evidence index. `Type` is one of `none`,
-`fileshare`, or `url`. `Location` is the file path or URL, and is optional for `none` sources.
-`UsernameEnv` and `PasswordEnv` are the names of environment variables holding HTTP Basic-auth
-credentials, used only by `url` sources.
-
-##### ReviewSet
-
-`ReviewSet` is a class with the following members:
-
-- `Id` — the review-set identifier
-- `Title` — the human-readable title
-- `Paths` — the ordered list of glob patterns
-- `GetFingerprint(directory)` — computes the SHA-256 fingerprint for the review-set file-set
-- `GetFiles(directory)` — returns the list of files matched by the review-set patterns
-
-##### LintSeverity
-
-`LintSeverity` is an enum with two values: `Warning` and `Error`.
-
-##### LintIssue
-
-`LintIssue(string Location, LintSeverity Severity, string Description)` — a record representing
-a single linting diagnostic. `ToString()` formats the issue as `{location}: {severity}: {description}`,
-matching standard linting tool output conventions.
-
-##### ReviewMarkLoadResult
-
-`ReviewMarkLoadResult(ReviewMarkConfiguration? Configuration, IReadOnlyList<LintIssue> Issues)` — a
-record returned by `ReviewMarkConfiguration.Load()`. `Configuration` is `null` if any error-level
-issues were detected. `Issues` contains all detected lint diagnostics.
-
-##### ReviewPlanResult
-
-`ReviewPlanResult(string Markdown, bool HasIssues)` — a record returned by
-`ReviewMarkConfiguration.PublishReviewPlan()`. `Markdown` is the generated plan document.
-`HasIssues` is `true` if any files in the needs-review set are not covered by any review-set.
-
-##### ReviewReportResult
-
-`ReviewReportResult(string Markdown, bool HasIssues)` — a record returned by
-`ReviewMarkConfiguration.PublishReviewReport()`. `Markdown` is the generated report document.
-`HasIssues` is `true` if any review-set has a status other than `Current`.
-
-##### ElaborateResult
-
-`ElaborateResult(string Markdown)` — a record returned by
-`ReviewMarkConfiguration.ElaborateReviewSet()`. `Markdown` is the generated elaboration document.
+**`ValidateReviews()`** (internal): iterates reviews by index; adds errors for missing
+`id`, duplicate `id`, missing `title`, and missing or empty `paths`.
 
 #### Error Handling
 
 | Exception | Source | Handling |
 | --------- | ------ | -------- |
-| `InvalidOperationException` | File open failure or unexpected I/O error in `Load()` | Propagated to the caller (`Program.RunLintLogic()` or `Program.RunDefinitionLogic()`) |
-| `ArgumentException` | Unknown review-set ID passed to `ElaborateReviewSet()` | Propagated to `Program.RunDefinitionLogic()`, which catches it and calls `Context.WriteError()` |
+| `InvalidOperationException` | File open failure or unexpected I/O in `Load()` | Propagated to `Program.RunLintLogic()` or `Program.RunDefinitionLogic()` |
+| `ArgumentException` | Unknown review-set ID in `ElaborateReviewSet()` | Propagated to `Program.RunDefinitionLogic()`, which catches it and calls `context.WriteError()` |
 | `ArgumentOutOfRangeException` | `markdownDepth > 5` in `ElaborateReviewSet()` | Propagated to the caller |
 | `IOException` / `UnauthorizedAccessException` | File-system failure during glob pattern expansion | Propagated to the caller |
 
 Lint errors (duplicate IDs, missing fields, invalid evidence-source type) are surfaced as
-`LintIssue` entries in the returned `ReviewMarkLoadResult.Issues` list and do not cause
-exceptions; `Load()` sets `Configuration` to `null` only when error-level issues are found.
+`LintIssue` entries in `ReviewMarkLoadResult.Issues` and do not cause exceptions.
 
-#### Interactions
+#### Dependencies
 
-**Called by:**
-
-- `Program.RunLintLogic()` — calls `Load()` then reports issues via `ReportIssues()`
-- `Program.RunDefinitionLogic()` — calls `Load()`, `PublishReviewPlan()`,
-  `PublishReviewReport()`, and `ElaborateReviewSet()`
-
-**Dependencies:**
-
-- `GlobMatcher` (Configuration subsystem) — called to resolve `needs-review` and
+- **`GlobMatcher`** (Configuration subsystem) — called to resolve `needs-review` and
   review-set glob patterns into sorted file lists
-- `ReviewIndex` (Indexing subsystem) — accepted as a parameter in `PublishReviewReport()`;
-  no import dependency (passed in by the caller)
-- `YamlDotNet` (OTS) — used by `Load()` to deserialize the `.reviewmark.yaml` configuration
-  file into the internal model types
+- **`ReviewIndex`** (Indexing subsystem) — accepted as a parameter in
+  `PublishReviewReport()`; no static import dependency (passed in by the caller)
+- **`YamlDotNet`** (OTS) — used by `Load()` to deserialize the `.reviewmark.yaml` file
+  into the internal model types
 
-#### Overview
+#### Callers
 
-`ReviewMarkConfiguration` is the central processing unit of the Configuration subsystem.
-It parses the `.reviewmark.yaml` file, validates its contents, resolves glob patterns via
-`GlobMatcher`, computes SHA-256 fingerprints, and generates the Review Plan and Review
-Report compliance documents. All review-set processing logic is encapsulated in this unit.
-
-#### Interfaces
-
-The primary entry point is the static factory method:
-
-- **`ReviewMarkConfiguration.Load(string filePath)`** → `ReviewMarkLoadResult` — loads,
-  validates, and returns the configuration
-
-When `Configuration` is non-null, the following instance methods are available:
-
-- **`GetNeedsReviewFiles(string dir)`** → `IReadOnlyList<string>`
-- **`ElaborateReviewSet(string id, string dir, int markdownDepth = 1)`** → `ElaborateResult`
-- **`PublishReviewPlan(string dir, int depth = 1)`** → `ReviewPlanResult`
-- **`PublishReviewReport(ReviewIndex index, string dir, int depth = 1)`** → `ReviewReportResult`
-
-Throws `ArgumentException` when `ElaborateReviewSet` is called with an unknown review-set ID.
-
-#### Design
-
-`Load()` performs a single-pass parse-and-lint by delegating structural validation to
-`ValidateEvidenceSource()` and `ValidateReviews()`, both of which accumulate issues into
-a shared list. This avoids multiple file reads and ensures all detectable issues are
-surfaced in one call.
-
-The fingerprinting algorithm is content-based and sort-before-hash: per-file SHA-256
-hashes are sorted lexicographically before being concatenated and re-hashed, making the
-fingerprint insensitive to file enumeration order. `GlobMatcher.GetMatchingFiles()` is
-called for each review-set and for the `needs-review` list; `ReviewMarkConfiguration`
-owns the fingerprint and document-generation logic.
+- **`Program.RunLintLogic()`** — calls `Load()` then reports issues via `ReportIssues()`
+- **`Program.RunDefinitionLogic()`** — calls `Load()`, `PublishReviewPlan()`,
+  `PublishReviewReport()`, and `ElaborateReviewSet()`

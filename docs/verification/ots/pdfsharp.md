@@ -2,55 +2,41 @@
 
 ### Verification Approach
 
-**Component**: PDFsharp (<https://docs.pdfsharp.net/>)
-**Role**: PDF import library used by the Indexing subsystem to read the Keywords metadata field
-from review evidence PDF files.
-**Acceptance approach**: Automated test coverage.
-
-PDFsharp's integration surface in ReviewMark is limited to `PdfReader.Open` and
-`PdfDocument.Info.Keywords`, used by `ReviewIndex.ScanPdfFile()` to extract the review identifier
-and content fingerprint embedded in each evidence PDF. The OTS integration is exercised directly by
-`DemaConsulting.ReviewMark.OtsSoftwareTests`, and through ReviewMark's higher-level behavior by
-`IndexTests.cs`.
+ReviewMark uses PDFsharp 6.2.4, referenced from `DemaConsulting.ReviewMark.csproj`, to read PDF
+document metadata in the Indexing subsystem. The integration surface is `PdfReader.Open` with
+`PdfDocumentOpenMode.Import` and `doc.Info.Keywords` inside `ReviewIndex.ProcessPdf()`, where
+ReviewMark extracts `id`, `fingerprint`, `date`, and `result` values from the Keywords field and
+skips incomplete evidence files with warnings. Fitness for intended use is verified by dedicated
+OTS tests in `test/OtsSoftwareTests/PDFsharpTests.cs`, index integration tests in
+`test/DemaConsulting.ReviewMark.Tests/Indexing/IndexTests.cs`, and the `dotnet test` step in the
+`build` matrix job of `build.yaml`, which publishes TRX evidence to `artifacts/`. No
+project-specific issues have been observed in this validated import-only usage.
 
 ### Test Scenarios
 
-#### PDFsharpReadMetadata
+**PDFsharpReadMetadata**: A PDF opened in import mode exposes the Keywords metadata that ReviewMark
+uses as its evidence payload, and valid review metadata is carried through into the in-memory
+review index. This scenario is tested by `PdfReader_Open_ImportMode_ExposesKeywordsField`,
+`ReviewIndex_Scan_PdfWithValidMetadata_PopulatesIndex`, and
+`ReviewIndex_Scan_MultiplePdfs_PopulatesAllEntries`.
 
-Evidence that PDFsharp correctly opens a PDF file in import mode and exposes the Keywords field
-from the document information dictionary.
-
-- **`PdfReader_Open_ImportMode_ExposesKeywordsField`** — a PDF containing a Keywords value is
-  opened with `PdfDocumentOpenMode.Import` and `doc.Info.Keywords` returns the expected value,
-  confirming direct OTS API access.
-- **`PdfReader_Open_ImportMode_NoKeywords_ReturnsNullOrEmpty`** — a PDF created without a
-  Keywords value is opened in import mode and `doc.Info.Keywords` is null or empty, confirming
-  graceful handling of absent metadata.
-- **`ReviewIndex_Scan_PdfWithValidMetadata_PopulatesIndex`** — a PDF containing correctly
-  formatted review metadata in its Keywords field is opened and the review identifier and
-  fingerprint are extracted into the index.
-- **`ReviewIndex_Scan_PdfWithNoKeywords_SkipsWithWarning`** — a PDF with no Keywords field is
-  opened without error and skipped with a warning, confirming graceful handling of absent metadata.
-- **`ReviewIndex_Scan_PdfWithMissingId_SkipsWithWarning`** — a PDF whose Keywords field lacks a
-  review identifier is skipped with a warning.
-- **`ReviewIndex_Scan_PdfWithMissingFingerprint_SkipsWithWarning`** — a PDF whose Keywords field
-  lacks a fingerprint is skipped with a warning.
-- **`ReviewIndex_Scan_MultiplePdfs_PopulatesAllEntries`** — multiple PDFs in the same directory
-  are each opened and their metadata extracted, confirming per-file handling.
-
-CI evidence source: `dotnet test` step in the `build` matrix job of `build.yaml`, writing test
-result files to `artifacts/`.
+**PDFsharpGracefulMetadataAbsenceHandling**: Missing or incomplete Keywords metadata does not cause
+a crash; instead, ReviewMark skips the PDF and reports warnings so unrelated evidence files can
+still be indexed. This scenario is tested by `PdfReader_Open_ImportMode_NoKeywords_ReturnsNullOrEmpty`,
+`ReviewIndex_Scan_PdfWithNoKeywords_SkipsWithWarning`,
+`ReviewIndex_Scan_PdfWithMissingId_SkipsWithWarning`, and
+`ReviewIndex_Scan_PdfWithMissingFingerprint_SkipsWithWarning`.
 
 ### Requirements Coverage
 
 - **ReviewMark-OTS-PDFsharp-ReadMetadata**: PDFsharp shall provide access to the Keywords metadata
   field of a PDF document opened in import mode.
-  - *PDFsharpReadMetadata*: verifies PDFsharp opens PDFs, reads Keywords metadata, and handles
-    absent or incomplete metadata gracefully.
+  - *PDFsharpReadMetadata*
     - `PdfReader_Open_ImportMode_ExposesKeywordsField`
-    - `PdfReader_Open_ImportMode_NoKeywords_ReturnsNullOrEmpty`
     - `ReviewIndex_Scan_PdfWithValidMetadata_PopulatesIndex`
+    - `ReviewIndex_Scan_MultiplePdfs_PopulatesAllEntries`
+  - *PDFsharpGracefulMetadataAbsenceHandling*
+    - `PdfReader_Open_ImportMode_NoKeywords_ReturnsNullOrEmpty`
     - `ReviewIndex_Scan_PdfWithNoKeywords_SkipsWithWarning`
     - `ReviewIndex_Scan_PdfWithMissingId_SkipsWithWarning`
     - `ReviewIndex_Scan_PdfWithMissingFingerprint_SkipsWithWarning`
-    - `ReviewIndex_Scan_MultiplePdfs_PopulatesAllEntries`

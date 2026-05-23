@@ -1,8 +1,5 @@
 ---
-# ReqStream OTS Software Requirements
-#
-# Requirements for the ReqStream requirements traceability tool functionality.
-
+# ReqStream OTS requirements
 sections:
   - title: OTS Software Requirements
     sections:

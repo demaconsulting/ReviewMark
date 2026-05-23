@@ -1,8 +1,8 @@
 ---
-title: "DemaConsulting.ReviewMark Code Review Report"
-subtitle: "Code Review Report for DemaConsulting.ReviewMark"
+title: "ReviewMark Code Review Report"
+subtitle: "Automated file-review evidence management"
 author: "DEMA Consulting"
-description: "Code Review Report for DemaConsulting.ReviewMark"
+description: "Code Review Report for ReviewMark"
 lang: en-US
 keywords:
   - Code Review

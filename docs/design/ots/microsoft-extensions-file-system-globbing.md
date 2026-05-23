@@ -22,14 +22,6 @@ glob semantics in application code.
 - **`Matcher.GetResultsInFullPath(string directoryPath)`**: executes the configured patterns
   against the specified directory and returns the full absolute paths of all matching files
 
-### Version Constraints
-
-The project pins Microsoft.Extensions.FileSystemGlobbing at version **10.0.8** in
-`src/DemaConsulting.ReviewMark/DemaConsulting.ReviewMark.csproj`. Patch and minor upgrades are
-managed automatically by Dependabot; major version upgrades require a review of vendor release
-notes and, if the integration surface changes, an update to this document before merging. See
-`docs/design/ots.md` for the project-wide OTS version management policy.
-
 ### Integration Pattern
 
 `GlobMatcher.GetMatchingFiles()` maintains a `HashSet<string>` of currently matched paths and
@@ -40,3 +32,7 @@ repository-relative path and added to the set. For each exclude pattern (prefixe
 separate `Matcher` is created for the stripped pattern and the matching paths are removed from the
 set. After all patterns are processed, paths are normalized to forward slashes and sorted using
 `StringComparer.Ordinal` to produce a deterministic, platform-independent file list.
+
+### Version
+
+Microsoft.Extensions.FileSystemGlobbing 10.0.8 is the required version.

@@ -16,7 +16,7 @@ XML serialization concerns.
 
 - **`DemaConsulting.TestResults.TestResults`**: top-level container holding the test run name and
   a mutable list of `TestResult` records
-- **`DemaConsulting.TestResults.TestResult`**: individual test-case record with `TestName`,
+- **`DemaConsulting.TestResults.TestResult`**: individual test-case record with `Name`,
   `Outcome`, `StartTime`, `EndTime`, and `Duration` properties
 - **`DemaConsulting.TestResults.TestOutcome`**: enumeration providing `Passed` and `Failed` values
   used to record the per-test verdict
@@ -24,14 +24,6 @@ XML serialization concerns.
   object to an MSTest TRX XML string for `.trx` output files
 - **`DemaConsulting.TestResults.IO.JUnitSerializer.Serialize(TestResults)`**: serializes the
   results object to a JUnit XML string for `.xml` output files
-
-### Version Constraints
-
-The project pins DemaConsulting.TestResults at version **1.7.0** in
-`src/DemaConsulting.ReviewMark/DemaConsulting.ReviewMark.csproj`. Patch and minor upgrades are
-managed automatically by Dependabot; major version upgrades require a review of vendor release
-notes and, if the integration surface changes, an update to this document before merging. See
-`docs/design/ots.md` for the project-wide OTS version management policy.
 
 ### Integration Pattern
 
@@ -44,3 +36,7 @@ the test body executes, `FinalizeTestResult()` records either `TestOutcome.Passe
 `JUnitSerializer` for `.xml` files, serializes the collection to a string, creates the output
 directory if it does not yet exist, and writes the file. Any file-write failure is reported via
 `Context.WriteError` and results in exit code 1.
+
+### Version
+
+DemaConsulting.TestResults 1.7.0 is the required version.

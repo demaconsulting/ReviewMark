@@ -1,13 +1,5 @@
 ---
-resource-path:
-  - docs/design
-  - docs/design/review-mark
-  - docs/design/review-mark/cli
-  - docs/design/review-mark/configuration
-  - docs/design/review-mark/indexing
-  - docs/design/review-mark/self-test
-  - docs/design/ots
-  - docs/template
+resource-path: [docs/design, docs/template]
 
 input-files:
   - docs/design/title.txt

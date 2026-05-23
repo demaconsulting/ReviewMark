@@ -1,8 +1,5 @@
 ---
-# FileAssert OTS Software Requirements
-#
-# Requirements for the FileAssert document assertion tool functionality.
-
+# FileAssert OTS requirements
 sections:
   - title: OTS Software Requirements
     sections:

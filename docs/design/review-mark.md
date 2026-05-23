@@ -1,205 +1,131 @@
-# System Design
+# ReviewMark
 
-This section describes the high-level behavior of the ReviewMark system and the workflow
-that connects its subsystems.
+ReviewMark is a .NET command-line tool for automated file-review evidence management in
+regulated environments. It determines which files are subject to review, identifies the
+review evidence that covers them, and generates Review Plan and Review Report compliance
+documents.
 
 ## Architecture
 
 ReviewMark is organized as a single system composed of four subsystems and one standalone
 unit:
 
-| Item | Type | Responsibility |
-| ---- | ---- | -------------- |
-| Program | Unit | Process entry point; dispatches to subsystems based on CLI flags |
+| Item | Category | Responsibility |
+| ---- | -------- | -------------- |
+| Program | Unit | Process entry point; constructs the execution context and dispatches to subsystems |
 | Cli | Subsystem | Command-line argument parsing and output channel ownership |
 | Configuration | Subsystem | YAML configuration loading, validation, and review-set processing |
-| Indexing | Subsystem | Review evidence loading, PDF scanning, and path utilities |
+| Indexing | Subsystem | Review evidence loading, PDF scanning, and safe path utilities |
 | SelfTest | Subsystem | Built-in self-validation test suite |
 
-There is no system-level source code beyond `Program.cs`. All processing logic is
-contained within the subsystems. `Program.Main()` creates a `Context` and delegates
-all work through `Program.Run()`, which dispatches to the appropriate subsystem based
-on the parsed command-line flags.
+There is no system-level source code beyond `Program.cs`; all processing logic resides
+within the subsystems. `Program.Main()` creates a `Context` instance and delegates all
+work through `Program.Run()`, which dispatches to the appropriate subsystem based on the
+parsed command-line flags.
 
-## Overview
+```mermaid
+flowchart TD
+    subgraph ReviewMark
+        Program
+        subgraph Cli
+            Context
+        end
+        subgraph Configuration
+            ReviewMarkConfiguration
+            GlobMatcher
+        end
+        subgraph Indexing
+            ReviewIndex
+            PathHelpers
+        end
+        subgraph SelfTest
+            Validation
+        end
+    end
+    Program --> Context
+    Program --> ReviewMarkConfiguration
+    Program --> ReviewIndex
+    Program --> Validation
+    ReviewMarkConfiguration --> GlobMatcher
+    ReviewIndex --> GlobMatcher
+    ReviewIndex --> PathHelpers
+```
 
-ReviewMark automates the evidence-gathering step of software review processes used in
-regulated environments. On each CI/CD run, it determines which files are subject to
-review, identifies the review evidence that covers them, and generates two compliance
-documents: a Review Plan and a Review Report.
+`Program.Run()` evaluates parsed flags in a fixed priority order: `--version` first, then
+the application banner, then `--help`, then `--validate`, then `--lint`, and finally the
+main tool logic. This ensures that diagnostic flags are always handled before
+output-generating actions. Each operational mode is described below.
 
-## Main Workflow
+**Review Plan and Report Generation**: When `--plan` and/or `--report` are supplied,
+ReviewMark loads the definition file, resolves file lists, loads the evidence index, and
+generates the requested documents. The `--enforce` flag can be combined with this mode to
+exit non-zero when issues are detected.
 
-The following steps describe the end-to-end processing flow.
+**Elaborate Mode (`--elaborate`)**: When `--elaborate <id>` is supplied, ReviewMark looks
+up the named review-set and writes a Markdown elaboration to stdout containing the
+review-set ID, title, current fingerprint, and the full sorted list of matched files. This
+mode does not query the evidence store.
 
-1. Parse CLI arguments
-2. Load `.reviewmark.yaml`
-3. Resolve file lists via glob patterns
-4. Compute SHA-256 fingerprints
-5. Load evidence index
-   - `none` — use an empty index (no evidence store configured)
-   - `fileshare` — load `index.json` from a local or network file path
-   - `url` — download `index.json` from an HTTP or HTTPS URL
-6. Generate Review Plan and/or Review Report
-7. If `--enforce` flag is set:
-   - If all review-sets are Current — return success
-   - Otherwise — return a non-zero exit code
+**Lint Mode (`--lint`)**: When `--lint` is supplied, ReviewMark loads and validates the
+definition file in a single pass, collecting all detectable structural and semantic issues.
+The application banner is suppressed. Silence means the definition file is valid.
 
-## Evidence Source Types
+**Validate Mode (`--validate`)**: When `--validate` is supplied, ReviewMark runs a
+built-in self-test suite that exercises core tool behaviors and produces a pass/fail
+summary, optionally writing results to a TRX or JUnit XML file via `--results`.
 
-ReviewMark supports three evidence source types, configured in `.reviewmark.yaml`:
+**Version Mode (`--version`)**: Writes only the version string to stdout and exits.
 
-| Source Type | Description |
-| ----------- | ----------- |
-| `none` | No evidence store; all review-sets are treated as missing |
-| `fileshare` | Evidence index loaded from a local or network file path |
-| `url` | Evidence index loaded from an HTTP or HTTPS URL |
+**Help Mode (`--help`)**: Writes the usage message listing all supported flags to stdout.
 
-### Credentials
+## External Interfaces
 
-For `url` sources that require authentication, an optional `credentials` key may be added to the
-`evidence-source` block. Its two sub-keys specify the names of environment variables that supply
-HTTP Basic Auth credentials at runtime; secrets are never stored in the definition file:
+**Command-Line Interface**: The sole external interface of the ReviewMark system. All
+inputs are supplied as command-line arguments to the `reviewmark` executable; all outputs
+are written to stdout, stderr, and optionally to files. There is no network listener, REST
+API, or graphical interface.
 
-| Key            | Required | Description                                                             |
-| -------------- | -------- | ----------------------------------------------------------------------- |
-| `username-env` | Yes      | Name of the environment variable holding the HTTP Basic Auth username   |
-| `password-env` | Yes      | Name of the environment variable holding the HTTP Basic Auth password   |
-
-## Output Documents
-
-### Review Plan
-
-The Review Plan lists every file that is subject to review and identifies which
-review-sets provide coverage for each file. It is generated by the `--plan` flag
-and written to a configurable output path.
-
-### Review Report
-
-The Review Report lists every review-set defined in the configuration, the current
-fingerprint of its file-set, and the review status (Current, Stale, Missing, or Failed).
-It is generated by the `--report` flag and written to a configurable output path.
-
-The statuses have the following meanings:
-
-- **Current** — Evidence exists for the current fingerprint and the recorded result is `pass`.
-- **Stale** — Evidence exists, but it corresponds to an older fingerprint than the current one.
-- **Missing** — No evidence exists for this review-set.
-- **Failed** — Evidence exists for the current fingerprint, but the recorded result is not `pass`.
-
-## Enforcement
-
-When the `--enforce` flag is set, ReviewMark returns a non-zero exit code in either
-of two situations:
-
-1. The Review Plan shows that one or more files matching the `needs-review` patterns
-   are not covered by any review-set.
-2. The Review Report shows that any review-set has a status other than Current
-   (i.e., is Stale, Missing, or Failed).
-
-This allows CI/CD pipelines to fail builds when review coverage is incomplete, files
-are uncovered, reviews are out of date, or review evidence has a failed result.
-
-## Index Management
-
-The `--index` flag causes ReviewMark to scan a directory for PDF evidence files and
-write an `index.json` file suitable for use as a fileshare evidence source. This
-supports workflows where review PDFs are stored alongside source code or on a
-shared network location.
-
-## Operational Modes
-
-ReviewMark supports several distinct operational modes, each activated by a specific flag:
-
-### Review Plan and Report Generation
-
-The default operational mode. When `--plan` and/or `--report` are supplied, ReviewMark
-loads the definition file, resolves file lists, and generates the requested documents.
-The `--enforce` flag can be combined with this mode to fail the process when issues are
-detected.
-
-### Elaborate Mode (`--elaborate`)
-
-When `--elaborate <id>` is supplied, ReviewMark loads the definition file, looks up the
-named review-set, and writes a Markdown elaboration to stdout. The elaboration contains
-the review-set ID, title, current fingerprint, and the full sorted list of files matched
-by the review-set paths. This mode does not query the evidence store. When the supplied
-`id` does not match any review-set, an error is written to stderr and the process exits
-with a non-zero code.
-
-### Lint Mode (`--lint`)
-
-When `--lint` is supplied, ReviewMark loads and validates the definition file in a single
-pass, collecting all detectable structural and semantic issues. The application banner is
-suppressed so that only issue messages reach the console.
-
-- **Success (exit code 0)** — the definition file is valid; no output is produced.
-- **Failure (exit code 1)** — one or more issues were found; only the issue messages are
-  printed, with no surrounding banner or summary text.
-
-Unlike normal operation, lint mode never queries the evidence store.
-
-### Validate Mode (`--validate`)
-
-When `--validate` is supplied, ReviewMark runs a built-in self-test suite that exercises
-core tool behaviors and produces a pass/fail summary. Validation results can be written to
-a TRX or JUnit XML file via `--results`. This mode is intended for tool qualification
-in regulated environments.
-
-### Version Mode (`--version`)
-
-When `--version` is supplied, ReviewMark writes only the version string to stdout and
-exits immediately. No banner or other output is produced.
-
-### Help Mode (`--help`)
-
-When `--help` is supplied, ReviewMark writes the usage message listing all supported flags
-to stdout and exits.
-
-## Command-Line Flags
-
-The following flags are recognized at the system design level:
+- *Type*: CLI (command-line interface)
+- *Role*: Provider — the ReviewMark executable is invoked by users and CI/CD pipelines
+- *Contract*: The following flags are recognized:
 
 | Flag | Description |
 | ---- | ----------- |
 | `--version` / `-v` | Display version string and exit |
 | `--help` / `-?` / `-h` | Display usage information and exit |
-| `--silent` | Suppress all console output; the exit code still signals success or failure |
+| `--silent` | Suppress all console output; exit code still signals success or failure |
 | `--lint` | Validate the definition file; print only issues; exit non-zero on failure |
 | `--validate` | Run built-in self-validation tests |
-| `--results <file>` | Write validation results to a TRX or JUnit XML file (used with `--validate`) |
+| `--results <file>` | Write validation results to a TRX or JUnit XML file (with `--validate`) |
 | `--log <file>` | Write all output to a persistent log file in addition to stdout |
-| `--depth <#>` | Default Markdown heading depth (1–5) for all generated documents; default is 1 |
-| `--dir <directory>` | Set the working directory used for default paths and glob scanning |
+| `--depth <#>` | Default Markdown heading depth (1–5) for all generated documents; default 1 |
+| `--dir <directory>` | Set the working directory for default paths and glob scanning |
 | `--definition <file>` | Override the default `.reviewmark.yaml` configuration file path |
-| `--plan <file>` | Generate a Markdown review-plan document listing all review sets and their current status |
-| `--plan-depth <#>` | Override the Markdown heading depth for the plan document (default: `--depth` value) |
+| `--plan <file>` | Generate a Markdown review-plan document listing all review sets |
+| `--plan-depth <#>` | Override the Markdown heading depth for the plan document |
 | `--report <file>` | Generate a Markdown review-report document summarizing review-set completion |
-| `--report-depth <#>` | Override the Markdown heading depth for the report document (default: `--depth` value) |
-| `--elaborate <id>` | Print a Markdown elaboration for the named review set (ID, title, fingerprint, and file list) |
+| `--report-depth <#>` | Override the Markdown heading depth for the report document |
+| `--elaborate <id>` | Print a Markdown elaboration for the named review set |
 | `--enforce` | Exit with code 1 if the plan has uncovered files or any review-set is non-current |
-| `--index <pattern>` | Scan PDF evidence files matching the glob pattern and write an `index.json` file to `--dir`; may be repeated to cover multiple patterns |
+| `--index <pattern>` | Scan PDF evidence files matching the glob pattern and write `index.json`; repeatable |
 
-## External Interfaces
-
-The command-line interface is the sole external interface of the ReviewMark system.
-All inputs are supplied as command-line arguments to the `reviewmark` executable, and all
-outputs are written to stdout, stderr, and optionally to files. There is no network
-listener, no REST API, and no graphical interface.
+- *Constraints*: Exit code 0 always means success; exit code 1 always means failure or
+  enforcement violation. Unrecognized arguments cause the process to exit with code 1 and
+  write a descriptive error to stderr.
 
 ## Dependencies
 
 ReviewMark depends on the following OTS software items:
 
-- **YamlDotNet**: provides YAML deserialization used by the Configuration subsystem to parse
-  `.reviewmark.yaml` (see _YamlDotNet Integration Design_)
-- **PDFsharp**: provides PDF document reading used by the Indexing subsystem to extract metadata
-  from evidence PDF files (see _PDFsharp Integration Design_)
-- **DemaConsulting.TestResults**: provides TRX and JUnit XML test-results serialization used by
-  the SelfTest subsystem (see _DemaConsulting.TestResults Integration Design_)
-- **Microsoft.Extensions.FileSystemGlobbing**: provides glob-pattern file matching used by the
-  `GlobMatcher` unit in the Configuration subsystem (see
-  _Microsoft.Extensions.FileSystemGlobbing Integration Design_)
+- **YamlDotNet**: YAML deserialization used by the Configuration subsystem to parse
+  `.reviewmark.yaml` — see *YamlDotNet Integration Design*
+- **PDFsharp**: PDF document reading used by the Indexing subsystem to extract metadata
+  from evidence PDF files — see *PDFsharp Integration Design*
+- **DemaConsulting.TestResults**: TRX and JUnit XML test-results serialization used by the
+  SelfTest subsystem — see *DemaConsulting.TestResults Integration Design*
+- **Microsoft.Extensions.FileSystemGlobbing**: glob-pattern file matching used by the
+  `GlobMatcher` unit in the Configuration subsystem — see
+  *Microsoft.Extensions.FileSystemGlobbing Integration Design*
 
 No shared packages are used.
 
@@ -207,46 +133,51 @@ No shared packages are used.
 
 N/A — ReviewMark is a standalone command-line tool that runs in a single process with no
 concurrent threads beyond those managed by the .NET runtime. There are no software items
-that require runtime segregation from each other. The evidence store is read-only during
+that require runtime segregation for risk control. The evidence store is read-only during
 normal operation; the only files written by the tool are the output documents and, when
-`--index` is used, `index.json`. No risk-control-motivated isolation mechanisms are required.
+`--index` is used, `index.json`.
 
 ## Data Flow
 
-The high-level data flow through the system is:
+The high-level data flow through the ReviewMark system:
 
-1. **Input**: `string[] args` from the OS shell → parsed by `Context.Create()` into structured flags and paths
-2. **Configuration**: `ReviewMarkConfiguration.Load()` reads `.reviewmark.yaml` from disk and resolves glob patterns via `GlobMatcher` into sorted file lists
-3. **Evidence**: `ReviewIndex.Load()` reads or downloads the evidence index, populating an in-memory lookup keyed by `(id, fingerprint)`
-4. **Processing**: `PublishReviewPlan()` or `PublishReviewReport()` combines the resolved file lists with the evidence index to compute status and generate Markdown output
-5. **Output**: Generated Markdown is written to files on disk; status messages and errors are written to stdout/stderr via `Context`
+1. **Input**: `string[] args` from the OS shell → parsed by `Context.Create()` into
+   structured flags and paths.
+2. **Configuration**: `ReviewMarkConfiguration.Load()` reads `.reviewmark.yaml` from disk
+   and resolves glob patterns via `GlobMatcher` into sorted file lists.
+3. **Evidence**: `ReviewIndex.Load()` reads or downloads the evidence index, populating an
+   in-memory lookup keyed by `(id, fingerprint)`. Three source types are supported:
+   `none` (empty index), `fileshare` (local or network file-path read), and `url` (HTTP or
+   HTTPS download, with optional Basic-auth credentials from environment variables).
+4. **Processing**: `PublishReviewPlan()` or `PublishReviewReport()` combines the resolved
+   file lists with the evidence index to compute status and generate Markdown output.
+   The Review Plan lists every file subject to review and which review-sets cover it.
+   The Review Report lists every review-set with status: Current, Stale, Missing, or Failed.
+5. **Output**: Generated Markdown is written to files on disk; status messages and errors
+   are written to stdout/stderr via `Context`.
 
 For the `--index` workflow, the flow is: glob patterns → `GlobMatcher` → sorted PDF paths
-→ `ReviewIndex.Scan()` → metadata extraction → serialized `index.json`.
+→ `ReviewIndex.Scan()` → PDF metadata extraction → serialized `index.json`.
+
+For `--elaborate`, the flow is: review-set ID → configuration lookup → Markdown
+elaboration (ID, title, fingerprint, file list) written to stdout.
+
+When `--enforce` is set, a non-zero exit code is returned if the Review Plan shows any
+uncovered files, or if the Review Report shows any review-set has a status other than
+Current (i.e., is Stale, Missing, or Failed).
 
 ## Design Constraints
 
-- **Platform**: Targets .NET 8, .NET 9, and .NET 10; must run on Windows, macOS, and Linux
-- **Distribution**: Distributed as a .NET global tool via NuGet; no external runtime dependencies beyond the .NET SDK
-- **Output format**: All generated documents are Markdown; no binary output is produced except `index.json` written by `--index`
-- **No GUI**: The sole external interface is the command-line; no interactive or graphical interface is provided
-- **Deterministic fingerprints**: The SHA-256 fingerprint algorithm must be content-based and platform-independent so that the same files produce the same fingerprint on any operating system
-- **Fingerprint rename stability**: Fingerprints are stable across renames or moves that keep the same set of file contents; only adding, removing, or modifying file content changes the fingerprint
-- **Exit code semantics**: Exit code 0 always means success; exit code 1 always means failure or enforcement violation; no other exit codes are used
-
-## Exit Codes and Error Handling
-
-| Exit Code | Meaning |
-| --------- | ------- |
-| `0` | Success — all requested operations completed without errors or enforcement failures |
-| `1` | Failure — an error occurred or enforcement detected review issues |
-
-Unrecognized or malformed command-line arguments cause the argument parser to throw an
-`ArgumentException`. `Program.Main` catches this exception, writes a descriptive error
-message to `stderr`, and returns exit code 1. The process never exits silently on an
-argument error.
-
-Expected operational errors (e.g., unreadable definition file, unknown review-set ID)
-are reported as error messages to stderr and result in exit code 1. Unexpected
-exceptions are also written to stderr and re-thrown so that the host environment
-generates an event log entry.
+- **Platform**: targets .NET 8, .NET 9, and .NET 10; runs on Windows, macOS, and Linux
+- **Distribution**: distributed as a .NET global tool via NuGet; no external runtime
+  dependencies beyond the .NET SDK
+- **Output format**: all generated documents are Markdown; no binary output is produced
+  except `index.json` written by `--index`
+- **No GUI**: the sole external interface is the command-line; no interactive or graphical
+  interface is provided
+- **Deterministic fingerprints**: the SHA-256 fingerprint algorithm is content-based and
+  platform-independent so that the same files produce the same fingerprint on any operating
+  system; fingerprints are stable across renames or moves that keep the same set of file
+  contents, and change only when file content changes
+- **Exit code semantics**: exit code 0 always means success; exit code 1 always means
+  failure or enforcement violation; no other exit codes are used

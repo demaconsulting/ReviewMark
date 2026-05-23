@@ -1,8 +1,5 @@
 ---
-# BuildMark OTS Software Requirements
-#
-# Requirements for the BuildMark build documentation tool functionality.
-
+# BuildMark OTS requirements
 sections:
   - title: OTS Software Requirements
     sections:

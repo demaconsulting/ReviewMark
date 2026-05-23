@@ -1,4 +1,4 @@
-# Security Policy
+﻿# Security Policy
 
 ## Supported Versions
 
@@ -11,8 +11,8 @@ We release patches for security vulnerabilities in the following versions:
 
 ## Reporting a Vulnerability
 
-We take the security of ReviewMark seriously. If you believe you have found a
-security vulnerability, please report it to us as described below.
+We take the security of ReviewMark seriously. If you believe you have found a security
+vulnerability, please report it to us as described below.
 
 ### How to Report
 
@@ -20,12 +20,13 @@ security vulnerability, please report it to us as described below.
 
 Instead, please report them using one of the following methods:
 
-- **Preferred**: [GitHub Security Advisories][security-advisories] - Use the private vulnerability reporting feature
+- **Preferred**: [GitHub Security Advisories][security-advisories] - Use the private vulnerability
+  reporting feature
 - **Alternative**: Contact the project maintainers directly through GitHub
 
 Please include the following information in your report:
 
-- **Type of vulnerability** (e.g., SQL injection, cross-site scripting, etc.)
+- **Type of vulnerability** (e.g., path traversal, arbitrary code execution, etc.)
 - **Full path** of source file(s) related to the vulnerability
 - **Location** of the affected source code (tag/branch/commit or direct URL)
 - **Step-by-step instructions** to reproduce the issue
@@ -60,7 +61,7 @@ Security updates will be released as:
 
 ## Security Best Practices
 
-When using ReviewMark, we recommend following these security best practices:
+When using ReviewMark, we recommend following these security best practices.
 
 ### Input Validation
 
@@ -99,7 +100,8 @@ When we receive a security bug report, we will:
 3. Prepare fixes for all supported versions
 4. Release patches as soon as possible
 
-We will credit security researchers who report vulnerabilities responsibly. If you would like to be credited:
+We will credit security researchers who report vulnerabilities responsibly. If you would like
+to be credited:
 
 - Provide your name or pseudonym
 - Optionally provide a link to your website or GitHub profile
@@ -121,8 +123,8 @@ dotnet list package --vulnerable
 
 ## Contact
 
-For security concerns, please use [GitHub Security Advisories][security-advisories] or contact the project
-maintainers directly through GitHub.
+For security concerns, please use [GitHub Security Advisories][security-advisories] or contact
+the project maintainers directly through GitHub.
 
 For general bugs and feature requests, please use [GitHub Issues][issues].
 

@@ -1,12 +1,12 @@
-# Contributing to ReviewMark
+﻿# Contributing to ReviewMark
 
-Thank you for your interest in contributing to ReviewMark! We welcome contributions from the community and appreciate
-your help in making this project better.
+Thank you for your interest in contributing to ReviewMark! We welcome contributions from the
+community and appreciate your help in making this project better.
 
 ## Code of Conduct
 
-This project adheres to a [Code of Conduct][code-of-conduct]. By participating, you are expected to uphold this code.
-Please report unacceptable behavior through GitHub.
+This project adheres to a [Code of Conduct][code-of-conduct]. By participating, you are expected
+to uphold this code. Please report unacceptable behavior through GitHub.
 
 ## How to Contribute
 
@@ -126,7 +126,7 @@ Note the spaces after `///` for proper indentation in summary blocks.
 
 ### Test Framework
 
-We use MSTest v4 for unit and integration tests.
+We use xUnit v3 for unit and integration tests.
 
 ### Test Naming Convention
 
@@ -141,10 +141,11 @@ Examples:
 ### Writing Tests
 
 - Write tests that are clear and focused
-- Use modern MSTest v4 assertions:
-  - `Assert.HasCount(expectedCount, collection)`
-  - `Assert.IsEmpty(collection)`
+- Use xUnit assertions:
+  - `Assert.Equal(expected, actual)`
+  - `Assert.Contains(item, collection)`
   - `Assert.DoesNotContain(item, collection)`
+  - `Assert.Empty(collection)`
 - Always clean up resources (use `try/finally` for console redirection)
 - Link tests to requirements in `requirements.yaml` when applicable
 
@@ -188,13 +189,15 @@ All markdown files must follow these rules (enforced by markdownlint):
 
 ### Spell Checking
 
-All files are spell-checked using cspell. **Never** add a word to the `.cspell.yaml` word list in order to silence a
-spell-checking failure. Doing so defeats the purpose of spell-checking and reduces the quality of the repository.
+All files are spell-checked using cspell. **Never** add a word to the `.cspell.yaml` word list
+in order to silence a spell-checking failure. Doing so defeats the purpose of spell-checking
+and reduces the quality of the repository.
 
 - If cspell flags a word that is **misspelled**, fix the spelling in the source file.
-- If cspell flags a word that is a **genuine technical term** (tool name, project identifier, etc.) and is spelled
-  correctly, raise a **proposal** (e.g. comment in a pull request) explaining why the word should be added. The
-  proposal must be reviewed and approved before the word is added to the list.
+- If cspell flags a word that is a **genuine technical term** (tool name, project identifier,
+  etc.) and is spelled correctly, raise a **proposal** (e.g. comment in a pull request) explaining
+  why the word should be added. The proposal must be reviewed and approved before the word is
+  added to the list.
 
 ## Quality Checks
 
@@ -224,7 +227,8 @@ pwsh ./lint.ps1
 
 ### 3. Code Coverage
 
-Maintain or improve code coverage. Use the `--collect "XPlat Code Coverage"` option when running tests.
+Maintain or improve code coverage. Use the `--collect "XPlat Code Coverage"` option when
+running tests.
 
 ## Commit Messages
 
@@ -293,7 +297,8 @@ Releases are managed by project maintainers. The process includes:
 
 ## License
 
-By contributing to ReviewMark, you agree that your contributions will be licensed under the MIT License.
+By contributing to ReviewMark, you agree that your contributions will be licensed under the
+MIT License.
 
 Thank you for contributing to ReviewMark!
 

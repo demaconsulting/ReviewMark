@@ -18,23 +18,16 @@ exactly this access path with minimal overhead and no risk of accidental documen
   document information dictionary; content streams are not decoded and the document cannot be
   modified
 - **`PdfDocument.Info.Keywords`**: the Keywords field from the PDF document information
-  dictionary; ReviewMark encodes the review identifier and content fingerprint in this field using
-  a structured key-value format
-
-### Version Constraints
-
-The project pins PDFsharp at version **6.2.4** in
-`src/DemaConsulting.ReviewMark/DemaConsulting.ReviewMark.csproj`. Patch and minor upgrades are
-managed automatically by Dependabot; major version upgrades require a review of vendor release
-notes and, if the integration surface changes, an update to this document before merging. See
-`docs/design/ots.md` for the project-wide OTS version management policy.
+  dictionary; ReviewMark encodes four required fields in this field using a structured
+  space-separated `name=value` format: `id`, `fingerprint`, `date`, and `result`
 
 ### Integration Pattern
 
-`ReviewIndex.ScanPdfFile()` calls `PdfReader.Open(fullPath, PdfDocumentOpenMode.Import)` inside a
+`ReviewIndex.ProcessPdf()` calls `PdfReader.Open(fullPath, PdfDocumentOpenMode.Import)` inside a
 `using` statement to ensure the document handle is disposed immediately after the Keywords field is
-read. The `doc.Info.Keywords` string is then parsed to extract the review identifier and
-fingerprint. If the Keywords field is absent (`null`) it is treated as an empty string and the PDF
-is skipped. If the field is present but does not contain the expected review metadata, the PDF is
-also skipped, allowing the index scan to accumulate all valid evidence files even when the scanned
-directory contains non-review PDFs.
+read. The `doc.Info.Keywords` string is then parsed to extract the `id`, `fingerprint`, `date`, and
+`result` fields. If the Keywords field is absent (`null`) it is treated as an empty string and the
+PDF is skipped with a warning. If the field is present but any of the four required fields are
+absent or empty, the PDF is also skipped with a warning identifying the missing field, allowing the
+index scan to accumulate all valid evidence files even when the scanned directory contains
+non-review PDFs or partially-tagged PDFs.

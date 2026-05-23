@@ -1,4 +1,7 @@
-# ReviewMark
+﻿# ReviewMark
+
+<!-- IMPORTANT: All links in this file must be absolute URLs.
+     This file is distributed in packages and relative links will not resolve. -->
 
 [![GitHub forks][badge-forks]][link-forks]
 [![GitHub stars][badge-stars]][link-stars]
@@ -11,7 +14,10 @@
 
 ## Overview
 
-DEMA Consulting tool for automated file-review evidence management in regulated environments.
+DEMA Consulting command-line tool for automated file-review evidence management in regulated
+environments. ReviewMark generates cryptographic fingerprints of source files and matches them
+against a catalogue of review evidence, producing a compliant review plan and review report on
+every CI/CD run.
 
 ## Features
 
@@ -82,13 +88,18 @@ evidence indexing, and compliance report formats.
 
 ## Installation
 
-Install the tool globally using the .NET CLI:
-
 ```bash
 dotnet tool install -g DemaConsulting.ReviewMark
 ```
 
 ## Usage
+
+```bash
+# Generate review plan and report, and enforce compliance (typical CI/CD usage)
+reviewmark --plan docs/review/review-plan.md --report docs/review/review-report.md --enforce
+```
+
+Additional usage examples:
 
 ```bash
 # Display version
@@ -112,11 +123,8 @@ reviewmark --lint --definition path/to/definition.yaml
 # Silent mode with logging
 reviewmark --silent --log output.log
 
-# Generate review plan and report (typical CI/CD usage)
+# Generate review plan and report without enforcement
 reviewmark --plan docs/review/review-plan.md --report docs/review/review-report.md
-
-# Generate review plan and report, and enforce compliance
-reviewmark --plan docs/review/review-plan.md --report docs/review/review-report.md --enforce
 
 # Index PDF evidence files matching a glob pattern
 reviewmark --dir \\reviews.example.com\evidence\ --index "**/*.pdf"
@@ -202,6 +210,12 @@ See the [User Guide][link-guide] for more details on the self-validation tests.
 
 On validation failure the tool will exit with a non-zero exit code.
 
+## Building
+
+```pwsh
+pwsh ./build.ps1
+```
+
 ## Documentation
 
 Generated documentation includes:
@@ -213,30 +227,26 @@ Generated documentation includes:
 - **Requirements Justifications**: Detailed requirement rationale
 - **Trace Matrix**: Requirements to test traceability
 
-## Building
-
-```pwsh
-pwsh ./build.ps1
-```
-
 ## User Guide
 
-The ReviewMark User Guide is available on the [ReviewMark releases page](https://github.com/demaconsulting/ReviewMark/releases).
+The ReviewMark User Guide is available on the
+[ReviewMark releases page](https://github.com/demaconsulting/ReviewMark/releases).
 
 ## Contributing
 
 See [CONTRIBUTING.md](https://github.com/demaconsulting/ReviewMark/blob/main/CONTRIBUTING.md) for guidelines.
 
+## License
+
+Copyright (c) DEMA Consulting. Licensed under the MIT License.
+See [LICENSE](https://github.com/demaconsulting/ReviewMark/blob/main/LICENSE) for details.
+
+By contributing to this project, you agree that your contributions will be licensed under the MIT License.
+
 ## Support
 
 - [Report a bug or request a feature](https://github.com/demaconsulting/ReviewMark/issues)
 - [Ask a question or start a discussion](https://github.com/demaconsulting/ReviewMark/discussions)
-
-## License
-
-Copyright (c) DEMA Consulting. Licensed under the MIT License. See [LICENSE][link-license] for details.
-
-By contributing to this project, you agree that your contributions will be licensed under the MIT License.
 
 <!-- Badge References -->
 [badge-forks]: https://img.shields.io/github/forks/demaconsulting/ReviewMark?style=plastic

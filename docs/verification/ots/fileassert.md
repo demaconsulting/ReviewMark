@@ -2,35 +2,43 @@
 
 ### Verification Approach
 
-**Component**: DemaConsulting.FileAssert
-**Role**: Validates that required files are present and well-formed as part of the CI build.
-**Acceptance approach**: Automated build pipeline verification.
+This repository pins DemaConsulting.FileAssert version 0.3.0 in the local tool
+manifest and uses that CLI as the document-output assertion gate in the
+`build-docs` job of `build.yaml`. Fitness for use is verified in two
+complementary ways. First, FileAssert is exercised repeatedly in the live
+pipeline through the `Assert ... Documents with FileAssert` steps, which execute
+the checked-in assertions from `.fileassert.yaml` against generated HTML and PDF
+artifacts for the build notes, code quality, code review, design, verification,
+user guide, and requirements document sets. Second, the `Run FileAssert
+self-validation` step executes `dotnet fileassert --validate` and writes
+`artifacts/fileassert-self-validation.trx`. Because any assertion failure or
+self-validation failure stops the workflow, a passing CI run shows that the
+pinned tool version is fit for the repository's intended use as an automated
+artifact validator. No project-specific qualification issues are currently
+recorded for this pinned version.
 
-FileAssert is invoked in the GitHub Actions CI workflow (`build.yaml`) within the
-`build-docs` job. After Pandoc and WeasyPrint generate each document group, a dedicated
-"Assert ... Documents with FileAssert" step validates the outputs. The "Run FileAssert
-self-validation" step runs `dotnet fileassert --validate` after all document groups are
-generated, producing `artifacts/fileassert-self-validation.trx`. A non-zero exit from
-any FileAssert step fails the build, providing evidence that FileAssert is operating
-correctly.
+### Test Scenarios
 
-### Test scenario coverage
+**FileAssertVersionDisplay**: FileAssert reports its version during
+self-validation, proving the pinned tool is installed correctly and can be
+invoked by the build pipeline before it is used to gate generated documents. The
+expected outcome is a passing self-validation result in
+`artifacts/fileassert-self-validation.trx`. This scenario is tested by
+`FileAssert_VersionDisplay`.
 
-- **`FileAssert_VersionDisplay`** — FileAssert's self-validation confirms the tool can
-  display its version, proving it is correctly installed and operationally available.
-  CI Evidence: "Run FileAssert self-validation" step in the `build-docs` job of
-  `build.yaml`, writing results to `artifacts/fileassert-self-validation.trx`.
-- **`FileAssert_HelpDisplay`** — FileAssert's self-validation confirms the tool can
-  display its help text, proving the CLI interface is correctly wired.
-  CI Evidence: Same "Run FileAssert self-validation" step, same TRX file.
+**FileAssertHelpDisplay**: FileAssert reports its help text during
+self-validation, proving the CLI surface expected by the workflow is available
+and operational. The expected outcome is a passing self-validation result in
+`artifacts/fileassert-self-validation.trx`. This scenario is tested by
+`FileAssert_HelpDisplay`.
 
 ### Requirements Coverage
 
-- **ReviewMark-OTS-FileAssert**: FileAssert shall confirm operational availability by
-  successfully completing self-validation.
-  - *FileAssert_VersionDisplay*: verifies FileAssert is correctly installed and displays its
-    version, confirming operational availability.
+- **ReviewMark-OTS-FileAssert**: FileAssert shall confirm operational
+  availability by successfully completing self-validation.
+  - *FileAssertVersionDisplay*: verifies FileAssert is installed correctly and
+    can execute its version-display self-check.
     - `FileAssert_VersionDisplay`
-  - *FileAssert_HelpDisplay*: verifies the FileAssert CLI interface is correctly wired and
-    displays its help text.
+  - *FileAssertHelpDisplay*: verifies FileAssert exposes the expected CLI help
+    surface during self-validation.
     - `FileAssert_HelpDisplay`

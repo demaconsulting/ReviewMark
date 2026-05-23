@@ -120,14 +120,14 @@ The list below shows how each artifact type maps to the same software structure:
 - **Program** — Req: `docs/reqstream/review-mark/program.yaml`,
   Design: `docs/design/review-mark/program.md`,
   Source: `src/.../Program.cs`, Tests: `test/.../ProgramTests.cs`
-- **Cli subsystem** — Req: `docs/reqstream/review-mark/cli/cli.yaml`,
+- **Cli subsystem** — Req: `docs/reqstream/review-mark/cli.yaml`,
   Design: `docs/design/review-mark/cli.md`,
   Source: `src/.../Cli/`
 - **Context** — Req: `docs/reqstream/review-mark/cli/context.yaml`,
   Design: `docs/design/review-mark/cli/context.md`,
   Source: `src/.../Cli/Context.cs`, Tests: `test/.../ContextTests.cs`
 - **Configuration subsystem** —
-  Req: `docs/reqstream/review-mark/configuration/configuration.yaml`,
+  Req: `docs/reqstream/review-mark/configuration.yaml`,
   Design: `docs/design/review-mark/configuration.md`,
   Source: `src/.../Configuration/`
 - **ReviewMarkConfiguration** —
@@ -139,7 +139,7 @@ The list below shows how each artifact type maps to the same software structure:
   Design: `docs/design/review-mark/configuration/glob-matcher.md`,
   Source: `src/.../Configuration/GlobMatcher.cs`,
   Tests: `test/.../GlobMatcherTests.cs`
-- **Indexing subsystem** — Req: `docs/reqstream/review-mark/indexing/indexing.yaml`,
+- **Indexing subsystem** — Req: `docs/reqstream/review-mark/indexing.yaml`,
   Design: `docs/design/review-mark/indexing.md`,
   Source: `src/.../Indexing/`
 - **ReviewIndex** — Req: `docs/reqstream/review-mark/indexing/review-index.yaml`,
@@ -148,7 +148,7 @@ The list below shows how each artifact type maps to the same software structure:
 - **PathHelpers** — Req: `docs/reqstream/review-mark/indexing/path-helpers.yaml`,
   Design: `docs/design/review-mark/indexing/path-helpers.md`,
   Source: `src/.../Indexing/PathHelpers.cs`, Tests: `test/.../IndexingTests.cs`
-- **SelfTest subsystem** — Req: `docs/reqstream/review-mark/self-test/self-test.yaml`,
+- **SelfTest subsystem** — Req: `docs/reqstream/review-mark/self-test.yaml`,
   Design: `docs/design/review-mark/self-test.md`,
   Source: `src/.../SelfTest/`
 - **Validation** — Req: `docs/reqstream/review-mark/self-test/validation.yaml`,
@@ -161,25 +161,6 @@ The list below shows how each artifact type maps to the same software structure:
   Design: `docs/design/ots/microsoft-extensions-file-system-globbing.md`
 
 Requirement IDs referenced in the design chapters match identifiers in the ReqStream YAML files under `docs/reqstream/`.
-
-## Document Conventions
-
-Throughout this document:
-
-- Class names, method names, property names, and file names appear in `monospace` font.
-- The word **shall** denotes a design constraint that the implementation must satisfy.
-- Section headings within each unit chapter follow a consistent structure: overview, data model,
-  methods/algorithms, and interactions with other units.
-- Text tables are used in preference to diagrams, which may not render in all PDF viewers.
-
-### Unit Document Structure Convention
-
-Each unit design document in this project includes an **Overview** subsection and an
-**Interfaces** subsection before the formal unit design sections (data model, methods,
-interactions). This is an intentional project convention: the brief Overview and Interfaces
-sections provide navigability aids — giving reviewers and maintainers an at-a-glance
-summary of a unit's role and public contract — before the detailed design content begins.
-These sections complement rather than replace the mandatory unit design sections.
 
 ## References
 

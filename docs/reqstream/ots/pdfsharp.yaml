@@ -1,8 +1,5 @@
 ---
-# PDFsharp OTS Software Requirements
-#
-# Requirements for the PDFsharp PDF import library.
-
+# PDFsharp OTS requirements
 sections:
   - title: OTS Software Requirements
     sections:

@@ -1,19 +1,27 @@
 # Introduction
 
+This guide describes how to install, configure, and use ReviewMark.
+
 ## Purpose
 
-ReviewMark is a tool for automated file-review evidence management in regulated environments.
-It computes cryptographic fingerprints of defined file-sets, queries a review evidence store
-for corresponding code-review PDFs, and produces compliance documents with every CI/CD run.
+ReviewMark is a DEMA Consulting command-line tool for automated file-review evidence management in
+regulated environments. It computes cryptographic fingerprints of defined file-sets, queries a
+review evidence store for corresponding code-review PDFs, and produces compliance documents on every
+CI/CD run.
 
 ## Scope
 
-This user guide covers:
+This guide covers:
 
-- Installation instructions
+- Installation of the ReviewMark .NET global tool
 - Usage examples for common tasks
 - Command-line options reference
+- Configuration of the `.reviewmark.yaml` definition file
+- End-to-end typical workflow for a regulated repository
 - Practical examples for various scenarios
+
+Prerequisites: a supported .NET runtime (8, 9, or 10) and access to a review evidence store (URL or
+file share), or `type: none` for initial setup.
 
 ## References
 
@@ -22,13 +30,13 @@ This user guide covers:
 
 # Continuous Compliance
 
-This tool follows the [Continuous Compliance][continuous-compliance] methodology, which ensures
-compliance evidence is generated automatically on every CI run.
+This tool follows the Continuous Compliance methodology, which ensures compliance evidence is
+generated automatically on every CI run.
 
 ## Key Practices
 
-- **Requirements Traceability**: Every requirement is linked to passing tests, and a trace matrix is
-  auto-generated on each release
+- **Requirements Traceability**: Every requirement is linked to passing tests, and a trace matrix
+  is auto-generated on each release
 - **Linting Enforcement**: markdownlint, cspell, and yamllint are enforced before any build proceeds
 - **Automated Audit Documentation**: Each release ships with generated requirements, justifications,
   trace matrix, and quality reports
@@ -62,8 +70,8 @@ reviewmark --help
 
 ## Self-Validation
 
-Self-validation produces a report demonstrating that ReviewMark is functioning
-correctly. This is useful in regulated industries where tool validation evidence is required.
+Self-validation produces a report demonstrating that ReviewMark is functioning correctly. This is
+useful in regulated industries where tool validation evidence is required.
 
 ### Running Validation
 
@@ -79,13 +87,13 @@ To save validation results to a file:
 reviewmark --validate --results results.trx
 ```
 
-The results file format is determined by the file extension: `.trx` for TRX (MSTest) format,
-or `.xml` for JUnit format.
+The results file format is determined by the file extension: `.trx` for TRX (MSTest) format, or
+`.xml` for JUnit format.
 
 ### Validation Report
 
-The validation report contains the tool version, machine name, operating system version,
-.NET runtime version, timestamp, and test results.
+The validation report contains the tool version, machine name, operating system version, .NET
+runtime version, timestamp, and test results.
 
 Example validation report:
 
@@ -124,16 +132,17 @@ Each test proves specific functionality works correctly:
 - **`ReviewMark_ReviewPlanGeneration`** - `--definition` + `--plan` generates a review plan.
 - **`ReviewMark_ReviewReportGeneration`** - `--definition` + `--report` generates a review report.
 - **`ReviewMark_IndexScan`** - `--index` scans PDF evidence files and writes `index.json`.
-- **`ReviewMark_WorkingDirectoryOverride`** - `--dir` overrides the working directory for file operations.
+- **`ReviewMark_WorkingDirectoryOverride`** - `--dir` overrides the working directory for file
+  operations.
 - **`ReviewMark_Enforce`** - `--enforce` exits with non-zero code when reviews have issues.
 - **`ReviewMark_Elaborate`** - `--elaborate` prints a Markdown elaboration of a review set.
 - **`ReviewMark_Lint`** - `--lint` validates a definition file and reports issues.
 
 ## Lint Definition File
 
-The `--lint` command validates the definition file (`.reviewmark.yaml`) and reports all
-structural and semantic issues in a single pass. Unlike running the full tool, `--lint` never
-queries the evidence store — it only checks the definition file itself.
+The `--lint` command validates the definition file (`.reviewmark.yaml`) and reports all structural
+and semantic issues in a single pass. Unlike running the full tool, `--lint` never queries the
+evidence store — it only checks the definition file itself.
 
 A successful lint exits with code 0; any issue causes a non-zero exit code.
 
@@ -167,19 +176,18 @@ All detected issues are reported together so you can fix multiple problems in on
 
 ### Lint Verbosity
 
-When linting, the application banner and any summary messages are suppressed. Only the
-actual issue messages are printed, making the output suitable for direct integration
-with linting scripts and CI pipelines:
+When linting, the application banner and any summary messages are suppressed. Only the actual issue
+messages are printed, making the output suitable for direct integration with linting scripts and CI
+pipelines:
 
-- **Success (exit code 0)** — no output is produced. Silence means the definition file
-  is valid.
-- **Failure (exit code 1)** — only the issue messages are printed, with no surrounding
-  banner or summary text.
+- **Success (exit code 0)** — no output is produced. Silence means the definition file is valid.
+- **Failure (exit code 1)** — only the issue messages are printed, with no surrounding banner or
+  summary text.
 
 ### Lint Error Messages
 
-Lint errors follow the standard `[location]: [severity]: [issue]` format. For YAML syntax
-errors the location includes the line and column number:
+Lint errors follow the standard `[location]: [severity]: [issue]` format. For YAML syntax errors
+the location includes the line and column number:
 
 ```text
 definition.yaml:3:5: error: (yaml parse details)
@@ -244,9 +252,9 @@ The following command-line options are supported:
 
 ## Unknown and Invalid Arguments
 
-If an unrecognized or malformed argument is supplied, ReviewMark writes a descriptive
-error message to stderr in the format `Error: {message}` and exits with code 1. No
-output is produced to stdout. For example:
+If an unrecognized or malformed argument is supplied, ReviewMark writes a descriptive error message
+to stderr in the format `Error: {message}` and exits with code 1. No output is produced to stdout.
+For example:
 
 ```bash
 reviewmark --unknown-flag
@@ -256,20 +264,19 @@ reviewmark --unknown-flag
 
 ## Working Directory (`--dir`)
 
-`--dir` sets the root directory used for operations that do not have an explicit path
-provided by another argument. Specifically it affects:
+`--dir` sets the root directory used for operations that do not have an explicit path provided by
+another argument. Specifically it affects:
 
-- **Default definition file** — when `--definition` is omitted, `.reviewmark.yaml` is
-  resolved relative to `--dir` (or the current directory if `--dir` is also omitted).
-- **Glob scanning** — `--index` glob patterns are rooted at `--dir`, and `index.json`
-  is written there.
-- **File scanning** — when generating a plan or report, source files are enumerated
-  relative to `--dir`.
+- **Default definition file** — when `--definition` is omitted, `.reviewmark.yaml` is resolved
+  relative to `--dir` (or the current directory if `--dir` is also omitted).
+- **Glob scanning** — `--index` glob patterns are rooted at `--dir`, and `index.json` is written
+  there.
+- **File scanning** — when generating a plan or report, source files are enumerated relative to
+  `--dir`.
 
-Paths that the caller explicitly supplies via `--definition`, `--plan`, or `--report`
-are used exactly as provided and are **not** re-rooted under `--dir`. This keeps each
-argument independent: specifying one argument's path cannot silently change another
-argument's path.
+Paths that the caller explicitly supplies via `--definition`, `--plan`, or `--report` are used
+exactly as provided and are **not** re-rooted under `--dir`. This keeps each argument independent:
+specifying one argument's path cannot silently change another argument's path.
 
 # Configuration
 
@@ -342,10 +349,10 @@ The same `!`-prefix syntax applies to the top-level `needs-review` list.
 
 ### Fingerprinting
 
-ReviewMark computes a cryptographic fingerprint for each review set from the hashes of all
-matched files. The fingerprint changes whenever files are **added, removed, or modified**, but is
-stable across renames or moves that keep the same set of file contents, so those do not
-invalidate a review.
+ReviewMark computes a cryptographic fingerprint for each review set from the hashes of all matched
+files. The fingerprint changes whenever files are **added, removed, or modified**, but is stable
+across renames or moves that keep the same set of file contents, so those do not invalidate a
+review.
 
 When a reviewer creates evidence, they record the current fingerprint in the PDF Keywords field.
 ReviewMark matches that recorded fingerprint against the current fingerprint to determine whether
@@ -357,9 +364,9 @@ Good review sets share these properties:
 
 - **Cohesive** — group implementation files with their corresponding tests and any documentation
   they are paired with (e.g. a module's `.md` file alongside its `.cs` files).
-- **Stable `id`** — choose an identifier that will not need to change as the code evolves, such
-  as `authentication-module` or `payment-api`. The `id` is embedded in every evidence PDF, so
-  renaming it breaks the evidence chain.
+- **Stable `id`** — choose an identifier that will not need to change as the code evolves, such as
+  `authentication-module` or `payment-api`. The `id` is embedded in every evidence PDF, so renaming
+  it breaks the evidence chain.
 - **Right-sized** — a set that is too large is difficult to review in a single sitting; a set that
   is too small creates an unmanageable number of review artifacts.
 - **Exclude generated files** — use `!` patterns to omit `obj/`, `bin/`, and other build outputs
@@ -382,17 +389,17 @@ reviews:
 ## Evidence Source
 
 The `evidence-source` block configures how ReviewMark obtains review evidence. For `url` and
-`fileshare` sources it points to `index.json` — the catalogue of completed review PDFs. The
-`none` source skips loading any index and always returns empty evidence (useful during initial
-project setup before an evidence store is provisioned).
+`fileshare` sources it points to `index.json` — the catalogue of completed review PDFs. The `none`
+source skips loading any index and always returns empty evidence (useful during initial project
+setup before an evidence store is provisioned).
 
 ### Source Types
 
-| Type         | Description                                                                          |
-| :----------- | :----------------------------------------------------------------------------------- |
-| `none`       | No evidence source; always returns an empty index (for initial project setup)        |
-| `fileshare`  | Full UNC or local file-system path to `index.json`                                   |
-| `url`        | Full HTTP or HTTPS URL to `index.json`                                               |
+| Type        | Description                                                                         |
+| :---------- | :---------------------------------------------------------------------------------- |
+| `none`      | No evidence source; always returns an empty index (for initial project setup)       |
+| `fileshare` | Full UNC or local file-system path to `index.json`                                  |
+| `url`       | Full HTTP or HTTPS URL to `index.json`                                              |
 
 #### None
 
@@ -411,9 +418,9 @@ evidence-source:
   location: \\reviews.example.com\evidence\index.json
 ```
 
-> **Note**: The `\\server\share\` syntax above is Windows UNC notation. On Linux and macOS,
-> mount the network share first (for example via NFS or CIFS) and reference the mounted path
-> instead, e.g. `location: /mnt/reviews/evidence/index.json`.
+> **Note**: The `\\server\share\` syntax above is Windows UNC notation. On Linux and macOS, mount
+> the network share first (for example via NFS or CIFS) and reference the mounted path instead,
+> e.g. `location: /mnt/reviews/evidence/index.json`.
 
 #### URL
 
@@ -425,8 +432,8 @@ evidence-source:
 
 ### Credentials
 
-For authenticated URL sources, supply credentials through environment variables so that secrets
-are never stored in the definition file or source control:
+For authenticated URL sources, supply credentials through environment variables so that secrets are
+never stored in the definition file or source control:
 
 ```yaml
 evidence-source:
@@ -487,13 +494,14 @@ any review set.
 reviewmark --plan docs/review/review-plan.md
 ```
 
-The plan is checked into the repository alongside the source code so that reviewers have a structured
-starting point.
+The plan is checked into the repository alongside the source code so that reviewers have a
+structured starting point.
 
 ## Step 3 — Elaborate the Review Set
 
 Before beginning a review, use `--elaborate` to obtain the precise fingerprint and the full sorted
-list of files for a specific review set. This information is required when creating the evidence PDF:
+list of files for a specific review set. This information is required when creating the evidence
+PDF:
 
 ```bash
 reviewmark --elaborate Core-Logic
@@ -532,8 +540,8 @@ id=core-module fingerprint=a3f9c2d1... date=2026-03-15 result=pass
 ```
 
 All four fields are **required** — a PDF without any one of them will be skipped with a warning
-when the evidence store is scanned. The PDF is deposited in the evidence store folder.
-ReviewMark never dictates file names — the reviewer uses whatever name the QMS requires.
+when the evidence store is scanned. The PDF is deposited in the evidence store folder. ReviewMark
+never dictates file names — the reviewer uses whatever name the QMS requires.
 
 ## Step 5 — Update the Evidence Index
 
@@ -692,6 +700,3 @@ reviewmark --validate --results validation-results.trx
 ```bash
 reviewmark --silent --log tool-output.log
 ```
-
-<!-- Link References -->
-[continuous-compliance]: https://github.com/demaconsulting/ContinuousCompliance

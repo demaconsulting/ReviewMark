@@ -1,13 +1,7 @@
 ---
-# ReviewMark System-Level Requirements
-#
-# PURPOSE:
-# - Define system-level requirements describing what end-users need the ReviewMark tool to provide
-# - These requirements capture the externally visible behavior of the complete ReviewMark system
-# - Unit-level requirements (per-class behavior) are in the individual *-requirements.yaml files
-
+# ReviewMark system-level requirements
 sections:
-  - title: System-Level Requirements
+  - title: ReviewMark Requirements
     requirements:
       - id: ReviewMark-System-ReviewPlan
         title: >-
@@ -65,6 +59,7 @@ sections:
           cleanly with CI/CD secret management.
         tests:
           - ReviewMark_LintFlag_WithValidConfig_ProducesNoOutput
+          - ReviewMarkConfiguration_Parse_EvidenceSourceWithCredentials_ParsedCorrectly
         children:
           - ReviewMark-Index-EvidenceSource
 
@@ -163,7 +158,7 @@ sections:
           summary) keeps the output suitable for direct use in linting scripts and CI pipelines.
         tests:
           - ReviewMark_LintFlag_WithValidConfig_ProducesNoOutput
-          - ReviewMark_LintFlag_WithInvalidConfig_ReportsIssueMessages
+          - ReviewMark_LintFlag_WithInvalidConfig_ReportsOnlyIssueMessages
         children:
           - ReviewMark-Cmd-Lint
           - ReviewMark-Program-LintVerbosity

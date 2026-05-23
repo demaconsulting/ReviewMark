@@ -1,0 +1,75 @@
+---
+# Indexing subsystem requirements
+sections:
+  - title: ReviewMark Requirements
+    sections:
+      - title: Indexing Requirements
+        requirements:
+          - id: ReviewMark-Indexing-LoadEvidence
+            title: >-
+              The tool shall load review evidence from a fileshare or url EvidenceSource.
+            justification: |
+              The Indexing subsystem must support loading evidence from remote or local
+              file-based stores (fileshare and url types) so that plan and report generation
+              can determine the review status of each review-set. Missing files, unreadable
+              files, and HTTP failures must each produce a clear error so the operator can
+              diagnose and correct the evidence configuration without inspecting raw exceptions.
+            tests:
+              - Indexing_SafePathCombine_WithIndexPath_LoadsIndex
+              - Indexing_ReviewIndex_Load_WithUrlSource_ReturnsPopulatedIndex
+              - Indexing_ReviewIndex_Load_MissingFile_ThrowsInvalidOperationException
+              - Indexing_ReviewIndex_Load_MalformedJson_ThrowsInvalidOperationException
+            children:
+              - ReviewMark-Index-EvidenceSource
+              - ReviewMark-Index-GetEvidence
+              - ReviewMark-Index-HasId
+              - ReviewMark-Index-GetAllForId
+
+          - id: ReviewMark-Indexing-CreateEvidence
+            title: >-
+              The tool shall create a new empty index when the EvidenceSource type is 'none'.
+            justification: |
+              When a project is first starting out, the evidence source can be set to 'none'
+              until an evidence store is provisioned. In this case the Indexing subsystem must
+              return an empty index immediately without accessing the file system or network,
+              allowing the tool to operate during initial repository setup without error.
+            tests:
+              - Indexing_ReviewIndex_Load_WithNoneSource_ReturnsEmptyIndex
+            children:
+              - ReviewMark-Index-EvidenceSource-None
+              - ReviewMark-Index-Empty
+
+          - id: ReviewMark-Indexing-ScanPdfEvidence
+            title: The tool shall scan PDF evidence files and extract embedded review metadata to build an index.
+            justification: |
+              Review evidence is stored as PDF files with metadata embedded in the Keywords
+              field. The Indexing subsystem must be able to scan directories for PDF files
+              and extract the review ID, fingerprint, date, and result from each file to
+              populate the evidence index used for report generation.
+            tests:
+              - Indexing_ReviewIndex_Scan_WithNoPdfs_ReturnsEmptyIndex
+              - Indexing_ReviewIndex_Scan_WithValidPdf_ReturnsPopulatedIndex
+            children: [ReviewMark-Index-PdfParsing, ReviewMark-Index-Freshness]
+
+          - id: ReviewMark-Indexing-Save
+            title: The tool shall save the review evidence index to a JSON file for later loading.
+            justification: |
+              After scanning PDF evidence files, the resulting index must be persisted to disk
+              so that plan and report generation can consume the evidence without re-scanning.
+              The save format must be compatible with the load format so that a round-trip
+              preserves all evidence entries without data loss.
+            tests:
+              - Indexing_ReviewIndex_SaveAndLoad_RoundTrip
+            children: [ReviewMark-Index-Save]
+
+          - id: ReviewMark-Indexing-SafePathCombine
+            title: The tool shall combine file paths safely, rejecting path traversal sequences.
+            justification: |
+              Path traversal sequences (such as '..') in file paths could allow access to
+              files outside the intended directory. The Indexing subsystem must reject such
+              sequences to prevent unintended file system access in both evidence scanning
+              and index file operations.
+            tests:
+              - Indexing_SafePathCombine_WithIndexPath_LoadsIndex
+              - Indexing_SafePathCombine_WithTraversalInputs_Throws
+            children: [ReviewMark-PathHelpers-SafeCombine, ReviewMark-PathHelpers-NullRejection]

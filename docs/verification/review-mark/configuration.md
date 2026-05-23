@@ -1,105 +1,36 @@
 ## Configuration
 
-### Verification Strategy
+### Verification Approach
 
-The Configuration subsystem is verified through `ConfigurationTests.cs`, which exercises
-`ReviewMarkConfiguration` and `GlobMatcher` working together with actual temporary file
-systems. Each test creates a fresh temporary directory with controlled definition files
-and source files, loads the configuration, and asserts on the resulting state.
-
-The constructor initializes the temporary directory; `Dispose` deletes it, ensuring each
-test operates in a clean environment.
-
-### Dependencies
-
-| Mock / Stub         | Reason                                                        |
-| ------------------- | ------------------------------------------------------------- |
-| Temporary directory | Isolated filesystem prevents test interference                |
-| Temporary YAML file | Controlled definition file with known configuration content   |
+Configuration subsystem verification uses `ConfigurationTests.cs` to exercise `ReviewMarkConfiguration` and `GlobMatcher` together against temporary directories, real YAML definition files, and real file sets. These tests verify file discovery, fingerprinting, plan and report generation, elaboration, and malformed-YAML handling across the subsystem boundary; `ReviewIndex` is used only where report generation needs realistic evidence input.
 
 ### Test Environment
 
-Tests run under xUnit on .NET 8, 9, and 10 across Windows, Linux, and macOS. Each test
-creates a fresh temporary directory with controlled definition files and source files in
-the test constructor and deletes it in `Dispose`, ensuring clean isolation. No external
-services or network access are required.
+Tests run under xUnit on .NET 8, 9, and 10 across Windows, Linux, and macOS. Each test creates a fresh temporary directory, writes controlled `.reviewmark.yaml` and source files, and removes the directory during cleanup. No external services or network access are required.
 
 ### Acceptance Criteria
 
-All Configuration subsystem tests pass with zero failures. Every `ReviewMark-Configuration-*`
-requirement is covered by at least one passing test scenario. Malformed YAML and unknown
-review-set IDs produce the specified exception or error result.
+- All Configuration subsystem integration tests pass with zero failures.
+- Each `ReviewMark-Configuration-*` requirement is traced to at least one scenario and test method.
+- Valid configurations generate deterministic fingerprints and Markdown outputs, while malformed inputs produce the documented diagnostics.
 
 ### Test Scenarios
 
-#### Configuration_NeedsReview_ValidConfig_ResolvesFiles
+**Configuration_NeedsReview_ValidConfig_ResolvesFiles**: A configuration with `needs-review: ["src/**/*.cs"]` is loaded; two `.cs` files exist in `src/`. Expected outcome: `GetNeedsReviewFiles` returns exactly two files. Requirement coverage: `ReviewMark-Configuration-NeedsReview`. This scenario is tested by `Configuration_NeedsReview_ValidConfig_ResolvesFiles`.
 
-**Scenario**: A configuration with `needs-review: ["src/**/*.cs"]` is loaded; two `.cs`
-files exist in `src/`.
+**Configuration_Fingerprinting_ContentModified_FingerprintDiffers**: A configuration is loaded before and after modifying a source file. Expected outcome: The fingerprints differ after the content change. Requirement coverage: `ReviewMark-Configuration-Fingerprinting`. This scenario is tested by `Configuration_Fingerprinting_ContentModified_FingerprintDiffers`.
 
-**Expected**: `GetNeedsReviewFiles` returns exactly two files.
+**Configuration_PlanGeneration_ValidConfig_Succeeds**: A valid configuration is loaded and `PublishReviewPlan` is called. Expected outcome: The returned markdown contains the review set ID. Requirement coverage: `ReviewMark-Configuration-PlanGeneration`. This scenario is tested by `Configuration_PlanGeneration_ValidConfig_Succeeds`.
 
-**Requirement coverage**: `ReviewMark-Configuration-NeedsReview`
+**Configuration_ReportGeneration_ValidConfig_Succeeds**: A valid configuration is loaded and `PublishReviewReport` is called. Expected outcome: The returned markdown contains the review set ID. Requirement coverage: `ReviewMark-Configuration-ReportGeneration`. This scenario is tested by `Configuration_ReportGeneration_ValidConfig_Succeeds`.
 
-#### Configuration_Fingerprinting_ContentModified_FingerprintDiffers
+**Configuration_Elaboration_ValidId_Succeeds**: A valid configuration file is loaded and `ElaborateReviewSet` is called with a known review-set ID. Expected outcome: The returned elaboration markdown contains the review-set ID, fingerprint, and file paths. Requirement coverage: `ReviewMark-Configuration-Elaboration`. This scenario is tested by `Configuration_Elaboration_ValidId_Succeeds`.
 
-**Scenario**: A configuration is loaded before and after modifying a source file.
+**Configuration_ElaborateReviewSet_UnknownId_ThrowsArgumentException**: A valid configuration file is loaded and `ElaborateReviewSet` is called with an ID that does not exist. Expected outcome: `ArgumentException` is thrown. Boundary or error path: Unknown review-set ID validation at subsystem level. Requirement coverage: `ReviewMark-Configuration-ElaborateUnknownId`. This scenario is tested by `Configuration_ElaborateReviewSet_UnknownId_ThrowsArgumentException`.
 
-**Expected**: The fingerprints differ after the content change.
+**Configuration_LoadConfig_MalformedYaml_ReturnsIssues**: A configuration file with invalid/malformed YAML is loaded. Expected outcome: The configuration is null and the issues list is non-empty. Boundary or error path: Malformed YAML input. Requirement coverage: `ReviewMark-Configuration-MalformedYaml`. This scenario is tested by `Configuration_LoadConfig_MalformedYaml_ReturnsIssues`.
 
-**Requirement coverage**: `ReviewMark-Configuration-Fingerprinting`
-
-#### Configuration_PlanGeneration_ValidConfig_Succeeds
-
-**Scenario**: A valid configuration is loaded and `PublishReviewPlan` is called.
-
-**Expected**: The returned markdown contains the review set ID.
-
-**Requirement coverage**: `ReviewMark-Configuration-PlanGeneration`
-
-#### Configuration_ReportGeneration_ValidConfig_Succeeds
-
-**Scenario**: A valid configuration is loaded and `PublishReviewReport` is called.
-
-**Expected**: The returned markdown contains the review set ID.
-
-**Requirement coverage**: `ReviewMark-Configuration-ReportGeneration`
-
-#### Configuration_Elaboration_ValidId_Succeeds
-
-**Scenario**: A valid configuration file is loaded and `ElaborateReviewSet` is called with a known review-set ID.
-
-**Expected**: The returned elaboration markdown contains the review-set ID, fingerprint, and file paths.
-
-**Requirement coverage**: `ReviewMark-Configuration-Elaboration`
-
-#### Configuration_ElaborateReviewSet_UnknownId_ThrowsArgumentException
-
-**Scenario**: A valid configuration file is loaded and `ElaborateReviewSet` is called with an ID that does not exist.
-
-**Expected**: `ArgumentException` is thrown.
-
-**Boundary / error path**: Unknown review-set ID validation at subsystem level.
-
-**Requirement coverage**: `ReviewMark-Configuration-ElaborateUnknownId`
-
-#### Configuration_LoadConfig_MalformedYaml_ReturnsIssues
-
-**Scenario**: A configuration file with invalid/malformed YAML is loaded.
-
-**Expected**: The configuration is null and the issues list is non-empty.
-
-**Boundary / error path**: Malformed YAML input.
-
-**Requirement coverage**: `ReviewMark-Configuration-MalformedYaml`
-
-#### Configuration_Fingerprinting_FileRenamed_FingerprintUnchanged
-
-**Scenario**: A review-set fingerprint is computed before and after renaming one of its source files.
-
-**Expected**: The fingerprint is identical before and after renaming (content-based, not path-based).
-
-**Requirement coverage**: `ReviewMark-Configuration-Fingerprinting`
+**Configuration_Fingerprinting_FileRenamed_FingerprintUnchanged**: A review-set fingerprint is computed before and after renaming one of its source files. Expected outcome: The fingerprint is identical before and after renaming (content-based, not path-based). Requirement coverage: `ReviewMark-Configuration-Fingerprinting`. This scenario is tested by `Configuration_Fingerprinting_FileRenamed_FingerprintUnchanged`.
 
 ### Requirements Coverage
 

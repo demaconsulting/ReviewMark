@@ -1,11 +1,12 @@
 ---
-title: ReviewMark User Guide
-subtitle: File-Review Evidence Management for Regulated Environments
-author: DEMA Consulting
-description: File-Review Evidence Management for Regulated Environments
+title: "ReviewMark User Guide"
+subtitle: "Automated file-review evidence management"
+author: "DEMA Consulting"
+description: "User Guide for ReviewMark"
 lang: en-US
 keywords:
   - ReviewMark
+  - User Guide
   - .NET
   - Command-Line Tool
   - File Review

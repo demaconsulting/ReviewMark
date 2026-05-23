@@ -103,8 +103,9 @@ public sealed class MicrosoftExtensionsFileSystemGlobbingTests : IDisposable
     }
 
     /// <summary>
-    ///     Verifies that files matching a pattern added via <see cref="Matcher.AddExclude" />
-    ///     are absent from the results, confirming exclusion behavior.
+    ///     Verifies that files matching an exclude pattern (using a separate <see cref="Matcher" />
+    ///     with <see cref="Matcher.AddInclude" />) are absent from the result set after removal,
+    ///     confirming the exclusion technique used by <c>GlobMatcher</c>.
     /// </summary>
     [Fact]
     public void Matcher_GetResultsInFullPath_ExcludePattern_OmitsMatchingFiles()
@@ -115,12 +116,21 @@ public sealed class MicrosoftExtensionsFileSystemGlobbingTests : IDisposable
         File.WriteAllText(Path.Combine(_testDirectory, "Real.cs"), "class Real {}");
         File.WriteAllText(Path.Combine(genDir, "Generated.cs"), "class Generated {}");
 
-        var matcher = new Matcher();
-        matcher.AddInclude("**/*.cs");
-        matcher.AddExclude("Generated/**");
+        // Include all .cs files
+        var includeMatcher = new Matcher();
+        includeMatcher.AddInclude("**/*.cs");
+        var included = includeMatcher.GetResultsInFullPath(_testDirectory).ToHashSet(StringComparer.Ordinal);
 
-        // Act
-        var results = matcher.GetResultsInFullPath(_testDirectory).ToList();
+        // Exclude Generated/** using a separate include matcher on the exclude pattern (stripped of '!')
+        var excludeMatcher = new Matcher();
+        excludeMatcher.AddInclude("Generated/**");
+        foreach (var path in excludeMatcher.GetResultsInFullPath(_testDirectory))
+        {
+            included.Remove(path);
+        }
+
+        // Act — convert to sorted list
+        var results = included.Order(StringComparer.Ordinal).ToList();
 
         // Assert — only Real.cs is returned; Generated.cs is excluded
         Assert.Single(results);

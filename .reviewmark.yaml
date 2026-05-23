@@ -88,7 +88,7 @@ reviews:
   - id: ReviewMark-Cli
     title: Review that ReviewMark Cli Satisfies Subsystem Requirements
     paths:
-      - "docs/reqstream/review-mark/cli/cli.yaml"              # subsystem requirements
+      - "docs/reqstream/review-mark/cli.yaml"              # subsystem requirements
       - "docs/design/review-mark/cli.md"                   # Cli subsystem design
       - "docs/verification/review-mark/cli.md"                 # Cli subsystem verification
       - "test/**/Cli/CliTests.cs"                              # Cli subsystem tests
@@ -106,7 +106,7 @@ reviews:
   - id: ReviewMark-Configuration
     title: Review that ReviewMark Configuration Satisfies Subsystem Requirements
     paths:
-      - "docs/reqstream/review-mark/configuration/configuration.yaml"   # subsystem requirements
+      - "docs/reqstream/review-mark/configuration.yaml"   # subsystem requirements
       - "docs/design/review-mark/configuration.md"        # Configuration subsystem design
       - "docs/verification/review-mark/configuration.md"                # Configuration subsystem verification
       - "test/**/Configuration/ConfigurationTests.cs"                   # Configuration subsystem tests
@@ -133,7 +133,7 @@ reviews:
   - id: ReviewMark-Indexing
     title: Review that ReviewMark Indexing Satisfies Subsystem Requirements
     paths:
-      - "docs/reqstream/review-mark/indexing/indexing.yaml"    # subsystem requirements
+      - "docs/reqstream/review-mark/indexing.yaml"    # subsystem requirements
       - "docs/design/review-mark/indexing.md"         # Indexing subsystem design
       - "docs/verification/review-mark/indexing.md"            # Indexing subsystem verification
       - "test/**/Indexing/IndexingTests.cs"                    # Indexing subsystem tests
@@ -160,7 +160,7 @@ reviews:
   - id: ReviewMark-SelfTest
     title: Review that ReviewMark SelfTest Satisfies Subsystem Requirements
     paths:
-      - "docs/reqstream/review-mark/self-test/self-test.yaml"    # subsystem requirements
+      - "docs/reqstream/review-mark/self-test.yaml"    # subsystem requirements
       - "docs/design/review-mark/self-test.md"         # SelfTest subsystem design
       - "docs/verification/review-mark/self-test.md"             # SelfTest subsystem verification
       - "test/**/SelfTest/SelfTestTests.cs"                      # SelfTest subsystem tests
@@ -187,7 +187,7 @@ reviews:
       - "docs/reqstream/ots/dema-consulting-test-results.yaml"
       - "docs/design/ots/dema-consulting-test-results.md"
       - "docs/verification/ots/dema-consulting-test-results.md"
-      - "test/DemaConsulting.ReviewMark.OtsSoftwareTests/DemaConsultingTestResultsTests.cs"
+      - "test/OtsSoftwareTests/DemaConsultingTestResultsTests.cs"
 
   - id: OTS-FileAssert
     title: Review that FileAssert Provides Required Functionality
@@ -201,7 +201,7 @@ reviews:
       - "docs/reqstream/ots/microsoft-extensions-file-system-globbing.yaml"
       - "docs/design/ots/microsoft-extensions-file-system-globbing.md"
       - "docs/verification/ots/microsoft-extensions-file-system-globbing.md"
-      - "test/DemaConsulting.ReviewMark.OtsSoftwareTests/MicrosoftExtensionsFileSystemGlobbingTests.cs"
+      - "test/OtsSoftwareTests/MicrosoftExtensionsFileSystemGlobbingTests.cs"
 
   - id: OTS-Pandoc
     title: Review that Pandoc Provides Required Functionality
@@ -215,7 +215,7 @@ reviews:
       - "docs/reqstream/ots/pdfsharp.yaml"
       - "docs/design/ots/pdfsharp.md"
       - "docs/verification/ots/pdfsharp.md"
-      - "test/DemaConsulting.ReviewMark.OtsSoftwareTests/PDFsharpTests.cs"
+      - "test/OtsSoftwareTests/PDFsharpTests.cs"
 
   - id: OTS-ReqStream
     title: Review that ReqStream Provides Required Functionality
@@ -265,4 +265,4 @@ reviews:
       - "docs/reqstream/ots/yamldotnet.yaml"
       - "docs/design/ots/yamldotnet.md"
       - "docs/verification/ots/yamldotnet.md"
-      - "test/DemaConsulting.ReviewMark.OtsSoftwareTests/YamlDotNetTests.cs"
+      - "test/OtsSoftwareTests/YamlDotNetTests.cs"

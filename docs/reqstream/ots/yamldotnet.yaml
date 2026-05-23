@@ -1,8 +1,5 @@
 ---
-# YamlDotNet OTS Software Requirements
-#
-# Requirements for the YamlDotNet YAML deserialization library.
-
+# YamlDotNet OTS requirements
 sections:
   - title: OTS Software Requirements
     sections:

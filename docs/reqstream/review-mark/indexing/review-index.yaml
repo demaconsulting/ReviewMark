@@ -1,162 +1,160 @@
 ---
-# ReviewIndex Software Unit Requirements
-#
-# PURPOSE:
-# - Define requirements for the ReviewIndex software unit
-# - This unit loads review evidence from an EvidenceSource (none/fileshare/url)
-# - It also scans PDF files to extract embedded review metadata for indexing
-
+# ReviewIndex unit requirements
 sections:
-  - title: Index Unit Requirements
-    requirements:
-      - id: ReviewMark-Index-EvidenceSource
-        title: >-
-          The tool shall dispatch to the appropriate evidence loader based on the
-          EvidenceSource type and reject null or unsupported source types.
-        justification: |
-          The ReviewIndex.Load method must validate its inputs and route loading to the
-          correct strategy based on the evidence source type. Null sources must be rejected
-          immediately with ArgumentNullException. Unrecognized source types must fail with
-          a clear InvalidOperationException so callers receive actionable diagnostics.
-          The three supported source types (none, fileshare, url) are each handled by a
-          dedicated atomic child requirement.
-        tests:
-          - ReviewIndex_Load_EvidenceSource_NullSource_ThrowsArgumentNullException
-          - ReviewIndex_Load_EvidenceSource_UnknownType_ThrowsInvalidOperationException
-          - ReviewIndex_Load_EvidenceSource_NullHttpClient_ThrowsArgumentNullException
-        children:
-          - ReviewMark-Index-LoadFromFile
-          - ReviewMark-Index-LoadFromStream
-          - ReviewMark-Index-EvidenceSource-None
+  - title: ReviewMark Requirements
+    sections:
+      - title: Indexing Requirements
+        sections:
+          - title: ReviewIndex Requirements
+            requirements:
+              - id: ReviewMark-Index-EvidenceSource
+                title: >-
+                  The tool shall dispatch to the appropriate evidence loader based on the
+                  EvidenceSource type and reject null or unsupported source types.
+                justification: |
+                  The ReviewIndex.Load method must validate its inputs and route loading to the
+                  correct strategy based on the evidence source type. Null sources must be rejected
+                  immediately with ArgumentNullException. Unrecognized source types must fail with
+                  a clear InvalidOperationException so callers receive actionable diagnostics.
+                  The three supported source types (none, fileshare, url) are each handled by a
+                  dedicated atomic child requirement.
+                tests:
+                  - ReviewIndex_Load_EvidenceSource_NullSource_ThrowsArgumentNullException
+                  - ReviewIndex_Load_EvidenceSource_UnknownType_ThrowsInvalidOperationException
+                  - ReviewIndex_Load_EvidenceSource_NullHttpClient_ThrowsArgumentNullException
+                children:
+                  - ReviewMark-Index-LoadFromFile
+                  - ReviewMark-Index-LoadFromStream
+                  - ReviewMark-Index-EvidenceSource-None
 
-      - id: ReviewMark-Index-LoadFromFile
-        title: >-
-          The tool shall load a ReviewIndex from a fileshare EvidenceSource by reading
-          the index JSON from the specified file path.
-        justification: |
-          When the evidence source type is 'fileshare', the tool must read index.json from
-          the path specified in EvidenceSource.Location and deserialize it into a ReviewIndex.
-          Missing files, unreadable files, and malformed JSON must each produce an
-          InvalidOperationException with a message identifying the path and the underlying
-          failure, so callers receive actionable diagnostics without needing to inspect raw
-          I/O exceptions.
-        tests:
-          - ReviewIndex_Load_EvidenceSource_Fileshare_LoadsFromFile
-          - ReviewIndex_Load_EvidenceSource_Fileshare_NonExistentFile_ThrowsInvalidOperationException
-          - ReviewIndex_Load_EvidenceSource_Fileshare_InvalidJson_ThrowsInvalidOperationException
-          - ReviewIndex_Load_EvidenceSource_Fileshare_EmptyReviews_ReturnsEmptyIndex
-          - ReviewIndex_Load_EvidenceSource_Fileshare_ValidJson_ReturnsPopulatedIndex
-          - ReviewIndex_Load_EvidenceSource_Fileshare_MissingRequiredFields_SkipsInvalidEntries
+              - id: ReviewMark-Index-LoadFromFile
+                title: >-
+                  The tool shall load a ReviewIndex from a fileshare EvidenceSource by reading
+                  the index JSON from the specified file path.
+                justification: |
+                  When the evidence source type is 'fileshare', the tool must read index.json from
+                  the path specified in EvidenceSource.Location and deserialize it into a ReviewIndex.
+                  Missing files, unreadable files, and malformed JSON must each produce an
+                  InvalidOperationException with a message identifying the path and the underlying
+                  failure, so callers receive actionable diagnostics without needing to inspect raw
+                  I/O exceptions.
+                tests:
+                  - ReviewIndex_Load_EvidenceSource_Fileshare_LoadsFromFile
+                  - ReviewIndex_Load_EvidenceSource_Fileshare_NonExistentFile_ThrowsInvalidOperationException
+                  - ReviewIndex_Load_EvidenceSource_Fileshare_InvalidJson_ThrowsInvalidOperationException
+                  - ReviewIndex_Load_EvidenceSource_Fileshare_EmptyReviews_ReturnsEmptyIndex
+                  - ReviewIndex_Load_EvidenceSource_Fileshare_ValidJson_ReturnsPopulatedIndex
+                  - ReviewIndex_Load_EvidenceSource_Fileshare_MissingRequiredFields_SkipsInvalidEntries
 
-      - id: ReviewMark-Index-LoadFromStream
-        title: >-
-          The tool shall load a ReviewIndex from a url EvidenceSource by downloading
-          the index JSON over HTTP(S).
-        justification: |
-          When the evidence source type is 'url', the tool must issue an HTTP GET request
-          to the URL in EvidenceSource.Location and deserialize the response body as
-          index JSON. Non-success HTTP responses and malformed JSON responses must each
-          produce an InvalidOperationException identifying the URL and the failure reason.
-          A testable overload accepting a caller-supplied HttpClient enables unit tests to
-          verify URL-source behavior without real network access.
-        tests:
-          - ReviewIndex_Load_EvidenceSource_Url_SuccessResponse_LoadsIndex
-          - ReviewIndex_Load_EvidenceSource_Url_NotFoundResponse_ThrowsInvalidOperationException
-          - ReviewIndex_Load_EvidenceSource_Url_InvalidJson_ThrowsInvalidOperationException
+              - id: ReviewMark-Index-LoadFromStream
+                title: >-
+                  The tool shall load a ReviewIndex from a url EvidenceSource by downloading
+                  the index JSON over HTTP(S).
+                justification: |
+                  When the evidence source type is 'url', the tool must issue an HTTP GET request
+                  to the URL in EvidenceSource.Location and deserialize the response body as
+                  index JSON. Non-success HTTP responses and malformed JSON responses must each
+                  produce an InvalidOperationException identifying the URL and the failure reason.
+                  A testable overload accepting a caller-supplied HttpClient enables unit tests to
+                  verify URL-source behavior without real network access.
+                tests:
+                  - ReviewIndex_Load_EvidenceSource_Url_SuccessResponse_LoadsIndex
+                  - ReviewIndex_Load_EvidenceSource_Url_NotFoundResponse_ThrowsInvalidOperationException
+                  - ReviewIndex_Load_EvidenceSource_Url_InvalidJson_ThrowsInvalidOperationException
 
-      - id: ReviewMark-Index-EvidenceSource-None
-        title: The tool shall support a 'none' evidence source type that provides no review evidence.
-        justification: |
-          When a project is first starting out, it should be able to set the evidence-source
-          to 'none' until an evidence store is provisioned. The 'none' type requires no
-          location field and always returns an empty index, allowing the tool to run without
-          error during initial repository setup.
-        tests:
-          - ReviewIndex_Load_EvidenceSource_None_ReturnsEmptyIndex
-          - ReviewIndex_Load_EvidenceSource_None_HttpClientOverload_ReturnsEmptyIndex
+              - id: ReviewMark-Index-EvidenceSource-None
+                title: The tool shall support a 'none' evidence source type that provides no review evidence.
+                justification: |
+                  When a project is first starting out, it should be able to set the evidence-source
+                  to 'none' until an evidence store is provisioned. The 'none' type requires no
+                  location field and always returns an empty index, allowing the tool to run without
+                  error during initial repository setup.
+                tests:
+                  - ReviewIndex_Load_EvidenceSource_None_ReturnsEmptyIndex
+                  - ReviewIndex_Load_EvidenceSource_None_HttpClientOverload_ReturnsEmptyIndex
 
-      - id: ReviewMark-Index-PdfParsing
-        title: The tool shall parse PDF metadata from the Keywords field when indexing evidence files.
-        justification: |
-          When scanning PDF evidence files, the tool must read the standard PDF Keywords
-          field and extract space-separated `name=value` pairs. All four fields — id,
-          fingerprint, date, and result — are required for an entry to be indexed; PDFs
-          whose Keywords field is missing any of these fields (or is entirely absent) must
-          be skipped with a warning, ensuring the index only contains complete, valid entries.
-        tests:
-          - ReviewIndex_Scan_PdfWithValidMetadata_PopulatesIndex
-          - ReviewIndex_Scan_PdfWithMissingId_SkipsWithWarning
-          - ReviewIndex_Scan_PdfWithMissingFingerprint_SkipsWithWarning
-          - ReviewIndex_Scan_PdfWithMissingDate_SkipsWithWarning
-          - ReviewIndex_Scan_PdfWithMissingResult_SkipsWithWarning
-          - ReviewIndex_Scan_PdfWithNoKeywords_SkipsWithWarning
-          - ReviewIndex_Scan_NoMatchingFiles_LeavesIndexEmpty
-          - ReviewIndex_Scan_MultiplePdfs_PopulatesAllEntries
+              - id: ReviewMark-Index-PdfParsing
+                title: The tool shall parse PDF metadata from the Keywords field when indexing evidence files.
+                justification: |
+                  When scanning PDF evidence files, the tool must read the standard PDF Keywords
+                  field and extract space-separated `name=value` pairs. All four fields — id,
+                  fingerprint, date, and result — are required for an entry to be indexed; PDFs
+                  whose Keywords field is missing any of these fields (or is entirely absent) must
+                  be skipped with a warning, ensuring the index only contains complete, valid entries.
+                tests:
+                  - ReviewIndex_Scan_PdfWithValidMetadata_PopulatesIndex
+                  - ReviewIndex_Scan_PdfWithMissingId_SkipsWithWarning
+                  - ReviewIndex_Scan_PdfWithMissingFingerprint_SkipsWithWarning
+                  - ReviewIndex_Scan_PdfWithMissingDate_SkipsWithWarning
+                  - ReviewIndex_Scan_PdfWithMissingResult_SkipsWithWarning
+                  - ReviewIndex_Scan_PdfWithNoKeywords_SkipsWithWarning
+                  - ReviewIndex_Scan_NoMatchingFiles_LeavesIndexEmpty
+                  - ReviewIndex_Scan_MultiplePdfs_PopulatesAllEntries
 
-      - id: ReviewMark-Index-Freshness
-        title: >-
-          The ReviewIndex.Scan() method shall return a new index containing only the
-          records found in the current scan.
-        justification: |
-          The Scan() factory method always creates a fresh ReviewIndex, ensuring that
-          entries from any previous index do not contaminate the result. This guarantees
-          that the scan result reflects only the evidence files present in the scanned directory.
-        tests:
-          - ReviewIndex_Scan_ClearsExistingEntries
+              - id: ReviewMark-Index-Freshness
+                title: >-
+                  The ReviewIndex.Scan() method shall return a new index containing only the
+                  records found in the current scan.
+                justification: |
+                  The Scan() factory method always creates a fresh ReviewIndex, ensuring that
+                  entries from any previous index do not contaminate the result. This guarantees
+                  that the scan result reflects only the evidence files present in the scanned directory.
+                tests:
+                  - ReviewIndex_Scan_ClearsExistingEntries
 
-      - id: ReviewMark-Index-Empty
-        title: The ReviewIndex unit shall support creating a new empty index with no evidence records.
-        justification: |
-          When the evidence source type is 'none', or when an empty index is needed
-          as an initial state, the ReviewIndex must provide a consistent way to create
-          an empty index without loading from any external source.
-        tests:
-          - ReviewIndex_Empty_ReturnsEmptyIndex
+              - id: ReviewMark-Index-Empty
+                title: The ReviewIndex unit shall support creating a new empty index with no evidence records.
+                justification: |
+                  When the evidence source type is 'none', or when an empty index is needed
+                  as an initial state, the ReviewIndex must provide a consistent way to create
+                  an empty index without loading from any external source.
+                tests:
+                  - ReviewIndex_Empty_ReturnsEmptyIndex
 
-      - id: ReviewMark-Index-Save
-        title: The ReviewIndex unit shall persist the evidence index to a file or stream.
-        justification: |
-          After scanning PDF evidence files, the resulting index must be persisted so
-          that other tools can consume it. The ReviewIndex must support writing to both
-          a file path and a stream, enabling both direct file output and in-memory
-          serialization for testing.
-        tests:
-          - ReviewIndex_Save_Stream_NullStream_ThrowsArgumentNullException
-          - ReviewIndex_Save_File_EmptyPath_ThrowsArgumentException
-          - ReviewIndex_Save_File_NullPath_ThrowsArgumentException
-          - ReviewIndex_Save_RoundTrip_PreservesAllEntries
+              - id: ReviewMark-Index-Save
+                title: The ReviewIndex unit shall persist the evidence index to a file or stream.
+                justification: |
+                  After scanning PDF evidence files, the resulting index must be persisted so
+                  that other tools can consume it. The ReviewIndex must support writing to both
+                  a file path and a stream, enabling both direct file output and in-memory
+                  serialization for testing.
+                tests:
+                  - ReviewIndex_Save_Stream_NullStream_ThrowsArgumentNullException
+                  - ReviewIndex_Save_File_EmptyPath_ThrowsArgumentException
+                  - ReviewIndex_Save_File_NullPath_ThrowsArgumentException
+                  - ReviewIndex_Save_RoundTrip_PreservesAllEntries
 
-      - id: ReviewMark-Index-GetEvidence
-        title: >-
-          The ReviewIndex unit shall look up a review evidence record by ID and
-          fingerprint, returning null if no match exists.
-        justification: |
-          When looking up review evidence by ID and fingerprint, the ReviewIndex must
-          return the matching evidence record if one exists, or null if no record matches
-          both the given ID and fingerprint.
-        tests:
-          - ReviewIndex_GetEvidence_ExistingEntry_ReturnsEvidence
-          - ReviewIndex_GetEvidence_WrongFingerprint_ReturnsNull
-          - ReviewIndex_GetEvidence_UnknownId_ReturnsNull
+              - id: ReviewMark-Index-GetEvidence
+                title: >-
+                  The ReviewIndex unit shall look up a review evidence record by ID and
+                  fingerprint, returning null if no match exists.
+                justification: |
+                  When looking up review evidence by ID and fingerprint, the ReviewIndex must
+                  return the matching evidence record if one exists, or null if no record matches
+                  both the given ID and fingerprint.
+                tests:
+                  - ReviewIndex_GetEvidence_ExistingEntry_ReturnsEvidence
+                  - ReviewIndex_GetEvidence_WrongFingerprint_ReturnsNull
+                  - ReviewIndex_GetEvidence_UnknownId_ReturnsNull
 
-      - id: ReviewMark-Index-HasId
-        title: The ReviewIndex unit shall indicate whether any evidence record exists for a given ID.
-        justification: |
-          When checking whether an ID has any associated review evidence, the ReviewIndex
-          must return true if at least one record exists for the given ID regardless of
-          fingerprint, and false if no record exists.
-        tests:
-          - ReviewIndex_HasId_ExistingId_ReturnsTrue
-          - ReviewIndex_HasId_UnknownId_ReturnsFalse
+              - id: ReviewMark-Index-HasId
+                title: The ReviewIndex unit shall indicate whether any evidence record exists for a given ID.
+                justification: |
+                  When checking whether an ID has any associated review evidence, the ReviewIndex
+                  must return true if at least one record exists for the given ID regardless of
+                  fingerprint, and false if no record exists.
+                tests:
+                  - ReviewIndex_HasId_ExistingId_ReturnsTrue
+                  - ReviewIndex_HasId_UnknownId_ReturnsFalse
 
-      - id: ReviewMark-Index-GetAllForId
-        title: >-
-          The ReviewIndex unit shall retrieve all evidence records for a given ID,
-          returning an empty collection when none exist.
-        justification: |
-          When retrieving all review evidence for a given ID, the ReviewIndex must return
-          all matching records as a collection. If no records exist for the ID, an empty
-          collection must be returned.
-        tests:
-          - ReviewIndex_GetAllForId_ExistingId_ReturnsAllEntries
-          - ReviewIndex_GetAllForId_UnknownId_ReturnsEmptyList
+              - id: ReviewMark-Index-GetAllForId
+                title: >-
+                  The ReviewIndex unit shall retrieve all evidence records for a given ID,
+                  returning an empty collection when none exist.
+                justification: |
+                  When retrieving all review evidence for a given ID, the ReviewIndex must return
+                  all matching records as a collection. If no records exist for the ID, an empty
+                  collection must be returned.
+                tests:
+                  - ReviewIndex_GetAllForId_ExistingId_ReturnsAllEntries
+                  - ReviewIndex_GetAllForId_UnknownId_ReturnsEmptyList
