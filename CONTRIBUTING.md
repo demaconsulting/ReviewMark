@@ -1,4 +1,4 @@
-﻿# Contributing to ReviewMark
+# Contributing to ReviewMark
 
 Thank you for your interest in contributing to ReviewMark! We welcome contributions from the
 community and appreciate your help in making this project better.

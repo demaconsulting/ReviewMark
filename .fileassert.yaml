@@ -36,7 +36,7 @@ tests:
             - field: "Author"
               contains: "DEMA Consulting"
             - field: "Subject"
-              contains: "Build notes"
+              contains: "Build Notes"
           pages:
             min: 1
           text:
