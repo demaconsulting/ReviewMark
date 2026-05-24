@@ -47,6 +47,12 @@ ReviewMark (System)
 │   └── PathHelpers (Unit)
 └── SelfTest (Subsystem)
     └── Validation (Unit)
+
+OTS Software Items (integration design in docs/design/ots/):
+├── YamlDotNet (OTS) — YAML deserialization for the Configuration subsystem
+├── PDFsharp (OTS) — PDF metadata reading for the Indexing subsystem
+├── DemaConsulting.TestResults (OTS) — TRX/JUnit serialization for the SelfTest subsystem
+└── Microsoft.Extensions.FileSystemGlobbing (OTS) — glob-pattern file matching for GlobMatcher
 ```
 
 Each unit is described in detail in its own companion design document, linked from the folder layout below.
@@ -79,22 +85,28 @@ The design documentation follows the same hierarchy under `docs/design/review-ma
 docs/design/
 ├── introduction.md                     — this document (software structure and folder layout)
 ├── review-mark.md                      — system-level design
-└── review-mark/
-    ├── program.md                      — Program unit design
-    ├── cli.md                          — Cli subsystem overview
-    ├── cli/
-    │   └── context.md                  — Context unit design
-    ├── configuration.md                — Configuration subsystem overview
-    ├── configuration/
-    │   ├── review-mark-configuration.md — ReviewMarkConfiguration unit design
-    │   └── glob-matcher.md             — GlobMatcher unit design
-    ├── indexing.md                     — Indexing subsystem overview
-    ├── indexing/
-    │   ├── review-index.md             — ReviewIndex unit design
-    │   └── path-helpers.md             — PathHelpers unit design
-    ├── self-test.md                    — SelfTest subsystem overview
-    └── self-test/
-        └── validation.md               — Validation unit design
+├── review-mark/
+│   ├── program.md                      — Program unit design
+│   ├── cli.md                          — Cli subsystem overview
+│   ├── cli/
+│   │   └── context.md                  — Context unit design
+│   ├── configuration.md                — Configuration subsystem overview
+│   ├── configuration/
+│   │   ├── review-mark-configuration.md — ReviewMarkConfiguration unit design
+│   │   └── glob-matcher.md             — GlobMatcher unit design
+│   ├── indexing.md                     — Indexing subsystem overview
+│   ├── indexing/
+│   │   ├── review-index.md             — ReviewIndex unit design
+│   │   └── path-helpers.md             — PathHelpers unit design
+│   ├── self-test.md                    — SelfTest subsystem overview
+│   └── self-test/
+│       └── validation.md               — Validation unit design
+├── ots.md                              — OTS integration strategy overview
+└── ots/
+    ├── yamldotnet.md                   — YamlDotNet integration design
+    ├── pdfsharp.md                     — PDFsharp integration design
+    ├── dema-consulting-test-results.md — DemaConsulting.TestResults integration design
+    └── microsoft-extensions-file-system-globbing.md — FileSystemGlobbing integration design
 ```
 
 ## Companion Artifact Structure
@@ -108,14 +120,14 @@ The list below shows how each artifact type maps to the same software structure:
 - **Program** — Req: `docs/reqstream/review-mark/program.yaml`,
   Design: `docs/design/review-mark/program.md`,
   Source: `src/.../Program.cs`, Tests: `test/.../ProgramTests.cs`
-- **Cli subsystem** — Req: `docs/reqstream/review-mark/cli/cli.yaml`,
+- **Cli subsystem** — Req: `docs/reqstream/review-mark/cli.yaml`,
   Design: `docs/design/review-mark/cli.md`,
   Source: `src/.../Cli/`
 - **Context** — Req: `docs/reqstream/review-mark/cli/context.yaml`,
   Design: `docs/design/review-mark/cli/context.md`,
   Source: `src/.../Cli/Context.cs`, Tests: `test/.../ContextTests.cs`
 - **Configuration subsystem** —
-  Req: `docs/reqstream/review-mark/configuration/configuration.yaml`,
+  Req: `docs/reqstream/review-mark/configuration.yaml`,
   Design: `docs/design/review-mark/configuration.md`,
   Source: `src/.../Configuration/`
 - **ReviewMarkConfiguration** —
@@ -127,7 +139,7 @@ The list below shows how each artifact type maps to the same software structure:
   Design: `docs/design/review-mark/configuration/glob-matcher.md`,
   Source: `src/.../Configuration/GlobMatcher.cs`,
   Tests: `test/.../GlobMatcherTests.cs`
-- **Indexing subsystem** — Req: `docs/reqstream/review-mark/indexing/indexing.yaml`,
+- **Indexing subsystem** — Req: `docs/reqstream/review-mark/indexing.yaml`,
   Design: `docs/design/review-mark/indexing.md`,
   Source: `src/.../Indexing/`
 - **ReviewIndex** — Req: `docs/reqstream/review-mark/indexing/review-index.yaml`,
@@ -136,27 +148,21 @@ The list below shows how each artifact type maps to the same software structure:
 - **PathHelpers** — Req: `docs/reqstream/review-mark/indexing/path-helpers.yaml`,
   Design: `docs/design/review-mark/indexing/path-helpers.md`,
   Source: `src/.../Indexing/PathHelpers.cs`, Tests: `test/.../IndexingTests.cs`
-- **SelfTest subsystem** — Req: `docs/reqstream/review-mark/self-test/self-test.yaml`,
+- **SelfTest subsystem** — Req: `docs/reqstream/review-mark/self-test.yaml`,
   Design: `docs/design/review-mark/self-test.md`,
   Source: `src/.../SelfTest/`
 - **Validation** — Req: `docs/reqstream/review-mark/self-test/validation.yaml`,
   Design: `docs/design/review-mark/self-test/validation.md`,
   Source: `src/.../SelfTest/Validation.cs`, Tests: `test/.../ValidationTests.cs`
+- **YamlDotNet (OTS)** — Design: `docs/design/ots/yamldotnet.md`
+- **PDFsharp (OTS)** — Design: `docs/design/ots/pdfsharp.md`
+- **DemaConsulting.TestResults (OTS)** — Design: `docs/design/ots/dema-consulting-test-results.md`
+- **Microsoft.Extensions.FileSystemGlobbing (OTS)** —
+  Design: `docs/design/ots/microsoft-extensions-file-system-globbing.md`
 
 Requirement IDs referenced in the design chapters match identifiers in the ReqStream YAML files under `docs/reqstream/`.
 
-## Document Conventions
-
-Throughout this document:
-
-- Class names, method names, property names, and file names appear in `monospace` font.
-- The word **shall** denotes a design constraint that the implementation must satisfy.
-- Section headings within each unit chapter follow a consistent structure: overview, data model,
-  methods/algorithms, and interactions with other units.
-- Text tables are used in preference to diagrams, which may not render in all PDF viewers.
-
 ## References
 
-- See *ReviewMark System Design* (`docs/design/review-mark.md`) for the system-level design.
-- See the *ReviewMark User Guide* (`docs/user_guide/introduction.md`) for usage information.
-- See the ReviewMark repository at `https://github.com/demaconsulting/ReviewMark`.
+- [Continuous Compliance](https://github.com/demaconsulting/ContinuousCompliance) — methodology
+  framework for automated compliance evidence generation

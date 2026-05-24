@@ -1,61 +1,64 @@
 ### PathHelpers
 
-#### Overview
+#### Purpose
 
-`PathHelpers` is a static utility class that provides a safe path-combination method. It
-protects callers against path-traversal attacks by verifying the resolved combined path stays
-within the base directory. Note that `Path.GetFullPath` normalizes `.`/`..` segments but does
-not resolve symlinks or reparse points, so this check guards against string-level traversal
-only.
+`PathHelpers` is a static utility class that provides a safe path-combination primitive.
+It guards against path-traversal attacks by verifying the resolved combined path remains
+within the base directory, protecting the tool when it constructs file paths from
+`file` fields read from externally supplied evidence index records.
 
-#### Class Structure
+#### Data Model
 
-##### SafePathCombine Method
+N/A — static utility class with no instance state.
 
-```csharp
-internal static string SafePathCombine(string basePath, string relativePath)
-```
+#### Key Methods
 
-Combines `basePath` and `relativePath` safely, ensuring the resulting path remains within
-the base directory.
+**`PathHelpers.SafePathCombine(string basePath, string relativePath)`** → `string`
 
-**Validation steps:**
+- *Parameters*:
+  - `string basePath` — the root directory that the result must reside within; must not
+    be null
+  - `string relativePath` — the relative path to combine with `basePath`; must not be null
+- *Returns*: The combined absolute path as a string
+- *Preconditions*: Both parameters are non-null and the combined path resolves inside
+  `basePath`
+- *Postconditions*: Returned path is within `basePath`; throws otherwise
+
+Algorithm:
 
 1. Reject null inputs via `ArgumentNullException.ThrowIfNull`.
-2. Combine the paths with `Path.Combine` to produce the candidate path (preserving the
-   caller's relative/absolute style).
-3. Resolve both `basePath` and the candidate to absolute form with `Path.GetFullPath`.
-4. Compute `Path.GetRelativePath(absoluteBase, absoluteCombined)` and reject the input if
-   the result is exactly `".."`, starts with `".."` followed by `Path.DirectorySeparatorChar`
-   or `Path.AltDirectorySeparatorChar`, or is itself rooted (absolute), which would indicate
-   the combined path escapes the base directory.
+2. Combine the paths with `Path.Combine` to produce a candidate path.
+3. Resolve both `basePath` and the candidate to absolute form via `Path.GetFullPath`.
+4. Compute `Path.GetRelativePath(absoluteBase, absoluteCombined)`.
+5. Reject the input if the relative result is `".."`, starts with `".."` followed by a
+   directory-separator character, or is rooted (absolute) — any of these conditions
+   indicates the combined path escapes `basePath`.
 
-#### Design Decisions
+Using `Path.GetRelativePath()` after resolving to absolute form handles all traversal
+patterns (`../`, embedded `/../`, absolute-path overrides) without fragile pre-combine
+string inspection. The check treats `..` as an escaping segment only when it is the
+complete relative result or is followed by a separator, avoiding false positives for
+valid names such as `..data`.
 
-- **`Path.GetRelativePath` for containment check**: Using `GetRelativePath` to verify
-  containment handles root paths (e.g. `/`, `C:\`), platform case-sensitivity, and
-  directory-separator normalization natively. The containment test should treat `..` as an
-  escaping segment only when it is the entire relative result or is followed by a directory
-  separator, avoiding false positives for valid in-base names such as `..data`.
-- **Post-combine canonical-path check**: Resolving paths after combining handles all traversal
-  patterns — `../`, embedded `/../`, absolute-path overrides, and platform edge cases —
-  without fragile pre-combine string inspection of `relativePath`.
-- **ArgumentException on invalid input**: Callers receive a specific `ArgumentException`
-  identifying `relativePath` as the problematic parameter, making debugging straightforward.
-- **No logging or error accumulation**: `SafePathCombine` is a pure utility method that throws
-  on invalid input; it does not interact with the `Context` or any output mechanism.
-- **Platform-passthrough exceptions**: `SafePathCombine` does not suppress platform exceptions
-  arising from the path arguments. Callers should be aware that platform-specific conditions
-  may surface through `Path.GetFullPath` and `Path.Combine`:
-  - `NotSupportedException` — thrown when a path contains an unsupported format (e.g. a colon
-    in a non-drive-root position on Windows).
-  - `PathTooLongException` — thrown when the combined path exceeds the platform path-length
-    limit. These are passed through to the caller without wrapping.
+Note: `Path.GetFullPath` normalizes `.`/`..` segments but does not resolve symlinks or
+reparse points; this containment check guards against string-level traversal only.
 
-#### Security Rationale
+#### Error Handling
 
-Evidence index files may be loaded from external sources (file shares or URLs).
-The `file` field in each index record is supplied by the evidence store and must
-be treated as untrusted input. Without path validation, a maliciously crafted
-index could direct the tool to read or reference files outside the intended
-evidence directory. `SafePathCombine` eliminates this attack surface.
+| Exception | Condition |
+| --------- | --------- |
+| `ArgumentNullException` | `basePath` or `relativePath` is null |
+| `ArgumentException` | Resolved path escapes `basePath` |
+| `NotSupportedException` | Path contains an unsupported format (e.g. colon in a non-root position on Windows); propagated without wrapping |
+| `PathTooLongException` | Combined path exceeds the platform path-length limit; propagated without wrapping |
+
+#### Dependencies
+
+- No dependencies on other ReviewMark units, subsystems, or OTS libraries — uses only
+  `System.IO.Path` from the .NET runtime.
+
+#### Callers
+
+- **`ReviewIndex.Scan()`** (Indexing subsystem) — calls `SafePathCombine()` to validate
+  each PDF file path constructed from index `file` fields before opening the file,
+  preventing directory-traversal attacks from maliciously crafted evidence index records

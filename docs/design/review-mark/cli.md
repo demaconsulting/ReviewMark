@@ -1,70 +1,44 @@
-## Cli Subsystem
+## Cli
+
+The Cli subsystem is responsible for parsing and owning the command-line interface of
+ReviewMark. It exposes a single unit — `Context` — that processes the raw `string[] args`
+array into a structured set of typed properties consumed by the rest of the tool.
 
 ### Overview
 
-The Cli subsystem is responsible for parsing and owning the command-line interface of
-ReviewMark. It exposes a single software unit — Context — that processes the raw
-`string[] args` array into a structured set of properties consumed by the rest of the
-tool.
+The Cli subsystem solves the problem of translating raw process arguments into a
+well-typed configuration carrier available to all processing subsystems. Its boundary is
+tightly scoped: it performs no file I/O beyond optionally opening a log file, and it calls
+no other ReviewMark subsystem.
 
-### Responsibilities
+The subsystem contains a single unit: **Context** (`Cli/Context.cs`) — the command-line
+argument parser and I/O owner. See the *Context Design* for full details.
 
-- Parse all supported command-line flags and arguments into a typed `Context` object
-- Validate that no unrecognized arguments are supplied
-- Own the output channels (stdout and optional log file) and the process exit code
-- Propagate the `--silent` flag to suppress non-error output
+### Interfaces
 
-### Units
+**`Context.Create(string[] args)`** → `Context`
 
-- **Context** (`Cli/Context.cs`) — Command-line argument parser and I/O owner;
-  see the Context unit design documentation
+- *Type*: In-process .NET static factory method
+- *Role*: Provider — other subsystems receive the `Context` instance created here
+- *Contract*: Parses all supported command-line flags into a fully initialized `Context`
+  instance with typed properties for every recognized flag. All flags are listed in the
+  *ReviewMark Design* External Interfaces section. Also exposes `WriteLine(string)`,
+  `WriteError(string)`, the computed `ExitCode` property, and `IDisposable.Dispose()`
+- *Constraints*: Throws `ArgumentException` for unrecognized or malformed arguments; throws
+  `InvalidOperationException` when the log file specified by `--log` cannot be opened
 
-### Dependencies
+### Design
 
-- **Cli** (Subsystem) — `Program.Main` creates a `Context` instance via `Context.Create(args)`
-  and passes it to `Program.Run(Context)`. `Context` is a passive data carrier; the Cli
-  subsystem has no dependency on Program.
+The `Context` unit owns all argument-parsing logic through its private `ArgumentParser`
+inner class. `ArgumentParser.ParseArguments()` processes the argument array sequentially,
+delegating individual tokens to `ParseArgument()`, which dispatches known flags via a
+`switch` statement and accumulates their values.
 
-### Supported Flags
+Once `Context.Create()` returns, all parsed properties are immutable. The only mutable
+state after construction is the internal error flag (set by `WriteError()`) and the log
+file handle (released by `Dispose()`). The `IDisposable` contract ensures the log file is
+always closed before the process exits.
 
-All flags are parsed by `Context.Create(string[] args)`. The following table lists every
-supported flag, its type, aliases, and constraints:
-
-| Flag | Alias(es) | Type | Constraint | Description |
-| ------ | --------- | ------ | ---------- | ----------- |
-| `--version` | `-v` | bool | — | Display version string only |
-| `--help` | `-?`, `-h` | bool | — | Display usage information |
-| `--silent` | — | bool | — | Suppress all console output |
-| `--validate` | — | bool | — | Run self-validation tests |
-| `--lint` | — | bool | — | Validate the definition file and report issues |
-| `--log <file>` | — | string | Valid file path | Write all output to a log file |
-| `--results <file>` | `--result` | string | Valid file path | Write validation results (TRX or JUnit) |
-| `--definition <file>` | — | string | Valid file path | Override default `.reviewmark.yaml` path |
-| `--plan <file>` | — | string | Valid file path | Output path for the Review Plan Markdown document |
-| `--depth <#>` | — | int | 1–5 | Default heading depth for all generated documents (default: 1) |
-| `--plan-depth <#>` | — | int | 1–5 | Heading depth for the Review Plan (overrides `--depth`) |
-| `--report <file>` | — | string | Valid file path | Output path for the Review Report Markdown document |
-| `--report-depth <#>` | — | int | 1–5 | Heading depth for the Review Report (overrides `--depth`) |
-| `--index <glob-path>` | — | string (repeatable) | Glob expression | Scan PDF evidence files matching the glob path |
-| `--dir <directory>` | — | string | Valid directory path | Set the working directory for file operations |
-| `--enforce` | — | bool | — | Exit with non-zero code if any review-set is not Current |
-| `--elaborate <id>` | — | string | Non-empty review-set ID | Print a Markdown elaboration of the specified review set |
-
-**Depth defaulting**: `PlanDepth` defaults to `Depth` when `--plan-depth` is not
-specified; `ReportDepth` defaults to `Depth` when `--report-depth` is not specified.
-
-**`--index` is repeatable**: Multiple `--index <glob-path>` arguments may be provided;
-all matching PDF files are combined into a single index scan.
-
-### Error Handling
-
-Unrecognized or malformed arguments cause `Context.Create` to throw an `ArgumentException`.
-`Program.Main` catches this exception, writes the error message to `Console.Error`, and
-returns exit code 1. The process never exits silently on an argument error.
-
-Value arguments (`--log`, `--plan`, `--results`, etc.) require a non-empty following
-token. If the token is missing, an `ArgumentException` is thrown with a message that
-names the flag and describes what is expected.
-
-Integer arguments (`--depth`, `--plan-depth`, `--report-depth`) require a positive
-integer value in the range 1–5. Values outside this range cause an `ArgumentException`.
+`PlanDepth` defaults to `Depth` when `--plan-depth` is not specified; `ReportDepth`
+defaults to `Depth` when `--report-depth` is not specified. Multiple `--index` arguments
+are accumulated into a `List<string>` and exposed as `IReadOnlyList<string>`.

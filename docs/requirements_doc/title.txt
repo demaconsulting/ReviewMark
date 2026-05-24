@@ -1,13 +1,14 @@
 ---
-title: ReviewMark Requirements
-subtitle: Requirements Specification for the ReviewMark
+title: "DemaConsulting.ReviewMark Requirements Document"
+subtitle: "Automated file-review evidence management"
 author: DEMA Consulting
-description: Requirements Specification for the ReviewMark
+description: "Requirements Document for DemaConsulting.ReviewMark"
 lang: en-US
 keywords:
   - ReviewMark
   - Requirements
   - Specification
   - .NET
+  - C#
   - Command-Line Tool
 ---

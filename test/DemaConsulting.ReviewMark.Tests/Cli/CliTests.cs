@@ -53,6 +53,7 @@ public class CliTests
             var output = outWriter.ToString();
             Assert.Equal(Program.Version, output.Trim());
             Assert.DoesNotContain("Copyright", output);
+            Assert.Equal(0, context.ExitCode);
         }
         finally
         {
@@ -83,6 +84,7 @@ public class CliTests
             Assert.Contains("Options:", output);
             Assert.Contains("--version", output);
             Assert.Contains("--help", output);
+            Assert.Equal(0, context.ExitCode);
         }
         finally
         {
@@ -665,10 +667,13 @@ public class CliTests
                 """);
 
             var originalOut = Console.Out;
+            var originalError = Console.Error;
             try
             {
                 using var outWriter = new StringWriter();
+                using var errWriter = new StringWriter();
                 Console.SetOut(outWriter);
+                Console.SetError(errWriter);
                 using var context = Context.Create(["--definition", defFile, "--lint"]);
 
                 // Act
@@ -678,10 +683,12 @@ public class CliTests
                 Assert.Equal(0, context.ExitCode);
                 var output = outWriter.ToString();
                 Assert.Equal(string.Empty, output);
+                Assert.Equal(string.Empty, errWriter.ToString());
             }
             finally
             {
                 Console.SetOut(originalOut);
+                Console.SetError(originalError);
             }
         }
         finally
@@ -952,6 +959,46 @@ public class CliTests
     {
         // Act & Assert — depth 6 exceeds the maximum of 5
         Assert.Throws<ArgumentException>(() => Context.Create(["--depth", "6"]));
+    }
+
+    /// <summary>
+    ///     Test that --plan-depth with a value below the minimum (0) throws ArgumentException.
+    /// </summary>
+    [Fact]
+    public void Cli_PlanDepthFlag_BelowMinimum_ThrowsArgumentException()
+    {
+        // Act & Assert — plan-depth 0 is below the minimum of 1
+        Assert.Throws<ArgumentException>(() => Context.Create(["--plan-depth", "0"]));
+    }
+
+    /// <summary>
+    ///     Test that --plan-depth with a value above the maximum (6) throws ArgumentException.
+    /// </summary>
+    [Fact]
+    public void Cli_PlanDepthFlag_AboveMaximum_ThrowsArgumentException()
+    {
+        // Act & Assert — plan-depth 6 exceeds the maximum of 5
+        Assert.Throws<ArgumentException>(() => Context.Create(["--plan-depth", "6"]));
+    }
+
+    /// <summary>
+    ///     Test that --report-depth with a value below the minimum (0) throws ArgumentException.
+    /// </summary>
+    [Fact]
+    public void Cli_ReportDepthFlag_BelowMinimum_ThrowsArgumentException()
+    {
+        // Act & Assert — report-depth 0 is below the minimum of 1
+        Assert.Throws<ArgumentException>(() => Context.Create(["--report-depth", "0"]));
+    }
+
+    /// <summary>
+    ///     Test that --report-depth with a value above the maximum (6) throws ArgumentException.
+    /// </summary>
+    [Fact]
+    public void Cli_ReportDepthFlag_AboveMaximum_ThrowsArgumentException()
+    {
+        // Act & Assert — report-depth 6 exceeds the maximum of 5
+        Assert.Throws<ArgumentException>(() => Context.Create(["--report-depth", "6"]));
     }
 
     /// <summary>

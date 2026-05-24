@@ -1,545 +1,140 @@
-### Context Verification
-
-This document describes the unit-level verification design for the `Context` unit. It
-defines the test scenarios, dependency usage, and requirement coverage for `Cli/Context.cs`.
+### Context
 
 #### Verification Approach
 
-`Context` is verified with unit tests in `ContextTests.cs`. Because `Context` depends
-only on .NET base class library types (`Console`, `StreamWriter`, `Path`), no mocking or
-test doubles are required. Tests call `Context.Create` with controlled argument arrays,
-inspect the resulting properties and exit codes, and verify output written to captured streams.
+Context unit verification uses `ContextTests.cs` to construct real contexts from controlled argument arrays and inspect parsed properties, exit-code behavior, console output, and log-file output. Dependencies remain real .NET BCL types, so no subsystem mocks are required; the tests validate the unit directly through `Context.Create`, `WriteLine`, and `WriteError`.
 
-#### Dependencies
+#### Test Environment
 
-`Context` has no dependencies on other tool units. All dependencies are real .NET BCL
-types; no mocking is needed at this level.
+N/A - standard test environment. Tests run under xUnit on .NET 8, 9, and 10, capture console streams with `StringWriter`, and create temporary log files only for the logging scenarios.
+
+#### Acceptance Criteria
+
+- All Context unit tests pass with zero failures.
+- Each `ReviewMark-Context-*` requirement is traced to at least one scenario and test method.
+- Flag parsing, value validation, output routing, and log-file error handling all produce the documented state changes and exceptions.
 
 #### Test Scenarios
 
-##### Context_Create_NoArguments_ReturnsDefaultContext
+**Context_Create_NoArguments_ReturnsDefaultContext**: `Context.Create` is called with an empty argument array. Expected outcome: All boolean flags are false; exit code is 0. Requirement coverage: `ReviewMark-Context-Parsing`. This scenario is tested by `Context_Create_NoArguments_ReturnsDefaultContext`.
 
-**Scenario**: `Context.Create` is called with an empty argument array.
+**Context_Create_VersionFlag_SetsVersionTrue**: `Context.Create` is called with `["--version"]`. Expected outcome: `Version` property is true; `Help` is false; exit code is 0. Requirement coverage: `ReviewMark-Context-Parsing`. This scenario is tested by `Context_Create_VersionFlag_SetsVersionTrue`.
 
-**Expected**: All boolean flags are false; exit code is 0.
+**Context_Create_ShortVersionFlag_SetsVersionTrue**: `Context.Create` is called with `["-v"]`. Expected outcome: `Version` property is true. Requirement coverage: `ReviewMark-Context-Parsing`. This scenario is tested by `Context_Create_ShortVersionFlag_SetsVersionTrue`.
 
-**Requirement coverage**: `ReviewMark-Context-Parsing`
+**Context_Create_HelpFlag_SetsHelpTrue**: `Context.Create` is called with `["--help"]`. Expected outcome: `Help` property is true. Requirement coverage: `ReviewMark-Context-Parsing`. This scenario is tested by `Context_Create_HelpFlag_SetsHelpTrue`.
 
-##### Context_Create_VersionFlag_SetsVersionTrue
+**Context_Create_SilentFlag_SetsSilentTrue**: `Context.Create` is called with `["--silent"]`. Expected outcome: `Silent` property is true. Requirement coverage: `ReviewMark-Context-Parsing`. This scenario is tested by `Context_Create_SilentFlag_SetsSilentTrue`.
 
-**Scenario**: `Context.Create` is called with `["--version"]`.
+**Context_Create_ValidateFlag_SetsValidateTrue**: `Context.Create` is called with `["--validate"]`. Expected outcome: `Validate` property is true. Requirement coverage: `ReviewMark-Context-Parsing`. This scenario is tested by `Context_Create_ValidateFlag_SetsValidateTrue`.
 
-**Expected**: `Version` property is true; `Help` is false; exit code is 0.
+**Context_Create_UnknownArgument_ThrowsArgumentException**: `Context.Create` is called with `["--unknown"]`. Expected outcome: `ArgumentException` is thrown. Boundary or error path: Unknown argument rejection. Requirement coverage: `ReviewMark-Context-Parsing`. This scenario is tested by `Context_Create_UnknownArgument_ThrowsArgumentException`.
 
-**Requirement coverage**: `ReviewMark-Context-Parsing`
+**Context_WriteLine_NotSilent_WritesToConsole**: A non-silent `Context` calls `WriteLine`. Expected outcome: The message appears on standard output. Requirement coverage: `ReviewMark-Context-Output`. This scenario is tested by `Context_WriteLine_NotSilent_WritesToConsole`.
 
-##### Context_Create_ShortVersionFlag_SetsVersionTrue
+**Context_WriteLine_Silent_DoesNotWriteToConsole**: A silent `Context` calls `WriteLine`. Expected outcome: Standard output receives nothing. Requirement coverage: `ReviewMark-Context-Output`. This scenario is tested by `Context_WriteLine_Silent_DoesNotWriteToConsole`.
 
-**Scenario**: `Context.Create` is called with `["-v"]`.
+**Context_WriteError_NotSilent_WritesToConsole**: A non-silent `Context` calls `WriteError`. Expected outcome: The message appears on standard error. Requirement coverage: `ReviewMark-Context-Output`. This scenario is tested by `Context_WriteError_NotSilent_WritesToConsole`.
 
-**Expected**: `Version` property is true.
+**Context_WriteError_SetsErrorExitCode**: A `Context` calls `WriteError`. Expected outcome: `ExitCode` is 1 after the call. Requirement coverage: `ReviewMark-Context-Output`. This scenario is tested by `Context_WriteError_SetsErrorExitCode`.
 
-**Requirement coverage**: `ReviewMark-Context-Parsing`
+**Context_Create_ShortHelpFlag_H_SetsHelpTrue**: `Context.Create` is called with `["-h"]`. Expected outcome: `Help` property is true. Requirement coverage: `ReviewMark-Context-Parsing`. This scenario is tested by `Context_Create_ShortHelpFlag_H_SetsHelpTrue`.
 
-##### Context_Create_HelpFlag_SetsHelpTrue
+**Context_Create_ShortHelpFlag_Question_SetsHelpTrue**: `Context.Create` is called with `["-?"]`. Expected outcome: `Help` property is true. Requirement coverage: `ReviewMark-Context-Parsing`. This scenario is tested by `Context_Create_ShortHelpFlag_Question_SetsHelpTrue`.
 
-**Scenario**: `Context.Create` is called with `["--help"]`.
+**Context_Create_ResultsFlag_SetsResultsFile**: `Context.Create` is called with `["--results", "test.trx"]`. Expected outcome: `ResultsFile` is set to `"test.trx"`. Requirement coverage: `ReviewMark-Context-Parsing`. This scenario is tested by `Context_Create_ResultsFlag_SetsResultsFile`.
 
-**Expected**: `Help` property is true.
+**Context_Create_LogFlag_OpensLogFile**: `Context.Create` is called with `["--log", "<file>"]` and `WriteLine` is called. Expected outcome: Log file exists and contains the written message. Requirement coverage: `ReviewMark-Context-Parsing`. This scenario is tested by `Context_Create_LogFlag_OpensLogFile`.
 
-**Requirement coverage**: `ReviewMark-Context-Parsing`
+**Context_Create_LogFlag_WithoutValue_ThrowsArgumentException**: `Context.Create` is called with `["--log"]` (no value). Expected outcome: `ArgumentException` is thrown with message containing `"--log"`. Boundary or error path: Missing value rejection. Requirement coverage: `ReviewMark-Context-Parsing`. This scenario is tested by `Context_Create_LogFlag_WithoutValue_ThrowsArgumentException`.
 
-##### Context_Create_SilentFlag_SetsSilentTrue
+**Context_Create_ResultsFlag_WithoutValue_ThrowsArgumentException**: `Context.Create` is called with `["--results"]` (no value). Expected outcome: `ArgumentException` is thrown with message containing `"--results"`. Boundary or error path: Missing value rejection. Requirement coverage: `ReviewMark-Context-Parsing`. This scenario is tested by `Context_Create_ResultsFlag_WithoutValue_ThrowsArgumentException`.
 
-**Scenario**: `Context.Create` is called with `["--silent"]`.
+**Context_Create_ResultAlias_SetsResultsFile**: `Context.Create` is called with `["--result", "test.trx"]`. Expected outcome: `ResultsFile` is set to `"test.trx"`. Requirement coverage: `ReviewMark-Context-Parsing`. This scenario is tested by `Context_Create_ResultAlias_SetsResultsFile`.
 
-**Expected**: `Silent` property is true.
+**Context_Create_ResultAlias_WithoutValue_ThrowsArgumentException**: `Context.Create` is called with `["--result"]` (no value). Expected outcome: `ArgumentException` is thrown with message containing `"--result"`. Boundary or error path: Missing value rejection. Requirement coverage: `ReviewMark-Context-Parsing`. This scenario is tested by `Context_Create_ResultAlias_WithoutValue_ThrowsArgumentException`.
 
-**Requirement coverage**: `ReviewMark-Context-Parsing`
+**Context_Create_DefinitionFlag_SetsDefinitionFile**: `Context.Create` is called with `["--definition", "spec.yaml"]`. Expected outcome: `DefinitionFile` is set to `"spec.yaml"`. Requirement coverage: `ReviewMark-Context-Parsing`. This scenario is tested by `Context_Create_DefinitionFlag_SetsDefinitionFile`.
 
-##### Context_Create_ValidateFlag_SetsValidateTrue
+**Context_Create_DefinitionFlag_WithoutValue_ThrowsArgumentException**: `Context.Create` is called with `["--definition"]` (no value). Expected outcome: `ArgumentException` is thrown with message containing `"--definition"`. Boundary or error path: Missing value rejection. Requirement coverage: `ReviewMark-Context-Parsing`. This scenario is tested by `Context_Create_DefinitionFlag_WithoutValue_ThrowsArgumentException`.
 
-**Scenario**: `Context.Create` is called with `["--validate"]`.
+**Context_Create_PlanFlag_WithoutValue_ThrowsArgumentException**: `Context.Create` is called with `["--plan"]` (no value). Expected outcome: `ArgumentException` is thrown with message containing `"--plan"`. Boundary or error path: Missing value rejection. Requirement coverage: `ReviewMark-Context-Parsing`. This scenario is tested by `Context_Create_PlanFlag_WithoutValue_ThrowsArgumentException`.
 
-**Expected**: `Validate` property is true.
+**Context_Create_ReportFlag_WithoutValue_ThrowsArgumentException**: `Context.Create` is called with `["--report"]` (no value). Expected outcome: `ArgumentException` is thrown with message containing `"--report"`. Boundary or error path: Missing value rejection. Requirement coverage: `ReviewMark-Context-Parsing`. This scenario is tested by `Context_Create_ReportFlag_WithoutValue_ThrowsArgumentException`.
 
-**Requirement coverage**: `ReviewMark-Context-Parsing`
+**Context_Create_IndexFlag_WithoutValue_ThrowsArgumentException**: `Context.Create` is called with `["--index"]` (no value). Expected outcome: `ArgumentException` is thrown with message containing `"--index"`. Boundary or error path: Missing value rejection. Requirement coverage: `ReviewMark-Context-Parsing`. This scenario is tested by `Context_Create_IndexFlag_WithoutValue_ThrowsArgumentException`.
 
-##### Context_Create_UnknownArgument_ThrowsArgumentException
+**Context_Create_PlanFlag_SetsPlanFile**: `Context.Create` is called with `["--plan", "plan.yaml"]`. Expected outcome: `PlanFile` is set to `"plan.yaml"`. Requirement coverage: `ReviewMark-Context-Parsing`. This scenario is tested by `Context_Create_PlanFlag_SetsPlanFile`.
 
-**Scenario**: `Context.Create` is called with `["--unknown"]`.
+**Context_Create_PlanDepthFlag_SetsPlanDepth**: `Context.Create` is called with `["--plan-depth", "3"]`. Expected outcome: `PlanDepth` is 3. Requirement coverage: `ReviewMark-Context-Parsing`. This scenario is tested by `Context_Create_PlanDepthFlag_SetsPlanDepth`.
 
-**Expected**: `ArgumentException` is thrown.
+**Context_Create_PlanDepthFlag_WithInvalidValue_ThrowsArgumentException**: `Context.Create` is called with `["--plan-depth", "not-a-number"]`. Expected outcome: `ArgumentException` is thrown. Boundary or error path: Non-numeric depth value. Requirement coverage: `ReviewMark-Context-Parsing`. This scenario is tested by `Context_Create_PlanDepthFlag_WithInvalidValue_ThrowsArgumentException`.
 
-**Boundary / error path**: Unknown argument rejection.
+**Context_Create_PlanDepthFlag_WithZeroValue_ThrowsArgumentException**: `Context.Create` is called with `["--plan-depth", "0"]`. Expected outcome: `ArgumentException` is thrown. Boundary or error path: Zero depth value (must be >= 1). Requirement coverage: `ReviewMark-Context-Parsing`. This scenario is tested by `Context_Create_PlanDepthFlag_WithZeroValue_ThrowsArgumentException`.
 
-**Requirement coverage**: `ReviewMark-Context-Parsing`
+**Context_Create_ReportFlag_SetsReportFile**: `Context.Create` is called with `["--report", "report.md"]`. Expected outcome: `ReportFile` is set to `"report.md"`. Requirement coverage: `ReviewMark-Context-Parsing`. This scenario is tested by `Context_Create_ReportFlag_SetsReportFile`.
 
-##### Context_WriteLine_NotSilent_WritesToConsole
+**Context_Create_ReportDepthFlag_SetsReportDepth**: `Context.Create` is called with `["--report-depth", "2"]`. Expected outcome: `ReportDepth` is 2. Requirement coverage: `ReviewMark-Context-Parsing`. This scenario is tested by `Context_Create_ReportDepthFlag_SetsReportDepth`.
 
-**Scenario**: A non-silent `Context` calls `WriteLine`.
+**Context_Create_ReportDepthFlag_NonNumeric_ThrowsArgumentException**: `Context.Create` is called with `["--report-depth", "abc"]`. Expected outcome: `ArgumentException` is thrown. Boundary or error path: Non-numeric depth value. Requirement coverage: `ReviewMark-Context-Parsing`. This scenario is tested by `Context_Create_ReportDepthFlag_NonNumeric_ThrowsArgumentException`.
 
-**Expected**: The message appears on standard output.
+**Context_Create_ReportDepthFlag_Zero_ThrowsArgumentException**: `Context.Create` is called with `["--report-depth", "0"]`. Expected outcome: `ArgumentException` is thrown. Boundary or error path: Zero depth value. Requirement coverage: `ReviewMark-Context-Parsing`. This scenario is tested by `Context_Create_ReportDepthFlag_Zero_ThrowsArgumentException`.
 
-**Requirement coverage**: `ReviewMark-Context-Output`
+**Context_Create_ReportDepthFlag_MissingValue_ThrowsArgumentException**: `Context.Create` is called with `["--report-depth"]` (no value). Expected outcome: `ArgumentException` is thrown. Boundary or error path: Missing value. Requirement coverage: `ReviewMark-Context-Parsing`. This scenario is tested by `Context_Create_ReportDepthFlag_MissingValue_ThrowsArgumentException`.
 
-##### Context_WriteLine_Silent_DoesNotWriteToConsole
+**Context_Create_IndexFlag_AddsIndexPath**: `Context.Create` is called with `["--index", "*.pdf"]`. Expected outcome: `IndexPaths` contains `"*.pdf"`. Requirement coverage: `ReviewMark-Context-Parsing`. This scenario is tested by `Context_Create_IndexFlag_AddsIndexPath`.
 
-**Scenario**: A silent `Context` calls `WriteLine`.
+**Context_Create_IndexFlag_MultipleTimes_AddsAllPaths**: `Context.Create` is called with two `--index` flags. Expected outcome: `IndexPaths` contains both patterns. Requirement coverage: `ReviewMark-Context-Parsing`. This scenario is tested by `Context_Create_IndexFlag_MultipleTimes_AddsAllPaths`.
 
-**Expected**: Standard output receives nothing.
+**Context_Create_NoArguments_IndexPathsEmpty**: `Context.Create` is called with no arguments. Expected outcome: `IndexPaths` is empty. Requirement coverage: `ReviewMark-Context-Parsing`. This scenario is tested by `Context_Create_NoArguments_IndexPathsEmpty`.
 
-**Requirement coverage**: `ReviewMark-Context-Output`
+**Context_Create_NoArguments_PlanDepthDefaultsToOne**: `Context.Create` is called with no arguments. Expected outcome: `PlanDepth` is 1. Requirement coverage: `ReviewMark-Context-Parsing`. This scenario is tested by `Context_Create_NoArguments_PlanDepthDefaultsToOne`.
 
-##### Context_WriteError_NotSilent_WritesToConsole
+**Context_Create_NoArguments_ReportDepthDefaultsToOne**: `Context.Create` is called with no arguments. Expected outcome: `ReportDepth` is 1. Requirement coverage: `ReviewMark-Context-Parsing`. This scenario is tested by `Context_Create_NoArguments_ReportDepthDefaultsToOne`.
 
-**Scenario**: A non-silent `Context` calls `WriteError`.
+**Context_Create_EnforceFlag_SetsEnforceTrue**: `Context.Create` is called with `["--enforce"]`. Expected outcome: `Enforce` is true. Requirement coverage: `ReviewMark-Context-Parsing`. This scenario is tested by `Context_Create_EnforceFlag_SetsEnforceTrue`.
 
-**Expected**: The message appears on standard error.
+**Context_Create_NoArguments_EnforceFalse**: `Context.Create` is called with no arguments. Expected outcome: `Enforce` is false. Requirement coverage: `ReviewMark-Context-Parsing`. This scenario is tested by `Context_Create_NoArguments_EnforceFalse`.
 
-**Requirement coverage**: `ReviewMark-Context-Output`
+**Context_Create_PlanDepthFlag_WithValueGreaterThanFive_ThrowsArgumentException**: `Context.Create` is called with `["--plan-depth", "6"]`. Expected outcome: `ArgumentException` is thrown. Boundary or error path: Depth exceeds maximum of 5. Requirement coverage: `ReviewMark-Context-Parsing`. This scenario is tested by `Context_Create_PlanDepthFlag_WithValueGreaterThanFive_ThrowsArgumentException`.
 
-##### Context_WriteError_SetsErrorExitCode
+**Context_Create_ReportDepthFlag_WithValueGreaterThanFive_ThrowsArgumentException**: `Context.Create` is called with `["--report-depth", "6"]`. Expected outcome: `ArgumentException` is thrown. Boundary or error path: Depth exceeds maximum of 5. Requirement coverage: `ReviewMark-Context-Parsing`. This scenario is tested by `Context_Create_ReportDepthFlag_WithValueGreaterThanFive_ThrowsArgumentException`.
 
-**Scenario**: A `Context` calls `WriteError`.
+**Context_Create_DirFlag_SetsWorkingDirectory**: `Context.Create` is called with `["--dir", "/evidence"]`. Expected outcome: `WorkingDirectory` is `"/evidence"`. Requirement coverage: `ReviewMark-Context-Parsing`. This scenario is tested by `Context_Create_DirFlag_SetsWorkingDirectory`.
 
-**Expected**: `ExitCode` is 1 after the call.
+**Context_Create_NoArguments_WorkingDirectoryIsNull**: `Context.Create` is called with no arguments. Expected outcome: `WorkingDirectory` is null. Requirement coverage: `ReviewMark-Context-Parsing`. This scenario is tested by `Context_Create_NoArguments_WorkingDirectoryIsNull`.
 
-**Requirement coverage**: `ReviewMark-Context-Output`
+**Context_Create_DirFlag_MissingValue_ThrowsArgumentException**: `Context.Create` is called with `["--dir"]` (no value). Expected outcome: `ArgumentException` is thrown. Boundary or error path: Missing value. Requirement coverage: `ReviewMark-Context-Parsing`. This scenario is tested by `Context_Create_DirFlag_MissingValue_ThrowsArgumentException`.
 
-##### Context_Create_ShortHelpFlag_H_SetsHelpTrue
+**Context_Create_ElaborateFlag_SetsElaborateId**: `Context.Create` is called with `["--elaborate", "Core-Logic"]`. Expected outcome: `ElaborateId` is `"Core-Logic"`. Requirement coverage: `ReviewMark-Context-Parsing`. This scenario is tested by `Context_Create_ElaborateFlag_SetsElaborateId`.
 
-**Scenario**: `Context.Create` is called with `["-h"]`.
+**Context_Create_NoArguments_ElaborateIdIsNull**: `Context.Create` is called with no arguments. Expected outcome: `ElaborateId` is null. Requirement coverage: `ReviewMark-Context-Parsing`. This scenario is tested by `Context_Create_NoArguments_ElaborateIdIsNull`.
 
-**Expected**: `Help` property is true.
+**Context_Create_ElaborateFlag_WithoutValue_ThrowsArgumentException**: `Context.Create` is called with `["--elaborate"]` (no value). Expected outcome: `ArgumentException` is thrown. Boundary or error path: Missing value. Requirement coverage: `ReviewMark-Context-Parsing`. This scenario is tested by `Context_Create_ElaborateFlag_WithoutValue_ThrowsArgumentException`.
 
-**Requirement coverage**: `ReviewMark-Context-Parsing`
+**Context_Create_LintFlag_SetsLintTrue**: `Context.Create` is called with `["--lint"]`. Expected outcome: `Lint` is true; `Version` and `Help` are false. Requirement coverage: `ReviewMark-Context-Parsing`. This scenario is tested by `Context_Create_LintFlag_SetsLintTrue`.
 
-##### Context_Create_ShortHelpFlag_Question_SetsHelpTrue
+**Context_Create_NoArguments_LintIsFalse**: `Context.Create` is called with no arguments. Expected outcome: `Lint` is false. Requirement coverage: `ReviewMark-Context-Parsing`. This scenario is tested by `Context_Create_NoArguments_LintIsFalse`.
 
-**Scenario**: `Context.Create` is called with `["-?"]`.
+**Context_Create_DepthFlag_SetsDepth**: `Context.Create` is called with `["--depth", "3"]`. Expected outcome: `Depth`, `PlanDepth`, and `ReportDepth` are all 3. Requirement coverage: `ReviewMark-Context-Parsing`. This scenario is tested by `Context_Create_DepthFlag_SetsDepth`.
 
-**Expected**: `Help` property is true.
+**Context_Create_DepthFlag_PlanDepthOverride**: `Context.Create` is called with `["--depth", "2", "--plan-depth", "4"]`. Expected outcome: `Depth` is 2, `PlanDepth` is 4, `ReportDepth` is 2. Requirement coverage: `ReviewMark-Context-Parsing`. This scenario is tested by `Context_Create_DepthFlag_PlanDepthOverride`.
 
-**Requirement coverage**: `ReviewMark-Context-Parsing`
+**Context_Create_DepthFlag_WithInvalidValue_ThrowsArgumentException**: `Context.Create` is called with `["--depth", "not-a-number"]`. Expected outcome: `ArgumentException` is thrown with message containing `"--depth"`. Boundary or error path: Non-numeric depth. Requirement coverage: `ReviewMark-Context-Parsing`. This scenario is tested by `Context_Create_DepthFlag_WithInvalidValue_ThrowsArgumentException`.
 
-##### Context_Create_ResultsFlag_SetsResultsFile
+**Context_Create_DepthFlag_WithZeroValue_ThrowsArgumentException**: `Context.Create` is called with `["--depth", "0"]`. Expected outcome: `ArgumentException` is thrown with message containing `"--depth"`. Boundary or error path: Zero depth. Requirement coverage: `ReviewMark-Context-Parsing`. This scenario is tested by `Context_Create_DepthFlag_WithZeroValue_ThrowsArgumentException`.
 
-**Scenario**: `Context.Create` is called with `["--results", "test.trx"]`.
+**Context_Create_DepthFlag_WithValueGreaterThanFive_ThrowsArgumentException**: `Context.Create` is called with `["--depth", "6"]`. Expected outcome: `ArgumentException` is thrown with message containing `"--depth"`. Boundary or error path: Depth exceeds maximum of 5. Requirement coverage: `ReviewMark-Context-Parsing`. This scenario is tested by `Context_Create_DepthFlag_WithValueGreaterThanFive_ThrowsArgumentException`.
 
-**Expected**: `ResultsFile` is set to `"test.trx"`.
+**Context_Create_DepthFlag_MissingValue_ThrowsArgumentException**: `Context.Create` is called with `["--depth"]` (no value). Expected outcome: `ArgumentException` is thrown with message containing `"--depth"`. Boundary or error path: Missing value. Requirement coverage: `ReviewMark-Context-Parsing`. This scenario is tested by `Context_Create_DepthFlag_MissingValue_ThrowsArgumentException`.
 
-**Requirement coverage**: `ReviewMark-Context-Parsing`
+**Context_Create_DepthFlag_ReportDepthOverride**: `Context.Create` is called with `["--depth", "2", "--report-depth", "4"]`. Expected outcome: `Depth` is 2, `PlanDepth` is 2, `ReportDepth` is 4. Requirement coverage: `ReviewMark-Context-Parsing`. This scenario is tested by `Context_Create_DepthFlag_ReportDepthOverride`.
 
-##### Context_Create_LogFlag_OpensLogFile
+**Context_Create_LogFlag_InvalidPath_ThrowsInvalidOperationException**: `Context.Create` is called with `["--log", "<path-with-nonexistent-parent-dir>"]`. Expected outcome: `InvalidOperationException` is thrown. Boundary or error path: Log file path whose parent directory does not exist. Requirement coverage: `ReviewMark-Context-LogFileError`. This scenario is tested by `Context_Create_LogFlag_InvalidPath_ThrowsInvalidOperationException`.
 
-**Scenario**: `Context.Create` is called with `["--log", "<file>"]` and `WriteLine` is called.
+**Context_WriteError_Silent_DoesNotWriteToConsole**: A silent `Context` calls `WriteError`. Expected outcome: Standard error receives nothing. Requirement coverage: `ReviewMark-Context-Output`. This scenario is tested by `Context_WriteError_Silent_DoesNotWriteToConsole`.
 
-**Expected**: Log file exists and contains the written message.
-
-**Requirement coverage**: `ReviewMark-Context-Parsing`
-
-##### Context_Create_LogFlag_WithoutValue_ThrowsArgumentException
-
-**Scenario**: `Context.Create` is called with `["--log"]` (no value).
-
-**Expected**: `ArgumentException` is thrown with message containing `"--log"`.
-
-**Boundary / error path**: Missing value rejection.
-
-**Requirement coverage**: `ReviewMark-Context-Parsing`
-
-##### Context_Create_ResultsFlag_WithoutValue_ThrowsArgumentException
-
-**Scenario**: `Context.Create` is called with `["--results"]` (no value).
-
-**Expected**: `ArgumentException` is thrown with message containing `"--results"`.
-
-**Boundary / error path**: Missing value rejection.
-
-**Requirement coverage**: `ReviewMark-Context-Parsing`
-
-##### Context_Create_ResultAlias_SetsResultsFile
-
-**Scenario**: `Context.Create` is called with `["--result", "test.trx"]`.
-
-**Expected**: `ResultsFile` is set to `"test.trx"`.
-
-**Requirement coverage**: `ReviewMark-Context-Parsing`
-
-##### Context_Create_ResultAlias_WithoutValue_ThrowsArgumentException
-
-**Scenario**: `Context.Create` is called with `["--result"]` (no value).
-
-**Expected**: `ArgumentException` is thrown with message containing `"--result"`.
-
-**Boundary / error path**: Missing value rejection.
-
-**Requirement coverage**: `ReviewMark-Context-Parsing`
-
-##### Context_Create_DefinitionFlag_SetsDefinitionFile
-
-**Scenario**: `Context.Create` is called with `["--definition", "spec.yaml"]`.
-
-**Expected**: `DefinitionFile` is set to `"spec.yaml"`.
-
-**Requirement coverage**: `ReviewMark-Context-Parsing`
-
-##### Context_Create_DefinitionFlag_WithoutValue_ThrowsArgumentException
-
-**Scenario**: `Context.Create` is called with `["--definition"]` (no value).
-
-**Expected**: `ArgumentException` is thrown with message containing `"--definition"`.
-
-**Boundary / error path**: Missing value rejection.
-
-**Requirement coverage**: `ReviewMark-Context-Parsing`
-
-##### Context_Create_PlanFlag_WithoutValue_ThrowsArgumentException
-
-**Scenario**: `Context.Create` is called with `["--plan"]` (no value).
-
-**Expected**: `ArgumentException` is thrown with message containing `"--plan"`.
-
-**Boundary / error path**: Missing value rejection.
-
-**Requirement coverage**: `ReviewMark-Context-Parsing`
-
-##### Context_Create_ReportFlag_WithoutValue_ThrowsArgumentException
-
-**Scenario**: `Context.Create` is called with `["--report"]` (no value).
-
-**Expected**: `ArgumentException` is thrown with message containing `"--report"`.
-
-**Boundary / error path**: Missing value rejection.
-
-**Requirement coverage**: `ReviewMark-Context-Parsing`
-
-##### Context_Create_IndexFlag_WithoutValue_ThrowsArgumentException
-
-**Scenario**: `Context.Create` is called with `["--index"]` (no value).
-
-**Expected**: `ArgumentException` is thrown with message containing `"--index"`.
-
-**Boundary / error path**: Missing value rejection.
-
-**Requirement coverage**: `ReviewMark-Context-Parsing`
-
-##### Context_Create_PlanFlag_SetsPlanFile
-
-**Scenario**: `Context.Create` is called with `["--plan", "plan.yaml"]`.
-
-**Expected**: `PlanFile` is set to `"plan.yaml"`.
-
-**Requirement coverage**: `ReviewMark-Context-Parsing`
-
-##### Context_Create_PlanDepthFlag_SetsPlanDepth
-
-**Scenario**: `Context.Create` is called with `["--plan-depth", "3"]`.
-
-**Expected**: `PlanDepth` is 3.
-
-**Requirement coverage**: `ReviewMark-Context-Parsing`
-
-##### Context_Create_PlanDepthFlag_WithInvalidValue_ThrowsArgumentException
-
-**Scenario**: `Context.Create` is called with `["--plan-depth", "not-a-number"]`.
-
-**Expected**: `ArgumentException` is thrown.
-
-**Boundary / error path**: Non-numeric depth value.
-
-**Requirement coverage**: `ReviewMark-Context-Parsing`
-
-##### Context_Create_PlanDepthFlag_WithZeroValue_ThrowsArgumentException
-
-**Scenario**: `Context.Create` is called with `["--plan-depth", "0"]`.
-
-**Expected**: `ArgumentException` is thrown.
-
-**Boundary / error path**: Zero depth value (must be >= 1).
-
-**Requirement coverage**: `ReviewMark-Context-Parsing`
-
-##### Context_Create_ReportFlag_SetsReportFile
-
-**Scenario**: `Context.Create` is called with `["--report", "report.md"]`.
-
-**Expected**: `ReportFile` is set to `"report.md"`.
-
-**Requirement coverage**: `ReviewMark-Context-Parsing`
-
-##### Context_Create_ReportDepthFlag_SetsReportDepth
-
-**Scenario**: `Context.Create` is called with `["--report-depth", "2"]`.
-
-**Expected**: `ReportDepth` is 2.
-
-**Requirement coverage**: `ReviewMark-Context-Parsing`
-
-##### Context_Create_ReportDepthFlag_NonNumeric_ThrowsArgumentException
-
-**Scenario**: `Context.Create` is called with `["--report-depth", "abc"]`.
-
-**Expected**: `ArgumentException` is thrown.
-
-**Boundary / error path**: Non-numeric depth value.
-
-**Requirement coverage**: `ReviewMark-Context-Parsing`
-
-##### Context_Create_ReportDepthFlag_Zero_ThrowsArgumentException
-
-**Scenario**: `Context.Create` is called with `["--report-depth", "0"]`.
-
-**Expected**: `ArgumentException` is thrown.
-
-**Boundary / error path**: Zero depth value.
-
-**Requirement coverage**: `ReviewMark-Context-Parsing`
-
-##### Context_Create_ReportDepthFlag_MissingValue_ThrowsArgumentException
-
-**Scenario**: `Context.Create` is called with `["--report-depth"]` (no value).
-
-**Expected**: `ArgumentException` is thrown.
-
-**Boundary / error path**: Missing value.
-
-**Requirement coverage**: `ReviewMark-Context-Parsing`
-
-##### Context_Create_IndexFlag_AddsIndexPath
-
-**Scenario**: `Context.Create` is called with `["--index", "*.pdf"]`.
-
-**Expected**: `IndexPaths` contains `"*.pdf"`.
-
-**Requirement coverage**: `ReviewMark-Context-Parsing`
-
-##### Context_Create_IndexFlag_MultipleTimes_AddsAllPaths
-
-**Scenario**: `Context.Create` is called with two `--index` flags.
-
-**Expected**: `IndexPaths` contains both patterns.
-
-**Requirement coverage**: `ReviewMark-Context-Parsing`
-
-##### Context_Create_NoArguments_IndexPathsEmpty
-
-**Scenario**: `Context.Create` is called with no arguments.
-
-**Expected**: `IndexPaths` is empty.
-
-**Requirement coverage**: `ReviewMark-Context-Parsing`
-
-##### Context_Create_NoArguments_PlanDepthDefaultsToOne
-
-**Scenario**: `Context.Create` is called with no arguments.
-
-**Expected**: `PlanDepth` is 1.
-
-**Requirement coverage**: `ReviewMark-Context-Parsing`
-
-##### Context_Create_NoArguments_ReportDepthDefaultsToOne
-
-**Scenario**: `Context.Create` is called with no arguments.
-
-**Expected**: `ReportDepth` is 1.
-
-**Requirement coverage**: `ReviewMark-Context-Parsing`
-
-##### Context_Create_EnforceFlag_SetsEnforceTrue
-
-**Scenario**: `Context.Create` is called with `["--enforce"]`.
-
-**Expected**: `Enforce` is true.
-
-**Requirement coverage**: `ReviewMark-Context-Parsing`
-
-##### Context_Create_NoArguments_EnforceFalse
-
-**Scenario**: `Context.Create` is called with no arguments.
-
-**Expected**: `Enforce` is false.
-
-**Requirement coverage**: `ReviewMark-Context-Parsing`
-
-##### Context_Create_PlanDepthFlag_WithValueGreaterThanFive_ThrowsArgumentException
-
-**Scenario**: `Context.Create` is called with `["--plan-depth", "6"]`.
-
-**Expected**: `ArgumentException` is thrown.
-
-**Boundary / error path**: Depth exceeds maximum of 5.
-
-**Requirement coverage**: `ReviewMark-Context-Parsing`
-
-##### Context_Create_ReportDepthFlag_WithValueGreaterThanFive_ThrowsArgumentException
-
-**Scenario**: `Context.Create` is called with `["--report-depth", "6"]`.
-
-**Expected**: `ArgumentException` is thrown.
-
-**Boundary / error path**: Depth exceeds maximum of 5.
-
-**Requirement coverage**: `ReviewMark-Context-Parsing`
-
-##### Context_Create_DirFlag_SetsWorkingDirectory
-
-**Scenario**: `Context.Create` is called with `["--dir", "/evidence"]`.
-
-**Expected**: `WorkingDirectory` is `"/evidence"`.
-
-**Requirement coverage**: `ReviewMark-Context-Parsing`
-
-##### Context_Create_NoArguments_WorkingDirectoryIsNull
-
-**Scenario**: `Context.Create` is called with no arguments.
-
-**Expected**: `WorkingDirectory` is null.
-
-**Requirement coverage**: `ReviewMark-Context-Parsing`
-
-##### Context_Create_DirFlag_MissingValue_ThrowsArgumentException
-
-**Scenario**: `Context.Create` is called with `["--dir"]` (no value).
-
-**Expected**: `ArgumentException` is thrown.
-
-**Boundary / error path**: Missing value.
-
-**Requirement coverage**: `ReviewMark-Context-Parsing`
-
-##### Context_Create_ElaborateFlag_SetsElaborateId
-
-**Scenario**: `Context.Create` is called with `["--elaborate", "Core-Logic"]`.
-
-**Expected**: `ElaborateId` is `"Core-Logic"`.
-
-**Requirement coverage**: `ReviewMark-Context-Parsing`
-
-##### Context_Create_NoArguments_ElaborateIdIsNull
-
-**Scenario**: `Context.Create` is called with no arguments.
-
-**Expected**: `ElaborateId` is null.
-
-**Requirement coverage**: `ReviewMark-Context-Parsing`
-
-##### Context_Create_ElaborateFlag_WithoutValue_ThrowsArgumentException
-
-**Scenario**: `Context.Create` is called with `["--elaborate"]` (no value).
-
-**Expected**: `ArgumentException` is thrown.
-
-**Boundary / error path**: Missing value.
-
-**Requirement coverage**: `ReviewMark-Context-Parsing`
-
-##### Context_Create_LintFlag_SetsLintTrue
-
-**Scenario**: `Context.Create` is called with `["--lint"]`.
-
-**Expected**: `Lint` is true; `Version` and `Help` are false.
-
-**Requirement coverage**: `ReviewMark-Context-Parsing`
-
-##### Context_Create_NoArguments_LintIsFalse
-
-**Scenario**: `Context.Create` is called with no arguments.
-
-**Expected**: `Lint` is false.
-
-**Requirement coverage**: `ReviewMark-Context-Parsing`
-
-##### Context_Create_DepthFlag_SetsDepth
-
-**Scenario**: `Context.Create` is called with `["--depth", "3"]`.
-
-**Expected**: `Depth`, `PlanDepth`, and `ReportDepth` are all 3.
-
-**Requirement coverage**: `ReviewMark-Context-Parsing`
-
-##### Context_Create_DepthFlag_PlanDepthOverride
-
-**Scenario**: `Context.Create` is called with `["--depth", "2", "--plan-depth", "4"]`.
-
-**Expected**: `Depth` is 2, `PlanDepth` is 4, `ReportDepth` is 2.
-
-**Requirement coverage**: `ReviewMark-Context-Parsing`
-
-##### Context_Create_DepthFlag_WithInvalidValue_ThrowsArgumentException
-
-**Scenario**: `Context.Create` is called with `["--depth", "not-a-number"]`.
-
-**Expected**: `ArgumentException` is thrown with message containing `"--depth"`.
-
-**Boundary / error path**: Non-numeric depth.
-
-**Requirement coverage**: `ReviewMark-Context-Parsing`
-
-##### Context_Create_DepthFlag_WithZeroValue_ThrowsArgumentException
-
-**Scenario**: `Context.Create` is called with `["--depth", "0"]`.
-
-**Expected**: `ArgumentException` is thrown with message containing `"--depth"`.
-
-**Boundary / error path**: Zero depth.
-
-**Requirement coverage**: `ReviewMark-Context-Parsing`
-
-##### Context_Create_DepthFlag_WithValueGreaterThanFive_ThrowsArgumentException
-
-**Scenario**: `Context.Create` is called with `["--depth", "6"]`.
-
-**Expected**: `ArgumentException` is thrown with message containing `"--depth"`.
-
-**Boundary / error path**: Depth exceeds maximum of 5.
-
-**Requirement coverage**: `ReviewMark-Context-Parsing`
-
-##### Context_Create_DepthFlag_MissingValue_ThrowsArgumentException
-
-**Scenario**: `Context.Create` is called with `["--depth"]` (no value).
-
-**Expected**: `ArgumentException` is thrown with message containing `"--depth"`.
-
-**Boundary / error path**: Missing value.
-
-**Requirement coverage**: `ReviewMark-Context-Parsing`
-
-##### Context_Create_DepthFlag_ReportDepthOverride
-
-**Scenario**: `Context.Create` is called with `["--depth", "2", "--report-depth", "4"]`.
-
-**Expected**: `Depth` is 2, `PlanDepth` is 2, `ReportDepth` is 4.
-
-**Requirement coverage**: `ReviewMark-Context-Parsing`
-
-##### Context_Create_LogFlag_InvalidPath_ThrowsInvalidOperationException
-
-**Scenario**: `Context.Create` is called with `["--log", "<path-with-nonexistent-parent-dir>"]`.
-
-**Expected**: `InvalidOperationException` is thrown.
-
-**Boundary / error path**: Log file path whose parent directory does not exist.
-
-**Requirement coverage**: `ReviewMark-Context-LogFileError`
-
-##### Context_WriteError_Silent_DoesNotWriteToConsole
-
-**Scenario**: A silent `Context` calls `WriteError`.
-
-**Expected**: Standard error receives nothing.
-
-**Requirement coverage**: `ReviewMark-Context-Output`
-
-##### Context_WriteError_WritesToLogFile
-
-**Scenario**: A `Context` with `--silent --log <file>` calls `WriteError`.
-
-**Expected**: The error message appears in the log file.
-
-**Requirement coverage**: `ReviewMark-Context-Output`
+**Context_WriteError_WritesToLogFile**: A `Context` with `--silent --log <file>` calls `WriteError`. Expected outcome: The error message appears in the log file. Requirement coverage: `ReviewMark-Context-Output`. This scenario is tested by `Context_WriteError_WritesToLogFile`.
 
 #### Requirements Coverage
 

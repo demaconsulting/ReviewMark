@@ -1,28 +1,35 @@
 ## ReqStream
 
-**Component**: DemaConsulting.ReqStream
-**Role**: Traces requirements from YAML definition files and validates coverage against test evidence.
-**Acceptance approach**: Automated build pipeline verification.
+### Verification Approach
 
-ReqStream is invoked in the GitHub Actions CI workflow (`build.yaml`) within the
-`build-docs` job. The "Run ReqStream self-validation" step runs `dotnet reqstream
---validate`, producing `artifacts/reqstream-self-validation.trx`. Subsequently, the
-"Generate Requirements Report, Justifications, and Trace Matrix" step runs ReqStream
-with `--enforce`, which exits non-zero if any requirement lacks test evidence, making
-uncovered requirements a build-breaking condition. A successful CI pipeline run therefore
-proves both that ReqStream is operational and that all requirements are covered.
+This repository pins DemaConsulting.ReqStream version 1.10.0 in the local tool
+manifest and uses that CLI as the final requirements traceability gate in the
+`build-docs` job of `build.yaml`. Fitness for use is
+verified by both self-validation and live enforcement. The `Run ReqStream
+self-validation` step executes `dotnet reqstream --validate` and writes
+`artifacts/reqstream-self-validation.trx`. The subsequent `Generate
+Requirements Report, Justifications, and Trace Matrix` step runs
+`dotnet reqstream --requirements requirements.yaml --tests "artifacts/**/*.trx"
+--report ... --justifications ... --matrix ... --enforce`. Because that command
+fails the workflow if any requirement lacks passing test evidence, a successful
+run shows that the pinned tool version correctly processes the repository's
+requirements set and accumulated TRX inputs. No project-specific qualification
+issues are currently recorded for this pinned version.
 
-### Test scenario coverage
+### Test Scenarios
 
-- **`ReqStream_EnforcementMode`** — ReqStream's self-validation confirms enforcement mode
-  behaviour: when run with `--enforce`, ReqStream exits non-zero if any requirement lacks
-  linked test evidence, making uncovered requirements a build-breaking condition.
-  CI Evidence: "Run ReqStream self-validation" step in the `build-docs` job of
-  `build.yaml`, writing results to `artifacts/reqstream-self-validation.trx`.
+**ReqStreamEnforcementMode**: ReqStream processes `requirements.yaml` together
+with the collected `artifacts/**/*.trx` files and enforces that every
+requirement has linked passing evidence, proving the repository can rely on the
+tool for release-gating traceability. The expected outcome is a passing
+self-validation result and a successful `--enforce` run that generates the
+requirements report, justifications, and trace matrix. This scenario is tested
+by `ReqStream_EnforcementMode`.
 
-The subsequent `--enforce` run (consuming all previously generated TRX files including
-FileAssert, BuildMark, and OTS self-validation results) provides additional runtime
-evidence that ReqStream correctly processed `requirements.yaml` and found all requirements
-covered by passing tests.
+### Requirements Coverage
 
-**Requirement coverage**: `ReviewMark-OTS-ReqStream`
+- **ReviewMark-OTS-ReqStream**: ReqStream shall enforce that every requirement
+  is linked to passing test evidence.
+  - *ReqStreamEnforcementMode*: verifies ReqStream enforces coverage across the
+    repository requirements set and the collected TRX evidence.
+    - `ReqStream_EnforcementMode`

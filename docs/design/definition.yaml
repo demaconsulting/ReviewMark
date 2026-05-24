@@ -1,12 +1,5 @@
 ---
-resource-path:
-  - docs/design
-  - docs/design/review-mark
-  - docs/design/review-mark/cli
-  - docs/design/review-mark/configuration
-  - docs/design/review-mark/indexing
-  - docs/design/review-mark/self-test
-  - docs/template
+resource-path: [docs/design, docs/template]
 
 input-files:
   - docs/design/title.txt
@@ -23,6 +16,11 @@ input-files:
   - docs/design/review-mark/indexing/path-helpers.md
   - docs/design/review-mark/self-test.md
   - docs/design/review-mark/self-test/validation.md
+  - docs/design/ots.md
+  - docs/design/ots/yamldotnet.md
+  - docs/design/ots/pdfsharp.md
+  - docs/design/ots/dema-consulting-test-results.md
+  - docs/design/ots/microsoft-extensions-file-system-globbing.md
 template: template.html
 
 table-of-contents: true

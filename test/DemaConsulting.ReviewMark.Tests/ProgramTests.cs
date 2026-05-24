@@ -26,6 +26,7 @@ namespace DemaConsulting.ReviewMark.Tests;
 /// <summary>
 ///     Unit tests for the Program class.
 /// </summary>
+[Collection("ConsoleTests")]
 public class ProgramTests
 {
     /// <summary>
@@ -763,6 +764,71 @@ public class ProgramTests
     }
 
     /// <summary>
+    ///     Test that Run does nothing (exit code 0, no warnings) when there are no review issues —
+    ///     both with and without --enforce.
+    /// </summary>
+    [Fact]
+    public void Program_HandleIssues_NoIssues_DoesNothing()
+    {
+        // Arrange — definition with no needs-review files and no reviews produces HasIssues=false
+        // for both plan and report, so HandleIssues is always called with hasIssues=false
+        using var tempDir = new TestDirectory();
+        var definitionFile = PathHelpers.SafePathCombine(tempDir.DirectoryPath, "definition.yaml");
+        File.WriteAllText(definitionFile, """
+            needs-review: []
+            evidence-source:
+              type: none
+            reviews: []
+            """);
+
+        var planFile = PathHelpers.SafePathCombine(tempDir.DirectoryPath, "plan.md");
+        var reportFile = PathHelpers.SafePathCombine(tempDir.DirectoryPath, "report.md");
+
+        var originalOut = Console.Out;
+        try
+        {
+            // Act (without --enforce) — no issues present; exit code must stay 0 with no warning
+            using var outWriterNoEnforce = new StringWriter();
+            Console.SetOut(outWriterNoEnforce);
+            int exitCodeNoEnforce;
+            using (var context = Context.Create([
+                "--definition", definitionFile,
+                "--plan", planFile,
+                "--report", reportFile]))
+            {
+                Program.Run(context);
+                exitCodeNoEnforce = context.ExitCode;
+            }
+
+            // Assert — exit code is 0 and no warning is emitted without --enforce
+            Assert.Equal(0, exitCodeNoEnforce);
+            Assert.DoesNotContain("Warning:", outWriterNoEnforce.ToString());
+
+            // Act (with --enforce) — no issues present; exit code must still be 0 with no warning
+            using var outWriterEnforce = new StringWriter();
+            Console.SetOut(outWriterEnforce);
+            int exitCodeEnforce;
+            using (var context = Context.Create([
+                "--definition", definitionFile,
+                "--plan", planFile,
+                "--report", reportFile,
+                "--enforce"]))
+            {
+                Program.Run(context);
+                exitCodeEnforce = context.ExitCode;
+            }
+
+            // Assert — exit code is 0 and no warning is emitted even with --enforce when no issues exist
+            Assert.Equal(0, exitCodeEnforce);
+            Assert.DoesNotContain("Warning:", outWriterEnforce.ToString());
+        }
+        finally
+        {
+            Console.SetOut(originalOut);
+        }
+    }
+
+    /// <summary>
     ///     Test that Run with --index flag scans PDF evidence files and writes index.json.
     /// </summary>
     [Fact]
@@ -784,3 +850,10 @@ public class ProgramTests
         Assert.True(File.Exists(indexFile), "index.json was not created");
     }
 }
+
+/// <summary>
+///     Collection definition that disables parallelization for Console-redirecting tests.
+///     Ensures tests using Console.SetOut / Console.SetError run sequentially.
+/// </summary>
+[CollectionDefinition("ConsoleTests", DisableParallelization = true)]
+public class ConsoleTestsCollection { }

@@ -129,6 +129,8 @@ public sealed class IndexTests : IDisposable
     [Fact]
     public void ReviewIndex_Empty_ReturnsEmptyIndex()
     {
+        // Arrange
+
         // Act
         var index = ReviewIndex.Empty();
 
@@ -1060,7 +1062,7 @@ public sealed class IndexTests : IDisposable
         var entries = index.GetAllForId("Core-Logic");
 
         // Assert — both entries for "Core-Logic" are returned
-        Assert.Equal(2, entries.Count());
+        Assert.Equal(2, entries.Count);
 
         var fingerprints = entries.Select(e => e.Fingerprint).ToHashSet();
         Assert.Contains("fp-v1", fingerprints);

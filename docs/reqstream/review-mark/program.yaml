@@ -1,93 +1,120 @@
 ---
-# Program Software Unit Requirements
-#
-# PURPOSE:
-# - Define requirements for the Program software unit
-# - This unit is the main entry point and top-level orchestrator of the tool
-# - It dispatches to processing logic based on parsed CLI flags
-
+# Program unit requirements
 sections:
-  - title: Program Unit Requirements
-    requirements:
-      - id: ReviewMark-Program-EntryPoint
-        title: >-
-          The Program unit shall parse command-line arguments, execute the requested operation,
-          and return an exit code reflecting success or failure.
-        justification: |
-          The Program unit is the process entry point. It must parse command-line arguments,
-          perform the requested operation, and return an exit code so that callers can detect
-          success or failure programmatically. Argument errors and invalid operations are
-          converted to exit code 1. Other unexpected exceptions are written to error output
-          and then rethrown, so callers may observe either a normal exit code or a process
-          termination due to an unhandled exception.
-        tests:
-          - Program_Run_WithVersionFlag_DisplaysVersionOnly
-          - Program_Version_ReturnsNonEmptyString
-          - Program_Run_WithHelpFlag_DisplaysUsageInformation
+  - title: ReviewMark Requirements
+    sections:
+      - title: Program Requirements
+        requirements:
+          - id: ReviewMark-Program-ParseArguments
+            title: The Program unit shall parse command-line arguments and construct an execution context.
+            justification: |
+              The Program unit is the process entry point. Parsing command-line arguments into a
+              structured execution context is the first step of every invocation and the mechanism
+              by which all flags (--version, --help, --lint, --index, etc.) are recognized.
+              Argument errors are caught during parsing and converted to exit code 1 so that
+              callers can detect malformed invocations programmatically.
+            tests:
+              - Program_Run_WithVersionFlag_DisplaysVersionOnly
+              - Program_Version_ReturnsNonEmptyString
 
-      - id: ReviewMark-Program-Dispatch
-        title: >-
-          The Program unit shall dispatch to exactly one operation per invocation based on
-          the priority order of CLI flags.
-        justification: |
-          --version, --help, --validate, --lint, --index, and plan/report operations must
-          be evaluated in a fixed priority order so that the behavior is predictable and
-          documented. Only the first matching flag action is executed; later flags are
-          not reached.
-        tests:
-          - Program_Run_WithVersionFlag_DisplaysVersionOnly
-          - Program_Run_WithHelpFlag_DisplaysUsageInformation
-          - Program_Run_WithValidateFlag_RunsValidation
-          - Program_Run_WithLintFlag_ValidConfig_ReportsSuccess
-          - Program_Run_WithHelpFlag_IncludesElaborateOption
-          - Program_Run_WithHelpFlag_IncludesLintOption
-          - Program_Run_WithElaborateFlag_OutputsElaboration
-          - Program_Run_WithElaborateFlag_UnknownId_ReportsError
-          - Program_Run_NoArguments_DisplaysDefaultBehavior
-          - Program_Run_WithDefinitionFlag_InvalidConfig_ReportsLintError
+          - id: ReviewMark-Program-ExecuteOperation
+            title: The Program unit shall execute exactly the requested operation based on the parsed context.
+            justification: |
+              After parsing, the Program unit dispatches to exactly one operation per invocation
+              based on the priority order of CLI flags (--version → --help → --validate → --lint
+              → --index → plan/report). Only the first matching flag action is executed; later
+              flags are not reached. This deterministic dispatch ensures predictable and
+              documented behavior.
+            tests:
+              - Program_Run_WithVersionFlag_DisplaysVersionOnly
+              - Program_Run_WithHelpFlag_DisplaysUsageInformation
+              - Program_Run_NoArguments_DisplaysDefaultBehavior
 
-      - id: ReviewMark-Program-LintVerbosity
-        title: >-
-          The Program unit shall suppress the application banner and produce no output
-          when lint succeeds, printing only issue messages on failure.
-        justification: |
-          When --lint is used from scripts or CI pipelines, any output other than the
-          actual issues pollutes the stream and complicates result detection. Suppressing
-          the banner and summary follows the Unix convention of silence-on-success,
-          making the exit code the sole signal for a clean definition file.
-        tests:
-          - Program_Run_WithLintFlag_ValidConfig_ReportsSuccess
-          - Program_Run_WithLintFlag_ValidConfig_SuppressesBanner
-          - Program_Run_WithLintFlag_MissingConfig_ReportsError
-          - Program_Run_WithLintFlag_DuplicateIds_ReportsError
-          - Program_Run_WithLintFlag_UnknownSourceType_ReportsError
-          - Program_Run_WithLintFlag_CorruptedYaml_ReportsError
-          - Program_Run_WithLintFlag_MissingEvidenceSource_ReportsError
-          - Program_Run_WithLintFlag_MultipleErrors_ReportsAll
-          - Program_Run_WithDefinitionFlag_InvalidConfig_ReportsLintError
+          - id: ReviewMark-Program-ExitCode
+            title: The Program unit shall return exit code 0 on success and 1 on failure.
+            justification: |
+              Callers (scripts, CI/CD pipelines) must be able to detect success or failure
+              programmatically via the process exit code. Argument errors and invalid operations
+              produce exit code 1. Unexpected exceptions are written to error output and rethrown,
+              so callers may observe either a normal exit code or a process termination due to an
+              unhandled exception.
+            tests:
+              - Program_HandleIssues_WithEnforce_SetsExitCode1
 
-      - id: ReviewMark-Program-HandleIssues
-        title: >-
-          The Program unit shall set the exit code to 1 when --enforce is set and review
-          issues are present, and emit a non-fatal warning otherwise.
-        justification: |
-          --enforce enables CI/CD pipelines to treat non-current reviews as a blocking
-          failure. Without --enforce, the same issues produce only a warning so that
-          developers can run report generation locally without failing the process. This
-          dual-mode behavior is controlled by a single helper so that the policy is
-          applied consistently across all plan and report operations.
-        tests:
-          - Program_HandleIssues_WithEnforce_SetsExitCode1
-          - Program_HandleIssues_WithoutEnforce_EmitsWarning
+          - id: ReviewMark-Program-Dispatch
+            title: >-
+              The Program unit shall dispatch to exactly one operation per invocation based on
+              the priority order of CLI flags.
+            justification: |
+              --version, --help, --validate, --lint, --index, and plan/report operations must
+              be evaluated in a fixed priority order so that the behavior is predictable and
+              documented. Only the first matching flag action is executed; later flags are
+              not reached.
+            tests:
+              - Program_Run_WithVersionFlag_DisplaysVersionOnly
+              - Program_Run_WithHelpFlag_DisplaysUsageInformation
+              - Program_Run_WithValidateFlag_RunsValidation
+              - Program_Run_WithLintFlag_ValidConfig_ReportsSuccess
+              - Program_Run_WithHelpFlag_IncludesElaborateOption
+              - Program_Run_WithHelpFlag_IncludesLintOption
+              - Program_Run_WithElaborateFlag_OutputsElaboration
+              - Program_Run_WithElaborateFlag_UnknownId_ReportsError
+              - Program_Run_NoArguments_DisplaysDefaultBehavior
+              - Program_Run_WithDefinitionFlag_InvalidConfig_ReportsLintError
 
-      - id: ReviewMark-Program-Index
-        title: >-
-          The Program unit shall scan PDF evidence files and write an index.json when the
-          --index flag is provided.
-        justification: |
-          When --index is provided, the Program unit must invoke RunIndexLogic() to scan
-          the specified glob paths for PDF evidence files and write the resulting index to
-          index.json in the working directory. This makes the --index flag a first-class
-          operation dispatched by Program.Run, just like --validate and --lint.
-        tests:
-          - Program_Run_WithIndexFlag_ScansAndWritesIndexFile
+          - id: ReviewMark-Program-LintVerbosity
+            title: >-
+              The Program unit shall suppress the application banner and produce no output
+              when lint succeeds, printing only issue messages on failure.
+            justification: |
+              When --lint is used from scripts or CI pipelines, any output other than the
+              actual issues pollutes the stream and complicates result detection. Suppressing
+              the banner and summary follows the Unix convention of silence-on-success,
+              making the exit code the sole signal for a clean definition file.
+            tests:
+              - Program_Run_WithLintFlag_ValidConfig_SuppressesBanner
+              - Program_Run_WithLintFlag_MissingConfig_ReportsError
+              - Program_Run_WithLintFlag_DuplicateIds_ReportsError
+              - Program_Run_WithLintFlag_UnknownSourceType_ReportsError
+              - Program_Run_WithLintFlag_CorruptedYaml_ReportsError
+              - Program_Run_WithLintFlag_MissingEvidenceSource_ReportsError
+              - Program_Run_WithLintFlag_MultipleErrors_ReportsAll
+              - Program_Run_WithDefinitionFlag_InvalidConfig_ReportsLintError
+
+          - id: ReviewMark-Program-HandleIssues-Enforce
+            title: >-
+              The Program unit shall set the exit code to 1 when --enforce is set and review
+              issues are present.
+            justification: |
+              --enforce enables CI/CD pipelines to treat non-current reviews as a blocking
+              failure. When --enforce is set and issues are found, the Program unit must exit
+              with code 1 so that callers and pipeline gates can detect the failure
+              programmatically. This policy is applied consistently across all plan and report
+              operations.
+            tests:
+              - Program_HandleIssues_WithEnforce_SetsExitCode1
+
+          - id: ReviewMark-Program-HandleIssues-Warn
+            title: >-
+              The Program unit shall emit a non-fatal warning message and exit with code 0 when
+              issues are present but --enforce is not set.
+            justification: |
+              Without --enforce, the same issues that would block a pipeline should not prevent
+              a developer from running report generation locally. Emitting a warning message
+              while still exiting with code 0 surfaces the problem without terminating the
+              process abnormally, giving developers early visibility without hard-failing their
+              workflow.
+            tests:
+              - Program_HandleIssues_WithoutEnforce_EmitsWarning
+
+          - id: ReviewMark-Program-Index
+            title: >-
+              The Program unit shall scan PDF evidence files and write an index.json when the
+              --index flag is provided.
+            justification: |
+              When --index is provided, the Program unit must invoke RunIndexLogic() to scan
+              the specified glob paths for PDF evidence files and write the resulting index to
+              index.json in the working directory. This makes the --index flag a first-class
+              operation dispatched by Program.Run, just like --validate and --lint.
+            tests:
+              - Program_Run_WithIndexFlag_ScansAndWritesIndexFile

@@ -1,5 +1,8 @@
 # ReviewMark
 
+<!-- IMPORTANT: All links in this file must be absolute URLs.
+     This file is distributed in packages and relative links will not resolve. -->
+
 [![GitHub forks][badge-forks]][link-forks]
 [![GitHub stars][badge-stars]][link-stars]
 [![GitHub contributors][badge-contributors]][link-contributors]
@@ -9,7 +12,12 @@
 [![Security][badge-security]][link-security]
 [![NuGet][badge-nuget]][link-nuget]
 
-DEMA Consulting tool for automated file-review evidence management in regulated environments.
+## Overview
+
+DEMA Consulting command-line tool for automated file-review evidence management in regulated
+environments. ReviewMark generates cryptographic fingerprints of source files and matches them
+against a catalogue of review evidence, producing a compliant review plan and review report on
+every CI/CD run.
 
 ## Features
 
@@ -17,7 +25,7 @@ DEMA Consulting tool for automated file-review evidence management in regulated 
 - 📂 **Evidence Querying** - Queries URL or file-share evidence stores via an `index.json` catalogue
 - 📋 **Coverage Reporting** - Review plan shows which files are covered and flags uncovered files
 - 📊 **Status Reporting** - Review report shows whether each review-set is Current, Stale, Missing, or Failed
-- 🔍 **Review Elaboration** - `--elaborate` prints the ID, fingerprint, and file list for a review set
+- 🔍 **Review Elaboration** - `--elaborate` prints the ID, title, fingerprint, and file list for a review set
 - 🔎 **Configuration Linting** - `--lint` validates the definition file and reports all structural and semantic issues
 - 🚦 **Enforcement** - `--enforce` exits non-zero if any review-set is stale, missing, or failed, or any file is uncovered
 - 🔄 **Re-indexing** - `--index` scans PDF evidence files and writes an up-to-date `index.json`
@@ -80,13 +88,18 @@ evidence indexing, and compliance report formats.
 
 ## Installation
 
-Install the tool globally using the .NET CLI:
-
 ```bash
 dotnet tool install -g DemaConsulting.ReviewMark
 ```
 
 ## Usage
+
+```bash
+# Generate review plan and report, and enforce compliance (typical CI/CD usage)
+reviewmark --plan docs/review/review-plan.md --report docs/review/review-report.md --enforce
+```
+
+Additional usage examples:
 
 ```bash
 # Display version
@@ -109,7 +122,20 @@ reviewmark --lint --definition path/to/definition.yaml
 
 # Silent mode with logging
 reviewmark --silent --log output.log
+
+# Generate review plan and report without enforcement
+reviewmark --plan docs/review/review-plan.md --report docs/review/review-report.md
+
+# Index PDF evidence files matching a glob pattern
+reviewmark --dir \\reviews.example.com\evidence\ --index "**/*.pdf"
+
+# Index evidence organized across multiple year sub-directories
+reviewmark --dir \\reviews.example.com\evidence\ --index "2025/**/*.pdf" --index "2026/**/*.pdf"
 ```
+
+> **Note**: The `\\server\share\` path syntax above is Windows UNC notation. On Linux and macOS,
+> mount the network share first (for example via NFS or CIFS) and use the resulting mount point
+> instead, e.g. `--dir /mnt/reviews/evidence/`.
 
 ## Command-Line Options
 
@@ -184,6 +210,12 @@ See the [User Guide][link-guide] for more details on the self-validation tests.
 
 On validation failure the tool will exit with a non-zero exit code.
 
+## Building
+
+```pwsh
+pwsh ./build.ps1
+```
+
 ## Documentation
 
 Generated documentation includes:
@@ -195,11 +227,26 @@ Generated documentation includes:
 - **Requirements Justifications**: Detailed requirement rationale
 - **Trace Matrix**: Requirements to test traceability
 
+## User Guide
+
+The ReviewMark User Guide is available on the
+[ReviewMark releases page](https://github.com/demaconsulting/ReviewMark/releases).
+
+## Contributing
+
+See [CONTRIBUTING.md](https://github.com/demaconsulting/ReviewMark/blob/main/CONTRIBUTING.md) for guidelines.
+
 ## License
 
-Copyright (c) DEMA Consulting. Licensed under the MIT License. See [LICENSE][link-license] for details.
+Copyright (c) DEMA Consulting. Licensed under the MIT License.
+See [LICENSE](https://github.com/demaconsulting/ReviewMark/blob/main/LICENSE) for details.
 
 By contributing to this project, you agree that your contributions will be licensed under the MIT License.
+
+## Support
+
+- [Report a bug or request a feature](https://github.com/demaconsulting/ReviewMark/issues)
+- [Ask a question or start a discussion](https://github.com/demaconsulting/ReviewMark/discussions)
 
 <!-- Badge References -->
 [badge-forks]: https://img.shields.io/github/forks/demaconsulting/ReviewMark?style=plastic

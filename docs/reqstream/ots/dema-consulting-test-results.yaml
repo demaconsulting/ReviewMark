@@ -1,0 +1,32 @@
+---
+# DemaConsulting.TestResults OTS requirements
+sections:
+  - title: OTS Software Requirements
+    sections:
+      - title: DemaConsulting.TestResults Requirements
+        requirements:
+          - id: ReviewMark-OTS-TestResults-TrxSerialize
+            title: >-
+              DemaConsulting.TestResults shall serialize test run results to MSTest TRX format.
+            justification: |
+              ReviewMark's self-validation output must be consumable by Azure DevOps, GitHub
+              Actions, and ReqStream's --enforce pipeline. The TRX format is the standard input
+              for these tools. DemaConsulting.TestResults provides a ready-made TrxSerializer
+              that produces well-formed TRX output, avoiding a bespoke XML serializer in the
+              SelfTest subsystem.
+            tags: [ots]
+            tests:
+              - TrxSerializer_Serialize_CompletedTestRun_ContainsTestRunElement
+              - Validation_Run_WithTrxResultsFile_WritesFile
+          - id: ReviewMark-OTS-TestResults-JUnitSerialize
+            title: >-
+              DemaConsulting.TestResults shall serialize test run results to JUnit XML format.
+            justification: |
+              ReviewMark's self-validation must also support JUnit XML output for CI environments
+              that consume the JUnit format. DemaConsulting.TestResults provides a JUnitSerializer
+              alongside TrxSerializer, enabling both output formats from a single library without
+              additional dependencies.
+            tags: [ots]
+            tests:
+              - JUnitSerializer_Serialize_CompletedTestRun_ContainsTestSuitesElement
+              - Validation_Run_WithXmlResultsFile_WritesFile

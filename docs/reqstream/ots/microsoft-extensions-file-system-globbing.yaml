@@ -1,0 +1,38 @@
+---
+# Microsoft.Extensions.FileSystemGlobbing OTS requirements
+sections:
+  - title: OTS Software Requirements
+    sections:
+      - title: Microsoft.Extensions.FileSystemGlobbing Requirements
+        requirements:
+          - id: ReviewMark-OTS-FileSystemGlobbing-WildcardMatching
+            title: >-
+              Microsoft.Extensions.FileSystemGlobbing shall match files using ** double-wildcard patterns.
+            justification: |
+              ReviewMark resolves the set of governed files from the ordered include patterns
+              in .reviewmark.yaml. Microsoft.Extensions.FileSystemGlobbing provides the
+              ** double-wildcard semantics and cross-platform path handling required by these
+              patterns, avoiding the need to reimplement glob semantics in application code.
+            tags: [ots]
+            tests:
+              - Matcher_GetResultsInFullPath_DoubleWildcard_MatchesFilesInSubdirectories
+              - Matcher_GetResultsInFullPath_SingleWildcard_MatchesFilesInDirectory
+              - GlobMatcher_GetMatchingFiles_SingleIncludePattern_ReturnsMatchingFiles
+              - GlobMatcher_GetMatchingFiles_MultipleIncludePatterns_ReturnsAllMatching
+              - GlobMatcher_GetMatchingFiles_IncludeAndExclude_ReturnsFilteredFiles
+              - GlobMatcher_GetMatchingFiles_ReIncludeAfterExclude_ReturnsReIncludedFiles
+              - GlobMatcher_GetMatchingFiles_NoMatchingFiles_ReturnsEmptyList
+              - GlobMatcher_GetMatchingFiles_FileInSubdirectory_UsesForwardSlashSeparator
+          - id: ReviewMark-OTS-FileSystemGlobbing-ExclusionPrefix
+            title: >-
+              Microsoft.Extensions.FileSystemGlobbing shall exclude files matching a !-prefixed pattern.
+            justification: |
+              ReviewMark allows governing file sets to exclude specific paths using !-prefixed
+              patterns in .reviewmark.yaml. Microsoft.Extensions.FileSystemGlobbing's exclude
+              support enables these exclusion semantics without custom filtering logic.
+            tags: [ots]
+            tests:
+              - Matcher_GetResultsInFullPath_ExcludePattern_OmitsMatchingFiles
+              - GlobMatcher_GetMatchingFiles_ExcludePattern_ExcludesMatchingFiles
+              - GlobMatcher_GetMatchingFiles_IncludeAndExclude_ReturnsFilteredFiles
+              - GlobMatcher_GetMatchingFiles_ReIncludeAfterExclude_ReturnsReIncludedFiles

@@ -1,30 +1,16 @@
 # Introduction
 
-This document contains the requirements for the ReviewMark project.
+This document lists all requirements for DemaConsulting.ReviewMark.
 
 ## Purpose
 
-ReviewMark is a reference implementation demonstrating best practices for DEMA Consulting
-.NET command-line tools. It provides a standardized approach to command-line argument parsing,
-self-validation, and comprehensive documentation generation.
+To provide a complete, traceable record of all requirements for DemaConsulting.ReviewMark,
+including requirements at the system, subsystem, and unit levels, plus OTS and Shared Package requirements.
 
 ## Scope
 
-This requirements document covers:
+This document covers all requirements defined in `docs/reqstream/` for DemaConsulting.ReviewMark.
 
-- Command-line interface and options
-- Self-validation framework
-- Test result output formats
-- Logging capabilities
-- Multi-platform support
-- Documentation generation
-- CI/CD integration
+## References
 
-## Audience
-
-This document is intended for:
-
-- Software developers working on ReviewMark
-- Quality assurance teams validating requirements
-- Project stakeholders reviewing project scope
-- Users understanding the tool's capabilities
+N/A

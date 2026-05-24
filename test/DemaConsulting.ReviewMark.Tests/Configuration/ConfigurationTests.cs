@@ -257,7 +257,7 @@ public sealed class ConfigurationTests : IDisposable
     ///     Test that elaborating a review-set with an unknown ID throws ArgumentException.
     /// </summary>
     [Fact]
-    public void Configuration_LoadConfig_ElaborateUnknownId_ThrowsArgumentException()
+    public void Configuration_ElaborateReviewSet_UnknownId_ThrowsArgumentException()
     {
         // Arrange
         var indexFile = PathHelpers.SafePathCombine(_testDirectory, "index.json");

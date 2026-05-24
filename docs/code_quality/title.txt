@@ -1,13 +1,14 @@
 ---
-title: ReviewMark Code Quality Report
-subtitle: Code Quality Analysis Report
-author: DEMA Consulting
-description: Code Quality Analysis Report for ReviewMark
+title: "ReviewMark Code Quality Report"
+subtitle: "Automated file-review evidence management"
+author: "DEMA Consulting"
+description: "Code Quality Report for ReviewMark"
 lang: en-US
 keywords:
-  - ReviewMark
   - Code Quality
-  - Analysis
+  - Static Analysis
   - .NET
-  - Documentation
+  - C#
+  - CodeQL
+  - SonarCloud
 ---

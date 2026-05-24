@@ -63,7 +63,7 @@ public class SelfTestTests
     ///     Test that running self-validation with --results creates a TRX results file.
     /// </summary>
     [Fact]
-    public void SelfTest_Run_GeneratesResultsFile()
+    public void SelfTest_Run_WithTrxResultsFile_WritesFile()
     {
         // Arrange
         var resultsFile = Path.Combine(Path.GetTempPath(), $"reviewmark-selftest-{Guid.NewGuid()}.trx");
@@ -103,7 +103,7 @@ public class SelfTestTests
     ///     Test that running self-validation with --results creates a JUnit XML results file.
     /// </summary>
     [Fact]
-    public void SelfTest_Run_GeneratesJUnitResultsFile()
+    public void SelfTest_Run_WithJUnitResultsFile_WritesFile()
     {
         // Arrange
         var resultsFile = Path.Combine(Path.GetTempPath(), $"reviewmark-selftest-{Guid.NewGuid()}.xml");

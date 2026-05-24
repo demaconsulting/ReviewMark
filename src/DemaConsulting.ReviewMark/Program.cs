@@ -34,6 +34,20 @@ internal static class Program
     /// <summary>
     ///     Gets the application version string.
     /// </summary>
+    /// <value>
+    ///     A semantic version string (e.g., <c>1.2.3</c>); may include a git
+    ///     hash suffix when build metadata is present
+    ///     (e.g., <c>1.2.3+abc1234</c>).
+    /// </value>
+    /// <remarks>
+    ///     Resolves the version through a fallback chain: tries
+    ///     <see cref="AssemblyInformationalVersionAttribute"/> first
+    ///     (InformationalVersion, which may include a git hash suffix), then
+    ///     falls back to <see cref="System.Reflection.AssemblyName.Version"/>
+    ///     (AssemblyVersionAttribute), and finally falls back to
+    ///     <c>"0.0.0"</c> when neither attribute is present.  The property is
+    ///     stateless and thread-safe.
+    /// </remarks>
     public static string Version
     {
         get
@@ -51,8 +65,20 @@ internal static class Program
     /// <summary>
     ///     Main entry point for ReviewMark.
     /// </summary>
+    /// <remarks>
+    ///     Implements a three-tier exception-handling design: (1) expected
+    ///     application-level exceptions (<see cref="ArgumentException"/> and
+    ///     <see cref="InvalidOperationException"/>) are caught and reported as
+    ///     clean user-facing errors, returning exit code 1 without a stack
+    ///     trace; (2) any other unexpected exception is caught, its message
+    ///     written to <see cref="Console.Error"/>, and then rethrown.
+    ///     Unexpected exceptions are rethrown rather than swallowed so that
+    ///     the process exits with a non-zero code and the full stack trace is
+    ///     preserved for diagnostics.
+    /// </remarks>
     /// <param name="args">Command-line arguments.</param>
     /// <returns>Exit code: 0 for success, non-zero for failure.</returns>
+    /// <exception cref="Exception">Thrown when an unexpected error occurs in any subsystem; the exception message is written to Console.Error before rethrowing.</exception>
     private static int Main(string[] args)
     {
         try
@@ -89,7 +115,22 @@ internal static class Program
     /// <summary>
     ///     Runs the program logic based on the provided context.
     /// </summary>
+    /// <remarks>
+    ///     Implements a priority-ordered dispatch so that diagnostic flags
+    ///     (<c>--version</c>, <c>--help</c>, <c>--validate</c>, <c>--lint</c>)
+    ///     are always evaluated before any output-generating actions, preventing
+    ///     unintended side effects when flags are combined.  The application
+    ///     banner is printed between priority-1 (<c>--version</c>) and
+    ///     priority-3 (<c>--help</c>) so it appears for every interactive
+    ///     invocation but is suppressed for <c>--lint</c> to keep that output
+    ///     clean for CI pipelines.
+    /// </remarks>
     /// <param name="context">The context containing command line arguments and program state.</param>
+    /// <exception cref="InvalidOperationException">
+    ///     Thrown when a file write operation fails; propagated from
+    ///     <see cref="RunDefinitionLogic"/> (plan or report file) or
+    ///     <see cref="RunIndexLogic"/> (index file).
+    /// </exception>
     public static void Run(Context context)
     {
         // Priority 1: Version query
@@ -131,8 +172,16 @@ internal static class Program
     }
 
     /// <summary>
-    ///     Prints the application banner.
+    ///     Prints the application banner to the context output.
     /// </summary>
+    /// <remarks>
+    ///     The banner is printed on every invocation except <c>--version</c>
+    ///     and <c>--lint</c>.  Suppressing it for <c>--lint</c> keeps the
+    ///     output parseable by linting scripts and CI pipelines (signal, no
+    ///     noise).  Suppressing it for <c>--version</c> ensures the output
+    ///     contains only the bare version string, which tooling can capture
+    ///     directly.
+    /// </remarks>
     /// <param name="context">The context for output.</param>
     private static void PrintBanner(Context context)
     {
@@ -142,8 +191,15 @@ internal static class Program
     }
 
     /// <summary>
-    ///     Prints usage information.
+    ///     Prints usage information to the context output.
     /// </summary>
+    /// <remarks>
+    ///     Called only when <c>--help</c> is set.  All available flags and
+    ///     arguments are listed so users can discover the full CLI surface
+    ///     without consulting external documentation.  The application banner
+    ///     has already been printed before this method is reached, so it is
+    ///     not repeated here.
+    /// </remarks>
     /// <param name="context">The context for output.</param>
     private static void PrintHelp(Context context)
     {
@@ -171,8 +227,17 @@ internal static class Program
     }
 
     /// <summary>
-    ///     Runs the lint logic to validate the definition file.
+    ///     Runs the lint logic to validate the definition file and report issues.
     /// </summary>
+    /// <remarks>
+    ///     Designed for machine-readable output: no banner, no summary message.
+    ///     Silence means the definition file is valid, which keeps the output
+    ///     clean for integration with linting scripts and CI pipelines.
+    ///     Issue messages are emitted via <see cref="Context.WriteError"/> for
+    ///     errors (which also sets the exit code to 1) and
+    ///     <see cref="Context.WriteLine"/> for warnings, so the caller can
+    ///     distinguish severity without parsing message content.
+    /// </remarks>
     /// <param name="context">The context containing command line arguments and program state.</param>
     private static void RunLintLogic(Context context)
     {
@@ -232,10 +297,25 @@ internal static class Program
     }
 
     /// <summary>
-    ///     Runs the index scanning logic.
+    ///     Runs the index scanning logic to build an evidence index from PDF files.
     /// </summary>
+    /// <remarks>
+    ///     Scans all PDFs matched by <c>context.IndexPaths</c> under
+    ///     <paramref name="directory"/>, extracts review-evidence metadata from
+    ///     each file's PDF Keywords field, and writes the resulting index to
+    ///     <c>index.json</c> in the working directory.  Per-file scan failures
+    ///     are forwarded as warnings via <c>context.WriteLine</c> so a single
+    ///     unreadable PDF does not abort the entire scan.  I/O failures when
+    ///     writing <c>index.json</c> are propagated as
+    ///     <see cref="InvalidOperationException"/> to <c>Main()</c>, which
+    ///     prints the message and returns exit code 1.
+    /// </remarks>
     /// <param name="context">The context for output.</param>
-    /// <param name="directory">The working directory.</param>
+    /// <param name="directory">The working directory used as the scan root and index output location.</param>
+    /// <exception cref="InvalidOperationException">
+    ///     Thrown when the index file cannot be written to disk; propagated from
+    ///     <see cref="ReviewIndex.Save(string)"/>.
+    /// </exception>
     private static void RunIndexLogic(Context context, string directory)
     {
         // Scan PDF evidence files and save the resulting index
@@ -252,6 +332,12 @@ internal static class Program
     /// <param name="context">The context for output.</param>
     /// <param name="directory">The working directory.</param>
     /// <param name="definitionFile">The path to the definition YAML file.</param>
+    /// <exception cref="InvalidOperationException">
+    ///     Thrown when a plan or report file cannot be written to disk due to an
+    ///     I/O failure (e.g., <see cref="IOException"/>,
+    ///     <see cref="UnauthorizedAccessException"/>, or
+    ///     <see cref="DirectoryNotFoundException"/>).
+    /// </exception>
     private static void RunDefinitionLogic(Context context, string directory, string definitionFile)
     {
         // Load the configuration with integrated linting
@@ -321,6 +407,16 @@ internal static class Program
     /// <summary>
     ///     Handles review issues by writing an error or warning to the context.
     /// </summary>
+    /// <remarks>
+    ///     This is the single exit-code decision point for review enforcement.
+    ///     When <c>--enforce</c> is set, any detected issues cause
+    ///     <see cref="Context.WriteError"/> to be called, which sets the internal
+    ///     error flag and drives <see cref="Context.ExitCode"/> to 1.  Without
+    ///     <c>--enforce</c>, issues are surfaced as non-fatal warnings so the
+    ///     tool can still complete successfully.  Centralizing this logic here
+    ///     ensures every plan and report operation observes the same enforcement
+    ///     policy.
+    /// </remarks>
     /// <param name="context">The context for output.</param>
     /// <param name="hasIssues">Whether there are issues to report.</param>
     /// <param name="message">The issue message.</param>

@@ -1,66 +1,64 @@
 ---
-# GlobMatcher Software Unit Requirements
-#
-# PURPOSE:
-# - Define requirements for the GlobMatcher software unit
-# - This unit resolves ordered include/exclude glob patterns to a list of files
-# - It is used by ReviewMarkConfiguration to resolve needs-review and review-set file lists
-
+# GlobMatcher unit requirements
 sections:
-  - title: GlobMatcher Unit Requirements
-    requirements:
-      - id: ReviewMark-GlobMatcher-IncludeExclude
-        title: >-
-          The GlobMatcher shall resolve ordered include and exclude glob patterns to a sorted list of
-          relative file paths.
-        justification: |
-          Review-set and needs-review configurations specify files using ordered glob patterns,
-          where patterns prefixed with '!' are exclusions. The GlobMatcher must apply these
-          patterns in declaration order so that a later include can re-add files removed by an
-          earlier exclude, and vice versa. The result must be sorted to ensure deterministic
-          fingerprinting regardless of filesystem iteration order.
-        tests:
-          - GlobMatcher_GetMatchingFiles_SingleIncludePattern_ReturnsMatchingFiles
-          - GlobMatcher_GetMatchingFiles_ExcludePattern_ExcludesMatchingFiles
-          - GlobMatcher_GetMatchingFiles_ReIncludeAfterExclude_ReturnsReIncludedFiles
-          - GlobMatcher_GetMatchingFiles_IncludeAndExclude_ReturnsFilteredFiles
-          - GlobMatcher_GetMatchingFiles_NoMatchingFiles_ReturnsEmptyList
-          - GlobMatcher_GetMatchingFiles_EmptyPatterns_ReturnsEmptyList
-          - GlobMatcher_GetMatchingFiles_MultipleIncludePatterns_ReturnsAllMatching
+  - title: ReviewMark Requirements
+    sections:
+      - title: Configuration Requirements
+        sections:
+          - title: GlobMatcher Requirements
+            requirements:
+              - id: ReviewMark-GlobMatcher-IncludeExclude
+                title: >-
+                  The GlobMatcher shall resolve ordered include and exclude glob patterns to a sorted list of
+                  relative file paths.
+                justification: |
+                  Review-set and needs-review configurations specify files using ordered glob patterns,
+                  where patterns prefixed with '!' are exclusions. The GlobMatcher must apply these
+                  patterns in declaration order so that a later include can re-add files removed by an
+                  earlier exclude, and vice versa. The result must be sorted to ensure deterministic
+                  fingerprinting regardless of filesystem iteration order.
+                tests:
+                  - GlobMatcher_GetMatchingFiles_SingleIncludePattern_ReturnsMatchingFiles
+                  - GlobMatcher_GetMatchingFiles_ExcludePattern_ExcludesMatchingFiles
+                  - GlobMatcher_GetMatchingFiles_ReIncludeAfterExclude_ReturnsReIncludedFiles
+                  - GlobMatcher_GetMatchingFiles_IncludeAndExclude_ReturnsFilteredFiles
+                  - GlobMatcher_GetMatchingFiles_NoMatchingFiles_ReturnsEmptyList
+                  - GlobMatcher_GetMatchingFiles_EmptyPatterns_ReturnsEmptyList
+                  - GlobMatcher_GetMatchingFiles_MultipleIncludePatterns_ReturnsAllMatching
 
-      - id: ReviewMark-GlobMatcher-NullBaseDirectoryRejection
-        title: The GlobMatcher shall reject a null baseDirectory parameter with an ArgumentNullException.
-        justification: |
-          When baseDirectory is null, the operation must be rejected with an ArgumentNullException
-          so callers receive a clear diagnostic rather than an unhandled error.
-        tests:
-          - GlobMatcher_GetMatchingFiles_NullBaseDirectory_ThrowsArgumentNullException
+              - id: ReviewMark-GlobMatcher-NullBaseDirectoryRejection
+                title: The GlobMatcher shall reject a null baseDirectory parameter with an ArgumentNullException.
+                justification: |
+                  When baseDirectory is null, the operation must be rejected with an ArgumentNullException
+                  so callers receive a clear diagnostic rather than an unhandled error.
+                tests:
+                  - GlobMatcher_GetMatchingFiles_NullBaseDirectory_ThrowsArgumentNullException
 
-      - id: ReviewMark-GlobMatcher-NullPatternsRejection
-        title: The GlobMatcher shall reject a null patterns parameter with an ArgumentNullException.
-        justification: |
-          When patterns is null, the operation must be rejected with an ArgumentNullException
-          so callers receive a clear diagnostic rather than an unhandled error.
-        tests:
-          - GlobMatcher_GetMatchingFiles_NullPatterns_ThrowsArgumentNullException
+              - id: ReviewMark-GlobMatcher-NullPatternsRejection
+                title: The GlobMatcher shall reject a null patterns parameter with an ArgumentNullException.
+                justification: |
+                  When patterns is null, the operation must be rejected with an ArgumentNullException
+                  so callers receive a clear diagnostic rather than an unhandled error.
+                tests:
+                  - GlobMatcher_GetMatchingFiles_NullPatterns_ThrowsArgumentNullException
 
-      - id: ReviewMark-GlobMatcher-EmptyBaseDirectoryRejection
-        title: >-
-          The GlobMatcher shall reject an empty or whitespace-only baseDirectory
-          parameter with an ArgumentException.
-        justification: |
-          When baseDirectory is empty or contains only whitespace, the operation must be
-          rejected with an ArgumentException so callers receive a clear diagnostic rather
-          than an unhandled error when invalid values are passed.
-        tests:
-          - GlobMatcher_GetMatchingFiles_EmptyBaseDirectory_ThrowsArgumentException
-          - GlobMatcher_GetMatchingFiles_WhitespaceBaseDirectory_ThrowsArgumentException
+              - id: ReviewMark-GlobMatcher-EmptyBaseDirectoryRejection
+                title: >-
+                  The GlobMatcher shall reject an empty or whitespace-only baseDirectory
+                  parameter with an ArgumentException.
+                justification: |
+                  When baseDirectory is empty or contains only whitespace, the operation must be
+                  rejected with an ArgumentException so callers receive a clear diagnostic rather
+                  than an unhandled error when invalid values are passed.
+                tests:
+                  - GlobMatcher_GetMatchingFiles_EmptyBaseDirectory_ThrowsArgumentException
+                  - GlobMatcher_GetMatchingFiles_WhitespaceBaseDirectory_ThrowsArgumentException
 
-      - id: ReviewMark-GlobMatcher-PathNormalization
-        title: The GlobMatcher shall normalize returned relative paths to use forward slashes as directory separators.
-        justification: |
-          Returned paths must use forward slashes regardless of the host operating system's
-          native directory separator to ensure consistent fingerprint computation across
-          platforms (Windows, Linux, macOS).
-        tests:
-          - GlobMatcher_GetMatchingFiles_FileInSubdirectory_UsesForwardSlashSeparator
+              - id: ReviewMark-GlobMatcher-PathNormalization
+                title: The GlobMatcher shall normalize returned relative paths to use forward slashes as directory separators.
+                justification: |
+                  Returned paths must use forward slashes regardless of the host operating system's
+                  native directory separator to ensure consistent fingerprint computation across
+                  platforms (Windows, Linux, macOS).
+                tests:
+                  - GlobMatcher_GetMatchingFiles_FileInSubdirectory_UsesForwardSlashSeparator

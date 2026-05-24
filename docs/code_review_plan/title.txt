@@ -1,13 +1,13 @@
 ---
-title: ReviewMark Review Plan
-subtitle: File Review Plan for ReviewMark
-author: DEMA Consulting
-description: File Review Plan for ReviewMark
+title: "DemaConsulting.ReviewMark Code Review Plan"
+subtitle: "Automated file-review evidence management"
+author: "DEMA Consulting"
+description: "Code Review Plan for DemaConsulting.ReviewMark"
 lang: en-US
 keywords:
+  - Code Review
   - ReviewMark
   - Review Plan
-  - File Reviews
   - .NET
   - Tool
 ---

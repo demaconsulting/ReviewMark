@@ -44,6 +44,18 @@ internal static class GlobMatcher
     /// </returns>
     /// <remarks>
     ///     This method is stateless and thread-safe; each call creates its own internal state.
+    ///     <para>
+    ///         Per-pattern <see cref="Matcher" /> instances are used rather than a single
+    ///         combined matcher in order to preserve declaration-order semantics: each pattern
+    ///         is applied independently so that a later include can re-add files removed by an
+    ///         earlier exclude, and vice versa. A single combined matcher cannot enforce this
+    ///         ordered include/exclude contract.
+    ///     </para>
+    ///     <para>
+    ///         A <see cref="HashSet{T}" /> accumulator is used to collect matched paths across
+    ///         multiple inclusion patterns and deduplicate results, so that a file matched by
+    ///         more than one include pattern appears only once in the returned list.
+    ///     </para>
     /// </remarks>
     /// <exception cref="ArgumentNullException">
     ///     Thrown when <paramref name="baseDirectory" /> or <paramref name="patterns" /> is <c>null</c>.

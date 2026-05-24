@@ -1,52 +1,62 @@
 # Introduction
 
-This document provides the verification design for ReviewMark, a .NET command-line tool
-for automated file-review evidence management in regulated environments.
+This document defines how the ReviewMark verification collection is organized and how the
+repository records verification coverage for the ReviewMark system, its local software items,
+and its off-the-shelf software items.
 
 ## Purpose
 
-The purpose of this document is to describe how each software requirement for ReviewMark
-is verified. For each unit, subsystem, and OTS component it identifies the test class,
-test methods, mock or stub dependencies, and the requirement identifiers that each test
-satisfies. The document provides a traceable record of verification coverage that
-supports formal code review, compliance audit, and ongoing maintenance.
+This document provides the verification design context for ReviewMark, a .NET command-line tool
+for automated file-review evidence management in regulated environments. It tells reviewers which
+software items are covered by this collection, how verification artifacts align with requirements,
+design, source, and tests, and where OTS qualification evidence is recorded so coverage can be
+confirmed without reverse-engineering the test code.
 
 ## Scope
 
-This document covers the verification design for the complete ReviewMark system,
-including all in-house subsystems and units and all Off-The-Shelf (OTS) components.
+This collection covers verification documentation for the following software items.
 
-In-house software items verified in this document:
+Local items:
 
-- **Program** - entry point and execution orchestrator
-- **Cli** subsystem - `Context` unit (command-line argument parser and I/O owner)
-- **Configuration** subsystem - `ReviewMarkConfiguration` and `GlobMatcher` units
-- **Indexing** subsystem - `ReviewIndex` and `PathHelpers` units
-- **SelfTest** subsystem - `Validation` unit
+- **ReviewMark** - system-level verification
+- **Program** - unit verification
+- **Cli** subsystem and **Context** unit
+- **Configuration** subsystem with **ReviewMarkConfiguration** and **GlobMatcher** units
+- **Indexing** subsystem with **ReviewIndex** and **PathHelpers** units
+- **SelfTest** subsystem with **Validation** unit
 
-OTS components verified in this document:
+OTS items:
 
-- **BuildMark** - build notes generation tool
-- **FileAssert** - file content assertion tool
-- **Pandoc** - document conversion tool
-- **ReqStream** - requirements traceability tool
-- **ReviewMark** - code review enforcement tool (self-referential)
-- **SarifMark** - SARIF report generation tool
-- **SonarMark** - SonarCloud report generation tool
-- **VersionMark** - tool version capture tool
-- **WeasyPrint** - HTML-to-PDF renderer
-- **xUnit** - unit testing framework
+- **BuildMark**
+- **DemaConsulting.TestResults**
+- **FileAssert**
+- **Microsoft.Extensions.FileSystemGlobbing**
+- **Pandoc**
+- **PDFsharp**
+- **ReqStream**
+- **ReviewMark**
+- **SarifMark**
+- **SonarMark**
+- **VersionMark**
+- **WeasyPrint**
+- **xUnit**
+- **YamlDotNet**
 
-The following topics are out of scope:
+Shared packages:
 
-- External library internals not listed above
-- Build pipeline configuration beyond the steps referenced as evidence
-- Deployment and packaging
+- N/A - ReviewMark does not consume shared packages from other repositories.
+
+Out of scope:
+
+- Test projects as standalone software items
+- Build pipeline implementation details except where CI outputs are cited as verification evidence
+- Deployment and packaging details
+- Internals of third-party components beyond the integration surfaces used by ReviewMark
 
 ## Software Structure
 
-The following tree shows how the ReviewMark software items are organized across the
-system, subsystem, and unit levels:
+The following tree shows how the ReviewMark software items are organized across the system,
+subsystem, and unit levels:
 
 ```text
 ReviewMark (System)
@@ -61,87 +71,99 @@ ReviewMark (System)
 │   └── PathHelpers (Unit)
 └── SelfTest (Subsystem)
     └── Validation (Unit)
+
+OTS Software Items (integration and qualification evidence in docs/design/ots/ and
+docs/verification/ots/):
+├── BuildMark
+├── DemaConsulting.TestResults
+├── FileAssert
+├── Microsoft.Extensions.FileSystemGlobbing
+├── Pandoc
+├── PDFsharp
+├── ReqStream
+├── ReviewMark
+├── SarifMark
+├── SonarMark
+├── VersionMark
+├── WeasyPrint
+├── xUnit
+└── YamlDotNet
 ```
 
 ## Companion Artifact Structure
 
-The list below shows how each artifact type maps to the same software structure,
-using per-item path patterns:
+Local items have parallel artifacts in the following repository locations:
 
-- **System** — Req: `docs/reqstream/review-mark.yaml`,
-  Design: `docs/design/review-mark.md`,
-  Verification: `docs/verification/review-mark.md`,
-  Tests: `test/.../IntegrationTests.cs`
-- **Program** — Req: `docs/reqstream/review-mark/program.yaml`,
+- **System** - Req: `docs/reqstream/review-mark.yaml`, Design: `docs/design/review-mark.md`,
+  Verification: `docs/verification/review-mark.md`, Tests:
+  `test/DemaConsulting.ReviewMark.Tests/IntegrationTests.cs`
+- **Program** - Req: `docs/reqstream/review-mark/program.yaml`,
   Design: `docs/design/review-mark/program.md`,
-  Verification: `docs/verification/review-mark/program.md`,
-  Source: `src/.../Program.cs`, Tests: `test/.../ProgramTests.cs`
-- **Cli subsystem** — Req: `docs/reqstream/review-mark/cli/cli.yaml`,
+  Verification: `docs/verification/review-mark/program.md`, Source:
+  `src/DemaConsulting.ReviewMark/Program.cs`, Tests:
+  `test/DemaConsulting.ReviewMark.Tests/ProgramTests.cs`
+- **Cli subsystem** - Req: `docs/reqstream/review-mark/cli.yaml`,
   Design: `docs/design/review-mark/cli.md`,
-  Verification: `docs/verification/review-mark/cli.md`,
-  Source: `src/.../Cli/`
-- **Context** — Req: `docs/reqstream/review-mark/cli/context.yaml`,
+  Verification: `docs/verification/review-mark/cli.md`, Source:
+  `src/DemaConsulting.ReviewMark/Cli/`
+- **Context** - Req: `docs/reqstream/review-mark/cli/context.yaml`,
   Design: `docs/design/review-mark/cli/context.md`,
-  Verification: `docs/verification/review-mark/cli/context.md`,
-  Source: `src/.../Cli/Context.cs`, Tests: `test/.../ContextTests.cs`
-- **Configuration subsystem** —
-  Req: `docs/reqstream/review-mark/configuration/configuration.yaml`,
+  Verification: `docs/verification/review-mark/cli/context.md`, Source:
+  `src/DemaConsulting.ReviewMark/Cli/Context.cs`, Tests:
+  `test/DemaConsulting.ReviewMark.Tests/ContextTests.cs`
+- **Configuration subsystem** - Req: `docs/reqstream/review-mark/configuration.yaml`,
   Design: `docs/design/review-mark/configuration.md`,
-  Verification: `docs/verification/review-mark/configuration.md`,
-  Source: `src/.../Configuration/`
-- **ReviewMarkConfiguration** —
+  Verification: `docs/verification/review-mark/configuration.md`, Source:
+  `src/DemaConsulting.ReviewMark/Configuration/`
+- **ReviewMarkConfiguration** -
   Req: `docs/reqstream/review-mark/configuration/review-mark-configuration.yaml`,
   Design: `docs/design/review-mark/configuration/review-mark-configuration.md`,
   Verification: `docs/verification/review-mark/configuration/review-mark-configuration.md`,
-  Source: `src/.../Configuration/ReviewMarkConfiguration.cs`,
-  Tests: `test/.../ReviewMarkConfigurationTests.cs`
-- **GlobMatcher** — Req: `docs/reqstream/review-mark/configuration/glob-matcher.yaml`,
+  Source: `src/DemaConsulting.ReviewMark/Configuration/ReviewMarkConfiguration.cs`, Tests:
+  `test/DemaConsulting.ReviewMark.Tests/Configuration/ReviewMarkConfigurationTests.cs`
+- **GlobMatcher** - Req: `docs/reqstream/review-mark/configuration/glob-matcher.yaml`,
   Design: `docs/design/review-mark/configuration/glob-matcher.md`,
-  Verification: `docs/verification/review-mark/configuration/glob-matcher.md`,
-  Source: `src/.../Configuration/GlobMatcher.cs`,
-  Tests: `test/.../GlobMatcherTests.cs`
-- **Indexing subsystem** — Req: `docs/reqstream/review-mark/indexing/indexing.yaml`,
+  Verification: `docs/verification/review-mark/configuration/glob-matcher.md`, Source:
+  `src/DemaConsulting.ReviewMark/Configuration/GlobMatcher.cs`, Tests:
+  `test/DemaConsulting.ReviewMark.Tests/Configuration/GlobMatcherTests.cs`
+- **Indexing subsystem** - Req: `docs/reqstream/review-mark/indexing.yaml`,
   Design: `docs/design/review-mark/indexing.md`,
-  Verification: `docs/verification/review-mark/indexing.md`,
-  Source: `src/.../Indexing/`
-- **ReviewIndex** — Req: `docs/reqstream/review-mark/indexing/review-index.yaml`,
+  Verification: `docs/verification/review-mark/indexing.md`, Source:
+  `src/DemaConsulting.ReviewMark/Indexing/`
+- **ReviewIndex** - Req: `docs/reqstream/review-mark/indexing/review-index.yaml`,
   Design: `docs/design/review-mark/indexing/review-index.md`,
-  Verification: `docs/verification/review-mark/indexing/review-index.md`,
-  Source: `src/.../Indexing/ReviewIndex.cs`, Tests: `test/.../IndexingTests.cs`
-- **PathHelpers** — Req: `docs/reqstream/review-mark/indexing/path-helpers.yaml`,
+  Verification: `docs/verification/review-mark/indexing/review-index.md`, Source:
+  `src/DemaConsulting.ReviewMark/Indexing/ReviewIndex.cs`, Tests:
+  `test/DemaConsulting.ReviewMark.Tests/IndexingTests.cs`
+- **PathHelpers** - Req: `docs/reqstream/review-mark/indexing/path-helpers.yaml`,
   Design: `docs/design/review-mark/indexing/path-helpers.md`,
-  Verification: `docs/verification/review-mark/indexing/path-helpers.md`,
-  Source: `src/.../Indexing/PathHelpers.cs`, Tests: `test/.../IndexingTests.cs`
-- **SelfTest subsystem** — Req: `docs/reqstream/review-mark/self-test/self-test.yaml`,
+  Verification: `docs/verification/review-mark/indexing/path-helpers.md`, Source:
+  `src/DemaConsulting.ReviewMark/Indexing/PathHelpers.cs`, Tests:
+  `test/DemaConsulting.ReviewMark.Tests/IndexingTests.cs`
+- **SelfTest subsystem** - Req: `docs/reqstream/review-mark/self-test.yaml`,
   Design: `docs/design/review-mark/self-test.md`,
-  Verification: `docs/verification/review-mark/self-test.md`,
-  Source: `src/.../SelfTest/`
-- **Validation** — Req: `docs/reqstream/review-mark/self-test/validation.yaml`,
+  Verification: `docs/verification/review-mark/self-test.md`, Source:
+  `src/DemaConsulting.ReviewMark/SelfTest/`
+- **Validation** - Req: `docs/reqstream/review-mark/self-test/validation.yaml`,
   Design: `docs/design/review-mark/self-test/validation.md`,
-  Verification: `docs/verification/review-mark/self-test/validation.md`,
-  Source: `src/.../SelfTest/Validation.cs`, Tests: `test/.../ValidationTests.cs`
+  Verification: `docs/verification/review-mark/self-test/validation.md`, Source:
+  `src/DemaConsulting.ReviewMark/SelfTest/Validation.cs`, Tests:
+  `test/DemaConsulting.ReviewMark.Tests/ValidationTests.cs`
 
-OTS components verified in this document have their requirements at:
+OTS items use repository-level integration and qualification artifacts parallel to the system
+folders:
 
-| OTS Component | Requirements |
-| ------------- | ------------ |
-| ReviewMark (self-referential) | `docs/reqstream/ots/reviewmark.yaml` |
-| BuildMark | `docs/reqstream/ots/buildmark.yaml` |
-| FileAssert | `docs/reqstream/ots/fileassert.yaml` |
-| Pandoc | `docs/reqstream/ots/pandoc.yaml` |
-| ReqStream | `docs/reqstream/ots/reqstream.yaml` |
-| SarifMark | `docs/reqstream/ots/sarifmark.yaml` |
-| SonarMark | `docs/reqstream/ots/sonarmark.yaml` |
-| VersionMark | `docs/reqstream/ots/versionmark.yaml` |
-| WeasyPrint | `docs/reqstream/ots/weasyprint.yaml` |
-| xUnit | `docs/reqstream/ots/xunit.yaml` |
+- Requirements: `docs/reqstream/ots/{ots-name}.yaml`
+- Design: `docs/design/ots/{ots-name}.md`
+- Verification: `docs/verification/ots/{ots-name}.md`
 
-Each chapter in this verification document corresponds to a unit or subsystem chapter
-in the design document. Requirement IDs referenced in the Requirements Coverage sections
-match identifiers defined in the ReqStream YAML files under `docs/reqstream/`.
+Shared packages:
+
+- N/A - no shared package verification artifacts are required for this repository.
+
+Review-sets are defined in `.reviewmark.yaml`.
 
 ## References
 
-- See the *ReviewMark Software Design* document for implementation details of each unit.
-- See the *ReviewMark Requirements* document for the full requirements specification.
-- See the ReviewMark repository at <https://github.com/demaconsulting/ReviewMark>.
+- [Continuous Compliance](https://github.com/demaconsulting/ContinuousCompliance)
+- [ReviewMark releases](https://github.com/demaconsulting/ReviewMark/releases)

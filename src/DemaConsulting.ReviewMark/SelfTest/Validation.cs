@@ -49,7 +49,8 @@ internal static partial class Validation
     /// <summary>
     ///     Runs self-validation tests and optionally writes results to a file.
     /// </summary>
-    /// <param name="context">The context containing command line arguments and program state.</param>
+    /// <param name="context">The context containing command line arguments and program state. Must not be null.</param>
+    /// <exception cref="ArgumentNullException">Thrown when <paramref name="context"/> is null.</exception>
     /// <remarks>
     ///     When one or more validation tests fail, or when the results file cannot be written
     ///     (for example because the file extension is unsupported or an I/O error occurs),

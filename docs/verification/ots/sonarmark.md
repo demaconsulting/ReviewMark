@@ -1,41 +1,64 @@
 ## SonarMark
 
-**Component**: DemaConsulting.SonarMark
-**Role**: Generates markdown reports from SonarCloud/SonarQube analysis results.
-**Acceptance approach**: Automated build pipeline verification.
+### Verification Approach
 
-SonarMark is maintained by DemaConsulting and is used as a build tool in the CI/CD
-pipeline. Its integration is verified through the GitHub Actions workflow (`build.yaml`),
-where two steps run within the `build-docs` job. The "Run SonarMark self-validation"
-step executes `dotnet sonarmark --validate` and writes results to
-`artifacts/sonarmark-self-validation.trx`, confirming the tool is correctly installed
-and its internal self-test scenarios pass. The "Generate SonarCloud Quality Report" step
-calls `dotnet sonarmark --server https://sonarcloud.io … --report docs/code_quality/generated/sonar-quality.md`,
-retrieving quality-gate, issues, and hotspots data from SonarCloud and rendering it as a
-markdown document. A non-zero exit from either step fails the CI build.
+This repository pins DemaConsulting.SonarMark version 1.5.0 in the local tool
+manifest and uses that CLI in the `build-docs` job of `build.yaml` to generate
+the SonarCloud portion of the code quality evidence.
+Fitness for use is verified in two ways. First, the `Run SonarMark
+self-validation` step executes `dotnet sonarmark --validate` and writes
+`artifacts/sonarmark-self-validation.trx`. Second, the `Generate SonarCloud
+Quality Report` step uses the same pinned tool version to query SonarCloud for
+the ReviewMark SonarCloud project and render
+`docs/code_quality/generated/sonar-quality.md`. Because either failure stops the
+workflow, a passing CI run shows that the tool can retrieve the data needed by
+this repository and generate the required markdown output. No project-specific
+qualification issues are currently recorded for this pinned version.
 
-The `--validate` self-validation step exercises four named test scenarios that cover the
-full retrieval-and-reporting workflow: quality-gate status retrieval, issues retrieval,
-hotspots retrieval, and markdown report generation.
+### Test Scenarios
 
-### Test scenario coverage
+**SonarMarkQualityGateRetrieval**: SonarMark retrieves the current quality-gate
+status from the configured SonarCloud project, proving the pinned tool version
+can authenticate and read the primary pass/fail signal used in the quality
+report. The expected outcome is a passing self-validation result recorded in
+`artifacts/sonarmark-self-validation.trx`. This scenario is tested by
+`SonarMark_QualityGateRetrieval`.
 
-- **`SonarMark_QualityGateRetrieval`** — SonarMark successfully retrieves the quality-gate
-  status from a SonarCloud project. CI Evidence: "Run SonarMark self-validation" step in
-  the `build-docs` job of `build.yaml`, writing results to
-  `artifacts/sonarmark-self-validation.trx`.
-- **`SonarMark_IssuesRetrieval`** — SonarMark successfully retrieves the list of open
-  issues from a SonarCloud project. CI Evidence: Same "Run SonarMark self-validation"
-  step, same TRX file.
-- **`SonarMark_HotSpotsRetrieval`** — SonarMark successfully retrieves the list of
-  security hotspots from a SonarCloud project. CI Evidence: Same "Run SonarMark
-  self-validation" step, same TRX file.
-- **`SonarMark_MarkdownReportGeneration`** — SonarMark generates a markdown quality report
-  from retrieved SonarCloud data, producing the expected report document. CI Evidence:
-  Same "Run SonarMark self-validation" step and the "Generate SonarCloud Quality Report"
-  step in the `build-docs` job, confirmed by successful report generation.
+**SonarMarkIssuesRetrieval**: SonarMark retrieves the open-issues data set from
+SonarCloud so that the repository can include actionable issue information in
+its generated code quality evidence. The expected outcome is a passing
+self-validation result for issue retrieval in
+`artifacts/sonarmark-self-validation.trx`. This scenario is tested by
+`SonarMark_IssuesRetrieval`.
 
-All four scenarios together confirm `ReviewMark-OTS-SonarMark`: SonarMark correctly
-retrieves SonarCloud analysis data and renders it as a human-readable markdown report.
+**SonarMarkHotSpotsRetrieval**: SonarMark retrieves the security hot spot data
+set from SonarCloud so that the quality report covers the security review data
+used by this project. The expected outcome is a passing self-validation result
+for security hot spot retrieval in `artifacts/sonarmark-self-validation.trx`.
+This
+scenario is tested by `SonarMark_HotSpotsRetrieval`.
 
-**Requirement coverage**: `ReviewMark-OTS-SonarMark`
+**SonarMarkMarkdownReportGeneration**: SonarMark renders the retrieved
+SonarCloud data into `docs/code_quality/generated/sonar-quality.md`, proving
+that the tool is fit for the repository's intended use as a markdown evidence
+producer. The expected outcome is a generated report with a zero-exit workflow
+step in `build.yaml`. This scenario is tested by
+`SonarMark_MarkdownReportGeneration`.
+
+### Requirements Coverage
+
+- **ReviewMark-OTS-SonarMark**: SonarMark shall generate a SonarCloud quality
+  report.
+  - *SonarMarkQualityGateRetrieval*: verifies SonarMark retrieves the current
+    quality-gate status needed by the report.
+    - `SonarMark_QualityGateRetrieval`
+  - *SonarMarkIssuesRetrieval*: verifies SonarMark retrieves the open-issues
+    data included in the report.
+    - `SonarMark_IssuesRetrieval`
+  - *SonarMarkHotSpotsRetrieval*: verifies SonarMark retrieves the
+    security hot spot data included in the report.
+    - `SonarMark_HotSpotsRetrieval`
+  - *SonarMarkMarkdownReportGeneration*: verifies SonarMark renders the
+    retrieved SonarCloud data into the markdown report consumed by this
+    repository.
+    - `SonarMark_MarkdownReportGeneration`
