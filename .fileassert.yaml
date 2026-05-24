@@ -234,7 +234,7 @@ tests:
             - field: "Author"
               contains: "DEMA Consulting"
             - field: "Subject"
-              contains: "File-Review Evidence Management"
+              contains: "User Guide"
           pages:
             min: 3
           text:
