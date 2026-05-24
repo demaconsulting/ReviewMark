@@ -201,7 +201,7 @@ tests:
             - field: "Author"
               contains: "DEMA Consulting"
             - field: "Subject"
-              contains: "Verification design document"
+              contains: "Verification Design Document"
           pages:
             min: 3
           text:
