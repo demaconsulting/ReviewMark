@@ -48,12 +48,12 @@
     <PackageReference Include="DemaConsulting.TestResults" Version="1.7.0" />
     <PackageReference Include="Microsoft.Extensions.FileSystemGlobbing" Version="10.0.8" />
     <PackageReference Include="PDFsharp" Version="6.2.4" />
-    <PackageReference Include="YamlDotNet" Version="17.1.0" />
+    <PackageReference Include="YamlDotNet" Version="18.0.0" />
   </ItemGroup>
 
   <!-- Build Tool Dependencies -->
   <ItemGroup>
-    <PackageReference Include="Polyfill" Version="10.5.1" PrivateAssets="All" />
+    <PackageReference Include="Polyfill" Version="10.7.0" PrivateAssets="All" />
   </ItemGroup>
 
   <!-- Code Analysis Dependencies -->
@@ -67,7 +67,7 @@
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
-    <PackageReference Include="SonarAnalyzer.CSharp" Version="10.25.0.139117">
+    <PackageReference Include="SonarAnalyzer.CSharp" Version="10.26.0.140279">
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
