@@ -46,14 +46,14 @@
   <!-- OTS Package Dependencies -->
   <ItemGroup>
     <PackageReference Include="DemaConsulting.TestResults" Version="1.9.0" />
-    <PackageReference Include="Microsoft.Extensions.FileSystemGlobbing" Version="10.0.8" />
+    <PackageReference Include="Microsoft.Extensions.FileSystemGlobbing" Version="10.0.9" />
     <PackageReference Include="PDFsharp" Version="6.2.4" />
     <PackageReference Include="YamlDotNet" Version="18.0.0" />
   </ItemGroup>
 
   <!-- Build Tool Dependencies -->
   <ItemGroup>
-    <PackageReference Include="Polyfill" Version="10.8.1" PrivateAssets="All" />
+    <PackageReference Include="Polyfill" Version="10.10.0" PrivateAssets="All" />
   </ItemGroup>
 
   <!-- Code Analysis Dependencies -->
@@ -63,7 +63,7 @@
            in any project that references this test project.
          - IncludeAssets lists all asset types (including 'analyzers' and 'buildtransitive') to ensure
            Roslyn analyzers and MSBuild targets are fully activated during the build. -->
-    <PackageReference Include="Microsoft.CodeAnalysis.NetAnalyzers" Version="10.0.300">
+    <PackageReference Include="Microsoft.CodeAnalysis.NetAnalyzers" Version="10.0.301">
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
