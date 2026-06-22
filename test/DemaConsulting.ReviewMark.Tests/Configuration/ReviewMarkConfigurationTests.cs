@@ -585,7 +585,7 @@ public sealed class ReviewMarkConfigurationTests : IDisposable
     }
 
     /// <summary>
-    ///     Test that PublishReviewPlan honours the markdownDepth parameter when
+    ///     Test that PublishReviewPlan honors the markdownDepth parameter when
     ///     building heading levels, including subheadings for uncovered files.
     /// </summary>
     [Fact]
