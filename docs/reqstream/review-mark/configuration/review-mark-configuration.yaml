@@ -214,11 +214,17 @@ sections:
 
               - id: ReviewMark-Config-ContextExcludedFromCoverage
                 title: >-
-                  Context files shall not be subject to needs-review coverage enforcement.
-                justification: |
-                  Context files are reference material, not files under review.
+                  Context entries shall provide reference material only and shall not satisfy
+                  needs-review coverage obligations; only paths: entries provide review coverage.
+                justification: >-
+                  A file appearing solely in context: is reference material shown during elaboration.
+                  It is not a file under review. A file that matches needs-review and appears only
+                  in context: — and not in any paths: entry — will still be reported as uncovered
+                  by PublishReviewPlan(). Only files resolved through a review set's paths: entries
+                  count as covered.
                 tests:
                   - ReviewMarkConfiguration_ElaborateReviewSet_ContextNotUnderReview
+                  - ReviewMarkConfiguration_PublishReviewPlan_ContextOnlyFile_StillReportedAsUncovered
 
               - id: ReviewMark-Config-ContextInElaboration
                 title: >-

@@ -142,6 +142,14 @@ the context files do not appear in the `Files` subsection. Requirement coverage:
 `ReviewMark-Config-ContextExcludedFromCoverage`. This scenario is tested by
 `ReviewMarkConfiguration_ElaborateReviewSet_ContextNotUnderReview`.
 
+**ReviewMarkConfiguration_PublishReviewPlan_ContextOnlyFile_StillReportedAsUncovered**:
+`PublishReviewPlan` is called when a file matching `needs-review` appears only in a review set's
+`context:` list and is not matched by any `paths:` entry. Expected outcome: `HasIssues` is true
+and the context-only file appears in the Markdown as uncovered. Boundary or error path: context
+isolation from coverage. Requirement coverage: `ReviewMark-Config-ContextExcludedFromCoverage`.
+This scenario is tested by
+`ReviewMarkConfiguration_PublishReviewPlan_ContextOnlyFile_StillReportedAsUncovered`.
+
 #### Requirements Coverage
 
 - **ReviewMark-Config-Reading**:
@@ -191,7 +199,7 @@ the context files do not appear in the `Files` subsection. Requirement coverage:
   ReviewMarkConfiguration_Parse_ReviewSetContext_ParsedCorrectly,
   ReviewMarkConfiguration_Parse_NoContext_DefaultsToEmpty
 - **ReviewMark-Config-ContextExcludedFromFingerprint**: ReviewSet_GetFingerprint_ContextNotIncluded
-- **ReviewMark-Config-ContextExcludedFromCoverage**: ReviewMarkConfiguration_ElaborateReviewSet_ContextNotUnderReview
+- **ReviewMark-Config-ContextExcludedFromCoverage**: ReviewMarkConfiguration_ElaborateReviewSet_ContextNotUnderReview, ReviewMarkConfiguration_PublishReviewPlan_ContextOnlyFile_StillReportedAsUncovered
 - **ReviewMark-Config-ContextInElaboration**:
   ReviewMarkConfiguration_ElaborateReviewSet_GlobalContext_AppearsInOutput,
   ReviewMarkConfiguration_ElaborateReviewSet_LocalContext_AppearsInOutput,

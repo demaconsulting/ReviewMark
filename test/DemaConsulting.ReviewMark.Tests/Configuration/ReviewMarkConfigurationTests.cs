@@ -549,6 +549,42 @@ public sealed class ReviewMarkConfigurationTests : IDisposable
     }
 
     /// <summary>
+    ///     Test that a file listed only in context: is still reported as uncovered by
+    ///     PublishReviewPlan when it matches the needs-review pattern.
+    /// </summary>
+    [Fact]
+    public void ReviewMarkConfiguration_PublishReviewPlan_ContextOnlyFile_StillReportedAsUncovered()
+    {
+        // Arrange — src/MyFile.cs matches needs-review; it appears in context: but NOT in paths:
+        var srcDir = PathHelpers.SafePathCombine(_testDirectory, "src");
+        Directory.CreateDirectory(srcDir);
+        File.WriteAllText(PathHelpers.SafePathCombine(srcDir, "MyFile.cs"), "class MyFile {}");
+
+        var yaml = """
+            needs-review:
+              - "**/*.cs"
+            evidence-source:
+              type: none
+            reviews:
+              - id: Core-Logic
+                title: Review of core business logic
+                context:
+                  - "src/**/*.cs"
+                paths:
+                  - "other/**/*.cs"
+            """;
+        var config = ReviewMarkConfiguration.Parse(yaml);
+
+        // Act
+        var result = config.PublishReviewPlan(_testDirectory);
+
+        // Assert — the context-only file is not covered, so HasIssues must be true
+        Assert.True(result.HasIssues, "HasIssues should be true when a needs-review file appears only in context:");
+        Assert.Contains("Coverage", result.Markdown);
+        Assert.Contains("`src/MyFile.cs`", result.Markdown);
+    }
+
+    /// <summary>
     ///     Test that PublishReviewPlan honours the markdownDepth parameter when
     ///     building heading levels, including subheadings for uncovered files.
     /// </summary>

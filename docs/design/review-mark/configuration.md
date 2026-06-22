@@ -37,6 +37,8 @@ When `Configuration` is non-null, the following instance properties and methods 
 - **`EvidenceSource`** → `EvidenceSource` — parsed evidence-source block (`Type`, `Location`,
   optional credential env-var names)
 - **`Reviews`** → `IReadOnlyList<ReviewSet>` — ordered list of review-set definitions
+- **`GlobalContext`** → `IReadOnlyList<string>` — top-level context glob patterns (empty when
+  omitted from YAML); these are reference-only patterns and do not satisfy needs-review coverage
 - **`GetNeedsReviewFiles(string dir)`** → `IReadOnlyList<string>`
 - **`ElaborateReviewSet(string id, string dir, int markdownDepth = 1)`** → `ElaborateResult`
 - **`PublishReviewPlan(string dir, int depth = 1)`** → `ReviewPlanResult`
@@ -63,12 +65,21 @@ enumeration and owns SHA-256 fingerprinting, document generation, and elaboratio
    error-level issues are found.
 2. For `PublishReviewPlan()` and `PublishReviewReport()`, `ReviewMarkConfiguration` calls
    `GlobMatcher.GetMatchingFiles()` to resolve each review-set's `paths` patterns and the
-   top-level `needs-review` patterns into sorted file lists.
+   top-level `needs-review` patterns into sorted file lists. Only files resolved through a
+   review-set's `paths:` entries count as covered; `context:` entries are reference material
+   and do not satisfy needs-review coverage obligations. A file that matches `needs-review`
+   but appears only in `context:` is reported as uncovered by `PublishReviewPlan()`.
 3. Fingerprinting is content-based and order-independent: per-file SHA-256 hashes are
    sorted lexicographically before concatenation and re-hashing, ensuring the fingerprint
-   is insensitive to file enumeration order but sensitive to content changes.
+   is insensitive to file enumeration order but sensitive to content changes. Context files
+   are excluded from fingerprint computation.
 4. `PublishReviewReport()` accepts `ReviewIndex` as a parameter and calls `GetEvidence()`
    for each review-set to determine Current, Stale, Missing, or Failed status.
+5. `ElaborateReviewSet()` generates a Markdown document that includes an optional Context
+   subsection listing resolved context files labeled `[global]` (from `GlobalContext`) or
+   `[local]` (from `ReviewSet.Context`); the subsection is omitted when no context files
+   resolve. `ReviewSet.Context` holds per-review-set context glob patterns; these patterns
+   identify reference material shown during elaboration and do not provide review coverage.
 
 `GlobMatcher` is stateless and has no knowledge of `ReviewMarkConfiguration`; the
 dependency is strictly one-directional. Integration-level Configuration subsystem tests

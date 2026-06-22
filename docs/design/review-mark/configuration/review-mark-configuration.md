@@ -102,6 +102,11 @@ lists all resolved context files labeled `[global]` (from `GlobalContext`) or `[
 `review.Context`), and is omitted when no context files resolve. Throws `ArgumentException`
 for unknown IDs; throws `ArgumentOutOfRangeException` when `markdownDepth > 5`.
 
+**Coverage note:** Context entries are reference material only. A file listed in `context:` is
+not considered covered for needs-review purposes. Only `paths:` entries provide review coverage.
+A file that matches `needs-review` but appears only in `context:` will still be reported as
+uncovered by `PublishReviewPlan()`.
+
 **Fingerprinting algorithm:**
 
 1. For each file in the review-set, read its contents and compute a SHA-256 hash.
