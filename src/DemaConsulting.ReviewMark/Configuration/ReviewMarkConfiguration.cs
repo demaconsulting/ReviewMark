@@ -400,12 +400,12 @@ file static class ReviewMarkConfigurationHelpers
 
             if (r.Context != null)
             {
-                foreach (var _ in r.Context.Where(p => p != null && string.IsNullOrWhiteSpace(p)))
+                foreach (var _ in r.Context.Where(p => string.IsNullOrWhiteSpace(p)))
                 {
                     issues.Add(new LintIssue(
                         filePath,
                         LintSeverity.Warning,
-                        $"Review set '{r.Id ?? $"at index {i}"}' has a whitespace-only 'context' entry."));
+                        $"Review set '{r.Id ?? $"at index {i}"}' has a null or whitespace-only 'context' entry."));
                 }
             }
         }
