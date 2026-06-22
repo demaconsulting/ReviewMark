@@ -288,6 +288,7 @@ The file has three top-level keys:
 | `needs-review`    | No       | Glob patterns identifying all files that require review  |
 | `evidence-source` | Yes      | Location of the review evidence index                    |
 | `reviews`         | Yes      | List of review sets, each grouping related files         |
+| `context`         | No       | Global context files read by all reviewers               |
 
 A complete annotated example:
 
@@ -315,6 +316,8 @@ reviews:
     paths:
       - "src/Core/**/*.cs"
       - "!src/Core/obj/**"   # exclude build output within the set
+    context:                 # optional: reference docs a reviewer must read
+      - "docs/core.md"
 
   - id: security-layer
     title: Review of authentication and authorization
@@ -328,11 +331,12 @@ reviews:
 A **review set** is a named group of files that are reviewed together as a single unit. Each set
 has three fields:
 
-| Field   | Required | Description                                              |
-| :------ | :------- | :------------------------------------------------------- |
-| `id`    | Yes      | Stable identifier used in evidence PDFs                  |
-| `title` | Yes      | Human-readable description shown in the plan and report  |
-| `paths` | Yes      | Ordered list of glob include/exclude patterns            |
+| Field     | Required | Description                                              |
+| :-------- | :------- | :------------------------------------------------------- |
+| `id`      | Yes      | Stable identifier used in evidence PDFs                  |
+| `title`   | Yes      | Human-readable description shown in the plan and report  |
+| `paths`   | Yes      | Ordered list of glob include/exclude patterns            |
+| `context` | No       | Review-set context files the reviewer must read          |
 
 ### Glob Patterns
 
@@ -517,6 +521,11 @@ The command prints a Markdown document to the console:
 | ID | Core-Logic |
 | Title | Review of core business logic |
 | Fingerprint | `a3f9c2d1e4b5e2f8d7c6b9a3f0e2d5c8a1b4e7f0a3d6c9b2e5f8a1d4c7b0e3` |
+
+## Context
+
+- `[global] docs/design/introduction.md`
+- `[local]  docs/design/core.md`
 
 ## Files
 

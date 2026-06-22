@@ -25,7 +25,7 @@ every CI/CD run.
 - 📂 **Evidence Querying** - Queries URL or file-share evidence stores via an `index.json` catalogue
 - 📋 **Coverage Reporting** - Review plan shows which files are covered and flags uncovered files
 - 📊 **Status Reporting** - Review report shows whether each review-set is Current, Stale, Missing, or Failed
-- 🔍 **Review Elaboration** - `--elaborate` prints the ID, title, fingerprint, and file list for a review set
+- 🔍 **Review Elaboration** - `--elaborate` prints the ID, title, fingerprint, optional context files, and file list for a review set
 - 🔎 **Configuration Linting** - `--lint` validates the definition file and reports all structural and semantic issues
 - 🚦 **Enforcement** - `--enforce` exits non-zero if any review-set is stale, missing, or failed, or any file is uncovered
 - 🔄 **Re-indexing** - `--index` scans PDF evidence files and writes an up-to-date `index.json`
@@ -77,6 +77,8 @@ reviews:
       - "src/Core/**/*.cs"
       - "src/Core/**/*.yaml"
       - "!src/Core/Generated/**"
+    context:                           # optional: reference docs a reviewer must read
+      - "docs/design/core.md"
   - id: Security-Layer
     title: Review of authentication and authorization
     paths:

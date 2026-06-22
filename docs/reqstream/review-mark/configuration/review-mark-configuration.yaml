@@ -191,3 +191,43 @@ sections:
                   immediately at the call site.
                 tests:
                   - ReviewMarkConfiguration_ElaborateReviewSet_MarkdownDepthAbove5_Throws
+
+              - id: ReviewMark-Config-ContextParsing
+                title: >-
+                  The ReviewMarkConfiguration unit shall parse an optional top-level context: list
+                  and an optional per-review-set context: list from .reviewmark.yaml.
+                justification: |
+                  Context entries provide reference material for reviewers and follow the same
+                  glob-pattern syntax as paths: entries.
+                tests:
+                  - ReviewMarkConfiguration_Parse_GlobalContext_ParsedCorrectly
+                  - ReviewMarkConfiguration_Parse_ReviewSetContext_ParsedCorrectly
+                  - ReviewMarkConfiguration_Parse_NoContext_DefaultsToEmpty
+
+              - id: ReviewMark-Config-ContextExcludedFromFingerprint
+                title: >-
+                  Context files shall not be included when computing a review set's fingerprint.
+                justification: |
+                  Changing context files (reference material) must not mark a review stale.
+                tests:
+                  - ReviewSet_GetFingerprint_ContextNotIncluded
+
+              - id: ReviewMark-Config-ContextExcludedFromCoverage
+                title: >-
+                  Context files shall not be subject to needs-review coverage enforcement.
+                justification: |
+                  Context files are reference material, not files under review.
+                tests:
+                  - ReviewMarkConfiguration_ElaborateReviewSet_ContextNotUnderReview
+
+              - id: ReviewMark-Config-ContextInElaboration
+                title: >-
+                  ElaborateReviewSet shall include a Context subsection listing all resolved context
+                  files labeled [global] (from the top-level list) or [local] (from the
+                  per-review-set list), omitting the subsection when no context files exist.
+                justification: |
+                  Reviewers need to know which reference files to consult.
+                tests:
+                  - ReviewMarkConfiguration_ElaborateReviewSet_GlobalContext_AppearsInOutput
+                  - ReviewMarkConfiguration_ElaborateReviewSet_LocalContext_AppearsInOutput
+                  - ReviewMarkConfiguration_ElaborateReviewSet_NoContext_ContextSectionOmitted

@@ -15,14 +15,15 @@ compliance documents.
 | -------- | ---- | ----------- |
 | `EvidenceSource` | `EvidenceSource` | Parsed evidence-source block (`Type`, `Location`, optional credential env-var names) |
 | `Reviews` | `IReadOnlyList<ReviewSet>` | Ordered list of review-set definitions |
+| `GlobalContext` | `IReadOnlyList<string>` | Ordered list of glob patterns identifying global context files (empty when omitted from YAML) |
 
 **YAML deserialization types (internal, not part of public API):**
 
 | Class | Description |
 | ----- | ----------- |
-| `ReviewMarkYaml` | Root configuration object; contains `NeedsReview` patterns, `EvidenceSource`, and `Reviews` list |
+| `ReviewMarkYaml` | Root configuration object; contains `NeedsReview` patterns, `EvidenceSource`, `Reviews` list, and optional `Context` list |
 | `EvidenceSourceYaml` | Describes how to locate the evidence index (`type`, `location`, optional `credentials`) |
-| `ReviewSetYaml` | Describes a single review-set (`id`, `title`, `paths`) |
+| `ReviewSetYaml` | Describes a single review-set (`id`, `title`, `paths`, and optional `context` list) |
 | `EvidenceCredentialsYaml` | Optional credentials block with `username-env` and `password-env` fields |
 
 **Evidence source types:**
@@ -38,7 +39,7 @@ compliance documents.
 | Type | Description |
 | ---- | ----------- |
 | `EvidenceSource` | Immutable record: `Type`, `Location`, `UsernameEnv`, `PasswordEnv` |
-| `ReviewSet` | Class with `Id`, `Title`, `Paths`, `GetFingerprint(dir)`, `GetFiles(dir)` |
+| `ReviewSet` | Class with `Id`, `Title`, `Paths`, `Context`, `GetFingerprint(dir)`, `GetFiles(dir)` |
 | `LintSeverity` | Enum: `Warning`, `Error` |
 | `LintIssue` | Record: `Location`, `Severity`, `Description`; `ToString()` formats as `{location}: {severity}: {description}` |
 | `ReviewMarkLoadResult` | Record: `Configuration` (null if error-level issues found), `Issues` |
@@ -96,8 +97,10 @@ and a boolean indicating whether any review-set is non-current.
 
 Looks up the review-set with the given `id`, resolves its file list and fingerprint, and
 returns a Markdown document with a heading at `markdownDepth`, a metadata table (ID, Title,
-Fingerprint), and a file list subheading. Throws `ArgumentException` for unknown IDs;
-throws `ArgumentOutOfRangeException` when `markdownDepth > 5`.
+Fingerprint), an optional Context subsection, and a Files subheading. The Context subsection
+lists all resolved context files labeled `[global]` (from `GlobalContext`) or `[local]` (from
+`review.Context`), and is omitted when no context files resolve. Throws `ArgumentException`
+for unknown IDs; throws `ArgumentOutOfRangeException` when `markdownDepth > 5`.
 
 **Fingerprinting algorithm:**
 

@@ -56,6 +56,14 @@ file sealed class ReviewMarkYaml
     /// </summary>
     [YamlMember(Alias = "reviews")]
     public List<ReviewSetYaml>? Reviews { get; set; }
+
+    /// <summary>
+    ///     Gets or sets the list of glob patterns that identify context files for all review sets.
+    ///     Context files are reference material a reviewer must read; they are not subject to
+    ///     coverage enforcement or fingerprint computation.
+    /// </summary>
+    [YamlMember(Alias = "context")]
+    public List<string>? Context { get; set; }
 }
 
 /// <summary>
@@ -123,6 +131,14 @@ file sealed class ReviewSetYaml
     /// </summary>
     [YamlMember(Alias = "paths")]
     public List<string>? Paths { get; set; }
+
+    /// <summary>
+    ///     Gets or sets the list of glob patterns that identify context files specific to this
+    ///     review set.  Context files are reference material a reviewer must read; they are not
+    ///     subject to coverage enforcement or fingerprint computation.
+    /// </summary>
+    [YamlMember(Alias = "context")]
+    public List<string>? Context { get; set; }
 }
 
 // ---------------------------------------------------------------------------
@@ -212,6 +228,9 @@ file static class ReviewMarkConfigurationHelpers
         // Map needs-review patterns (default to empty list if absent)
         var needsReviewPatterns = (IReadOnlyList<string>)(raw.NeedsReview ?? []);
 
+        // Map global context patterns (default to empty list if absent)
+        var globalContext = (IReadOnlyList<string>)(raw.Context ?? []);
+
         // Map evidence-source (required: evidence-source block, type, and location)
         if (raw.EvidenceSource is not { } es)
         {
@@ -264,11 +283,13 @@ file static class ReviewMarkConfigurationHelpers
                         $"Review set '{r.Id}' at index {i} is missing required 'paths' entries.");
                 }
 
-                return new ReviewSet(r.Id, r.Title, paths);
+                // Map per-review-set context patterns (default to empty list if absent)
+                var context = (IReadOnlyList<string>)(r.Context ?? []);
+                return new ReviewSet(r.Id, r.Title, paths, context);
             })
             .ToList();
 
-        return new ReviewMarkConfiguration(needsReviewPatterns, evidenceSource, reviews);
+        return new ReviewMarkConfiguration(needsReviewPatterns, evidenceSource, reviews, globalContext);
     }
 
     /// <summary>
@@ -417,16 +438,25 @@ internal sealed class ReviewSet
     public IReadOnlyList<string> Paths { get; }
 
     /// <summary>
+    ///     Gets the ordered list of glob patterns identifying context files specific to this review
+    ///     set.  Context files are reference material a reviewer must read and are excluded from
+    ///     fingerprint computation and coverage enforcement.
+    /// </summary>
+    public IReadOnlyList<string> Context { get; }
+
+    /// <summary>
     ///     Initializes a new instance of the <see cref="ReviewSet" /> class.
     /// </summary>
     /// <param name="id">The unique identifier.</param>
     /// <param name="title">The human-readable title.</param>
     /// <param name="paths">The ordered list of glob patterns.</param>
-    internal ReviewSet(string id, string title, IReadOnlyList<string> paths)
+    /// <param name="context">The ordered list of glob patterns for per-review-set context files.</param>
+    internal ReviewSet(string id, string title, IReadOnlyList<string> paths, IReadOnlyList<string> context)
     {
         Id = id;
         Title = title;
         Paths = paths;
+        Context = context;
     }
 
     /// <summary>
@@ -594,19 +624,29 @@ internal sealed class ReviewMarkConfiguration
     public IReadOnlyList<ReviewSet> Reviews { get; }
 
     /// <summary>
+    ///     Gets the ordered list of glob patterns identifying global context files that apply to
+    ///     every review set.  Context files are reference material a reviewer must read and are
+    ///     excluded from fingerprint computation and coverage enforcement.
+    /// </summary>
+    public IReadOnlyList<string> GlobalContext { get; }
+
+    /// <summary>
     ///     Initializes a new instance of <see cref="ReviewMarkConfiguration" />.
     /// </summary>
     /// <param name="needsReviewPatterns">Glob patterns for files requiring review.</param>
     /// <param name="evidenceSource">Evidence-source configuration.</param>
     /// <param name="reviews">Review set definitions.</param>
+    /// <param name="globalContext">Global context file glob patterns.</param>
     internal ReviewMarkConfiguration(
         IReadOnlyList<string> needsReviewPatterns,
         EvidenceSource evidenceSource,
-        IReadOnlyList<ReviewSet> reviews)
+        IReadOnlyList<ReviewSet> reviews,
+        IReadOnlyList<string> globalContext)
     {
         NeedsReviewPatterns = needsReviewPatterns;
         EvidenceSource = evidenceSource;
         Reviews = reviews;
+        GlobalContext = globalContext;
     }
 
     /// <summary>
@@ -697,7 +737,8 @@ internal sealed class ReviewMarkConfiguration
             config = new ReviewMarkConfiguration(
                 config.NeedsReviewPatterns,
                 config.EvidenceSource with { Location = absoluteLocation },
-                config.Reviews);
+                config.Reviews,
+                config.GlobalContext);
         }
 
         return new ReviewMarkLoadResult(config, issues);
@@ -984,8 +1025,28 @@ internal sealed class ReviewMarkConfiguration
         sb.AppendLine($"| Fingerprint | `{fingerprint}` |");
         sb.AppendLine();
 
-        // Emit the files subsection
+        // Resolve global and local context files, labeling each with its scope
+        var globalContextFiles = GlobMatcher.GetMatchingFiles(directory, GlobalContext)
+            .Select(f => $"[global] {f}");
+        var localContextFiles = GlobMatcher.GetMatchingFiles(directory, review.Context)
+            .Select(f => $"[local]  {f}");
+        var allContext = globalContextFiles.Concat(localContextFiles).ToList();
+
+        // Emit the context subsection only when at least one context file resolves
         var subHeading = new string('#', markdownDepth + 1);
+        if (allContext.Count > 0)
+        {
+            sb.AppendLine($"{subHeading} Context");
+            sb.AppendLine();
+            foreach (var entry in allContext)
+            {
+                sb.AppendLine($"- `{entry}`");
+            }
+
+            sb.AppendLine();
+        }
+
+        // Emit the files subsection
         sb.AppendLine($"{subHeading} Files");
         sb.AppendLine();
         var files = review.GetFiles(directory);

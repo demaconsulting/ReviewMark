@@ -92,6 +92,56 @@ N/A - standard test environment. Tests run under xUnit on .NET 8, 9, and 10, cre
 
 **ReviewMarkConfiguration_ElaborateReviewSet_MarkdownDepthAbove5_Throws**: `ElaborateReviewSet` is called with `markdownDepth: 6`. Expected outcome: `ArgumentOutOfRangeException` is thrown. Boundary or error path: Depth exceeds maximum. Requirement coverage: `ReviewMark-Config-ElaborationMarkdownDepthValidation`. This scenario is tested by `ReviewMarkConfiguration_ElaborateReviewSet_MarkdownDepthAbove5_Throws`.
 
+**ReviewMarkConfiguration_Parse_GlobalContext_ParsedCorrectly**: `ReviewMarkConfiguration.Parse`
+is called with YAML containing a top-level `context:` list. Expected outcome: `GlobalContext`
+contains all listed entries in order. Requirement coverage: `ReviewMark-Config-ContextParsing`.
+This scenario is tested by `ReviewMarkConfiguration_Parse_GlobalContext_ParsedCorrectly`.
+
+**ReviewMarkConfiguration_Parse_ReviewSetContext_ParsedCorrectly**: `ReviewMarkConfiguration.Parse`
+is called with YAML containing a per-review-set `context:` list. Expected outcome: the review
+set's `Context` contains all listed entries in order. Requirement coverage:
+`ReviewMark-Config-ContextParsing`. This scenario is tested by
+`ReviewMarkConfiguration_Parse_ReviewSetContext_ParsedCorrectly`.
+
+**ReviewMarkConfiguration_Parse_NoContext_DefaultsToEmpty**: `ReviewMarkConfiguration.Parse` is
+called with YAML that omits both the top-level `context:` and the per-review-set `context:`.
+Expected outcome: `GlobalContext` is empty and `ReviewSet.Context` is empty. Requirement
+coverage: `ReviewMark-Config-ContextParsing`. This scenario is tested by
+`ReviewMarkConfiguration_Parse_NoContext_DefaultsToEmpty`.
+
+**ReviewSet_GetFingerprint_ContextNotIncluded**: Two `ReviewSet` instances are created with the
+same `paths:` patterns but different `context:` patterns; both are resolved against a directory
+containing a single source file. Expected outcome: both fingerprints are equal, confirming that
+context patterns do not affect the fingerprint. Boundary or error path: context isolation.
+Requirement coverage: `ReviewMark-Config-ContextExcludedFromFingerprint`. This scenario is tested
+by `ReviewSet_GetFingerprint_ContextNotIncluded`.
+
+**ReviewMarkConfiguration_ElaborateReviewSet_GlobalContext_AppearsInOutput**:
+`ElaborateReviewSet` is called on a configuration with a global `context:` list; the context
+files exist on disk. Expected outcome: the output Markdown contains a `Context` subsection and
+each context file is listed with the `[global]` label. Requirement coverage:
+`ReviewMark-Config-ContextInElaboration`. This scenario is tested by
+`ReviewMarkConfiguration_ElaborateReviewSet_GlobalContext_AppearsInOutput`.
+
+**ReviewMarkConfiguration_ElaborateReviewSet_LocalContext_AppearsInOutput**:
+`ElaborateReviewSet` is called on a configuration with a per-review-set `context:` list; the
+context files exist on disk. Expected outcome: the output Markdown contains a `Context`
+subsection and each context file is listed with the `[local]` label. Requirement coverage:
+`ReviewMark-Config-ContextInElaboration`. This scenario is tested by
+`ReviewMarkConfiguration_ElaborateReviewSet_LocalContext_AppearsInOutput`.
+
+**ReviewMarkConfiguration_ElaborateReviewSet_NoContext_ContextSectionOmitted**:
+`ElaborateReviewSet` is called on a configuration with no context lists and no context files on
+disk. Expected outcome: the output Markdown does not contain a `Context` subsection heading.
+Requirement coverage: `ReviewMark-Config-ContextInElaboration`. This scenario is tested by
+`ReviewMarkConfiguration_ElaborateReviewSet_NoContext_ContextSectionOmitted`.
+
+**ReviewMarkConfiguration_ElaborateReviewSet_ContextNotUnderReview**: `ElaborateReviewSet` is
+called on a configuration with context files that are not in the `paths:` list. Expected outcome:
+the context files do not appear in the `Files` subsection. Requirement coverage:
+`ReviewMark-Config-ContextExcludedFromCoverage`. This scenario is tested by
+`ReviewMarkConfiguration_ElaborateReviewSet_ContextNotUnderReview`.
+
 #### Requirements Coverage
 
 - **ReviewMark-Config-Reading**:
@@ -136,3 +186,13 @@ N/A - standard test environment. Tests run under xUnit on .NET 8, 9, and 10, cre
 - **ReviewMark-Config-ElaborationUnknownIdRejection**: ReviewMarkConfiguration_ElaborateReviewSet_UnknownId_ThrowsArgumentException
 - **ReviewMark-Config-ElaborationMarkdownDepth**: ReviewMarkConfiguration_ElaborateReviewSet_MarkdownDepth_UsedForHeadings
 - **ReviewMark-Config-ElaborationMarkdownDepthValidation**: ReviewMarkConfiguration_ElaborateReviewSet_MarkdownDepthAbove5_Throws
+- **ReviewMark-Config-ContextParsing**:
+  ReviewMarkConfiguration_Parse_GlobalContext_ParsedCorrectly,
+  ReviewMarkConfiguration_Parse_ReviewSetContext_ParsedCorrectly,
+  ReviewMarkConfiguration_Parse_NoContext_DefaultsToEmpty
+- **ReviewMark-Config-ContextExcludedFromFingerprint**: ReviewSet_GetFingerprint_ContextNotIncluded
+- **ReviewMark-Config-ContextExcludedFromCoverage**: ReviewMarkConfiguration_ElaborateReviewSet_ContextNotUnderReview
+- **ReviewMark-Config-ContextInElaboration**:
+  ReviewMarkConfiguration_ElaborateReviewSet_GlobalContext_AppearsInOutput,
+  ReviewMarkConfiguration_ElaborateReviewSet_LocalContext_AppearsInOutput,
+  ReviewMarkConfiguration_ElaborateReviewSet_NoContext_ContextSectionOmitted
