@@ -47,6 +47,9 @@ sections:
                   - ReviewMarkConfiguration_Load_NoneEvidenceSource_NoIssues
                   - ReviewMarkLoadResult_ReportIssues_RoutesIssuesToContext
                   - ReviewMarkConfiguration_Load_WhitespaceOnlyPaths_ReturnsLintError
+                  - ReviewMarkConfiguration_Load_WhitespaceOnlyNeedsReviewEntry_ReturnsLintWarning
+                  - ReviewMarkConfiguration_Load_WhitespaceOnlyGlobalContextEntry_ReturnsLintWarning
+                  - ReviewMarkConfiguration_Load_WhitespaceOnlyPathsEntry_ReturnsLintWarning
 
               - id: ReviewMark-Config-LoadingNullOnError
                 title: >-

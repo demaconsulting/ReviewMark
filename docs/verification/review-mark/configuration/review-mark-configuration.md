@@ -152,6 +152,29 @@ isolation from coverage. Requirement coverage: `ReviewMark-Config-ContextExclude
 This scenario is tested by
 `ReviewMarkConfiguration_PublishReviewPlan_ContextOnlyFile_StillReportedAsUncovered`.
 
+**ReviewMarkConfiguration_Load_WhitespaceOnlyNeedsReviewEntry_ReturnsLintWarning**:
+`ReviewMarkConfiguration.Load` is called with a config whose top-level `needs-review:` list
+contains one valid pattern and one whitespace-only entry. Expected outcome: non-null configuration
+with a single lint warning referencing `"needs-review"`; the valid pattern is retained and the
+whitespace entry is dropped. Boundary or error path: whitespace-only needs-review entry.
+Requirement coverage: `ReviewMark-Config-Loading`. This scenario is tested by
+`ReviewMarkConfiguration_Load_WhitespaceOnlyNeedsReviewEntry_ReturnsLintWarning`.
+
+**ReviewMarkConfiguration_Load_WhitespaceOnlyGlobalContextEntry_ReturnsLintWarning**:
+`ReviewMarkConfiguration.Load` is called with a config whose top-level `context:` list contains
+one valid pattern and one whitespace-only entry. Expected outcome: non-null configuration with a
+single lint warning referencing `"context"`. Boundary or error path: whitespace-only global
+context entry. Requirement coverage: `ReviewMark-Config-Loading`. This scenario is tested by
+`ReviewMarkConfiguration_Load_WhitespaceOnlyGlobalContextEntry_ReturnsLintWarning`.
+
+**ReviewMarkConfiguration_Load_WhitespaceOnlyPathsEntry_ReturnsLintWarning**:
+`ReviewMarkConfiguration.Load` is called with a config whose per-review-set `paths:` list
+contains one valid pattern and one whitespace-only entry. Expected outcome: non-null configuration
+with a single lint warning referencing `"paths"`; the valid pattern is retained and the whitespace
+entry is dropped. Boundary or error path: individual whitespace paths entry in otherwise valid
+list. Requirement coverage: `ReviewMark-Config-Loading`. This scenario is tested by
+`ReviewMarkConfiguration_Load_WhitespaceOnlyPathsEntry_ReturnsLintWarning`.
+
 #### Requirements Coverage
 
 - **ReviewMark-Config-Reading**:
@@ -175,7 +198,10 @@ This scenario is tested by
   ReviewMarkConfiguration_Load_NoneEvidenceSource_NoIssues,
   ReviewMarkLoadResult_ReportIssues_RoutesIssuesToContext,
   ReviewMarkConfiguration_Load_WhitespaceOnlyPaths_ReturnsLintError,
-  ReviewMarkConfiguration_Load_WhitespaceOnlyContextEntries_ReturnsLintWarning
+  ReviewMarkConfiguration_Load_WhitespaceOnlyContextEntries_ReturnsLintWarning,
+  ReviewMarkConfiguration_Load_WhitespaceOnlyNeedsReviewEntry_ReturnsLintWarning,
+  ReviewMarkConfiguration_Load_WhitespaceOnlyGlobalContextEntry_ReturnsLintWarning,
+  ReviewMarkConfiguration_Load_WhitespaceOnlyPathsEntry_ReturnsLintWarning
 - **ReviewMark-Config-LoadingNullOnError**:
   ReviewMarkConfiguration_Load_NonExistentFile_ReturnsNullConfigWithErrorIssue,
   ReviewMarkConfiguration_Load_InvalidYaml_ReturnsNullConfigWithErrorIssue,

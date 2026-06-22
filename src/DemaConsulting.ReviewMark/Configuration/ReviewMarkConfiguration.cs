@@ -225,8 +225,10 @@ file static class ReviewMarkConfigurationHelpers
     /// </exception>
     public static ReviewMarkConfiguration BuildConfiguration(ReviewMarkYaml raw)
     {
-        // Map needs-review patterns (default to empty list if absent)
-        var needsReviewPatterns = (IReadOnlyList<string>)(raw.NeedsReview ?? []);
+        // Map needs-review patterns (default to empty list if absent), filtering null/whitespace
+        var needsReviewPatterns = (IReadOnlyList<string>)(raw.NeedsReview ?? [])
+            .Where(p => !string.IsNullOrWhiteSpace(p))
+            .ToList();
 
         // Map global context patterns (default to empty list if absent), filtering null/whitespace
         var globalContext = (IReadOnlyList<string>)(raw.Context ?? [])
@@ -289,7 +291,12 @@ file static class ReviewMarkConfigurationHelpers
                 var context = (IReadOnlyList<string>)(r.Context ?? [])
                     .Where(p => !string.IsNullOrWhiteSpace(p))
                     .ToList();
-                return new ReviewSet(r.Id, r.Title, paths, context);
+
+                // Filter null/whitespace entries from the paths list before constructing the ReviewSet
+                var filteredPaths = (IReadOnlyList<string>)paths
+                    .Where(p => !string.IsNullOrWhiteSpace(p))
+                    .ToList();
+                return new ReviewSet(r.Id, r.Title, filteredPaths, context);
             })
             .ToList();
 
@@ -398,6 +405,20 @@ file static class ReviewMarkConfigurationHelpers
                     $"Review set '{r.Id ?? $"at index {i}"}' is missing required 'paths'."));
             }
 
+            // Warn on individual whitespace-only path entries only when the list is otherwise valid
+            // (i.e. has at least one non-whitespace entry) — the all-whitespace case is already
+            // reported as an error above, so no additional warning is needed there.
+            if (r.Paths != null && r.Paths.Any(p => !string.IsNullOrWhiteSpace(p)))
+            {
+                foreach (var _ in r.Paths.Where(p => p != null && string.IsNullOrWhiteSpace(p)))
+                {
+                    issues.Add(new LintIssue(
+                        filePath,
+                        LintSeverity.Warning,
+                        $"Review set '{r.Id ?? $"at index {i}"}' has a whitespace-only 'paths' entry."));
+                }
+            }
+
             if (r.Context != null)
             {
                 foreach (var _ in r.Context.Where(p => string.IsNullOrWhiteSpace(p)))
@@ -407,6 +428,45 @@ file static class ReviewMarkConfigurationHelpers
                         LintSeverity.Warning,
                         $"Review set '{r.Id ?? $"at index {i}"}' has a null or whitespace-only 'context' entry."));
                 }
+            }
+        }
+    }
+
+    /// <summary>
+    ///     Validates the top-level <c>needs-review</c> and <c>context</c> lists,
+    ///     appending a warning for each whitespace-only entry found.
+    /// </summary>
+    /// <param name="filePath">Path to the configuration file, used in issue locations.</param>
+    /// <param name="raw">The raw top-level YAML model to validate.</param>
+    /// <param name="issues">The list to append any detected issues to.</param>
+    /// <remarks>
+    ///     Whitespace-only entries in these lists are silently dropped during
+    ///     <see cref="BuildConfiguration" /> to prevent null patterns reaching
+    ///     <c>GlobMatcher</c>.  A warning is emitted here so the user knows the entry
+    ///     was ineffective and can correct the configuration file.
+    /// </remarks>
+    internal static void ValidateTopLevel(
+        string filePath,
+        ReviewMarkYaml raw,
+        ICollection<LintIssue> issues)
+    {
+        // Warn on whitespace-only needs-review entries
+        if (raw.NeedsReview != null)
+        {
+            foreach (var _ in raw.NeedsReview.Where(p => p != null && string.IsNullOrWhiteSpace(p)))
+            {
+                issues.Add(new LintIssue(filePath, LintSeverity.Warning,
+                    "Top-level 'needs-review' has a whitespace-only entry."));
+            }
+        }
+
+        // Warn on whitespace-only context entries
+        if (raw.Context != null)
+        {
+            foreach (var _ in raw.Context.Where(p => p != null && string.IsNullOrWhiteSpace(p)))
+            {
+                issues.Add(new LintIssue(filePath, LintSeverity.Warning,
+                    "Top-level 'context' has a whitespace-only entry."));
             }
         }
     }
@@ -718,7 +778,9 @@ internal sealed class ReviewMarkConfiguration
             return new ReviewMarkLoadResult(null, issues);
         }
 
-        // Validate the evidence-source block and each review set, collecting all field-level errors.
+        // Validate the top-level needs-review and context lists, and the evidence-source block and
+        // each review set, collecting all field-level errors and warnings.
+        ReviewMarkConfigurationHelpers.ValidateTopLevel(filePath, raw, issues);
         ReviewMarkConfigurationHelpers.ValidateEvidenceSource(filePath, raw.EvidenceSource, issues);
         ReviewMarkConfigurationHelpers.ValidateReviews(filePath, raw.Reviews ?? [], issues);
 

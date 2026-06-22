@@ -1297,4 +1297,105 @@ public sealed class ReviewMarkConfigurationTests : IDisposable
         var filesSection = result.Markdown[filesIndex..];
         Assert.DoesNotContain("`docs/design.md`", filesSection);
     }
+
+    /// <summary>
+    ///     Test that Load returns a lint warning when a top-level needs-review list contains
+    ///     a whitespace-only entry, and that the valid pattern is still present in the configuration.
+    /// </summary>
+    [Fact]
+    public void ReviewMarkConfiguration_Load_WhitespaceOnlyNeedsReviewEntry_ReturnsLintWarning()
+    {
+        // Arrange — write a config with one valid and one whitespace-only needs-review pattern
+        var configPath = PathHelpers.SafePathCombine(_testDirectory, ".reviewmark.yaml");
+        File.WriteAllText(configPath, """
+            needs-review:
+              - "**/*.cs"
+              - "   "
+            evidence-source:
+              type: none
+            reviews:
+              - id: Core-Logic
+                title: Review of core business logic
+                paths:
+                  - "src/**/*.cs"
+            """);
+
+        // Act
+        var result = ReviewMarkConfiguration.Load(configPath);
+
+        // Assert — warning issued for the whitespace-only entry; configuration is still returned
+        // with the valid pattern retained and the whitespace entry silently dropped
+        Assert.NotNull(result.Configuration);
+        Assert.Single(result.Issues);
+        Assert.Equal(LintSeverity.Warning, result.Issues[0].Severity);
+        Assert.Contains("needs-review", result.Issues[0].Description);
+        Assert.Single(result.Configuration.NeedsReviewPatterns);
+        Assert.Equal("**/*.cs", result.Configuration.NeedsReviewPatterns[0]);
+    }
+
+    /// <summary>
+    ///     Test that Load returns a lint warning when the top-level context list contains
+    ///     a whitespace-only entry.
+    /// </summary>
+    [Fact]
+    public void ReviewMarkConfiguration_Load_WhitespaceOnlyGlobalContextEntry_ReturnsLintWarning()
+    {
+        // Arrange — write a config with a valid and a whitespace-only global context entry
+        var configPath = PathHelpers.SafePathCombine(_testDirectory, ".reviewmark.yaml");
+        File.WriteAllText(configPath, """
+            context:
+              - "docs/**/*.md"
+              - "   "
+            evidence-source:
+              type: none
+            reviews:
+              - id: Core-Logic
+                title: Review of core business logic
+                paths:
+                  - "src/**/*.cs"
+            """);
+
+        // Act
+        var result = ReviewMarkConfiguration.Load(configPath);
+
+        // Assert — a warning is issued for the whitespace-only entry; configuration is still returned
+        Assert.NotNull(result.Configuration);
+        Assert.Single(result.Issues);
+        Assert.Equal(LintSeverity.Warning, result.Issues[0].Severity);
+        Assert.Contains("context", result.Issues[0].Description);
+    }
+
+    /// <summary>
+    ///     Test that Load returns a lint warning when a per-review-set paths list contains
+    ///     a whitespace-only entry alongside at least one valid entry, and that the valid
+    ///     pattern is still present in the review set.
+    /// </summary>
+    [Fact]
+    public void ReviewMarkConfiguration_Load_WhitespaceOnlyPathsEntry_ReturnsLintWarning()
+    {
+        // Arrange — write a config with one valid and one whitespace-only paths entry in a review set
+        var configPath = PathHelpers.SafePathCombine(_testDirectory, ".reviewmark.yaml");
+        File.WriteAllText(configPath, """
+            evidence-source:
+              type: none
+            reviews:
+              - id: Core-Logic
+                title: Review of core business logic
+                paths:
+                  - "src/**/*.cs"
+                  - "   "
+            """);
+
+        // Act
+        var result = ReviewMarkConfiguration.Load(configPath);
+
+        // Assert — warning issued for the whitespace-only entry; configuration is still returned
+        // with the valid pattern retained and the whitespace entry silently dropped
+        Assert.NotNull(result.Configuration);
+        Assert.Single(result.Issues);
+        Assert.Equal(LintSeverity.Warning, result.Issues[0].Severity);
+        Assert.Contains("paths", result.Issues[0].Description);
+        Assert.Single(result.Configuration.Reviews[0].Paths);
+        Assert.Equal("src/**/*.cs", result.Configuration.Reviews[0].Paths[0]);
+    }
 }
