@@ -62,6 +62,8 @@ N/A - standard test environment. Tests run under xUnit on .NET 8, 9, and 10, cre
 
 **ReviewMarkConfiguration_Load_WhitespaceOnlyPaths_ReturnsLintError**: `ReviewMarkConfiguration.Load` is called with a config whose review set paths list contains only whitespace. Expected outcome: Null configuration with a lint error referencing `"paths"`. Requirement coverage: `ReviewMark-Config-Loading`. This scenario is tested by `ReviewMarkConfiguration_Load_WhitespaceOnlyPaths_ReturnsLintError`.
 
+**ReviewMarkConfiguration_Load_WhitespaceOnlyContextEntries_ReturnsLintWarning**: `ReviewMarkConfiguration.Load` is called with a config whose review set context list contains a whitespace-only entry. Expected outcome: Non-null configuration with a single lint warning referencing `"context"`. Boundary or error path: Whitespace-only context entry. Requirement coverage: `ReviewMark-Config-Loading`. This scenario is tested by `ReviewMarkConfiguration_Load_WhitespaceOnlyContextEntries_ReturnsLintWarning`.
+
 **ReviewMarkConfiguration_Parse_NoneEvidenceSource_ParsedCorrectly**: `ReviewMarkConfiguration.Parse` is called with YAML containing `evidence-source: type: none`. Expected outcome: `EvidenceSource.Type` is `"none"` and `Location` is empty. Requirement coverage: `ReviewMark-Config-Reading`. This scenario is tested by `ReviewMarkConfiguration_Parse_NoneEvidenceSource_ParsedCorrectly`.
 
 **ReviewMarkConfiguration_Parse_NoneEvidenceSource_NoLocationRequired**: `ReviewMarkConfiguration.Parse` is called with YAML containing a `none` source and no `location` field. Expected outcome: Parsing succeeds without throwing; `EvidenceSource.Type` is `"none"`. Requirement coverage: `ReviewMark-Config-Reading`. This scenario is tested by `ReviewMarkConfiguration_Parse_NoneEvidenceSource_NoLocationRequired`.
@@ -172,7 +174,8 @@ This scenario is tested by
   ReviewMarkConfiguration_Load_MultipleErrors_ReturnsAllIssues,
   ReviewMarkConfiguration_Load_NoneEvidenceSource_NoIssues,
   ReviewMarkLoadResult_ReportIssues_RoutesIssuesToContext,
-  ReviewMarkConfiguration_Load_WhitespaceOnlyPaths_ReturnsLintError
+  ReviewMarkConfiguration_Load_WhitespaceOnlyPaths_ReturnsLintError,
+  ReviewMarkConfiguration_Load_WhitespaceOnlyContextEntries_ReturnsLintWarning
 - **ReviewMark-Config-LoadingNullOnError**:
   ReviewMarkConfiguration_Load_NonExistentFile_ReturnsNullConfigWithErrorIssue,
   ReviewMarkConfiguration_Load_InvalidYaml_ReturnsNullConfigWithErrorIssue,

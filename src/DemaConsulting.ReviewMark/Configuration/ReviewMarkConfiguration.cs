@@ -228,8 +228,10 @@ file static class ReviewMarkConfigurationHelpers
         // Map needs-review patterns (default to empty list if absent)
         var needsReviewPatterns = (IReadOnlyList<string>)(raw.NeedsReview ?? []);
 
-        // Map global context patterns (default to empty list if absent)
-        var globalContext = (IReadOnlyList<string>)(raw.Context ?? []);
+        // Map global context patterns (default to empty list if absent), filtering null/whitespace
+        var globalContext = (IReadOnlyList<string>)(raw.Context ?? [])
+            .Where(p => !string.IsNullOrWhiteSpace(p))
+            .ToList();
 
         // Map evidence-source (required: evidence-source block, type, and location)
         if (raw.EvidenceSource is not { } es)
@@ -283,8 +285,10 @@ file static class ReviewMarkConfigurationHelpers
                         $"Review set '{r.Id}' at index {i} is missing required 'paths' entries.");
                 }
 
-                // Map per-review-set context patterns (default to empty list if absent)
-                var context = (IReadOnlyList<string>)(r.Context ?? []);
+                // Map per-review-set context patterns (default to empty list if absent), filtering null/whitespace
+                var context = (IReadOnlyList<string>)(r.Context ?? [])
+                    .Where(p => !string.IsNullOrWhiteSpace(p))
+                    .ToList();
                 return new ReviewSet(r.Id, r.Title, paths, context);
             })
             .ToList();
@@ -392,6 +396,17 @@ file static class ReviewMarkConfigurationHelpers
                     filePath,
                     LintSeverity.Error,
                     $"Review set '{r.Id ?? $"at index {i}"}' is missing required 'paths'."));
+            }
+
+            if (r.Context != null)
+            {
+                foreach (var _ in r.Context.Where(p => p != null && string.IsNullOrWhiteSpace(p)))
+                {
+                    issues.Add(new LintIssue(
+                        filePath,
+                        LintSeverity.Warning,
+                        $"Review set '{r.Id ?? $"at index {i}"}' has a whitespace-only 'context' entry."));
+                }
             }
         }
     }

@@ -1038,6 +1038,36 @@ public sealed class ReviewMarkConfigurationTests : IDisposable
     // -------------------------------------------------------------------------
 
     /// <summary>
+    ///     Test that Load returns a lint warning when a review set has whitespace-only context entries.
+    /// </summary>
+    [Fact]
+    public void ReviewMarkConfiguration_Load_WhitespaceOnlyContextEntries_ReturnsLintWarning()
+    {
+        // Arrange — write a config with a review set whose context list contains a whitespace-only string
+        var configPath = PathHelpers.SafePathCombine(_testDirectory, ".reviewmark.yaml");
+        File.WriteAllText(configPath, """
+            evidence-source:
+              type: none
+            reviews:
+              - id: Core-Logic
+                title: Review of core business logic
+                paths:
+                  - "src/**/*.cs"
+                context:
+                  - "   "
+            """);
+
+        // Act
+        var result = ReviewMarkConfiguration.Load(configPath);
+
+        // Assert — whitespace-only context entry should produce a lint warning; configuration is still returned
+        Assert.NotNull(result.Configuration);
+        Assert.Single(result.Issues);
+        Assert.Equal(LintSeverity.Warning, result.Issues[0].Severity);
+        Assert.Contains("context", result.Issues[0].Description);
+    }
+
+    /// <summary>
     ///     Test that a top-level context: list is parsed into GlobalContext.
     /// </summary>
     [Fact]

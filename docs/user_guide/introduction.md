@@ -281,7 +281,7 @@ specifying one argument's path cannot silently change another argument's path.
 # Configuration
 
 ReviewMark is configured through a `.reviewmark.yaml` file, normally placed at the repository root.
-The file has three top-level keys:
+The file has four top-level keys:
 
 | Key               | Required | Description                                              |
 | :---------------- | :------- | :------------------------------------------------------- |
@@ -329,7 +329,7 @@ reviews:
 ## Review Sets
 
 A **review set** is a named group of files that are reviewed together as a single unit. Each set
-has three fields:
+has four fields:
 
 | Field     | Required | Description                                              |
 | :-------- | :------- | :------------------------------------------------------- |
