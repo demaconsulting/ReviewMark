@@ -62,6 +62,8 @@ N/A - standard test environment. Tests run under xUnit on .NET 8, 9, and 10, cre
 
 **ReviewMarkConfiguration_Load_WhitespaceOnlyPaths_ReturnsLintError**: `ReviewMarkConfiguration.Load` is called with a config whose review set paths list contains only whitespace. Expected outcome: Null configuration with a lint error referencing `"paths"`. Requirement coverage: `ReviewMark-Config-Loading`. This scenario is tested by `ReviewMarkConfiguration_Load_WhitespaceOnlyPaths_ReturnsLintError`.
 
+**ReviewMarkConfiguration_Load_WhitespaceOnlyContextEntries_ReturnsLintWarning**: `ReviewMarkConfiguration.Load` is called with a config whose review set context list contains a whitespace-only entry. Expected outcome: Non-null configuration with a single lint warning referencing `"context"`. Boundary or error path: Whitespace-only context entry. Requirement coverage: `ReviewMark-Config-Loading`. This scenario is tested by `ReviewMarkConfiguration_Load_WhitespaceOnlyContextEntries_ReturnsLintWarning`.
+
 **ReviewMarkConfiguration_Parse_NoneEvidenceSource_ParsedCorrectly**: `ReviewMarkConfiguration.Parse` is called with YAML containing `evidence-source: type: none`. Expected outcome: `EvidenceSource.Type` is `"none"` and `Location` is empty. Requirement coverage: `ReviewMark-Config-Reading`. This scenario is tested by `ReviewMarkConfiguration_Parse_NoneEvidenceSource_ParsedCorrectly`.
 
 **ReviewMarkConfiguration_Parse_NoneEvidenceSource_NoLocationRequired**: `ReviewMarkConfiguration.Parse` is called with YAML containing a `none` source and no `location` field. Expected outcome: Parsing succeeds without throwing; `EvidenceSource.Type` is `"none"`. Requirement coverage: `ReviewMark-Config-Reading`. This scenario is tested by `ReviewMarkConfiguration_Parse_NoneEvidenceSource_NoLocationRequired`.
@@ -92,6 +94,87 @@ N/A - standard test environment. Tests run under xUnit on .NET 8, 9, and 10, cre
 
 **ReviewMarkConfiguration_ElaborateReviewSet_MarkdownDepthAbove5_Throws**: `ElaborateReviewSet` is called with `markdownDepth: 6`. Expected outcome: `ArgumentOutOfRangeException` is thrown. Boundary or error path: Depth exceeds maximum. Requirement coverage: `ReviewMark-Config-ElaborationMarkdownDepthValidation`. This scenario is tested by `ReviewMarkConfiguration_ElaborateReviewSet_MarkdownDepthAbove5_Throws`.
 
+**ReviewMarkConfiguration_Parse_GlobalContext_ParsedCorrectly**: `ReviewMarkConfiguration.Parse`
+is called with YAML containing a top-level `context:` list. Expected outcome: `GlobalContext`
+contains all listed entries in order. Requirement coverage: `ReviewMark-Config-ContextParsing`.
+This scenario is tested by `ReviewMarkConfiguration_Parse_GlobalContext_ParsedCorrectly`.
+
+**ReviewMarkConfiguration_Parse_ReviewSetContext_ParsedCorrectly**: `ReviewMarkConfiguration.Parse`
+is called with YAML containing a per-review-set `context:` list. Expected outcome: the review
+set's `Context` contains all listed entries in order. Requirement coverage:
+`ReviewMark-Config-ContextParsing`. This scenario is tested by
+`ReviewMarkConfiguration_Parse_ReviewSetContext_ParsedCorrectly`.
+
+**ReviewMarkConfiguration_Parse_NoContext_DefaultsToEmpty**: `ReviewMarkConfiguration.Parse` is
+called with YAML that omits both the top-level `context:` and the per-review-set `context:`.
+Expected outcome: `GlobalContext` is empty and `ReviewSet.Context` is empty. Requirement
+coverage: `ReviewMark-Config-ContextParsing`. This scenario is tested by
+`ReviewMarkConfiguration_Parse_NoContext_DefaultsToEmpty`.
+
+**ReviewSet_GetFingerprint_ContextNotIncluded**: Two `ReviewSet` instances are created with the
+same `paths:` patterns but different `context:` patterns; both are resolved against a directory
+containing a single source file. Expected outcome: both fingerprints are equal, confirming that
+context patterns do not affect the fingerprint. Boundary or error path: context isolation.
+Requirement coverage: `ReviewMark-Config-ContextExcludedFromFingerprint`. This scenario is tested
+by `ReviewSet_GetFingerprint_ContextNotIncluded`.
+
+**ReviewMarkConfiguration_ElaborateReviewSet_GlobalContext_AppearsInOutput**:
+`ElaborateReviewSet` is called on a configuration with a global `context:` list; the context
+files exist on disk. Expected outcome: the output Markdown contains a `Context` subsection and
+each context file is listed with the `[global]` label. Requirement coverage:
+`ReviewMark-Config-ContextInElaboration`. This scenario is tested by
+`ReviewMarkConfiguration_ElaborateReviewSet_GlobalContext_AppearsInOutput`.
+
+**ReviewMarkConfiguration_ElaborateReviewSet_LocalContext_AppearsInOutput**:
+`ElaborateReviewSet` is called on a configuration with a per-review-set `context:` list; the
+context files exist on disk. Expected outcome: the output Markdown contains a `Context`
+subsection and each context file is listed with the `[local]` label. Requirement coverage:
+`ReviewMark-Config-ContextInElaboration`. This scenario is tested by
+`ReviewMarkConfiguration_ElaborateReviewSet_LocalContext_AppearsInOutput`.
+
+**ReviewMarkConfiguration_ElaborateReviewSet_NoContext_ContextSectionOmitted**:
+`ElaborateReviewSet` is called on a configuration with no context lists and no context files on
+disk. Expected outcome: the output Markdown does not contain a `Context` subsection heading.
+Requirement coverage: `ReviewMark-Config-ContextInElaboration`. This scenario is tested by
+`ReviewMarkConfiguration_ElaborateReviewSet_NoContext_ContextSectionOmitted`.
+
+**ReviewMarkConfiguration_ElaborateReviewSet_ContextNotUnderReview**: `ElaborateReviewSet` is
+called on a configuration with context files that are not in the `paths:` list. Expected outcome:
+the context files do not appear in the `Files` subsection. Requirement coverage:
+`ReviewMark-Config-ContextExcludedFromCoverage`. This scenario is tested by
+`ReviewMarkConfiguration_ElaborateReviewSet_ContextNotUnderReview`.
+
+**ReviewMarkConfiguration_PublishReviewPlan_ContextOnlyFile_StillReportedAsUncovered**:
+`PublishReviewPlan` is called when a file matching `needs-review` appears only in a review set's
+`context:` list and is not matched by any `paths:` entry. Expected outcome: `HasIssues` is true
+and the context-only file appears in the Markdown as uncovered. Boundary or error path: context
+isolation from coverage. Requirement coverage: `ReviewMark-Config-ContextExcludedFromCoverage`.
+This scenario is tested by
+`ReviewMarkConfiguration_PublishReviewPlan_ContextOnlyFile_StillReportedAsUncovered`.
+
+**ReviewMarkConfiguration_Load_WhitespaceOnlyNeedsReviewEntry_ReturnsLintWarning**:
+`ReviewMarkConfiguration.Load` is called with a config whose top-level `needs-review:` list
+contains one valid pattern and one whitespace-only entry. Expected outcome: non-null configuration
+with a single lint warning referencing `"needs-review"`; the valid pattern is retained and the
+whitespace entry is dropped. Boundary or error path: whitespace-only needs-review entry.
+Requirement coverage: `ReviewMark-Config-Loading`. This scenario is tested by
+`ReviewMarkConfiguration_Load_WhitespaceOnlyNeedsReviewEntry_ReturnsLintWarning`.
+
+**ReviewMarkConfiguration_Load_WhitespaceOnlyGlobalContextEntry_ReturnsLintWarning**:
+`ReviewMarkConfiguration.Load` is called with a config whose top-level `context:` list contains
+one valid pattern and one whitespace-only entry. Expected outcome: non-null configuration with a
+single lint warning referencing `"context"`. Boundary or error path: whitespace-only global
+context entry. Requirement coverage: `ReviewMark-Config-Loading`. This scenario is tested by
+`ReviewMarkConfiguration_Load_WhitespaceOnlyGlobalContextEntry_ReturnsLintWarning`.
+
+**ReviewMarkConfiguration_Load_WhitespaceOnlyPathsEntry_ReturnsLintWarning**:
+`ReviewMarkConfiguration.Load` is called with a config whose per-review-set `paths:` list
+contains one valid pattern and one whitespace-only entry. Expected outcome: non-null configuration
+with a single lint warning referencing `"paths"`; the valid pattern is retained and the whitespace
+entry is dropped. Boundary or error path: individual whitespace paths entry in otherwise valid
+list. Requirement coverage: `ReviewMark-Config-Loading`. This scenario is tested by
+`ReviewMarkConfiguration_Load_WhitespaceOnlyPathsEntry_ReturnsLintWarning`.
+
 #### Requirements Coverage
 
 - **ReviewMark-Config-Reading**:
@@ -114,7 +197,11 @@ N/A - standard test environment. Tests run under xUnit on .NET 8, 9, and 10, cre
   ReviewMarkConfiguration_Load_MultipleErrors_ReturnsAllIssues,
   ReviewMarkConfiguration_Load_NoneEvidenceSource_NoIssues,
   ReviewMarkLoadResult_ReportIssues_RoutesIssuesToContext,
-  ReviewMarkConfiguration_Load_WhitespaceOnlyPaths_ReturnsLintError
+  ReviewMarkConfiguration_Load_WhitespaceOnlyPaths_ReturnsLintError,
+  ReviewMarkConfiguration_Load_WhitespaceOnlyContextEntries_ReturnsLintWarning,
+  ReviewMarkConfiguration_Load_WhitespaceOnlyNeedsReviewEntry_ReturnsLintWarning,
+  ReviewMarkConfiguration_Load_WhitespaceOnlyGlobalContextEntry_ReturnsLintWarning,
+  ReviewMarkConfiguration_Load_WhitespaceOnlyPathsEntry_ReturnsLintWarning
 - **ReviewMark-Config-LoadingNullOnError**:
   ReviewMarkConfiguration_Load_NonExistentFile_ReturnsNullConfigWithErrorIssue,
   ReviewMarkConfiguration_Load_InvalidYaml_ReturnsNullConfigWithErrorIssue,
@@ -136,3 +223,13 @@ N/A - standard test environment. Tests run under xUnit on .NET 8, 9, and 10, cre
 - **ReviewMark-Config-ElaborationUnknownIdRejection**: ReviewMarkConfiguration_ElaborateReviewSet_UnknownId_ThrowsArgumentException
 - **ReviewMark-Config-ElaborationMarkdownDepth**: ReviewMarkConfiguration_ElaborateReviewSet_MarkdownDepth_UsedForHeadings
 - **ReviewMark-Config-ElaborationMarkdownDepthValidation**: ReviewMarkConfiguration_ElaborateReviewSet_MarkdownDepthAbove5_Throws
+- **ReviewMark-Config-ContextParsing**:
+  ReviewMarkConfiguration_Parse_GlobalContext_ParsedCorrectly,
+  ReviewMarkConfiguration_Parse_ReviewSetContext_ParsedCorrectly,
+  ReviewMarkConfiguration_Parse_NoContext_DefaultsToEmpty
+- **ReviewMark-Config-ContextExcludedFromFingerprint**: ReviewSet_GetFingerprint_ContextNotIncluded
+- **ReviewMark-Config-ContextExcludedFromCoverage**: ReviewMarkConfiguration_ElaborateReviewSet_ContextNotUnderReview, ReviewMarkConfiguration_PublishReviewPlan_ContextOnlyFile_StillReportedAsUncovered
+- **ReviewMark-Config-ContextInElaboration**:
+  ReviewMarkConfiguration_ElaborateReviewSet_GlobalContext_AppearsInOutput,
+  ReviewMarkConfiguration_ElaborateReviewSet_LocalContext_AppearsInOutput,
+  ReviewMarkConfiguration_ElaborateReviewSet_NoContext_ContextSectionOmitted

@@ -47,6 +47,9 @@ sections:
                   - ReviewMarkConfiguration_Load_NoneEvidenceSource_NoIssues
                   - ReviewMarkLoadResult_ReportIssues_RoutesIssuesToContext
                   - ReviewMarkConfiguration_Load_WhitespaceOnlyPaths_ReturnsLintError
+                  - ReviewMarkConfiguration_Load_WhitespaceOnlyNeedsReviewEntry_ReturnsLintWarning
+                  - ReviewMarkConfiguration_Load_WhitespaceOnlyGlobalContextEntry_ReturnsLintWarning
+                  - ReviewMarkConfiguration_Load_WhitespaceOnlyPathsEntry_ReturnsLintWarning
 
               - id: ReviewMark-Config-LoadingNullOnError
                 title: >-
@@ -191,3 +194,49 @@ sections:
                   immediately at the call site.
                 tests:
                   - ReviewMarkConfiguration_ElaborateReviewSet_MarkdownDepthAbove5_Throws
+
+              - id: ReviewMark-Config-ContextParsing
+                title: >-
+                  The ReviewMarkConfiguration unit shall parse an optional top-level context: list
+                  and an optional per-review-set context: list from .reviewmark.yaml.
+                justification: |
+                  Context entries provide reference material for reviewers and follow the same
+                  glob-pattern syntax as paths: entries.
+                tests:
+                  - ReviewMarkConfiguration_Parse_GlobalContext_ParsedCorrectly
+                  - ReviewMarkConfiguration_Parse_ReviewSetContext_ParsedCorrectly
+                  - ReviewMarkConfiguration_Parse_NoContext_DefaultsToEmpty
+
+              - id: ReviewMark-Config-ContextExcludedFromFingerprint
+                title: >-
+                  Context files shall not be included when computing a review set's fingerprint.
+                justification: |
+                  Changing context files (reference material) must not mark a review stale.
+                tests:
+                  - ReviewSet_GetFingerprint_ContextNotIncluded
+
+              - id: ReviewMark-Config-ContextExcludedFromCoverage
+                title: >-
+                  Context entries shall provide reference material only and shall not satisfy
+                  needs-review coverage obligations; only paths: entries provide review coverage.
+                justification: >-
+                  A file appearing solely in context: is reference material shown during elaboration.
+                  It is not a file under review. A file that matches needs-review and appears only
+                  in context: — and not in any paths: entry — will still be reported as uncovered
+                  by PublishReviewPlan(). Only files resolved through a review set's paths: entries
+                  count as covered.
+                tests:
+                  - ReviewMarkConfiguration_ElaborateReviewSet_ContextNotUnderReview
+                  - ReviewMarkConfiguration_PublishReviewPlan_ContextOnlyFile_StillReportedAsUncovered
+
+              - id: ReviewMark-Config-ContextInElaboration
+                title: >-
+                  ElaborateReviewSet shall include a Context subsection listing all resolved context
+                  files labeled [global] (from the top-level list) or [local] (from the
+                  per-review-set list), omitting the subsection when no context files exist.
+                justification: |
+                  Reviewers need to know which reference files to consult.
+                tests:
+                  - ReviewMarkConfiguration_ElaborateReviewSet_GlobalContext_AppearsInOutput
+                  - ReviewMarkConfiguration_ElaborateReviewSet_LocalContext_AppearsInOutput
+                  - ReviewMarkConfiguration_ElaborateReviewSet_NoContext_ContextSectionOmitted

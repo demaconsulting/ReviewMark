@@ -233,7 +233,7 @@ public sealed class ReviewMarkConfigurationTests : IDisposable
         File.WriteAllText(PathHelpers.SafePathCombine(dir2, "A.cs"), "class A {}");
         File.WriteAllText(PathHelpers.SafePathCombine(dir2, "B.cs"), "class B {}");
 
-        var reviewSet = new ReviewSet("Test", "Test Review", ["**/*.cs"]);
+        var reviewSet = new ReviewSet("Test", "Test Review", ["**/*.cs"], []);
 
         // Act
         var fp1 = reviewSet.GetFingerprint(dir1);
@@ -257,7 +257,7 @@ public sealed class ReviewMarkConfigurationTests : IDisposable
         File.WriteAllText(PathHelpers.SafePathCombine(dir1, "A.cs"), "class A { int x = 1; }");
         File.WriteAllText(PathHelpers.SafePathCombine(dir2, "A.cs"), "class A { int x = 2; }");
 
-        var reviewSet = new ReviewSet("Test", "Test Review", ["**/*.cs"]);
+        var reviewSet = new ReviewSet("Test", "Test Review", ["**/*.cs"], []);
 
         // Act
         var fp1 = reviewSet.GetFingerprint(dir1);
@@ -284,7 +284,7 @@ public sealed class ReviewMarkConfigurationTests : IDisposable
         File.WriteAllText(PathHelpers.SafePathCombine(dir1, "OriginalName.cs"), content);
         File.WriteAllText(PathHelpers.SafePathCombine(dir2, "RenamedFile.cs"), content);
 
-        var reviewSet = new ReviewSet("Test", "Test Review", ["**/*.cs"]);
+        var reviewSet = new ReviewSet("Test", "Test Review", ["**/*.cs"], []);
 
         // Act
         var fp1 = reviewSet.GetFingerprint(dir1);
@@ -549,7 +549,43 @@ public sealed class ReviewMarkConfigurationTests : IDisposable
     }
 
     /// <summary>
-    ///     Test that PublishReviewPlan honours the markdownDepth parameter when
+    ///     Test that a file listed only in context: is still reported as uncovered by
+    ///     PublishReviewPlan when it matches the needs-review pattern.
+    /// </summary>
+    [Fact]
+    public void ReviewMarkConfiguration_PublishReviewPlan_ContextOnlyFile_StillReportedAsUncovered()
+    {
+        // Arrange — src/MyFile.cs matches needs-review; it appears in context: but NOT in paths:
+        var srcDir = PathHelpers.SafePathCombine(_testDirectory, "src");
+        Directory.CreateDirectory(srcDir);
+        File.WriteAllText(PathHelpers.SafePathCombine(srcDir, "MyFile.cs"), "class MyFile {}");
+
+        var yaml = """
+            needs-review:
+              - "**/*.cs"
+            evidence-source:
+              type: none
+            reviews:
+              - id: Core-Logic
+                title: Review of core business logic
+                context:
+                  - "src/**/*.cs"
+                paths:
+                  - "other/**/*.cs"
+            """;
+        var config = ReviewMarkConfiguration.Parse(yaml);
+
+        // Act
+        var result = config.PublishReviewPlan(_testDirectory);
+
+        // Assert — the context-only file is not covered, so HasIssues must be true
+        Assert.True(result.HasIssues, "HasIssues should be true when a needs-review file appears only in context:");
+        Assert.Contains("Coverage", result.Markdown);
+        Assert.Contains("`src/MyFile.cs`", result.Markdown);
+    }
+
+    /// <summary>
+    ///     Test that PublishReviewPlan honors the markdownDepth parameter when
     ///     building heading levels, including subheadings for uncovered files.
     /// </summary>
     [Fact]
@@ -995,5 +1031,371 @@ public sealed class ReviewMarkConfigurationTests : IDisposable
         Assert.Single(result.Issues);
         Assert.Equal(LintSeverity.Error, result.Issues[0].Severity);
         Assert.Contains("paths", result.Issues[0].Description);
+    }
+
+    // -------------------------------------------------------------------------
+    // Context file tests
+    // -------------------------------------------------------------------------
+
+    /// <summary>
+    ///     Test that Load returns a lint warning when a review set has whitespace-only context entries.
+    /// </summary>
+    [Fact]
+    public void ReviewMarkConfiguration_Load_WhitespaceOnlyContextEntries_ReturnsLintWarning()
+    {
+        // Arrange — write a config with a review set whose context list contains a whitespace-only string
+        var configPath = PathHelpers.SafePathCombine(_testDirectory, ".reviewmark.yaml");
+        File.WriteAllText(configPath, """
+            evidence-source:
+              type: none
+            reviews:
+              - id: Core-Logic
+                title: Review of core business logic
+                paths:
+                  - "src/**/*.cs"
+                context:
+                  - "   "
+            """);
+
+        // Act
+        var result = ReviewMarkConfiguration.Load(configPath);
+
+        // Assert — whitespace-only context entry should produce a lint warning; configuration is still returned
+        Assert.NotNull(result.Configuration);
+        Assert.Single(result.Issues);
+        Assert.Equal(LintSeverity.Warning, result.Issues[0].Severity);
+        Assert.Contains("context", result.Issues[0].Description);
+    }
+
+    /// <summary>
+    ///     Test that a top-level context: list is parsed into GlobalContext.
+    /// </summary>
+    [Fact]
+    public void ReviewMarkConfiguration_Parse_GlobalContext_ParsedCorrectly()
+    {
+        // Arrange
+        var yaml = """
+            context:
+              - "docs/design/introduction.md"
+              - "docs/design/system.md"
+            evidence-source:
+              type: none
+            reviews:
+              - id: Core-Logic
+                title: Review of core business logic
+                paths:
+                  - "src/**/*.cs"
+            """;
+
+        // Act
+        var config = ReviewMarkConfiguration.Parse(yaml);
+
+        // Assert — both global context entries are present and in order
+        Assert.Equal(2, config.GlobalContext.Count);
+        Assert.Equal("docs/design/introduction.md", config.GlobalContext[0]);
+        Assert.Equal("docs/design/system.md", config.GlobalContext[1]);
+    }
+
+    /// <summary>
+    ///     Test that a per-review-set context: list is parsed into ReviewSet.Context.
+    /// </summary>
+    [Fact]
+    public void ReviewMarkConfiguration_Parse_ReviewSetContext_ParsedCorrectly()
+    {
+        // Arrange
+        var yaml = """
+            evidence-source:
+              type: none
+            reviews:
+              - id: Core-Logic
+                title: Review of core business logic
+                paths:
+                  - "src/**/*.cs"
+                context:
+                  - "docs/design/core.md"
+                  - "docs/design/core-api.md"
+            """;
+
+        // Act
+        var config = ReviewMarkConfiguration.Parse(yaml);
+
+        // Assert — both per-review-set context entries are present and in order
+        Assert.Single(config.Reviews);
+        Assert.Equal(2, config.Reviews[0].Context.Count);
+        Assert.Equal("docs/design/core.md", config.Reviews[0].Context[0]);
+        Assert.Equal("docs/design/core-api.md", config.Reviews[0].Context[1]);
+    }
+
+    /// <summary>
+    ///     Test that omitting context: in YAML results in empty GlobalContext and ReviewSet.Context.
+    /// </summary>
+    [Fact]
+    public void ReviewMarkConfiguration_Parse_NoContext_DefaultsToEmpty()
+    {
+        // Arrange — uses MinimalYaml constant which has no context: entries
+
+        // Act
+        var config = ReviewMarkConfiguration.Parse(MinimalYaml);
+
+        // Assert — both GlobalContext and the review set's Context are empty
+        Assert.Empty(config.GlobalContext);
+        Assert.Single(config.Reviews);
+        Assert.Empty(config.Reviews[0].Context);
+    }
+
+    /// <summary>
+    ///     Test that context patterns do not affect the review set fingerprint.
+    /// </summary>
+    [Fact]
+    public void ReviewSet_GetFingerprint_ContextNotIncluded()
+    {
+        // Arrange — one source file; two review sets with identical paths but different context
+        var srcDir = PathHelpers.SafePathCombine(_testDirectory, "src");
+        Directory.CreateDirectory(srcDir);
+        File.WriteAllText(PathHelpers.SafePathCombine(srcDir, "A.cs"), "class A {}");
+
+        var reviewSetNoContext = new ReviewSet("Test", "Test Review", ["src/**/*.cs"], []);
+        var reviewSetWithContext = new ReviewSet("Test", "Test Review", ["src/**/*.cs"], ["docs/**/*.md"]);
+
+        // Act
+        var fp1 = reviewSetNoContext.GetFingerprint(_testDirectory);
+        var fp2 = reviewSetWithContext.GetFingerprint(_testDirectory);
+
+        // Assert — different context patterns must not change the fingerprint
+        Assert.Equal(fp1, fp2);
+    }
+
+    /// <summary>
+    ///     Test that ElaborateReviewSet includes a Context subsection with [global] labels
+    ///     when global context files resolve.
+    /// </summary>
+    [Fact]
+    public void ReviewMarkConfiguration_ElaborateReviewSet_GlobalContext_AppearsInOutput()
+    {
+        // Arrange — create a source file and a context file; configure global context
+        var srcDir = PathHelpers.SafePathCombine(_testDirectory, "src");
+        var docsDir = PathHelpers.SafePathCombine(_testDirectory, "docs");
+        Directory.CreateDirectory(srcDir);
+        Directory.CreateDirectory(docsDir);
+        File.WriteAllText(PathHelpers.SafePathCombine(srcDir, "A.cs"), "class A {}");
+        File.WriteAllText(PathHelpers.SafePathCombine(docsDir, "design.md"), "# Design");
+
+        var yaml = """
+            context:
+              - "docs/**/*.md"
+            evidence-source:
+              type: none
+            reviews:
+              - id: Core-Logic
+                title: Review of core business logic
+                paths:
+                  - "src/**/*.cs"
+            """;
+        var config = ReviewMarkConfiguration.Parse(yaml);
+
+        // Act
+        var result = config.ElaborateReviewSet("Core-Logic", _testDirectory);
+
+        // Assert — context subsection is present and the file is labeled [global]
+        Assert.Contains("## Context", result.Markdown);
+        Assert.Contains("[global]", result.Markdown);
+        Assert.Contains("docs/design.md", result.Markdown);
+    }
+
+    /// <summary>
+    ///     Test that ElaborateReviewSet includes a Context subsection with [local] labels
+    ///     when per-review-set context files resolve.
+    /// </summary>
+    [Fact]
+    public void ReviewMarkConfiguration_ElaborateReviewSet_LocalContext_AppearsInOutput()
+    {
+        // Arrange — create a source file and a context file; configure per-review-set context
+        var srcDir = PathHelpers.SafePathCombine(_testDirectory, "src");
+        var docsDir = PathHelpers.SafePathCombine(_testDirectory, "docs");
+        Directory.CreateDirectory(srcDir);
+        Directory.CreateDirectory(docsDir);
+        File.WriteAllText(PathHelpers.SafePathCombine(srcDir, "A.cs"), "class A {}");
+        File.WriteAllText(PathHelpers.SafePathCombine(docsDir, "design.md"), "# Design");
+
+        var yaml = """
+            evidence-source:
+              type: none
+            reviews:
+              - id: Core-Logic
+                title: Review of core business logic
+                paths:
+                  - "src/**/*.cs"
+                context:
+                  - "docs/**/*.md"
+            """;
+        var config = ReviewMarkConfiguration.Parse(yaml);
+
+        // Act
+        var result = config.ElaborateReviewSet("Core-Logic", _testDirectory);
+
+        // Assert — context subsection is present and the file is labeled [local]
+        Assert.Contains("## Context", result.Markdown);
+        Assert.Contains("[local]", result.Markdown);
+        Assert.Contains("docs/design.md", result.Markdown);
+    }
+
+    /// <summary>
+    ///     Test that ElaborateReviewSet omits the Context subsection when no context files resolve.
+    /// </summary>
+    [Fact]
+    public void ReviewMarkConfiguration_ElaborateReviewSet_NoContext_ContextSectionOmitted()
+    {
+        // Arrange — config with no context entries; one source file present
+        var config = ReviewMarkConfiguration.Parse(MinimalYaml);
+        var srcDir = PathHelpers.SafePathCombine(_testDirectory, "src");
+        Directory.CreateDirectory(srcDir);
+        File.WriteAllText(PathHelpers.SafePathCombine(srcDir, "A.cs"), "class A {}");
+
+        // Act
+        var result = config.ElaborateReviewSet("Core-Logic", _testDirectory);
+
+        // Assert — the Context heading must not appear when there are no context files
+        Assert.DoesNotContain("## Context", result.Markdown);
+    }
+
+    /// <summary>
+    ///     Test that context files do not appear in the Files subsection of ElaborateReviewSet output.
+    /// </summary>
+    [Fact]
+    public void ReviewMarkConfiguration_ElaborateReviewSet_ContextNotUnderReview()
+    {
+        // Arrange — source file in src/, context file in docs/; context not in paths:
+        var srcDir = PathHelpers.SafePathCombine(_testDirectory, "src");
+        var docsDir = PathHelpers.SafePathCombine(_testDirectory, "docs");
+        Directory.CreateDirectory(srcDir);
+        Directory.CreateDirectory(docsDir);
+        File.WriteAllText(PathHelpers.SafePathCombine(srcDir, "A.cs"), "class A {}");
+        File.WriteAllText(PathHelpers.SafePathCombine(docsDir, "design.md"), "# Design");
+
+        var yaml = """
+            evidence-source:
+              type: none
+            reviews:
+              - id: Core-Logic
+                title: Review of core business logic
+                paths:
+                  - "src/**/*.cs"
+                context:
+                  - "docs/**/*.md"
+            """;
+        var config = ReviewMarkConfiguration.Parse(yaml);
+
+        // Act
+        var result = config.ElaborateReviewSet("Core-Logic", _testDirectory);
+
+        // Assert — Files subsection contains only the source file, not the context file
+        Assert.Contains("## Files", result.Markdown);
+        Assert.Contains("`src/A.cs`", result.Markdown);
+
+        // Extract just the Files section content to verify the context file is absent there
+        var filesIndex = result.Markdown.IndexOf("## Files", StringComparison.Ordinal);
+        var filesSection = result.Markdown[filesIndex..];
+        Assert.DoesNotContain("`docs/design.md`", filesSection);
+    }
+
+    /// <summary>
+    ///     Test that Load returns a lint warning when a top-level needs-review list contains
+    ///     a whitespace-only entry, and that the valid pattern is still present in the configuration.
+    /// </summary>
+    [Fact]
+    public void ReviewMarkConfiguration_Load_WhitespaceOnlyNeedsReviewEntry_ReturnsLintWarning()
+    {
+        // Arrange — write a config with one valid and one whitespace-only needs-review pattern
+        var configPath = PathHelpers.SafePathCombine(_testDirectory, ".reviewmark.yaml");
+        File.WriteAllText(configPath, """
+            needs-review:
+              - "**/*.cs"
+              - "   "
+            evidence-source:
+              type: none
+            reviews:
+              - id: Core-Logic
+                title: Review of core business logic
+                paths:
+                  - "src/**/*.cs"
+            """);
+
+        // Act
+        var result = ReviewMarkConfiguration.Load(configPath);
+
+        // Assert — warning issued for the whitespace-only entry; configuration is still returned
+        // with the valid pattern retained and the whitespace entry silently dropped
+        Assert.NotNull(result.Configuration);
+        Assert.Single(result.Issues);
+        Assert.Equal(LintSeverity.Warning, result.Issues[0].Severity);
+        Assert.Contains("needs-review", result.Issues[0].Description);
+        Assert.Single(result.Configuration.NeedsReviewPatterns);
+        Assert.Equal("**/*.cs", result.Configuration.NeedsReviewPatterns[0]);
+    }
+
+    /// <summary>
+    ///     Test that Load returns a lint warning when the top-level context list contains
+    ///     a whitespace-only entry.
+    /// </summary>
+    [Fact]
+    public void ReviewMarkConfiguration_Load_WhitespaceOnlyGlobalContextEntry_ReturnsLintWarning()
+    {
+        // Arrange — write a config with a valid and a whitespace-only global context entry
+        var configPath = PathHelpers.SafePathCombine(_testDirectory, ".reviewmark.yaml");
+        File.WriteAllText(configPath, """
+            context:
+              - "docs/**/*.md"
+              - "   "
+            evidence-source:
+              type: none
+            reviews:
+              - id: Core-Logic
+                title: Review of core business logic
+                paths:
+                  - "src/**/*.cs"
+            """);
+
+        // Act
+        var result = ReviewMarkConfiguration.Load(configPath);
+
+        // Assert — a warning is issued for the whitespace-only entry; configuration is still returned
+        Assert.NotNull(result.Configuration);
+        Assert.Single(result.Issues);
+        Assert.Equal(LintSeverity.Warning, result.Issues[0].Severity);
+        Assert.Contains("context", result.Issues[0].Description);
+    }
+
+    /// <summary>
+    ///     Test that Load returns a lint warning when a per-review-set paths list contains
+    ///     a whitespace-only entry alongside at least one valid entry, and that the valid
+    ///     pattern is still present in the review set.
+    /// </summary>
+    [Fact]
+    public void ReviewMarkConfiguration_Load_WhitespaceOnlyPathsEntry_ReturnsLintWarning()
+    {
+        // Arrange — write a config with one valid and one whitespace-only paths entry in a review set
+        var configPath = PathHelpers.SafePathCombine(_testDirectory, ".reviewmark.yaml");
+        File.WriteAllText(configPath, """
+            evidence-source:
+              type: none
+            reviews:
+              - id: Core-Logic
+                title: Review of core business logic
+                paths:
+                  - "src/**/*.cs"
+                  - "   "
+            """);
+
+        // Act
+        var result = ReviewMarkConfiguration.Load(configPath);
+
+        // Assert — warning issued for the whitespace-only entry; configuration is still returned
+        // with the valid pattern retained and the whitespace entry silently dropped
+        Assert.NotNull(result.Configuration);
+        Assert.Single(result.Issues);
+        Assert.Equal(LintSeverity.Warning, result.Issues[0].Severity);
+        Assert.Contains("paths", result.Issues[0].Description);
+        Assert.Single(result.Configuration.Reviews[0].Paths);
+        Assert.Equal("src/**/*.cs", result.Configuration.Reviews[0].Paths[0]);
     }
 }

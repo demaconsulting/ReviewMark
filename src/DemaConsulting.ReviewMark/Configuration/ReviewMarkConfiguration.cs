@@ -56,6 +56,14 @@ file sealed class ReviewMarkYaml
     /// </summary>
     [YamlMember(Alias = "reviews")]
     public List<ReviewSetYaml>? Reviews { get; set; }
+
+    /// <summary>
+    ///     Gets or sets the list of glob patterns that identify context files for all review sets.
+    ///     Context files are reference material a reviewer must read; they are not subject to
+    ///     coverage enforcement or fingerprint computation.
+    /// </summary>
+    [YamlMember(Alias = "context")]
+    public List<string>? Context { get; set; }
 }
 
 /// <summary>
@@ -123,6 +131,14 @@ file sealed class ReviewSetYaml
     /// </summary>
     [YamlMember(Alias = "paths")]
     public List<string>? Paths { get; set; }
+
+    /// <summary>
+    ///     Gets or sets the list of glob patterns that identify context files specific to this
+    ///     review set.  Context files are reference material a reviewer must read; they are not
+    ///     subject to coverage enforcement or fingerprint computation.
+    /// </summary>
+    [YamlMember(Alias = "context")]
+    public List<string>? Context { get; set; }
 }
 
 // ---------------------------------------------------------------------------
@@ -209,8 +225,15 @@ file static class ReviewMarkConfigurationHelpers
     /// </exception>
     public static ReviewMarkConfiguration BuildConfiguration(ReviewMarkYaml raw)
     {
-        // Map needs-review patterns (default to empty list if absent)
-        var needsReviewPatterns = (IReadOnlyList<string>)(raw.NeedsReview ?? []);
+        // Map needs-review patterns (default to empty list if absent), filtering null/whitespace
+        var needsReviewPatterns = (IReadOnlyList<string>)(raw.NeedsReview ?? [])
+            .Where(p => !string.IsNullOrWhiteSpace(p))
+            .ToList();
+
+        // Map global context patterns (default to empty list if absent), filtering null/whitespace
+        var globalContext = (IReadOnlyList<string>)(raw.Context ?? [])
+            .Where(p => !string.IsNullOrWhiteSpace(p))
+            .ToList();
 
         // Map evidence-source (required: evidence-source block, type, and location)
         if (raw.EvidenceSource is not { } es)
@@ -264,11 +287,20 @@ file static class ReviewMarkConfigurationHelpers
                         $"Review set '{r.Id}' at index {i} is missing required 'paths' entries.");
                 }
 
-                return new ReviewSet(r.Id, r.Title, paths);
+                // Map per-review-set context patterns (default to empty list if absent), filtering null/whitespace
+                var context = (IReadOnlyList<string>)(r.Context ?? [])
+                    .Where(p => !string.IsNullOrWhiteSpace(p))
+                    .ToList();
+
+                // Filter null/whitespace entries from the paths list before constructing the ReviewSet
+                var filteredPaths = (IReadOnlyList<string>)paths
+                    .Where(p => !string.IsNullOrWhiteSpace(p))
+                    .ToList();
+                return new ReviewSet(r.Id, r.Title, filteredPaths, context);
             })
             .ToList();
 
-        return new ReviewMarkConfiguration(needsReviewPatterns, evidenceSource, reviews);
+        return new ReviewMarkConfiguration(needsReviewPatterns, evidenceSource, reviews, globalContext);
     }
 
     /// <summary>
@@ -372,6 +404,70 @@ file static class ReviewMarkConfigurationHelpers
                     LintSeverity.Error,
                     $"Review set '{r.Id ?? $"at index {i}"}' is missing required 'paths'."));
             }
+
+            // Warn on individual whitespace-only path entries only when the list is otherwise valid
+            // (i.e. has at least one non-whitespace entry) — the all-whitespace case is already
+            // reported as an error above, so no additional warning is needed there.
+            if (r.Paths != null && r.Paths.Any(p => !string.IsNullOrWhiteSpace(p)))
+            {
+                foreach (var _ in r.Paths.Where(p => p != null && string.IsNullOrWhiteSpace(p)))
+                {
+                    issues.Add(new LintIssue(
+                        filePath,
+                        LintSeverity.Warning,
+                        $"Review set '{r.Id ?? $"at index {i}"}' has a whitespace-only 'paths' entry."));
+                }
+            }
+
+            if (r.Context != null)
+            {
+                foreach (var _ in r.Context.Where(p => string.IsNullOrWhiteSpace(p)))
+                {
+                    issues.Add(new LintIssue(
+                        filePath,
+                        LintSeverity.Warning,
+                        $"Review set '{r.Id ?? $"at index {i}"}' has a null or whitespace-only 'context' entry."));
+                }
+            }
+        }
+    }
+
+    /// <summary>
+    ///     Validates the top-level <c>needs-review</c> and <c>context</c> lists,
+    ///     appending a warning for each whitespace-only entry found.
+    /// </summary>
+    /// <param name="filePath">Path to the configuration file, used in issue locations.</param>
+    /// <param name="raw">The raw top-level YAML model to validate.</param>
+    /// <param name="issues">The list to append any detected issues to.</param>
+    /// <remarks>
+    ///     Whitespace-only entries in these lists are silently dropped during
+    ///     <see cref="BuildConfiguration" /> to prevent null patterns reaching
+    ///     <c>GlobMatcher</c>.  A warning is emitted here so the user knows the entry
+    ///     was ineffective and can correct the configuration file.
+    /// </remarks>
+    internal static void ValidateTopLevel(
+        string filePath,
+        ReviewMarkYaml raw,
+        ICollection<LintIssue> issues)
+    {
+        // Warn on whitespace-only needs-review entries
+        if (raw.NeedsReview != null)
+        {
+            foreach (var _ in raw.NeedsReview.Where(p => p != null && string.IsNullOrWhiteSpace(p)))
+            {
+                issues.Add(new LintIssue(filePath, LintSeverity.Warning,
+                    "Top-level 'needs-review' has a whitespace-only entry."));
+            }
+        }
+
+        // Warn on whitespace-only context entries
+        if (raw.Context != null)
+        {
+            foreach (var _ in raw.Context.Where(p => p != null && string.IsNullOrWhiteSpace(p)))
+            {
+                issues.Add(new LintIssue(filePath, LintSeverity.Warning,
+                    "Top-level 'context' has a whitespace-only entry."));
+            }
         }
     }
 }
@@ -417,16 +513,25 @@ internal sealed class ReviewSet
     public IReadOnlyList<string> Paths { get; }
 
     /// <summary>
+    ///     Gets the ordered list of glob patterns identifying context files specific to this review
+    ///     set.  Context files are reference material a reviewer must read and are excluded from
+    ///     fingerprint computation and coverage enforcement.
+    /// </summary>
+    public IReadOnlyList<string> Context { get; }
+
+    /// <summary>
     ///     Initializes a new instance of the <see cref="ReviewSet" /> class.
     /// </summary>
     /// <param name="id">The unique identifier.</param>
     /// <param name="title">The human-readable title.</param>
     /// <param name="paths">The ordered list of glob patterns.</param>
-    internal ReviewSet(string id, string title, IReadOnlyList<string> paths)
+    /// <param name="context">The ordered list of glob patterns for per-review-set context files.</param>
+    internal ReviewSet(string id, string title, IReadOnlyList<string> paths, IReadOnlyList<string> context)
     {
         Id = id;
         Title = title;
         Paths = paths;
+        Context = context;
     }
 
     /// <summary>
@@ -594,19 +699,29 @@ internal sealed class ReviewMarkConfiguration
     public IReadOnlyList<ReviewSet> Reviews { get; }
 
     /// <summary>
+    ///     Gets the ordered list of glob patterns identifying global context files that apply to
+    ///     every review set.  Context files are reference material a reviewer must read and are
+    ///     excluded from fingerprint computation and coverage enforcement.
+    /// </summary>
+    public IReadOnlyList<string> GlobalContext { get; }
+
+    /// <summary>
     ///     Initializes a new instance of <see cref="ReviewMarkConfiguration" />.
     /// </summary>
     /// <param name="needsReviewPatterns">Glob patterns for files requiring review.</param>
     /// <param name="evidenceSource">Evidence-source configuration.</param>
     /// <param name="reviews">Review set definitions.</param>
+    /// <param name="globalContext">Global context file glob patterns.</param>
     internal ReviewMarkConfiguration(
         IReadOnlyList<string> needsReviewPatterns,
         EvidenceSource evidenceSource,
-        IReadOnlyList<ReviewSet> reviews)
+        IReadOnlyList<ReviewSet> reviews,
+        IReadOnlyList<string> globalContext)
     {
         NeedsReviewPatterns = needsReviewPatterns;
         EvidenceSource = evidenceSource;
         Reviews = reviews;
+        GlobalContext = globalContext;
     }
 
     /// <summary>
@@ -663,7 +778,9 @@ internal sealed class ReviewMarkConfiguration
             return new ReviewMarkLoadResult(null, issues);
         }
 
-        // Validate the evidence-source block and each review set, collecting all field-level errors.
+        // Validate the top-level needs-review and context lists, and the evidence-source block and
+        // each review set, collecting all field-level errors and warnings.
+        ReviewMarkConfigurationHelpers.ValidateTopLevel(filePath, raw, issues);
         ReviewMarkConfigurationHelpers.ValidateEvidenceSource(filePath, raw.EvidenceSource, issues);
         ReviewMarkConfigurationHelpers.ValidateReviews(filePath, raw.Reviews ?? [], issues);
 
@@ -697,7 +814,8 @@ internal sealed class ReviewMarkConfiguration
             config = new ReviewMarkConfiguration(
                 config.NeedsReviewPatterns,
                 config.EvidenceSource with { Location = absoluteLocation },
-                config.Reviews);
+                config.Reviews,
+                config.GlobalContext);
         }
 
         return new ReviewMarkLoadResult(config, issues);
@@ -984,8 +1102,28 @@ internal sealed class ReviewMarkConfiguration
         sb.AppendLine($"| Fingerprint | `{fingerprint}` |");
         sb.AppendLine();
 
-        // Emit the files subsection
+        // Resolve global and local context files, labeling each with its scope
+        var globalContextFiles = GlobMatcher.GetMatchingFiles(directory, GlobalContext)
+            .Select(f => $"[global] {f}");
+        var localContextFiles = GlobMatcher.GetMatchingFiles(directory, review.Context)
+            .Select(f => $"[local]  {f}");
+        var allContext = globalContextFiles.Concat(localContextFiles).ToList();
+
+        // Emit the context subsection only when at least one context file resolves
         var subHeading = new string('#', markdownDepth + 1);
+        if (allContext.Count > 0)
+        {
+            sb.AppendLine($"{subHeading} Context");
+            sb.AppendLine();
+            foreach (var entry in allContext)
+            {
+                sb.AppendLine($"- `{entry}`");
+            }
+
+            sb.AppendLine();
+        }
+
+        // Emit the files subsection
         sb.AppendLine($"{subHeading} Files");
         sb.AppendLine();
         var files = review.GetFiles(directory);
