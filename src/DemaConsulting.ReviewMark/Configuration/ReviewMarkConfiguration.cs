@@ -1102,12 +1102,18 @@ internal sealed class ReviewMarkConfiguration
         sb.AppendLine($"| Fingerprint | `{fingerprint}` |");
         sb.AppendLine();
 
-        // Resolve global and local context files; global files appear first
+        // Resolve the files-under-review first so we can suppress them from context
+        var files = review.GetFiles(directory);
+        var filesUnderReview = new HashSet<string>(files, StringComparer.Ordinal);
+
+        // Resolve global and local context files; global files appear first.
+        // Any file that is also under review is suppressed from the Context subsection.
         var globalContextFiles = GlobMatcher.GetMatchingFiles(directory, GlobalContext);
         var localContextFiles = GlobMatcher.GetMatchingFiles(directory, review.Context);
         var allContext = globalContextFiles
             .Concat(localContextFiles)
             .Distinct(StringComparer.Ordinal)
+            .Where(f => !filesUnderReview.Contains(f))
             .ToList();
 
         // Emit the context subsection only when at least one context file resolves
@@ -1127,7 +1133,6 @@ internal sealed class ReviewMarkConfiguration
         // Emit the files subsection
         sb.AppendLine($"{subHeading} Files");
         sb.AppendLine();
-        var files = review.GetFiles(directory);
         foreach (var file in files)
         {
             sb.AppendLine($"- `{file}`");

@@ -100,7 +100,10 @@ returns a Markdown document with a heading at `markdownDepth`, a metadata table 
 Fingerprint), an optional Context subsection, and a Files subheading. The Context subsection
 lists all resolved context files as plain paths (global context files from `GlobalContext`
 first, followed by per-review-set files from `review.Context`), and is omitted when no
-context files resolve. Throws `ArgumentException`
+context files resolve. **The files-under-review set is resolved before context so that any
+context file that also appears in the review set's `paths:` list is suppressed from the
+Context subsection; a file cannot serve both purposes in the same elaboration output.**
+Throws `ArgumentException`
 for unknown IDs; throws `ArgumentOutOfRangeException` when `markdownDepth > 5`.
 
 **Coverage note:** Context entries are reference material only. A file listed in `context:` is

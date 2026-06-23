@@ -240,3 +240,18 @@ sections:
                   - ReviewMarkConfiguration_ElaborateReviewSet_GlobalContext_AppearsInOutput
                   - ReviewMarkConfiguration_ElaborateReviewSet_LocalContext_AppearsInOutput
                   - ReviewMarkConfiguration_ElaborateReviewSet_NoContext_ContextSectionOmitted
+
+              - id: ReviewMark-Config-ContextDeduplication
+                title: >-
+                  ElaborateReviewSet shall suppress from the Context subsection any file that also
+                  appears in the review set's Files list, so that no file is presented with
+                  conflicting purpose in the same elaboration output.
+                justification: |
+                  A file listed in global context (e.g. docs/design/introduction.md) is normally
+                  reference material. However, when a review set explicitly includes that same file
+                  in its paths:, it is under review for that set. Showing it in both sections
+                  simultaneously presents contradictory guidance. Suppressing it from context
+                  ensures the file's purpose is unambiguous in every elaboration output.
+                tests:
+                  - ReviewMarkConfiguration_ElaborateReviewSet_FileInBothContextAndPaths_SuppressedFromContext
+                  - ReviewMarkConfiguration_ElaborateReviewSet_ContextFileNotInPaths_NotSuppressed
