@@ -98,8 +98,7 @@ and a boolean indicating whether any review-set is non-current.
 Looks up the review-set with the given `id`, resolves its file list and fingerprint, and
 returns a Markdown document with a heading at `markdownDepth`, a metadata table (ID, Title,
 Fingerprint), an optional Context subsection, and a Files subheading. The Context subsection
-lists all resolved context files as plain paths in lexicographic order (consistent with the
-Files section), and is omitted when no context files resolve.
+lists all resolved context files as plain paths, and is omitted when no context files resolve.
 
 **Combined ordered context resolution:** Global and per-review-set context patterns are
 concatenated into a single ordered pattern list (`GlobalContext` first, then `review.Context`)

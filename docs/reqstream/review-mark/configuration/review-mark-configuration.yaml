@@ -232,11 +232,10 @@ sections:
               - id: ReviewMark-Config-ContextInElaboration
                 title: >-
                   ElaborateReviewSet shall include a Context subsection listing all resolved context
-                  files as plain paths in lexicographic order (consistent with the Files section),
-                  omitting the subsection when no context files exist.
+                  files as plain paths, omitting the subsection when no context files exist.
                 justification: |
-                  Reviewers need to know which reference files to consult. The lexicographic sort
-                  matches the Files section behavior and is a stable, predictable ordering.
+                  Reviewers need to know which reference files to consult before assessing
+                  the files under review.
                 tests:
                   - ReviewMarkConfiguration_ElaborateReviewSet_GlobalContext_AppearsInOutput
                   - ReviewMarkConfiguration_ElaborateReviewSet_LocalContext_AppearsInOutput
