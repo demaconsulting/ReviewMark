@@ -1112,7 +1112,7 @@ internal sealed class ReviewMarkConfiguration
         var localContextFiles = GlobMatcher.GetMatchingFiles(directory, review.Context);
         var allContext = globalContextFiles
             .Concat(localContextFiles)
-            .Distinct(StringComparer.OrdinalIgnoreCase)
+            .Distinct(StringComparer.Ordinal)
             .Where(f => !filesUnderReview.Contains(f))
             .ToList();
 
