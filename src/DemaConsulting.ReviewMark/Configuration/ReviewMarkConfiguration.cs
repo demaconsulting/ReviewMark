@@ -1104,7 +1104,7 @@ internal sealed class ReviewMarkConfiguration
 
         // Resolve the files-under-review first so we can suppress them from context
         var files = review.GetFiles(directory);
-        var filesUnderReview = new HashSet<string>(files, StringComparer.OrdinalIgnoreCase);
+        var filesUnderReview = new HashSet<string>(files, StringComparer.Ordinal);
 
         // Resolve global and local context files; global files appear first.
         // Any file that is also under review is suppressed from the Context subsection.
