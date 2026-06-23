@@ -236,7 +236,7 @@ sections:
                   omitting the subsection when no context files exist.
                 justification: |
                   Reviewers need to know which reference files to consult. The lexicographic sort
-                  matches the Files section behaviour and is a stable, predictable ordering.
+                  matches the Files section behavior and is a stable, predictable ordering.
                 tests:
                   - ReviewMarkConfiguration_ElaborateReviewSet_GlobalContext_AppearsInOutput
                   - ReviewMarkConfiguration_ElaborateReviewSet_LocalContext_AppearsInOutput
