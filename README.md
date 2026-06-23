@@ -63,14 +63,16 @@ named review-sets:
 needs-review:
   - "**/*.cs"
   - "**/*.yaml"
-  - "!**/obj/**"           # exclude build output
-  - "!src/Generated/**"    # exclude auto-generated files
+  - "!**/obj/**"         # exclude build output
+  - "!src/Generated/**"  # exclude auto-generated files
 
+# Configuration for the review evidence source
 evidence-source:
-  type: url                # 'none', 'url', or 'fileshare'
+  type: url              # 'none', 'url', or 'fileshare'
   location: https://reviews.example.com/evidence/index.json
 
-context:                    # optional: reference docs for all reviewers
+# Optional reference files included in all reviews
+context:
   - "docs/design/introduction.md"
 
 reviews:
@@ -80,8 +82,9 @@ reviews:
       - "src/Core/**/*.cs"
       - "src/Core/**/*.yaml"
       - "!src/Core/Generated/**"
-    context:                # optional: reference docs a reviewer must read
+    context:
       - "docs/design/core.md"
+
   - id: Security-Layer
     title: Review of authentication and authorization
     paths:
