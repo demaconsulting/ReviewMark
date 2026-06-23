@@ -1106,13 +1106,11 @@ internal sealed class ReviewMarkConfiguration
         var files = review.GetFiles(directory);
         var filesUnderReview = new HashSet<string>(files, StringComparer.Ordinal);
 
-        // Resolve global and local context files; global files appear first.
-        // Any file that is also under review is suppressed from the Context subsection.
-        var globalContextFiles = GlobMatcher.GetMatchingFiles(directory, GlobalContext);
-        var localContextFiles = GlobMatcher.GetMatchingFiles(directory, review.Context);
-        var allContext = globalContextFiles
-            .Concat(localContextFiles)
-            .Distinct(StringComparer.Ordinal)
+        // Resolve context as a single ordered pattern list: global patterns first, then
+        // per-review-set patterns. This allows per-review-set exclusions (! prefix) to
+        // suppress files added by the global context.
+        var combinedContextPatterns = GlobalContext.Concat(review.Context).ToList();
+        var allContext = GlobMatcher.GetMatchingFiles(directory, combinedContextPatterns)
             .Where(f => !filesUnderReview.Contains(f))
             .ToList();
 

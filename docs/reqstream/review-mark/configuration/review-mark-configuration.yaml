@@ -232,14 +232,15 @@ sections:
               - id: ReviewMark-Config-ContextInElaboration
                 title: >-
                   ElaborateReviewSet shall include a Context subsection listing all resolved context
-                  files as plain paths (global context first, then per-review-set context),
-                  omitting the subsection when no context files exist.
+                  files as plain paths, omitting the subsection when no context files exist.
                 justification: |
-                  Reviewers need to know which reference files to consult.
+                  Reviewers need to know which reference files to consult before assessing
+                  the files under review.
                 tests:
                   - ReviewMarkConfiguration_ElaborateReviewSet_GlobalContext_AppearsInOutput
                   - ReviewMarkConfiguration_ElaborateReviewSet_LocalContext_AppearsInOutput
                   - ReviewMarkConfiguration_ElaborateReviewSet_NoContext_ContextSectionOmitted
+                  - ReviewMarkConfiguration_ElaborateReviewSet_BothGlobalAndLocalContextAppear
 
               - id: ReviewMark-Config-ContextDeduplication
                 title: >-
@@ -255,3 +256,20 @@ sections:
                 tests:
                   - ReviewMarkConfiguration_ElaborateReviewSet_FileInBothContextAndPaths_SuppressedFromContext
                   - ReviewMarkConfiguration_ElaborateReviewSet_ContextFileNotInPaths_NotSuppressed
+
+              - id: ReviewMark-Config-ContextExclusionPatterns
+                title: >-
+                  ElaborateReviewSet shall treat global and per-review-set context patterns as a
+                  single ordered sequence, allowing per-review-set exclusion patterns (prefixed
+                  with !) to suppress files added by the global context.
+                justification: |
+                  Global context adds reference files for every review set. Occasionally a specific
+                  review set does not need a globally-added file — for example, the Purpose review
+                  set may want to exclude docs/design/introduction.md that every other review set
+                  finds useful. By resolving the combined [global + per-review-set] context pattern
+                  list in order (leveraging GlobMatcher's existing ordered include/exclude semantics),
+                  per-review-set exclusions can selectively suppress global context files without
+                  requiring changes to the global configuration.
+                tests:
+                  - ReviewMarkConfiguration_ElaborateReviewSet_PerSetContextExcludesGlobalFile
+                  - ReviewMarkConfiguration_ElaborateReviewSet_ExclusionDoesNotAffectOtherReviewSets
