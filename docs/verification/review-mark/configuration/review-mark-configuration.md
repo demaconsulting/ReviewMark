@@ -144,6 +144,21 @@ the context files do not appear in the `Files` subsection. Requirement coverage:
 `ReviewMark-Config-ContextExcludedFromCoverage`. This scenario is tested by
 `ReviewMarkConfiguration_ElaborateReviewSet_ContextNotUnderReview`.
 
+**ReviewMarkConfiguration_ElaborateReviewSet_FileInBothContextAndPaths_SuppressedFromContext**:
+`ElaborateReviewSet` is called on a configuration where a file is listed in both the global
+`context:` list and the review set's `paths:` list. Expected outcome: the file appears in the
+`Files` subsection and is absent from the `Context` subsection; the path appears exactly once
+as a list item. Requirement coverage: `ReviewMark-Config-ContextDeduplication`. This scenario
+is tested by
+`ReviewMarkConfiguration_ElaborateReviewSet_FileInBothContextAndPaths_SuppressedFromContext`.
+
+**ReviewMarkConfiguration_ElaborateReviewSet_ContextFileNotInPaths_NotSuppressed**:
+`ElaborateReviewSet` is called on a configuration where a context file is not in the review
+set's `paths:` list. Expected outcome: the file appears in the `Context` subsection and is
+absent from the `Files` subsection. Requirement coverage: `ReviewMark-Config-ContextDeduplication`.
+This scenario is tested by
+`ReviewMarkConfiguration_ElaborateReviewSet_ContextFileNotInPaths_NotSuppressed`.
+
 **ReviewMarkConfiguration_PublishReviewPlan_ContextOnlyFile_StillReportedAsUncovered**:
 `PublishReviewPlan` is called when a file matching `needs-review` appears only in a review set's
 `context:` list and is not matched by any `paths:` entry. Expected outcome: `HasIssues` is true
@@ -233,3 +248,6 @@ list. Requirement coverage: `ReviewMark-Config-Loading`. This scenario is tested
   ReviewMarkConfiguration_ElaborateReviewSet_GlobalContext_AppearsInOutput,
   ReviewMarkConfiguration_ElaborateReviewSet_LocalContext_AppearsInOutput,
   ReviewMarkConfiguration_ElaborateReviewSet_NoContext_ContextSectionOmitted
+- **ReviewMark-Config-ContextDeduplication**:
+  ReviewMarkConfiguration_ElaborateReviewSet_FileInBothContextAndPaths_SuppressedFromContext,
+  ReviewMarkConfiguration_ElaborateReviewSet_ContextFileNotInPaths_NotSuppressed

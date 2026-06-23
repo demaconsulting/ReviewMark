@@ -1344,6 +1344,101 @@ public sealed class ReviewMarkConfigurationTests : IDisposable
     }
 
     /// <summary>
+    ///     Test that ElaborateReviewSet suppresses a context file from the Context subsection
+    ///     when that same file also appears in the review set's paths: list.
+    /// </summary>
+    [Fact]
+    public void ReviewMarkConfiguration_ElaborateReviewSet_FileInBothContextAndPaths_SuppressedFromContext()
+    {
+        // Arrange — context file in docs/ and source file in src/; global context matches docs/,
+        // and paths: matches both docs/ and src/
+        var srcDir = Path.Combine(_testDirectory, "src");
+        var docsDir = Path.Combine(_testDirectory, "docs");
+        Directory.CreateDirectory(srcDir);
+        Directory.CreateDirectory(docsDir);
+        File.WriteAllText(Path.Combine(srcDir, "A.cs"), "class A {}");
+        File.WriteAllText(Path.Combine(docsDir, "introduction.md"), "# Introduction");
+
+        var yaml = """
+            context:
+              - "docs/**/*.md"
+            evidence-source:
+              type: none
+            reviews:
+              - id: Core-Logic
+                title: Review of core business logic
+                paths:
+                  - "docs/**/*.md"
+                  - "src/**/*.cs"
+            """;
+        var config = ReviewMarkConfiguration.Parse(yaml);
+
+        // Act
+        var result = config.ElaborateReviewSet("Core-Logic", _testDirectory);
+
+        // Assert — docs/introduction.md is present in the Files subsection
+        var filesIndex = result.Markdown.IndexOf("## Files", StringComparison.Ordinal);
+        var filesSection = result.Markdown[filesIndex..];
+        Assert.Contains("- `docs/introduction.md`", filesSection);
+
+        // Assert — docs/introduction.md is absent from the Context subsection
+        var contextIndex = result.Markdown.IndexOf("## Context", StringComparison.Ordinal);
+        if (contextIndex >= 0)
+        {
+            var contextSection = result.Markdown[contextIndex..filesIndex];
+            Assert.DoesNotContain("`docs/introduction.md`", contextSection);
+        }
+
+        // Assert — the path appears exactly once as a list item (in Files only)
+        var occurrences = result.Markdown.Split("- `docs/introduction.md`").Length - 1;
+        Assert.Equal(1, occurrences);
+    }
+
+    /// <summary>
+    ///     Test that ElaborateReviewSet does not suppress a context file from the Context
+    ///     subsection when that file does not appear in the review set's paths: list.
+    /// </summary>
+    [Fact]
+    public void ReviewMarkConfiguration_ElaborateReviewSet_ContextFileNotInPaths_NotSuppressed()
+    {
+        // Arrange — context file in docs/ and source file in src/; global context matches docs/,
+        // but paths: matches only src/
+        var srcDir = Path.Combine(_testDirectory, "src");
+        var docsDir = Path.Combine(_testDirectory, "docs");
+        Directory.CreateDirectory(srcDir);
+        Directory.CreateDirectory(docsDir);
+        File.WriteAllText(Path.Combine(srcDir, "B.cs"), "class B {}");
+        File.WriteAllText(Path.Combine(docsDir, "context.md"), "# Context");
+
+        var yaml = """
+            context:
+              - "docs/**/*.md"
+            evidence-source:
+              type: none
+            reviews:
+              - id: Core-Logic
+                title: Review of core business logic
+                paths:
+                  - "src/**/*.cs"
+            """;
+        var config = ReviewMarkConfiguration.Parse(yaml);
+
+        // Act
+        var result = config.ElaborateReviewSet("Core-Logic", _testDirectory);
+
+        // Assert — docs/context.md appears in the Context subsection
+        Assert.Contains("## Context", result.Markdown);
+        var contextIndex = result.Markdown.IndexOf("## Context", StringComparison.Ordinal);
+        var filesIndex = result.Markdown.IndexOf("## Files", StringComparison.Ordinal);
+        var contextSection = result.Markdown[contextIndex..filesIndex];
+        Assert.Contains("`docs/context.md`", contextSection);
+
+        // Assert — docs/context.md does NOT appear in the Files subsection
+        var filesSection = result.Markdown[filesIndex..];
+        Assert.DoesNotContain("`docs/context.md`", filesSection);
+    }
+
+    /// <summary>
     ///     Test that Load returns a lint warning when a top-level needs-review list contains
     ///     a whitespace-only entry, and that the valid pattern is still present in the configuration.
     /// </summary>
