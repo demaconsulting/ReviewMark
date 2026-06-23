@@ -1538,4 +1538,99 @@ public sealed class ReviewMarkConfigurationTests : IDisposable
         Assert.Single(result.Configuration.Reviews[0].Paths);
         Assert.Equal("src/**/*.cs", result.Configuration.Reviews[0].Paths[0]);
     }
+
+    // -------------------------------------------------------------------------
+    // Context exclusion pattern tests
+    // -------------------------------------------------------------------------
+
+    /// <summary>
+    ///     Test that a per-review-set exclusion pattern (! prefix) suppresses a file that was
+    ///     added by the global context, so the excluded file does not appear anywhere in the output.
+    /// </summary>
+    [Fact]
+    public void ReviewMarkConfiguration_ElaborateReviewSet_PerSetContextExcludesGlobalFile()
+    {
+        // Arrange — create docs/intro.md, docs/design.md, and src/A.cs on disk
+        var srcDir = PathHelpers.SafePathCombine(_testDirectory, "src");
+        var docsDir = PathHelpers.SafePathCombine(_testDirectory, "docs");
+        Directory.CreateDirectory(srcDir);
+        Directory.CreateDirectory(docsDir);
+        File.WriteAllText(PathHelpers.SafePathCombine(srcDir, "A.cs"), "class A {}");
+        File.WriteAllText(PathHelpers.SafePathCombine(docsDir, "intro.md"), "# Introduction");
+        File.WriteAllText(PathHelpers.SafePathCombine(docsDir, "design.md"), "# Design");
+
+        // Global context matches both docs/*.md files; per-review-set context excludes intro.md
+        var yaml = """
+            context:
+              - "docs/**/*.md"
+            evidence-source:
+              type: none
+            reviews:
+              - id: Core-Logic
+                title: Review of core business logic
+                paths:
+                  - "src/**/*.cs"
+                context:
+                  - "!docs/intro.md"
+            """;
+        var config = ReviewMarkConfiguration.Parse(yaml);
+
+        // Act
+        var result = config.ElaborateReviewSet("Core-Logic", _testDirectory);
+
+        // Assert — docs/design.md is in the Context subsection (not excluded)
+        Assert.Contains("## Context", result.Markdown);
+        Assert.Contains("- `docs/design.md`", result.Markdown);
+
+        // Assert — docs/intro.md does NOT appear anywhere in the output (excluded by per-set pattern)
+        Assert.DoesNotContain("docs/intro.md", result.Markdown);
+    }
+
+    /// <summary>
+    ///     Test that a per-review-set context exclusion only affects that review set and does not
+    ///     suppress the excluded file from another review set that does not carry the exclusion.
+    /// </summary>
+    [Fact]
+    public void ReviewMarkConfiguration_ElaborateReviewSet_ExclusionDoesNotAffectOtherReviewSets()
+    {
+        // Arrange — create docs/intro.md, src/A.cs, and src/B.cs on disk
+        var srcDir = PathHelpers.SafePathCombine(_testDirectory, "src");
+        var docsDir = PathHelpers.SafePathCombine(_testDirectory, "docs");
+        Directory.CreateDirectory(srcDir);
+        Directory.CreateDirectory(docsDir);
+        File.WriteAllText(PathHelpers.SafePathCombine(srcDir, "A.cs"), "class A {}");
+        File.WriteAllText(PathHelpers.SafePathCombine(srcDir, "B.cs"), "class B {}");
+        File.WriteAllText(PathHelpers.SafePathCombine(docsDir, "intro.md"), "# Introduction");
+
+        // Global context matches docs/intro.md; ReviewSet-A excludes it, ReviewSet-B does not
+        var yaml = """
+            context:
+              - "docs/**/*.md"
+            evidence-source:
+              type: none
+            reviews:
+              - id: ReviewSet-A
+                title: Review set A
+                paths:
+                  - "src/A.cs"
+                context:
+                  - "!docs/intro.md"
+              - id: ReviewSet-B
+                title: Review set B
+                paths:
+                  - "src/B.cs"
+            """;
+        var config = ReviewMarkConfiguration.Parse(yaml);
+
+        // Act
+        var resultA = config.ElaborateReviewSet("ReviewSet-A", _testDirectory);
+        var resultB = config.ElaborateReviewSet("ReviewSet-B", _testDirectory);
+
+        // Assert — ReviewSet-A does NOT contain docs/intro.md (exclusion applied)
+        Assert.DoesNotContain("docs/intro.md", resultA.Markdown);
+
+        // Assert — ReviewSet-B DOES contain docs/intro.md (exclusion is per-set only)
+        Assert.Contains("## Context", resultB.Markdown);
+        Assert.Contains("- `docs/intro.md`", resultB.Markdown);
+    }
 }

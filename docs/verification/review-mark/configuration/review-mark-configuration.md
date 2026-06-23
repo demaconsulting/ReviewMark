@@ -251,3 +251,82 @@ list. Requirement coverage: `ReviewMark-Config-Loading`. This scenario is tested
 - **ReviewMark-Config-ContextDeduplication**:
   ReviewMarkConfiguration_ElaborateReviewSet_FileInBothContextAndPaths_SuppressedFromContext,
   ReviewMarkConfiguration_ElaborateReviewSet_ContextFileNotInPaths_NotSuppressed
+
+**ReviewMarkConfiguration_ElaborateReviewSet_PerSetContextExcludesGlobalFile**: `ElaborateReviewSet`
+is called on a configuration with a global `context:` matching two docs files and a per-review-set
+`context: ["!docs/intro.md"]` exclusion. Expected outcome: `docs/design.md` appears in the Context
+subsection; `docs/intro.md` does not appear anywhere in the output. Requirement coverage:
+`ReviewMark-Config-ContextExclusionPatterns`. This scenario is tested by
+`ReviewMarkConfiguration_ElaborateReviewSet_PerSetContextExcludesGlobalFile`.
+
+**ReviewMarkConfiguration_ElaborateReviewSet_ExclusionDoesNotAffectOtherReviewSets**: Two review sets
+share the same global context (`docs/intro.md`). `ReviewSet-A` carries a `context: ["!docs/intro.md"]`
+exclusion; `ReviewSet-B` has no local context. Expected outcome: `ReviewSet-A` output does not contain
+`docs/intro.md`; `ReviewSet-B` output does contain `docs/intro.md`. Requirement coverage:
+`ReviewMark-Config-ContextExclusionPatterns`. This scenario is tested by
+`ReviewMarkConfiguration_ElaborateReviewSet_ExclusionDoesNotAffectOtherReviewSets`.
+
+#### Requirements Coverage
+
+- **ReviewMark-Config-Reading**:
+  ReviewMarkConfiguration_Parse_NullYaml_ThrowsArgumentNullException,
+  ReviewMarkConfiguration_Parse_ValidYaml_ReturnsConfiguration,
+  ReviewMarkConfiguration_Parse_NeedsReviewPatterns_ParsedCorrectly,
+  ReviewMarkConfiguration_Parse_EvidenceSource_ParsedCorrectly,
+  ReviewMarkConfiguration_Parse_Reviews_ParsedCorrectly,
+  ReviewMarkConfiguration_Parse_EvidenceSourceWithCredentials_ParsedCorrectly,
+  ReviewMarkConfiguration_GetNeedsReviewFiles_ReturnsMatchingFiles,
+  ReviewSet_GetFingerprint_SameContent_ReturnsSameFingerprint,
+  ReviewSet_GetFingerprint_DifferentContent_ReturnsDifferentFingerprint,
+  ReviewSet_GetFingerprint_RenameFile_ReturnsSameFingerprint,
+  ReviewMarkConfiguration_Parse_NoneEvidenceSource_ParsedCorrectly,
+  ReviewMarkConfiguration_Parse_NoneEvidenceSource_NoLocationRequired,
+  ReviewMarkConfiguration_Load_FileshareRelativeLocation_ResolvesToAbsolutePath
+- **ReviewMark-Config-Loading**:
+  ReviewMarkConfiguration_Load_ValidFile_ReturnsConfigurationAndNoIssues,
+  ReviewMarkConfiguration_Load_MissingEvidenceSource_ReturnsNullConfigWithErrorIssue,
+  ReviewMarkConfiguration_Load_MultipleErrors_ReturnsAllIssues,
+  ReviewMarkConfiguration_Load_NoneEvidenceSource_NoIssues,
+  ReviewMarkLoadResult_ReportIssues_RoutesIssuesToContext,
+  ReviewMarkConfiguration_Load_WhitespaceOnlyPaths_ReturnsLintError,
+  ReviewMarkConfiguration_Load_WhitespaceOnlyContextEntries_ReturnsLintWarning,
+  ReviewMarkConfiguration_Load_WhitespaceOnlyNeedsReviewEntry_ReturnsLintWarning,
+  ReviewMarkConfiguration_Load_WhitespaceOnlyGlobalContextEntry_ReturnsLintWarning,
+  ReviewMarkConfiguration_Load_WhitespaceOnlyPathsEntry_ReturnsLintWarning
+- **ReviewMark-Config-LoadingNullOnError**:
+  ReviewMarkConfiguration_Load_NonExistentFile_ReturnsNullConfigWithErrorIssue,
+  ReviewMarkConfiguration_Load_InvalidYaml_ReturnsNullConfigWithErrorIssue,
+  ReviewMarkConfiguration_Load_MissingEvidenceSource_ReturnsNullConfigWithErrorIssue
+- **ReviewMark-Config-PlanGeneration**: ReviewMarkConfiguration_PublishReviewPlan_AllCovered_NoIssues, ReviewMarkConfiguration_PublishReviewPlan_UncoveredFiles_HasIssues
+- **ReviewMark-Config-PlanMarkdownDepth**: ReviewMarkConfiguration_PublishReviewPlan_MarkdownDepth_UsedForHeadings
+- **ReviewMark-Config-PlanMarkdownDepthValidation**: ReviewMarkConfiguration_PublishReviewPlan_MarkdownDepthAbove5_Throws
+- **ReviewMark-Config-ReportGeneration**:
+  ReviewMarkConfiguration_PublishReviewReport_CurrentReview_NoIssues,
+  ReviewMarkConfiguration_PublishReviewReport_StaleReview_HasIssues,
+  ReviewMarkConfiguration_PublishReviewReport_FailedReview_HasIssues,
+  ReviewMarkConfiguration_PublishReviewReport_MissingReview_HasIssues
+- **ReviewMark-Config-ReportMarkdownDepth**: ReviewMarkConfiguration_PublishReviewReport_MarkdownDepth_UsedForHeadings
+- **ReviewMark-Config-ReportMarkdownDepthValidation**: ReviewMarkConfiguration_PublishReviewReport_MarkdownDepthAbove5_Throws
+- **ReviewMark-Config-Elaboration**: ReviewMarkConfiguration_ElaborateReviewSet_ValidId_ReturnsElaboration, ReviewMarkConfiguration_ElaborateReviewSet_ContainsFullFingerprint
+- **ReviewMark-Config-ElaborationNullRejection**:
+  ReviewMarkConfiguration_ElaborateReviewSet_NullId_ThrowsArgumentNullException,
+  ReviewMarkConfiguration_ElaborateReviewSet_WhitespaceId_ThrowsArgumentException
+- **ReviewMark-Config-ElaborationUnknownIdRejection**: ReviewMarkConfiguration_ElaborateReviewSet_UnknownId_ThrowsArgumentException
+- **ReviewMark-Config-ElaborationMarkdownDepth**: ReviewMarkConfiguration_ElaborateReviewSet_MarkdownDepth_UsedForHeadings
+- **ReviewMark-Config-ElaborationMarkdownDepthValidation**: ReviewMarkConfiguration_ElaborateReviewSet_MarkdownDepthAbove5_Throws
+- **ReviewMark-Config-ContextParsing**:
+  ReviewMarkConfiguration_Parse_GlobalContext_ParsedCorrectly,
+  ReviewMarkConfiguration_Parse_ReviewSetContext_ParsedCorrectly,
+  ReviewMarkConfiguration_Parse_NoContext_DefaultsToEmpty
+- **ReviewMark-Config-ContextExcludedFromFingerprint**: ReviewSet_GetFingerprint_ContextNotIncluded
+- **ReviewMark-Config-ContextExcludedFromCoverage**: ReviewMarkConfiguration_ElaborateReviewSet_ContextNotUnderReview, ReviewMarkConfiguration_PublishReviewPlan_ContextOnlyFile_StillReportedAsUncovered
+- **ReviewMark-Config-ContextInElaboration**:
+  ReviewMarkConfiguration_ElaborateReviewSet_GlobalContext_AppearsInOutput,
+  ReviewMarkConfiguration_ElaborateReviewSet_LocalContext_AppearsInOutput,
+  ReviewMarkConfiguration_ElaborateReviewSet_NoContext_ContextSectionOmitted
+- **ReviewMark-Config-ContextDeduplication**:
+  ReviewMarkConfiguration_ElaborateReviewSet_FileInBothContextAndPaths_SuppressedFromContext,
+  ReviewMarkConfiguration_ElaborateReviewSet_ContextFileNotInPaths_NotSuppressed
+- **ReviewMark-Config-ContextExclusionPatterns**:
+  ReviewMarkConfiguration_ElaborateReviewSet_PerSetContextExcludesGlobalFile,
+  ReviewMarkConfiguration_ElaborateReviewSet_ExclusionDoesNotAffectOtherReviewSets
