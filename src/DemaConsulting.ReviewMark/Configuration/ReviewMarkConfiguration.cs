@@ -1105,7 +1105,10 @@ internal sealed class ReviewMarkConfiguration
         // Resolve global and local context files; global files appear first
         var globalContextFiles = GlobMatcher.GetMatchingFiles(directory, GlobalContext);
         var localContextFiles = GlobMatcher.GetMatchingFiles(directory, review.Context);
-        var allContext = globalContextFiles.Concat(localContextFiles).ToList();
+        var allContext = globalContextFiles
+            .Concat(localContextFiles)
+            .Distinct(StringComparer.Ordinal)
+            .ToList();
 
         // Emit the context subsection only when at least one context file resolves
         var subHeading = new string('#', markdownDepth + 1);
