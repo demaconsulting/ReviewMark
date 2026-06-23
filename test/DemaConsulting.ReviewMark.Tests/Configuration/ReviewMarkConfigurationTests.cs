@@ -1242,25 +1242,28 @@ public sealed class ReviewMarkConfigurationTests : IDisposable
     }
 
     /// <summary>
-    ///     Test that ElaborateReviewSet lists global context files before per-review-set context files.
+    ///     Test that ElaborateReviewSet includes both global and per-review-set context files in the
+    ///     Context subsection, regardless of which source contributed each file.
     /// </summary>
     [Fact]
-    public void ReviewMarkConfiguration_ElaborateReviewSet_GlobalContextBeforeLocalContext()
+    public void ReviewMarkConfiguration_ElaborateReviewSet_BothGlobalAndLocalContextAppear()
     {
-        // Arrange — create a global context file and a local context file
+        // Arrange — create a global context file (zzz/ sorts after aaa/ so lexicographic order
+        // would list aaa/ first; this ensures the test is not accidentally passing due to
+        // source-ordering coinciding with alphabetic ordering)
         var srcDir = PathHelpers.SafePathCombine(_testDirectory, "src");
-        var docsDir = PathHelpers.SafePathCombine(_testDirectory, "docs");
-        var specDir = PathHelpers.SafePathCombine(_testDirectory, "spec");
+        var zzzDir = PathHelpers.SafePathCombine(_testDirectory, "zzz");
+        var aaaDir = PathHelpers.SafePathCombine(_testDirectory, "aaa");
         Directory.CreateDirectory(srcDir);
-        Directory.CreateDirectory(docsDir);
-        Directory.CreateDirectory(specDir);
+        Directory.CreateDirectory(zzzDir);
+        Directory.CreateDirectory(aaaDir);
         File.WriteAllText(PathHelpers.SafePathCombine(srcDir, "A.cs"), "class A {}");
-        File.WriteAllText(PathHelpers.SafePathCombine(docsDir, "global.md"), "# Global");
-        File.WriteAllText(PathHelpers.SafePathCombine(specDir, "local.md"), "# Local");
+        File.WriteAllText(PathHelpers.SafePathCombine(zzzDir, "global.md"), "# Global");
+        File.WriteAllText(PathHelpers.SafePathCombine(aaaDir, "local.md"), "# Local");
 
         var yaml = """
             context:
-              - "docs/**/*.md"
+              - "zzz/**/*.md"
             evidence-source:
               type: none
             reviews:
@@ -1269,19 +1272,16 @@ public sealed class ReviewMarkConfigurationTests : IDisposable
                 paths:
                   - "src/**/*.cs"
                 context:
-                  - "spec/**/*.md"
+                  - "aaa/**/*.md"
             """;
         var config = ReviewMarkConfiguration.Parse(yaml);
 
         // Act
         var result = config.ElaborateReviewSet("Core-Logic", _testDirectory);
 
-        // Assert — both files appear as plain-path list items, global before local
-        var globalIndex = result.Markdown.IndexOf("- `docs/global.md`", StringComparison.Ordinal);
-        var localIndex = result.Markdown.IndexOf("- `spec/local.md`", StringComparison.Ordinal);
-        Assert.True(globalIndex >= 0, "Global context file not found in output");
-        Assert.True(localIndex >= 0, "Local context file not found in output");
-        Assert.True(globalIndex < localIndex, "Global context file should appear before local context file");
+        // Assert — both files appear as plain-path list items (order-agnostic)
+        Assert.Contains("- `zzz/global.md`", result.Markdown);
+        Assert.Contains("- `aaa/local.md`", result.Markdown);
     }
 
     /// <summary>

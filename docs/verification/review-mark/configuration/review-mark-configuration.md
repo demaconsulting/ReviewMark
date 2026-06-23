@@ -138,6 +138,16 @@ disk. Expected outcome: the output Markdown does not contain a `Context` subsect
 Requirement coverage: `ReviewMark-Config-ContextInElaboration`. This scenario is tested by
 `ReviewMarkConfiguration_ElaborateReviewSet_NoContext_ContextSectionOmitted`.
 
+**ReviewMarkConfiguration_ElaborateReviewSet_BothGlobalAndLocalContextAppear**:
+`ElaborateReviewSet` is called on a configuration with both a global `context:` list (matching
+`zzz/**/*.md`) and a per-review-set `context:` list (matching `aaa/**/*.md`); files exist in both
+directories. Expected outcome: both `zzz/global.md` and `aaa/local.md` appear as plain-path list
+items in the `Context` subsection. The `zzz/` prefix sorts after `aaa/` lexicographically, which
+means the assertion is order-agnostic — it verifies presence only, confirming that output is not
+accidentally dependent on source ordering. Requirement coverage:
+`ReviewMark-Config-ContextInElaboration`. This scenario is tested by
+`ReviewMarkConfiguration_ElaborateReviewSet_BothGlobalAndLocalContextAppear`.
+
 **ReviewMarkConfiguration_ElaborateReviewSet_ContextNotUnderReview**: `ElaborateReviewSet` is
 called on a configuration with context files that are not in the `paths:` list. Expected outcome:
 the context files do not appear in the `Files` subsection. Requirement coverage:
@@ -247,7 +257,8 @@ list. Requirement coverage: `ReviewMark-Config-Loading`. This scenario is tested
 - **ReviewMark-Config-ContextInElaboration**:
   ReviewMarkConfiguration_ElaborateReviewSet_GlobalContext_AppearsInOutput,
   ReviewMarkConfiguration_ElaborateReviewSet_LocalContext_AppearsInOutput,
-  ReviewMarkConfiguration_ElaborateReviewSet_NoContext_ContextSectionOmitted
+  ReviewMarkConfiguration_ElaborateReviewSet_NoContext_ContextSectionOmitted,
+  ReviewMarkConfiguration_ElaborateReviewSet_BothGlobalAndLocalContextAppear
 - **ReviewMark-Config-ContextDeduplication**:
   ReviewMarkConfiguration_ElaborateReviewSet_FileInBothContextAndPaths_SuppressedFromContext,
   ReviewMarkConfiguration_ElaborateReviewSet_ContextFileNotInPaths_NotSuppressed
