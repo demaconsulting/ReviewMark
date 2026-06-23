@@ -232,8 +232,8 @@ sections:
               - id: ReviewMark-Config-ContextInElaboration
                 title: >-
                   ElaborateReviewSet shall include a Context subsection listing all resolved context
-                  files labeled [global] (from the top-level list) or [local] (from the
-                  per-review-set list), omitting the subsection when no context files exist.
+                  files as plain paths (global context first, then per-review-set context),
+                  omitting the subsection when no context files exist.
                 justification: |
                   Reviewers need to know which reference files to consult.
                 tests:

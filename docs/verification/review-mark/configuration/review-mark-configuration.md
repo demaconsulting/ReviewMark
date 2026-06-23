@@ -121,14 +121,14 @@ by `ReviewSet_GetFingerprint_ContextNotIncluded`.
 **ReviewMarkConfiguration_ElaborateReviewSet_GlobalContext_AppearsInOutput**:
 `ElaborateReviewSet` is called on a configuration with a global `context:` list; the context
 files exist on disk. Expected outcome: the output Markdown contains a `Context` subsection and
-each context file is listed with the `[global]` label. Requirement coverage:
+each context file is listed as a plain path. Requirement coverage:
 `ReviewMark-Config-ContextInElaboration`. This scenario is tested by
 `ReviewMarkConfiguration_ElaborateReviewSet_GlobalContext_AppearsInOutput`.
 
 **ReviewMarkConfiguration_ElaborateReviewSet_LocalContext_AppearsInOutput**:
 `ElaborateReviewSet` is called on a configuration with a per-review-set `context:` list; the
 context files exist on disk. Expected outcome: the output Markdown contains a `Context`
-subsection and each context file is listed with the `[local]` label. Requirement coverage:
+subsection and each context file is listed as a plain path. Requirement coverage:
 `ReviewMark-Config-ContextInElaboration`. This scenario is tested by
 `ReviewMarkConfiguration_ElaborateReviewSet_LocalContext_AppearsInOutput`.
 
