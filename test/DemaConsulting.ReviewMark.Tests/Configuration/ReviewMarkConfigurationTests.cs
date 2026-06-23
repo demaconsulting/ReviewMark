@@ -1166,7 +1166,7 @@ public sealed class ReviewMarkConfigurationTests : IDisposable
     }
 
     /// <summary>
-    ///     Test that ElaborateReviewSet includes a Context subsection with [global] labels
+    ///     Test that ElaborateReviewSet includes a Context subsection with plain file paths
     ///     when global context files resolve.
     /// </summary>
     [Fact]
@@ -1196,14 +1196,13 @@ public sealed class ReviewMarkConfigurationTests : IDisposable
         // Act
         var result = config.ElaborateReviewSet("Core-Logic", _testDirectory);
 
-        // Assert — context subsection is present and the file is labeled [global]
+        // Assert — context subsection is present and the file appears as a plain path
         Assert.Contains("## Context", result.Markdown);
-        Assert.Contains("[global]", result.Markdown);
         Assert.Contains("docs/design.md", result.Markdown);
     }
 
     /// <summary>
-    ///     Test that ElaborateReviewSet includes a Context subsection with [local] labels
+    ///     Test that ElaborateReviewSet includes a Context subsection with plain file paths
     ///     when per-review-set context files resolve.
     /// </summary>
     [Fact]
@@ -1233,9 +1232,8 @@ public sealed class ReviewMarkConfigurationTests : IDisposable
         // Act
         var result = config.ElaborateReviewSet("Core-Logic", _testDirectory);
 
-        // Assert — context subsection is present and the file is labeled [local]
+        // Assert — context subsection is present and the file appears as a plain path
         Assert.Contains("## Context", result.Markdown);
-        Assert.Contains("[local]", result.Markdown);
         Assert.Contains("docs/design.md", result.Markdown);
     }
 

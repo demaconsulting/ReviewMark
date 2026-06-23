@@ -70,6 +70,9 @@ evidence-source:
   type: url                # 'none', 'url', or 'fileshare'
   location: https://reviews.example.com/evidence/index.json
 
+context:                             # optional: reference docs for all reviewers
+  - "docs/design/introduction.md"
+
 reviews:
   - id: Core-Logic
     title: Review of core business logic
