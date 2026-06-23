@@ -70,7 +70,7 @@ evidence-source:
   type: url                # 'none', 'url', or 'fileshare'
   location: https://reviews.example.com/evidence/index.json
 
-context:                             # optional: reference docs for all reviewers
+context:                    # optional: reference docs for all reviewers
   - "docs/design/introduction.md"
 
 reviews:
@@ -80,7 +80,7 @@ reviews:
       - "src/Core/**/*.cs"
       - "src/Core/**/*.yaml"
       - "!src/Core/Generated/**"
-    context:                           # optional: reference docs a reviewer must read
+    context:                # optional: reference docs a reviewer must read
       - "docs/design/core.md"
   - id: Security-Layer
     title: Review of authentication and authorization
