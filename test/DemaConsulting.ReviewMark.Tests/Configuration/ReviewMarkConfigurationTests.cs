@@ -1166,7 +1166,7 @@ public sealed class ReviewMarkConfigurationTests : IDisposable
     }
 
     /// <summary>
-    ///     Test that ElaborateReviewSet includes a Context subsection with [global] labels
+    ///     Test that ElaborateReviewSet includes a Context subsection with plain file paths
     ///     when global context files resolve.
     /// </summary>
     [Fact]
@@ -1196,14 +1196,15 @@ public sealed class ReviewMarkConfigurationTests : IDisposable
         // Act
         var result = config.ElaborateReviewSet("Core-Logic", _testDirectory);
 
-        // Assert — context subsection is present and the file is labeled [global]
+        // Assert — context subsection is present, file is a plain-path list item, no scope labels
         Assert.Contains("## Context", result.Markdown);
-        Assert.Contains("[global]", result.Markdown);
-        Assert.Contains("docs/design.md", result.Markdown);
+        Assert.Contains("- `docs/design.md`", result.Markdown);
+        Assert.DoesNotContain("[global]", result.Markdown);
+        Assert.DoesNotContain("[local]", result.Markdown);
     }
 
     /// <summary>
-    ///     Test that ElaborateReviewSet includes a Context subsection with [local] labels
+    ///     Test that ElaborateReviewSet includes a Context subsection with plain file paths
     ///     when per-review-set context files resolve.
     /// </summary>
     [Fact]
@@ -1233,10 +1234,54 @@ public sealed class ReviewMarkConfigurationTests : IDisposable
         // Act
         var result = config.ElaborateReviewSet("Core-Logic", _testDirectory);
 
-        // Assert — context subsection is present and the file is labeled [local]
+        // Assert — context subsection is present, file is a plain-path list item, no scope labels
         Assert.Contains("## Context", result.Markdown);
-        Assert.Contains("[local]", result.Markdown);
-        Assert.Contains("docs/design.md", result.Markdown);
+        Assert.Contains("- `docs/design.md`", result.Markdown);
+        Assert.DoesNotContain("[global]", result.Markdown);
+        Assert.DoesNotContain("[local]", result.Markdown);
+    }
+
+    /// <summary>
+    ///     Test that ElaborateReviewSet lists global context files before per-review-set context files.
+    /// </summary>
+    [Fact]
+    public void ReviewMarkConfiguration_ElaborateReviewSet_GlobalContextBeforeLocalContext()
+    {
+        // Arrange — create a global context file and a local context file
+        var srcDir = PathHelpers.SafePathCombine(_testDirectory, "src");
+        var docsDir = PathHelpers.SafePathCombine(_testDirectory, "docs");
+        var specDir = PathHelpers.SafePathCombine(_testDirectory, "spec");
+        Directory.CreateDirectory(srcDir);
+        Directory.CreateDirectory(docsDir);
+        Directory.CreateDirectory(specDir);
+        File.WriteAllText(PathHelpers.SafePathCombine(srcDir, "A.cs"), "class A {}");
+        File.WriteAllText(PathHelpers.SafePathCombine(docsDir, "global.md"), "# Global");
+        File.WriteAllText(PathHelpers.SafePathCombine(specDir, "local.md"), "# Local");
+
+        var yaml = """
+            context:
+              - "docs/**/*.md"
+            evidence-source:
+              type: none
+            reviews:
+              - id: Core-Logic
+                title: Review of core business logic
+                paths:
+                  - "src/**/*.cs"
+                context:
+                  - "spec/**/*.md"
+            """;
+        var config = ReviewMarkConfiguration.Parse(yaml);
+
+        // Act
+        var result = config.ElaborateReviewSet("Core-Logic", _testDirectory);
+
+        // Assert — both files appear as plain-path list items, global before local
+        var globalIndex = result.Markdown.IndexOf("- `docs/global.md`", StringComparison.Ordinal);
+        var localIndex = result.Markdown.IndexOf("- `spec/local.md`", StringComparison.Ordinal);
+        Assert.True(globalIndex >= 0, "Global context file not found in output");
+        Assert.True(localIndex >= 0, "Local context file not found in output");
+        Assert.True(globalIndex < localIndex, "Global context file should appear before local context file");
     }
 
     /// <summary>

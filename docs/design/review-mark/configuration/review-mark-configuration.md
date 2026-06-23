@@ -98,8 +98,9 @@ and a boolean indicating whether any review-set is non-current.
 Looks up the review-set with the given `id`, resolves its file list and fingerprint, and
 returns a Markdown document with a heading at `markdownDepth`, a metadata table (ID, Title,
 Fingerprint), an optional Context subsection, and a Files subheading. The Context subsection
-lists all resolved context files labeled `[global]` (from `GlobalContext`) or `[local]` (from
-`review.Context`), and is omitted when no context files resolve. Throws `ArgumentException`
+lists all resolved context files as plain paths (global context files from `GlobalContext`
+first, followed by per-review-set files from `review.Context`), and is omitted when no
+context files resolve. Throws `ArgumentException`
 for unknown IDs; throws `ArgumentOutOfRangeException` when `markdownDepth > 5`.
 
 **Coverage note:** Context entries are reference material only. A file listed in `context:` is

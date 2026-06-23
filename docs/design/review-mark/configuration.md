@@ -76,8 +76,8 @@ enumeration and owns SHA-256 fingerprinting, document generation, and elaboratio
 4. `PublishReviewReport()` accepts `ReviewIndex` as a parameter and calls `GetEvidence()`
    for each review-set to determine Current, Stale, Missing, or Failed status.
 5. `ElaborateReviewSet()` generates a Markdown document that includes an optional Context
-   subsection listing resolved context files labeled `[global]` (from `GlobalContext`) or
-   `[local]` (from `ReviewSet.Context`); the subsection is omitted when no context files
+   subsection listing resolved context files as plain paths (global context files first,
+   followed by per-review-set context files); the subsection is omitted when no context files
    resolve. `ReviewSet.Context` holds per-review-set context glob patterns; these patterns
    identify reference material shown during elaboration and do not provide review coverage.
 

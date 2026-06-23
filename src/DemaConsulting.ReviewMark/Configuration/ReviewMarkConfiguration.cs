@@ -1102,12 +1102,13 @@ internal sealed class ReviewMarkConfiguration
         sb.AppendLine($"| Fingerprint | `{fingerprint}` |");
         sb.AppendLine();
 
-        // Resolve global and local context files, labeling each with its scope
-        var globalContextFiles = GlobMatcher.GetMatchingFiles(directory, GlobalContext)
-            .Select(f => $"[global] {f}");
-        var localContextFiles = GlobMatcher.GetMatchingFiles(directory, review.Context)
-            .Select(f => $"[local]  {f}");
-        var allContext = globalContextFiles.Concat(localContextFiles).ToList();
+        // Resolve global and local context files; global files appear first
+        var globalContextFiles = GlobMatcher.GetMatchingFiles(directory, GlobalContext);
+        var localContextFiles = GlobMatcher.GetMatchingFiles(directory, review.Context);
+        var allContext = globalContextFiles
+            .Concat(localContextFiles)
+            .Distinct(StringComparer.Ordinal)
+            .ToList();
 
         // Emit the context subsection only when at least one context file resolves
         var subHeading = new string('#', markdownDepth + 1);

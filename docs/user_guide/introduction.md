@@ -524,8 +524,8 @@ The command prints a Markdown document to the console:
 
 ## Context
 
-- `[global] docs/design/introduction.md`
-- `[local]  docs/design/core.md`
+- `docs/design/introduction.md`
+- `docs/design/core.md`
 
 ## Files
 
