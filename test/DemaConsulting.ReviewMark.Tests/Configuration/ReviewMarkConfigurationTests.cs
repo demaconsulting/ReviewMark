@@ -1352,12 +1352,12 @@ public sealed class ReviewMarkConfigurationTests : IDisposable
     {
         // Arrange — context file in docs/ and source file in src/; global context matches docs/,
         // and paths: matches both docs/ and src/
-        var srcDir = Path.Combine(_testDirectory, "src");
-        var docsDir = Path.Combine(_testDirectory, "docs");
+        var srcDir = PathHelpers.SafePathCombine(_testDirectory, "src");
+        var docsDir = PathHelpers.SafePathCombine(_testDirectory, "docs");
         Directory.CreateDirectory(srcDir);
         Directory.CreateDirectory(docsDir);
-        File.WriteAllText(Path.Combine(srcDir, "A.cs"), "class A {}");
-        File.WriteAllText(Path.Combine(docsDir, "introduction.md"), "# Introduction");
+        File.WriteAllText(PathHelpers.SafePathCombine(srcDir, "A.cs"), "class A {}");
+        File.WriteAllText(PathHelpers.SafePathCombine(docsDir, "introduction.md"), "# Introduction");
 
         var yaml = """
             context:
@@ -1403,12 +1403,12 @@ public sealed class ReviewMarkConfigurationTests : IDisposable
     {
         // Arrange — context file in docs/ and source file in src/; global context matches docs/,
         // but paths: matches only src/
-        var srcDir = Path.Combine(_testDirectory, "src");
-        var docsDir = Path.Combine(_testDirectory, "docs");
+        var srcDir = PathHelpers.SafePathCombine(_testDirectory, "src");
+        var docsDir = PathHelpers.SafePathCombine(_testDirectory, "docs");
         Directory.CreateDirectory(srcDir);
         Directory.CreateDirectory(docsDir);
-        File.WriteAllText(Path.Combine(srcDir, "B.cs"), "class B {}");
-        File.WriteAllText(Path.Combine(docsDir, "context.md"), "# Context");
+        File.WriteAllText(PathHelpers.SafePathCombine(srcDir, "B.cs"), "class B {}");
+        File.WriteAllText(PathHelpers.SafePathCombine(docsDir, "context.md"), "# Context");
 
         var yaml = """
             context:

@@ -254,3 +254,4 @@ sections:
                   ensures the file's purpose is unambiguous in every elaboration output.
                 tests:
                   - ReviewMarkConfiguration_ElaborateReviewSet_FileInBothContextAndPaths_SuppressedFromContext
+                  - ReviewMarkConfiguration_ElaborateReviewSet_ContextFileNotInPaths_NotSuppressed
