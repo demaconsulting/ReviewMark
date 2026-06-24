@@ -567,9 +567,10 @@ internal sealed class ReviewSet
     /// <param name="directory">The root directory to search.</param>
     /// <param name="constraint">
     ///     When non-<c>null</c>, only files whose relative paths appear in this set
-    ///     contribute to the fingerprint.  Pass the resolved needs-review file set so
-    ///     that build artifacts excluded from <c>needs-review</c> do not affect the
-    ///     fingerprint even when the review-set paths are broad.
+    ///     contribute to the fingerprint. Relative paths must use forward slashes (<c>/</c>),
+    ///     matching the normalization performed by <see cref="GlobMatcher" />.
+    ///     Pass the resolved needs-review file set so that build artifacts excluded from
+    ///     <c>needs-review</c> do not affect the fingerprint even when the review-set paths are broad.
     ///     When <c>null</c>, all glob-matched files contribute to the fingerprint.
     /// </param>
     /// <returns>
