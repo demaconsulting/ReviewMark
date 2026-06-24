@@ -488,6 +488,7 @@ least one review set grouping related files.
 ```yaml
 needs-review:
   - "src/**/*.cs"
+  - "tests/**/*.cs"
   - "docs/**/*.md"
   - "!**/obj/**"
 
@@ -636,6 +637,7 @@ With a corresponding definition file:
 # .reviewmark.yaml
 needs-review:
   - "src/**/*.cs"
+  - "tests/**/*.cs"
   - "docs/**/*.md"
   - "!**/obj/**"
 

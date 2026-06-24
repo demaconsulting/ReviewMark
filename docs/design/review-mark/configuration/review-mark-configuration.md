@@ -50,6 +50,15 @@ compliance documents.
 
 #### Key Methods
 
+**`ReviewMarkConfiguration.GetNeedsReviewFiles(string directory)`** → `IReadOnlyList<string>` (sorted, relative paths)
+
+Resolves `NeedsReviewPatterns` against `directory` using `GlobMatcher` and returns a sorted list
+of relative file paths that require review. This method is used by `PublishReviewPlan`,
+`PublishReviewReport`, and `ElaborateReviewSet` to compute the constraint passed to
+`ReviewSet.GetFiles(dir, constraint)` and `ReviewSet.GetFingerprint(dir, constraint)`. When
+`NeedsReviewPatterns` is empty the callers treat the result as an absent constraint (null) rather
+than an empty set, preserving backward compatibility.
+
 **`ReviewMarkConfiguration.Load(string filePath)`** → `ReviewMarkLoadResult`
 
 - *Parameters*: `string filePath` — path to the `.reviewmark.yaml` file

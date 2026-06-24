@@ -277,7 +277,7 @@ sections:
               - id: ReviewMark-Config-PathsConstrainedToNeedsReview
                 title: >-
                   Review set paths resolution shall be constrained to the needs-review file set
-                  when needs-review patterns are present, ensuring review set files are a strict
+                  when needs-review patterns are present, ensuring review set files are a
                   subset of files declared as needing review.
                 justification: >-
                   The needs-review list is the canonical declaration of which files require review.
