@@ -1166,6 +1166,187 @@ public sealed class ReviewMarkConfigurationTests : IDisposable
     }
 
     /// <summary>
+    ///     Test that GetFiles with a constraint excludes files outside the constraint set.
+    /// </summary>
+    [Fact]
+    public void ReviewSet_GetFiles_WithConstraint_ExcludesFilesOutsideConstraint()
+    {
+        // Arrange — source file in src/ and a generated file in src/bin/; only src/ file is in needs-review
+        var srcDir = PathHelpers.SafePathCombine(_testDirectory, "src");
+        var binDir = PathHelpers.SafePathCombine(srcDir, "bin");
+        Directory.CreateDirectory(srcDir);
+        Directory.CreateDirectory(binDir);
+        File.WriteAllText(PathHelpers.SafePathCombine(srcDir, "A.cs"), "class A {}");
+        File.WriteAllText(PathHelpers.SafePathCombine(binDir, "Generated.cs"), "// generated");
+
+        var reviewSet = new ReviewSet("Test", "Test Review", ["src/**/*.cs"], []);
+        var constraint = new HashSet<string>(["src/A.cs"], StringComparer.Ordinal);
+
+        // Act
+        var files = reviewSet.GetFiles(_testDirectory, constraint);
+
+        // Assert — only the file in the constraint set is returned; the generated file is excluded
+        Assert.Single(files);
+        Assert.Contains("src/A.cs", files);
+        Assert.DoesNotContain("src/bin/Generated.cs", files);
+    }
+
+    /// <summary>
+    ///     Test that GetFiles without a constraint returns all matched files including those outside needs-review.
+    /// </summary>
+    [Fact]
+    public void ReviewSet_GetFiles_WithoutConstraint_ReturnsAllMatchedFiles()
+    {
+        // Arrange — source file in src/ and a generated file in src/bin/
+        var srcDir = PathHelpers.SafePathCombine(_testDirectory, "src");
+        var binDir = PathHelpers.SafePathCombine(srcDir, "bin");
+        Directory.CreateDirectory(srcDir);
+        Directory.CreateDirectory(binDir);
+        File.WriteAllText(PathHelpers.SafePathCombine(srcDir, "A.cs"), "class A {}");
+        File.WriteAllText(PathHelpers.SafePathCombine(binDir, "Generated.cs"), "// generated");
+
+        var reviewSet = new ReviewSet("Test", "Test Review", ["src/**/*.cs"], []);
+
+        // Act
+        var files = reviewSet.GetFiles(_testDirectory);
+
+        // Assert — both files are returned when no constraint is applied
+        Assert.Equal(2, files.Count);
+        Assert.Contains("src/A.cs", files);
+        Assert.Contains("src/bin/Generated.cs", files);
+    }
+
+    /// <summary>
+    ///     Test that GetFingerprint with a constraint excludes files outside the constraint
+    ///     from the hash so that build artifacts do not affect the fingerprint.
+    /// </summary>
+    [Fact]
+    public void ReviewSet_GetFingerprint_WithConstraint_ExcludesBuildArtifacts()
+    {
+        // Arrange — two directories: one with source only, one with source + generated file
+        var dirClean = PathHelpers.SafePathCombine(_testDirectory, "clean");
+        var dirBuilt = PathHelpers.SafePathCombine(_testDirectory, "built");
+        var dirCleanSrc = PathHelpers.SafePathCombine(dirClean, "src");
+        var dirBuiltSrc = PathHelpers.SafePathCombine(dirBuilt, "src");
+        var binDir = PathHelpers.SafePathCombine(dirBuiltSrc, "bin");
+        Directory.CreateDirectory(dirCleanSrc);
+        Directory.CreateDirectory(binDir);
+        File.WriteAllText(PathHelpers.SafePathCombine(dirCleanSrc, "A.cs"), "class A {}");
+        File.WriteAllText(PathHelpers.SafePathCombine(dirBuiltSrc, "A.cs"), "class A {}");
+        File.WriteAllText(PathHelpers.SafePathCombine(binDir, "Generated.cs"), "// generated");
+
+        var reviewSet = new ReviewSet("Test", "Test Review", ["src/**/*.cs"], []);
+
+        // The constraint mirrors needs-review: all *.cs files except bin/
+        var constraint = new HashSet<string>(["src/A.cs"], StringComparer.Ordinal);
+
+        // Act
+        var fpClean = reviewSet.GetFingerprint(dirClean, constraint);
+        var fpBuilt = reviewSet.GetFingerprint(dirBuilt, constraint);
+
+        // Assert — the generated file is excluded by the constraint; fingerprints are equal
+        Assert.Equal(fpClean, fpBuilt);
+    }
+
+    /// <summary>
+    ///     Test that PublishReviewPlan excludes build-artifact files from review set coverage
+    ///     when needs-review patterns exclude build output directories.
+    /// </summary>
+    [Fact]
+    public void ReviewMarkConfiguration_PublishReviewPlan_ReviewSetExcludesBuildArtifacts()
+    {
+        // Arrange — source file in src/ and a generated file in src/bin/
+        var srcDir = PathHelpers.SafePathCombine(_testDirectory, "src");
+        var binDir = PathHelpers.SafePathCombine(srcDir, "bin");
+        Directory.CreateDirectory(srcDir);
+        Directory.CreateDirectory(binDir);
+        File.WriteAllText(PathHelpers.SafePathCombine(srcDir, "A.cs"), "class A {}");
+        File.WriteAllText(PathHelpers.SafePathCombine(binDir, "Generated.cs"), "// generated");
+
+        // needs-review includes *.cs but excludes bin/; review set uses a broad pattern
+        var yaml = """
+            needs-review:
+              - "**/*.cs"
+              - "!**/bin/**"
+            evidence-source:
+              type: none
+            reviews:
+              - id: Core-Logic
+                title: Review of core business logic
+                paths:
+                  - "src/**/*.cs"
+            """;
+        var config = ReviewMarkConfiguration.Parse(yaml);
+
+        // Act
+        var result = config.PublishReviewPlan(_testDirectory);
+
+        // Assert — review set reports 1 file (not 2), and the generated file is not listed as covered
+        Assert.Contains("| Core-Logic |", result.Markdown);
+        Assert.Contains("| Core-Logic | Review of core business logic | 1 |", result.Markdown);
+        Assert.False(result.HasIssues, "The one needs-review file should be covered");
+    }
+
+    /// <summary>
+    ///     Test that PublishReviewReport computes a fingerprint consistent with PublishReviewPlan
+    ///     when needs-review excludes build output directories.
+    /// </summary>
+    [Fact]
+    public void ReviewMarkConfiguration_PublishReviewReport_FingerprintConsistentWithPlan()
+    {
+        // Arrange — source file in src/ and a generated file in src/bin/
+        var srcDir = PathHelpers.SafePathCombine(_testDirectory, "src");
+        var binDir = PathHelpers.SafePathCombine(srcDir, "bin");
+        Directory.CreateDirectory(srcDir);
+        Directory.CreateDirectory(binDir);
+        File.WriteAllText(PathHelpers.SafePathCombine(srcDir, "A.cs"), "class A {}");
+        File.WriteAllText(PathHelpers.SafePathCombine(binDir, "Generated.cs"), "// generated");
+
+        var yaml = """
+            needs-review:
+              - "**/*.cs"
+              - "!**/bin/**"
+            evidence-source:
+              type: none
+            reviews:
+              - id: Core-Logic
+                title: Review of core business logic
+                paths:
+                  - "src/**/*.cs"
+            """;
+        var config = ReviewMarkConfiguration.Parse(yaml);
+
+        // Compute the fingerprint the same way PublishReviewReport will: via the constraint
+        var needsReviewConstraint = new HashSet<string>(
+            config.GetNeedsReviewFiles(_testDirectory), StringComparer.Ordinal);
+        var expectedFingerprint = config.Reviews[0].GetFingerprint(_testDirectory, needsReviewConstraint);
+
+        // Write an index entry using that fingerprint
+        var indexPath = PathHelpers.SafePathCombine(_testDirectory, "index.json");
+        File.WriteAllText(indexPath, $$"""
+            {
+              "reviews": [
+                {
+                  "id": "Core-Logic",
+                  "fingerprint": "{{expectedFingerprint}}",
+                  "date": "2026-06-23",
+                  "result": "pass",
+                  "file": "CR-2026-001.pdf"
+                }
+              ]
+            }
+            """);
+        var index = ReviewIndex.Load(new EvidenceSource("fileshare", indexPath, null, null));
+
+        // Act
+        var result = config.PublishReviewReport(index, _testDirectory);
+
+        // Assert — fingerprint matches (build artifact excluded); review is current
+        Assert.False(result.HasIssues);
+        Assert.Contains("\u2705 Current", result.Markdown);
+    }
+
+    /// <summary>
     ///     Test that ElaborateReviewSet includes a Context subsection with plain file paths
     ///     when global context files resolve.
     /// </summary>

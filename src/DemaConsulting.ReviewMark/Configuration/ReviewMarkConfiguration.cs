@@ -536,18 +536,43 @@ internal sealed class ReviewSet
 
     /// <summary>
     ///     Returns all files matched by this review set's glob patterns within
-    ///     <paramref name="directory" />.
+    ///     <paramref name="directory" />, optionally constrained to a set of allowed paths.
     /// </summary>
     /// <param name="directory">The root directory to search.</param>
+    /// <param name="constraint">
+    ///     When non-<c>null</c>, only files whose relative paths appear in this set are
+    ///     returned. Relative paths must use forward slashes (<c>/</c>), matching the
+    ///     normalization performed by <see cref="GlobMatcher" />.
+    ///     Pass the resolved needs-review file set to enforce that review-set
+    ///     files are a strict subset of files declared as needing review (excluding build
+    ///     artifacts and other paths that are excluded from <c>needs-review</c>).
+    ///     When <c>null</c>, all glob-matched files are returned without filtering.
+    /// </param>
     /// <returns>A sorted list of relative file paths.</returns>
-    internal IReadOnlyList<string> GetFiles(string directory) =>
-        GlobMatcher.GetMatchingFiles(directory, Paths);
+    internal IReadOnlyList<string> GetFiles(string directory, IReadOnlySet<string>? constraint = null)
+    {
+        var files = GlobMatcher.GetMatchingFiles(directory, Paths);
+        if (constraint == null)
+        {
+            return files;
+        }
+
+        return files.Where(f => constraint.Contains(f)).ToList();
+    }
 
     /// <summary>
     ///     Computes a content-based fingerprint for this review set's matched files
     ///     within <paramref name="directory" />.
     /// </summary>
     /// <param name="directory">The root directory to search.</param>
+    /// <param name="constraint">
+    ///     When non-<c>null</c>, only files whose relative paths appear in this set
+    ///     contribute to the fingerprint. Relative paths must use forward slashes (<c>/</c>),
+    ///     matching the normalization performed by <see cref="GlobMatcher" />.
+    ///     Pass the resolved needs-review file set so that build artifacts excluded from
+    ///     <c>needs-review</c> do not affect the fingerprint even when the review-set paths are broad.
+    ///     When <c>null</c>, all glob-matched files contribute to the fingerprint.
+    /// </param>
     /// <returns>
     ///     A lowercase hex SHA-256 string that is stable across file renames but
     ///     changes when any file's content changes.
@@ -563,10 +588,11 @@ internal sealed class ReviewSet
     ///         <item>Return as lowercase hex string.</item>
     ///     </list>
     /// </remarks>
-    internal string GetFingerprint(string directory)
+    internal string GetFingerprint(string directory, IReadOnlySet<string>? constraint = null)
     {
-        // Resolve all matching files for this review set
-        var files = GetFiles(directory);
+        // Resolve all matching files for this review set, constrained to the needs-review
+        // set when provided so that build artifacts are not included in the fingerprint.
+        var files = GetFiles(directory, constraint);
 
         // Compute a SHA-256 hash of each file's content and collect as hex strings
         var contentHashes = files
@@ -873,6 +899,14 @@ internal sealed class ReviewMarkConfiguration
         ArgumentOutOfRangeException.ThrowIfNegativeOrZero(markdownDepth);
         ArgumentOutOfRangeException.ThrowIfGreaterThan(markdownDepth, 5);
 
+        // Compute needs-review files once — reused both as the constraint for review-set
+        // file resolution and for the coverage gap analysis below.  When no needs-review
+        // patterns are defined, no constraint is applied (null means unconstrained).
+        var needsReviewFiles = GetNeedsReviewFiles(directory);
+        var needsReviewConstraint = NeedsReviewPatterns.Count > 0
+            ? new HashSet<string>(needsReviewFiles, StringComparer.Ordinal)
+            : null;
+
         // Build the section heading at the requested depth
         var sb = new StringBuilder();
         var heading = new string('#', markdownDepth);
@@ -887,9 +921,10 @@ internal sealed class ReviewMarkConfiguration
         var coveredFiles = new HashSet<string>(StringComparer.Ordinal);
         foreach (var review in Reviews)
         {
-            // Resolve matched files and compute the fingerprint for this review set
-            var files = review.GetFiles(directory);
-            var fingerprint = review.GetFingerprint(directory);
+            // Resolve matched files and compute the fingerprint for this review set,
+            // constrained to the needs-review set so build artifacts are excluded.
+            var files = review.GetFiles(directory, needsReviewConstraint);
+            var fingerprint = review.GetFingerprint(directory, needsReviewConstraint);
 
             // Abbreviate the fingerprint to first 8 characters followed by an ellipsis
             var abbreviatedFingerprint = $"`{fingerprint[..8]}\u2026`";
@@ -907,7 +942,6 @@ internal sealed class ReviewMarkConfiguration
         sb.AppendLine();
 
         // Identify files that require review but are not covered by any review set
-        var needsReviewFiles = GetNeedsReviewFiles(directory);
         var uncoveredFiles = needsReviewFiles
             .Where(f => !coveredFiles.Contains(f))
             .ToList();
@@ -966,6 +1000,12 @@ internal sealed class ReviewMarkConfiguration
         ArgumentOutOfRangeException.ThrowIfNegativeOrZero(markdownDepth);
         ArgumentOutOfRangeException.ThrowIfGreaterThan(markdownDepth, 5);
 
+        // Compute the needs-review constraint once so that all fingerprints are computed
+        // against the same constrained file set, keeping build artifacts out of the hashes.
+        var needsReviewConstraint = NeedsReviewPatterns.Count > 0
+            ? new HashSet<string>(GetNeedsReviewFiles(directory), StringComparer.Ordinal)
+            : null;
+
         // Build the section heading at the requested depth
         var sb = new StringBuilder();
         var heading = new string('#', markdownDepth);
@@ -984,8 +1024,9 @@ internal sealed class ReviewMarkConfiguration
 
         foreach (var review in Reviews)
         {
-            // Compute the current content fingerprint for this review set
-            var fingerprint = review.GetFingerprint(directory);
+            // Compute the current content fingerprint, constrained to the needs-review set
+            // so that build artifacts excluded from needs-review do not affect the fingerprint.
+            var fingerprint = review.GetFingerprint(directory, needsReviewConstraint);
 
             // Check if there is evidence with a matching fingerprint for this review set
             var currentEvidence = index.GetEvidence(review.Id, fingerprint);
@@ -1087,14 +1128,20 @@ internal sealed class ReviewMarkConfiguration
             throw new ArgumentException($"No review set found with ID '{reviewSetId}'.");
         }
 
+        // Compute the needs-review constraint so that build artifacts excluded from
+        // needs-review are also excluded from the elaborated file list and fingerprint.
+        var needsReviewConstraint = NeedsReviewPatterns.Count > 0
+            ? new HashSet<string>(GetNeedsReviewFiles(directory), StringComparer.Ordinal)
+            : null;
+
         // Build the section heading at the requested depth
         var sb = new StringBuilder();
         var heading = new string('#', markdownDepth);
         sb.AppendLine($"{heading} {review.Id}");
         sb.AppendLine();
 
-        // Emit the review metadata table
-        var fingerprint = review.GetFingerprint(directory);
+        // Emit the review metadata table, constrained to the needs-review set
+        var fingerprint = review.GetFingerprint(directory, needsReviewConstraint);
         sb.AppendLine("| Field | Value |");
         sb.AppendLine("| :--- | :--- |");
         sb.AppendLine($"| ID | {review.Id} |");
@@ -1103,7 +1150,7 @@ internal sealed class ReviewMarkConfiguration
         sb.AppendLine();
 
         // Resolve the files-under-review first so we can suppress them from context
-        var files = review.GetFiles(directory);
+        var files = review.GetFiles(directory, needsReviewConstraint);
         var filesUnderReview = new HashSet<string>(files, StringComparer.Ordinal);
 
         // Resolve context as a single ordered pattern list: global patterns first, then

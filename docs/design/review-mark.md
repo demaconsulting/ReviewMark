@@ -143,8 +143,11 @@ The high-level data flow through the ReviewMark system:
 
 1. **Input**: `string[] args` from the OS shell → parsed by `Context.Create()` into
    structured flags and paths.
-2. **Configuration**: `ReviewMarkConfiguration.Load()` reads `.reviewmark.yaml` from disk
-   and resolves glob patterns via `GlobMatcher` into sorted file lists.
+2. **Configuration**: `ReviewMarkConfiguration.Load()` reads `.reviewmark.yaml` from disk,
+   parses and validates the YAML structure, and resolves relative fileshare paths. Glob
+   pattern resolution against the file system is performed later, in `PublishReviewPlan`,
+   `PublishReviewReport`, and `ElaborateReviewSet`, each of which calls `GlobMatcher` to
+   enumerate the matching files at generation time.
 3. **Evidence**: `ReviewIndex.Load()` reads or downloads the evidence index, populating an
    in-memory lookup keyed by `(id, fingerprint)`. Three source types are supported:
    `none` (empty index), `fileshare` (local or network file-path read), and `url` (HTTP or
