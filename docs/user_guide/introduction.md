@@ -362,6 +362,23 @@ When a reviewer creates evidence, they record the current fingerprint in the PDF
 ReviewMark matches that recorded fingerprint against the current fingerprint to determine whether
 the review is still current.
 
+#### Constraint: paths are a subset of needs-review
+
+When `needs-review` patterns are present, ReviewMark intersects each review set's `paths:` results
+with the `needs-review` file set before computing the file count and fingerprint. This means:
+
+- A file that matches a `paths:` pattern but is excluded from `needs-review` (for example a file
+  under `obj/` or `bin/`) does **not** appear in the review set and does **not** affect the
+  fingerprint.
+- You do not need to repeat every `!**/obj/**` exclusion in every review set — the `needs-review`
+  exclusions apply globally.
+- Context files are **not** constrained by `needs-review`; they are reference material and are
+  never subject to coverage or fingerprint computation.
+
+When `needs-review` is absent or empty, no constraint is applied and all glob-matched files are
+included, preserving backward compatibility for configurations written before `needs-review` was
+introduced.
+
 ### Design Guidance
 
 Good review sets share these properties:

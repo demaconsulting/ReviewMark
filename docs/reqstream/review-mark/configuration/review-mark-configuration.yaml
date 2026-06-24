@@ -273,3 +273,47 @@ sections:
                 tests:
                   - ReviewMarkConfiguration_ElaborateReviewSet_PerSetContextExcludesGlobalFile
                   - ReviewMarkConfiguration_ElaborateReviewSet_ExclusionDoesNotAffectOtherReviewSets
+
+              - id: ReviewMark-Config-PathsConstrainedToNeedsReview
+                title: >-
+                  Review set paths resolution shall be constrained to the needs-review file set
+                  when needs-review patterns are present, ensuring review set files are a strict
+                  subset of files declared as needing review.
+                justification: >-
+                  The needs-review list is the canonical declaration of which files require review.
+                  A review set's paths: list is semantically a partition of that set. Constraining
+                  paths resolution to needs-review ensures that build artifacts, generated files, and
+                  other excluded paths cannot enter a review set even when a broad glob pattern is
+                  used. The same constraint applies to fingerprint computation, so that adding a
+                  build artifact to a directory does not change the fingerprint and does not
+                  invalidate a valid review.
+                tests:
+                  - ReviewSet_GetFiles_WithConstraint_ExcludesFilesOutsideConstraint
+                  - ReviewSet_GetFingerprint_WithConstraint_ExcludesBuildArtifacts
+                  - ReviewMarkConfiguration_PublishReviewPlan_ReviewSetExcludesBuildArtifacts
+                  - ReviewMarkConfiguration_PublishReviewReport_FingerprintConsistentWithPlan
+
+              - id: ReviewMark-Config-GetFilesUnconstrainedWhenNoConstraint
+                title: >-
+                  Review set GetFiles shall return all glob-matched files without filtering when
+                  no constraint is provided, preserving backward compatibility.
+                justification: >-
+                  When called without a constraint (null), GetFiles returns all files matched by the
+                  review set's glob patterns regardless of needs-review. This preserves the
+                  pre-constraint behavior and ensures that callers that do not supply a constraint
+                  receive the complete unconstrained file list.
+                tests:
+                  - ReviewSet_GetFiles_WithoutConstraint_ReturnsAllMatchedFiles
+
+              - id: ReviewMark-Config-NeedsReviewAbsentUnconstrained
+                title: >-
+                  When the needs-review patterns list is absent or empty, the tool shall apply no
+                  constraint to review set paths resolution, preserving backward compatibility for
+                  configurations that omit needs-review.
+                justification: >-
+                  Configurations written before needs-review was introduced have no
+                  needs-review block. Treating an absent or empty needs-review as "no constraint"
+                  ensures those configurations continue to work without modification. Only a
+                  non-empty needs-review list produces a constraint.
+                tests:
+                  - ReviewSet_GetFiles_WithoutConstraint_ReturnsAllMatchedFiles

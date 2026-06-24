@@ -200,6 +200,41 @@ entry is dropped. Boundary or error path: individual whitespace paths entry in o
 list. Requirement coverage: `ReviewMark-Config-Loading`. This scenario is tested by
 `ReviewMarkConfiguration_Load_WhitespaceOnlyPathsEntry_ReturnsLintWarning`.
 
+**ReviewSet_GetFiles_WithConstraint_ExcludesFilesOutsideConstraint**:
+`ReviewSet.GetFiles` is called with a constraint set containing only the source file, while the
+directory also contains a generated file in `src/bin/`. Expected outcome: only the file in the
+constraint set is returned; the generated file is excluded. Requirement coverage:
+`ReviewMark-Config-PathsConstrainedToNeedsReview`. This scenario is tested by
+`ReviewSet_GetFiles_WithConstraint_ExcludesFilesOutsideConstraint`.
+
+**ReviewSet_GetFiles_WithoutConstraint_ReturnsAllMatchedFiles**:
+`ReviewSet.GetFiles` is called with no constraint while the directory contains both a source file
+and a generated file. Expected outcome: both files are returned. Requirement coverage:
+`ReviewMark-Config-GetFilesUnconstrainedWhenNoConstraint`,
+`ReviewMark-Config-NeedsReviewAbsentUnconstrained`. This scenario is tested by
+`ReviewSet_GetFiles_WithoutConstraint_ReturnsAllMatchedFiles`.
+
+**ReviewSet_GetFingerprint_WithConstraint_ExcludesBuildArtifacts**:
+`ReviewSet.GetFingerprint` is called with a constraint on two directories — one clean (source
+only), one built (source plus a generated file in `bin/`). The constraint mirrors `needs-review`
+by excluding `bin/`. Expected outcome: both fingerprints are equal because the generated file is
+excluded by the constraint. Requirement coverage: `ReviewMark-Config-PathsConstrainedToNeedsReview`.
+This scenario is tested by `ReviewSet_GetFingerprint_WithConstraint_ExcludesBuildArtifacts`.
+
+**ReviewMarkConfiguration_PublishReviewPlan_ReviewSetExcludesBuildArtifacts**:
+`PublishReviewPlan` is called on a configuration whose `needs-review` list excludes `bin/`, while
+a broad review set pattern matches both the source file and the generated file. Expected outcome:
+the review set reports one file and `HasIssues` is false (the single needs-review file is covered).
+Requirement coverage: `ReviewMark-Config-PathsConstrainedToNeedsReview`. This scenario is tested
+by `ReviewMarkConfiguration_PublishReviewPlan_ReviewSetExcludesBuildArtifacts`.
+
+**ReviewMarkConfiguration_PublishReviewReport_FingerprintConsistentWithPlan**:
+`PublishReviewReport` is called after computing the expected fingerprint via the same
+`needs-review` constraint. Expected outcome: `HasIssues` is false and the review is shown as
+Current, proving that the fingerprint used in the report is consistent with the one used in the
+plan. Requirement coverage: `ReviewMark-Config-PathsConstrainedToNeedsReview`. This scenario is
+tested by `ReviewMarkConfiguration_PublishReviewReport_FingerprintConsistentWithPlan`.
+
 #### Requirements Coverage
 
 - **ReviewMark-Config-Reading**:
@@ -265,3 +300,10 @@ list. Requirement coverage: `ReviewMark-Config-Loading`. This scenario is tested
 - **ReviewMark-Config-ContextExclusionPatterns**:
   ReviewMarkConfiguration_ElaborateReviewSet_PerSetContextExcludesGlobalFile,
   ReviewMarkConfiguration_ElaborateReviewSet_ExclusionDoesNotAffectOtherReviewSets
+- **ReviewMark-Config-PathsConstrainedToNeedsReview**:
+  ReviewSet_GetFiles_WithConstraint_ExcludesFilesOutsideConstraint,
+  ReviewSet_GetFingerprint_WithConstraint_ExcludesBuildArtifacts,
+  ReviewMarkConfiguration_PublishReviewPlan_ReviewSetExcludesBuildArtifacts,
+  ReviewMarkConfiguration_PublishReviewReport_FingerprintConsistentWithPlan
+- **ReviewMark-Config-GetFilesUnconstrainedWhenNoConstraint**: ReviewSet_GetFiles_WithoutConstraint_ReturnsAllMatchedFiles
+- **ReviewMark-Config-NeedsReviewAbsentUnconstrained**: ReviewSet_GetFiles_WithoutConstraint_ReturnsAllMatchedFiles

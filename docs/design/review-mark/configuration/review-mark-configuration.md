@@ -13,6 +13,7 @@ compliance documents.
 
 | Property | Type | Description |
 | -------- | ---- | ----------- |
+| `NeedsReviewPatterns` | `IReadOnlyList<string>` | Ordered list of glob patterns identifying files that need review (empty when omitted from YAML) |
 | `EvidenceSource` | `EvidenceSource` | Parsed evidence-source block (`Type`, `Location`, optional credential env-var names) |
 | `Reviews` | `IReadOnlyList<ReviewSet>` | Ordered list of review-set definitions |
 | `GlobalContext` | `IReadOnlyList<string>` | Ordered list of glob patterns identifying global context files (empty when omitted from YAML) |
@@ -39,7 +40,7 @@ compliance documents.
 | Type | Description |
 | ---- | ----------- |
 | `EvidenceSource` | Immutable record: `Type`, `Location`, `UsernameEnv`, `PasswordEnv` |
-| `ReviewSet` | Class with `Id`, `Title`, `Paths`, `Context`, `GetFingerprint(dir)`, `GetFiles(dir)` |
+| `ReviewSet` | Class with `Id`, `Title`, `Paths`, `Context`, `GetFingerprint(dir, constraint?)`, `GetFiles(dir, constraint?)` |
 | `LintSeverity` | Enum: `Warning`, `Error` |
 | `LintIssue` | Record: `Location`, `Severity`, `Description`; `ToString()` formats as `{location}: {severity}: {description}` |
 | `ReviewMarkLoadResult` | Record: `Configuration` (null if error-level issues found), `Issues` |
@@ -80,25 +81,53 @@ from YAML strings without touching the file system.
 
 **`ReviewMarkConfiguration.PublishReviewPlan(string dir, int depth = 1)`** → `ReviewPlanResult`
 
-Resolves `needs-review` patterns via `GlobMatcher.GetMatchingFiles()` and, for each file,
-identifies which review-sets provide coverage. Returns the Markdown document and a boolean
-indicating whether any files lack coverage. The `depth` parameter controls heading level.
+Computes the needs-review file set once via `GlobMatcher.GetMatchingFiles()` and converts it to a
+`HashSet<string>` constraint when `NeedsReviewPatterns` is non-empty (null constraint when empty, for
+backward compatibility). For each review set, resolves its file list by calling `ReviewSet.GetFiles(dir,
+constraint)` and its fingerprint by calling `ReviewSet.GetFingerprint(dir, constraint)` with the same
+constraint. The constraint limits each review set to files in the needs-review set, so build artifacts
+excluded from needs-review are also excluded from coverage and fingerprints. Returns the Markdown document
+and a boolean indicating whether any files lack coverage. The `depth` parameter controls heading level.
 
 **`ReviewMarkConfiguration.PublishReviewReport(ReviewIndex index, string dir, int depth = 1)`**
 → `ReviewReportResult`
 
-For each review-set: resolves its file list via `GlobMatcher`, computes the SHA-256
-fingerprint, calls `index.GetEvidence(id, fingerprint)` to determine status (Current,
-Stale, Missing, or Failed), and generates the report table. Returns the Markdown document
-and a boolean indicating whether any review-set is non-current.
+Computes the needs-review constraint (same logic as `PublishReviewPlan`) once and reuses it for all
+review sets. For each review-set, calls `ReviewSet.GetFingerprint(dir, constraint)` so that build
+artifacts excluded from needs-review do not affect the hash. Calls `index.GetEvidence(id, fingerprint)`
+to determine status (Current, Stale, Missing, or Failed), and generates the report table. Returns the
+Markdown document and a boolean indicating whether any review-set is non-current.
 
 **`ReviewMarkConfiguration.ElaborateReviewSet(string id, string dir, int markdownDepth = 1)`**
 → `ElaborateResult`
 
-Looks up the review-set with the given `id`, resolves its file list and fingerprint, and
-returns a Markdown document with a heading at `markdownDepth`, a metadata table (ID, Title,
-Fingerprint), an optional Context subsection, and a Files subheading. The Context subsection
-lists all resolved context files as plain paths, and is omitted when no context files resolve.
+Looks up the review-set with the given `id`. Computes the needs-review constraint (same logic as
+`PublishReviewPlan`). Calls `ReviewSet.GetFingerprint(dir, constraint)` and `ReviewSet.GetFiles(dir,
+constraint)` with the constraint so that build artifacts excluded from needs-review are also excluded
+from the elaborated file list and fingerprint. Returns a Markdown document with a heading at
+`markdownDepth`, a metadata table (ID, Title, Fingerprint), an optional Context subsection, and a
+Files subheading. The Context subsection lists all resolved context files as plain paths, and is
+omitted when no context files resolve.
+
+**Needs-review constraint:** `PublishReviewPlan`, `PublishReviewReport`, and `ElaborateReviewSet`
+each compute a needs-review constraint before iterating review sets. When `NeedsReviewPatterns`
+is non-empty, the constraint is a `HashSet<string>` of all files matched by the top-level
+`needs-review` patterns. When `NeedsReviewPatterns` is empty (the key is absent or the list
+contains only whitespace entries), the constraint is `null` and no filtering is applied — this
+preserves backward compatibility for configurations written before `needs-review` was introduced.
+
+**`ReviewSet.GetFiles(string dir, IReadOnlySet<string>? constraint = null)`**
+→ `IReadOnlyList<string>` (sorted, relative paths)
+
+Calls `GlobMatcher.GetMatchingFiles()` with the review set's ordered `Paths` patterns. When
+`constraint` is non-null, filters the result to include only files whose relative paths appear
+in the constraint set. When `constraint` is null, returns all glob-matched files without filtering.
+Context patterns are never passed here; context is not under review.
+
+**`ReviewSet.GetFingerprint(string dir, IReadOnlySet<string>? constraint = null)`** → `string`
+
+Delegates to `GetFiles(dir, constraint)` to obtain the constrained file list, then applies the
+fingerprinting algorithm below.
 
 **Combined ordered context resolution:** Global and per-review-set context patterns are
 concatenated into a single ordered pattern list (`GlobalContext` first, then `review.Context`)
