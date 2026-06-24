@@ -541,7 +541,9 @@ internal sealed class ReviewSet
     /// <param name="directory">The root directory to search.</param>
     /// <param name="constraint">
     ///     When non-<c>null</c>, only files whose relative paths appear in this set are
-    ///     returned.  Pass the resolved needs-review file set to enforce that review-set
+    ///     returned. Relative paths must use forward slashes (<c>/</c>), matching the
+    ///     normalization performed by <see cref="GlobMatcher" />.
+    ///     Pass the resolved needs-review file set to enforce that review-set
     ///     files are a strict subset of files declared as needing review (excluding build
     ///     artifacts and other paths that are excluded from <c>needs-review</c>).
     ///     When <c>null</c>, all glob-matched files are returned without filtering.
