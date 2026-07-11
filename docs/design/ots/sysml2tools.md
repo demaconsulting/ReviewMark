@@ -43,9 +43,11 @@ It is used in two places in the pipeline:
   references.
 - **Render** (`build.yaml`, build-docs job): `dotnet sysml2tools render` renders each declared view
   to an SVG file in `docs/design/generated/`, immediately before Pandoc compiles the Design
-  document. The rendered SVGs sit alongside the compiled `design.html`, so the design Markdown
-  sources embed bare filenames (for example `![Software Structure](SoftwareStructureView.svg)`)
-  that Pandoc and the browser resolve relative to that directory.
+  document. The design Markdown sources embed bare filenames (for example
+  `![Software Structure](SoftwareStructureView.svg)`); `docs/design/generated` is included in
+  Pandoc's `resource-path` (`docs/design/definition.yaml`) so Pandoc locates the rendered SVGs at
+  build time, and the compiled `design.html` sits in the same directory so the browser resolves
+  them relative to it.
 
 SysML2Tools reads only the local SysML2 model files and writes only local SVG output files; it
 requires no external service or network access, and it has no transitive NuGet dependencies that

@@ -71,7 +71,9 @@ Throughout this document:
 - The word **shall** denotes a design constraint that the implementation must satisfy.
 - Section headings within each unit chapter follow a consistent structure: overview, data model,
   methods/algorithms, and interactions with other units.
-- Text tables are used in preference to diagrams, which may not render in all PDF viewers.
+- Rendered SysML2 diagrams (SVG) illustrate software structure; text tables are used in preference
+  to hand-maintained diagrams elsewhere, since hand-maintained diagrams may not render in all PDF
+  viewers and drift out of sync with the model.
 
 ## Companion Artifact Structure
 
