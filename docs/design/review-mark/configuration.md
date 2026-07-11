@@ -1,5 +1,7 @@
 ## Configuration
 
+![Configuration Structure](ConfigurationView.svg)
+
 The Configuration subsystem is responsible for loading, validating, and processing the
 ReviewMark YAML configuration file (`.reviewmark.yaml`). It provides file-pattern matching
 and drives the generation of Review Plan and Review Report compliance documents.

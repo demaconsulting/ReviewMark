@@ -1,5 +1,7 @@
 ### Context
 
+![Cli Structure](CliView.svg)
+
 #### Purpose
 
 `Context` is the command-line argument parser and output channel for ReviewMark. It

@@ -18,6 +18,7 @@ words:
   - buildmark
   - CIFS
   - Dema
+  - demaconsulting
   - fileassert
   - fileshare
   - hotspots
@@ -38,6 +39,8 @@ words:
   - sarifmark
   - selftest
   - sonarmark
+  - sysml
+  - sysml2tools
   - unreviewed
   - versionmark
   - weasy

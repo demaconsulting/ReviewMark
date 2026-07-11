@@ -37,6 +37,7 @@ OTS items:
 - **ReviewMark**
 - **SarifMark**
 - **SonarMark**
+- **SysML2Tools**
 - **VersionMark**
 - **WeasyPrint**
 - **xUnit**
@@ -84,6 +85,7 @@ docs/verification/ots/):
 ├── ReviewMark
 ├── SarifMark
 ├── SonarMark
+├── SysML2Tools
 ├── VersionMark
 ├── WeasyPrint
 ├── xUnit

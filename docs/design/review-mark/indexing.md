@@ -1,5 +1,7 @@
 ## Indexing
 
+![Indexing Structure](IndexingView.svg)
+
 The Indexing subsystem is responsible for loading review evidence from an external index
 and for safe file-path manipulation. It provides the lookup engine that determines whether
 each review-set is Current, Stale, Missing, or Failed.

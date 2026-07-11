@@ -1,5 +1,7 @@
 ## SelfTest
 
+![SelfTest Structure](SelfTestView.svg)
+
 The SelfTest subsystem provides a built-in self-validation framework that allows ReviewMark
 to qualify itself as a tool for use in regulated environments.
 
