@@ -1,5 +1,7 @@
 ## Program
 
+![ReviewMark Structure](ReviewMarkView.svg)
+
 ### Purpose
 
 `Program` is the process entry point and execution dispatcher for ReviewMark. It owns

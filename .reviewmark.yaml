@@ -7,16 +7,18 @@
 # Processed in order; prefix a pattern with '!' to exclude.
 needs-review:
   - "README.md"                   # Root README file
-  - "requirements.yaml"           # Root requirements file
+  - "docs/user_guide/**/*.md"     # User guide documentation
   - "**/*.cs"                     # All C# source and test files
+  - "requirements.yaml"           # Root requirements file
   - "docs/reqstream/**/*.yaml"    # Requirements files
   - "docs/design/**/*.md"         # Design documentation files
+  - "docs/sysml2/**/*.sysml"      # SysML2 architecture model
   - "docs/verification/**/*.md"   # Verification documentation files
-  - "docs/user_guide/**/*.md"     # User guide documentation
   - "!**/obj/**"                  # Exclude build output
   - "!**/bin/**"                  # Exclude build output
   - "!node_modules/**"            # Exclude npm dependencies
   - "!**/.venv/**"                # Exclude Python virtual environment
+  - "!**/generated/**"            # Exclude generated document output
 
 # Evidence source: review data and index.json are located in the 'reviews' branch
 # of this repository, accessed through the GitHub public HTTPS raw content access.
@@ -26,93 +28,144 @@ evidence-source:
   type: url
   location: https://raw.githubusercontent.com/demaconsulting/ReviewMark/reviews/index.json
 
+# Global context shown to every reviewer for orientation (not fingerprinted).
+context:
+  - docs/design/introduction.md
+
 # Review sets following hierarchical scope principles.
 # Each review-set focuses on a single compliance question with manageable file counts.
 reviews:
-  # Purpose
+  # Purpose Review (only one per repository)
   - id: Purpose
-    title: Review of user-facing capabilities and system promises
+    title: Review that README and User Guide are Coherent and Complete
+    context:
+      - "!docs/design/introduction.md"    # exclude design intro from user-facing review
     paths:
+      - "README.md"                       # project readme
+      - "docs/user_guide/**/*.md"         # user guide
+
+  # Decomposition Review (only one per repository)
+  - id: Decomposition
+    title: Review that ReviewMark Decomposition Addresses the Stated Purpose
+    context:
       - "README.md"
       - "docs/user_guide/**/*.md"
-      - "docs/reqstream/review-mark.yaml"
-      - "docs/design/introduction.md"
-      - "docs/design/review-mark.md"
+    paths:
+      - "requirements.yaml"               # root requirements file
+      - "docs/design/introduction.md"     # design introduction
+      - "docs/sysml2/**/*.sysml"          # SysML2 model (authoritative structure)
 
-  # ReviewMark - Specials
+  # ReviewMark-Architecture Review (one per system)
   - id: ReviewMark-Architecture
     title: Review that ReviewMark Architecture Satisfies Requirements
+    context:
+      - "README.md"
+      - "docs/user_guide/**/*.md"
     paths:
-      - "docs/reqstream/review-mark.yaml"            # system requirements
-      - "docs/design/introduction.md"                # design introduction and architecture
-      - "docs/design/review-mark.md"                 # system design
-      - "docs/verification/introduction.md"          # verification introduction
-      - "docs/verification/review-mark.md"           # system verification design
-      - "test/**/IntegrationTests.cs"                # integration tests
-      - "test/**/Runner.cs"                          # test infrastructure
-      - "test/**/AssemblyInfo.cs"                    # test infrastructure
-      - "test/**/TestDirectory.cs"                   # test infrastructure
+      - "docs/reqstream/review-mark.yaml"     # system requirements
+      - "docs/design/introduction.md"         # design introduction and architecture
+      - "docs/design/review-mark.md"          # system design
+      - "docs/verification/introduction.md"   # verification introduction
+      - "docs/verification/review-mark.md"    # system verification design
+      - "test/**/IntegrationTests.cs"         # integration tests
+      - "test/**/Runner.cs"                   # test infrastructure
+      - "test/**/AssemblyInfo.cs"             # test infrastructure
+      - "test/**/TestDirectory.cs"            # test infrastructure
 
+  # ReviewMark-Design Review (one per system)
   - id: ReviewMark-Design
     title: Review that ReviewMark Design is Consistent and Complete
+    context:
+      - "docs/reqstream/review-mark.yaml"
     paths:
-      - "docs/reqstream/review-mark.yaml"                        # system requirements
       - "docs/reqstream/review-mark/platform-requirements.yaml"  # platform requirements
       - "docs/design/introduction.md"                            # design introduction
       - "docs/design/review-mark.md"                             # system-level design document
       - "docs/design/review-mark/**/*.md"                        # system design documents
       - "docs/design/ots.md"                                     # OTS integration strategy
-      - "docs/design/ots/**/*.md"                                # OTS integration design documents
-      - "docs/verification/introduction.md"                      # verification introduction
-      - "docs/verification/ots.md"                               # OTS verification overview
 
+  # ReviewMark-Verification Review (one per system)
+  - id: ReviewMark-Verification
+    title: Review that ReviewMark Verification is Consistent and Complete
+    context:
+      - "docs/reqstream/review-mark.yaml"
+    paths:
+      - "docs/verification/introduction.md"      # verification introduction
+      - "docs/verification/review-mark.md"        # system-level verification document
+      - "docs/verification/review-mark/**/*.md"   # system verification documents
+      - "docs/verification/ots.md"                # OTS verification overview
+
+  # ReviewMark-AllRequirements Review (one per system)
   - id: ReviewMark-AllRequirements
     title: Review that All ReviewMark Requirements are Complete
+    context:
+      - "docs/design/review-mark.md"
     paths:
-      - "requirements.yaml"                                      # root requirements file
-      - "docs/reqstream/review-mark.yaml"                        # system requirements file
-      - "docs/reqstream/review-mark/**/*.yaml"                   # all review-mark requirements files
-      - "docs/reqstream/ots/**/*.yaml"                           # all OTS requirements files
+      - "requirements.yaml"                       # root requirements file
+      - "docs/reqstream/review-mark.yaml"         # system requirements file
+      - "docs/reqstream/review-mark/**/*.yaml"    # all review-mark requirements files
+      - "docs/reqstream/ots/**/*.yaml"            # all OTS requirements files
 
-  # ReviewMark - Program
+  # ReviewMark-Program Review (one per unit directly under the system)
   - id: ReviewMark-Program
     title: Review that ReviewMark Program Implementation is Correct
+    context:
+      - "docs/design/review-mark.md"
+      - "docs/reqstream/review-mark.yaml"
     paths:
-      - "docs/reqstream/review-mark/program.yaml"              # requirements
-      - "docs/design/review-mark/program.md"                   # design
-      - "docs/verification/review-mark/program.md"             # verification design
-      - "src/**/Program.cs"                                    # implementation
-      - "test/**/ProgramTests.cs"                              # unit tests
+      - "docs/reqstream/review-mark/program.yaml"    # requirements
+      - "docs/design/review-mark/program.md"         # design
+      - "docs/verification/review-mark/program.md"   # verification design
+      - "src/**/Program.cs"                          # implementation
+      - "test/**/ProgramTests.cs"                    # unit tests
 
-  # ReviewMark - Cli
+  # ReviewMark-Cli Review (one per subsystem)
   - id: ReviewMark-Cli
     title: Review that ReviewMark Cli Satisfies Subsystem Requirements
+    context:
+      - "docs/design/review-mark.md"
+      - "docs/reqstream/review-mark.yaml"
     paths:
-      - "docs/reqstream/review-mark/cli.yaml"              # subsystem requirements
-      - "docs/design/review-mark/cli.md"                   # Cli subsystem design
-      - "docs/verification/review-mark/cli.md"                 # Cli subsystem verification
-      - "test/**/Cli/CliTests.cs"                              # Cli subsystem tests
+      - "docs/reqstream/review-mark/cli.yaml"        # subsystem requirements
+      - "docs/design/review-mark/cli.md"             # Cli subsystem design
+      - "docs/verification/review-mark/cli.md"       # Cli subsystem verification
+      - "test/**/Cli/CliTests.cs"                    # Cli subsystem tests
 
+  # ReviewMark-Cli-Context Review (one per unit under a subsystem)
   - id: ReviewMark-Cli-Context
     title: Review that ReviewMark Cli Context Implementation is Correct
+    context:
+      - "docs/design/review-mark.md"
+      - "docs/reqstream/review-mark.yaml"
+      - "docs/design/review-mark/cli.md"
+      - "docs/reqstream/review-mark/cli.yaml"
     paths:
-      - "docs/reqstream/review-mark/cli/context.yaml"          # requirements
-      - "docs/design/review-mark/cli/context.md"               # design
-      - "docs/verification/review-mark/cli/context.md"         # verification design
-      - "src/**/Cli/Context.cs"                                # implementation
-      - "test/**/Cli/ContextTests.cs"                          # tests
+      - "docs/reqstream/review-mark/cli/context.yaml"       # requirements
+      - "docs/design/review-mark/cli/context.md"            # design
+      - "docs/verification/review-mark/cli/context.md"      # verification design
+      - "src/**/Cli/Context.cs"                             # implementation
+      - "test/**/Cli/ContextTests.cs"                       # tests
 
-  # ReviewMark - Configuration
+  # ReviewMark-Configuration Review (one per subsystem)
   - id: ReviewMark-Configuration
     title: Review that ReviewMark Configuration Satisfies Subsystem Requirements
+    context:
+      - "docs/design/review-mark.md"
+      - "docs/reqstream/review-mark.yaml"
     paths:
-      - "docs/reqstream/review-mark/configuration.yaml"   # subsystem requirements
-      - "docs/design/review-mark/configuration.md"        # Configuration subsystem design
-      - "docs/verification/review-mark/configuration.md"                # Configuration subsystem verification
-      - "test/**/Configuration/ConfigurationTests.cs"                   # Configuration subsystem tests
+      - "docs/reqstream/review-mark/configuration.yaml"     # subsystem requirements
+      - "docs/design/review-mark/configuration.md"          # Configuration subsystem design
+      - "docs/verification/review-mark/configuration.md"    # Configuration subsystem verification
+      - "test/**/Configuration/ConfigurationTests.cs"        # Configuration subsystem tests
 
+  # ReviewMark-Configuration-ReviewMarkConfiguration Review (one per unit under a subsystem)
   - id: ReviewMark-Configuration-ReviewMarkConfiguration
     title: Review that ReviewMark Configuration ReviewMarkConfiguration Implementation is Correct
+    context:
+      - "docs/design/review-mark.md"
+      - "docs/reqstream/review-mark.yaml"
+      - "docs/design/review-mark/configuration.md"
+      - "docs/reqstream/review-mark/configuration.yaml"
     paths:
       - "docs/reqstream/review-mark/configuration/review-mark-configuration.yaml"    # requirements
       - "docs/design/review-mark/configuration/review-mark-configuration.md"         # design
@@ -120,8 +173,14 @@ reviews:
       - "src/**/Configuration/ReviewMarkConfiguration.cs"                            # implementation
       - "test/**/Configuration/ReviewMarkConfigurationTests.cs"                      # tests
 
+  # ReviewMark-Configuration-GlobMatcher Review (one per unit under a subsystem)
   - id: ReviewMark-Configuration-GlobMatcher
     title: Review that ReviewMark Configuration GlobMatcher Implementation is Correct
+    context:
+      - "docs/design/review-mark.md"
+      - "docs/reqstream/review-mark.yaml"
+      - "docs/design/review-mark/configuration.md"
+      - "docs/reqstream/review-mark/configuration.yaml"
     paths:
       - "docs/reqstream/review-mark/configuration/glob-matcher.yaml"   # requirements
       - "docs/design/review-mark/configuration/glob-matcher.md"        # design
@@ -129,44 +188,69 @@ reviews:
       - "src/**/Configuration/GlobMatcher.cs"                          # implementation
       - "test/**/Configuration/GlobMatcherTests.cs"                    # tests
 
-  # ReviewMark - Indexing
+  # ReviewMark-Indexing Review (one per subsystem)
   - id: ReviewMark-Indexing
     title: Review that ReviewMark Indexing Satisfies Subsystem Requirements
+    context:
+      - "docs/design/review-mark.md"
+      - "docs/reqstream/review-mark.yaml"
     paths:
       - "docs/reqstream/review-mark/indexing.yaml"    # subsystem requirements
       - "docs/design/review-mark/indexing.md"         # Indexing subsystem design
-      - "docs/verification/review-mark/indexing.md"            # Indexing subsystem verification
-      - "test/**/Indexing/IndexingTests.cs"                    # Indexing subsystem tests
+      - "docs/verification/review-mark/indexing.md"   # Indexing subsystem verification
+      - "test/**/Indexing/IndexingTests.cs"           # Indexing subsystem tests
+      - "test/**/PdfTestHelper.cs"                    # PDF test-fixture infrastructure
 
+  # ReviewMark-Indexing-ReviewIndex Review (one per unit under a subsystem)
   - id: ReviewMark-Indexing-ReviewIndex
     title: Review that ReviewMark Indexing ReviewIndex Implementation is Correct
+    context:
+      - "docs/design/review-mark.md"
+      - "docs/reqstream/review-mark.yaml"
+      - "docs/design/review-mark/indexing.md"
+      - "docs/reqstream/review-mark/indexing.yaml"
     paths:
-      - "docs/reqstream/review-mark/indexing/review-index.yaml"   # requirements
-      - "docs/design/review-mark/indexing/review-index.md"        # design
-      - "docs/verification/review-mark/indexing/review-index.md"  # verification design
-      - "src/**/Indexing/ReviewIndex.cs"                           # implementation
-      - "test/**/Indexing/IndexTests.cs"                           # tests
+      - "docs/reqstream/review-mark/indexing/review-index.yaml"     # requirements
+      - "docs/design/review-mark/indexing/review-index.md"          # design
+      - "docs/verification/review-mark/indexing/review-index.md"    # verification design
+      - "src/**/Indexing/ReviewIndex.cs"                            # implementation
+      - "test/**/Indexing/IndexTests.cs"                            # tests
 
+  # ReviewMark-Indexing-PathHelpers Review (one per unit under a subsystem)
   - id: ReviewMark-Indexing-PathHelpers
     title: Review that ReviewMark Indexing PathHelpers Implementation is Correct
+    context:
+      - "docs/design/review-mark.md"
+      - "docs/reqstream/review-mark.yaml"
+      - "docs/design/review-mark/indexing.md"
+      - "docs/reqstream/review-mark/indexing.yaml"
     paths:
-      - "docs/reqstream/review-mark/indexing/path-helpers.yaml"   # requirements
-      - "docs/design/review-mark/indexing/path-helpers.md"        # design
-      - "docs/verification/review-mark/indexing/path-helpers.md"  # verification design
-      - "src/**/Indexing/PathHelpers.cs"                           # implementation
-      - "test/**/Indexing/PathHelpersTests.cs"                     # tests
+      - "docs/reqstream/review-mark/indexing/path-helpers.yaml"     # requirements
+      - "docs/design/review-mark/indexing/path-helpers.md"          # design
+      - "docs/verification/review-mark/indexing/path-helpers.md"    # verification design
+      - "src/**/Indexing/PathHelpers.cs"                            # implementation
+      - "test/**/Indexing/PathHelpersTests.cs"                      # tests
 
-  # ReviewMark - SelfTest
+  # ReviewMark-SelfTest Review (one per subsystem)
   - id: ReviewMark-SelfTest
     title: Review that ReviewMark SelfTest Satisfies Subsystem Requirements
+    context:
+      - "docs/design/review-mark.md"
+      - "docs/reqstream/review-mark.yaml"
     paths:
       - "docs/reqstream/review-mark/self-test.yaml"    # subsystem requirements
       - "docs/design/review-mark/self-test.md"         # SelfTest subsystem design
-      - "docs/verification/review-mark/self-test.md"             # SelfTest subsystem verification
-      - "test/**/SelfTest/SelfTestTests.cs"                      # SelfTest subsystem tests
+      - "docs/verification/review-mark/self-test.md"   # SelfTest subsystem verification
+      - "test/**/SelfTest/SelfTestTests.cs"            # SelfTest subsystem tests
 
+  # ReviewMark-SelfTest-Validation Review (one per unit under a subsystem)
   - id: ReviewMark-SelfTest-Validation
     title: Review that ReviewMark SelfTest Validation Implementation is Correct
+    context:
+      - "docs/design/review-mark.md"
+      - "docs/reqstream/review-mark.yaml"
+      - "docs/design/review-mark/self-test.md"
+      - "docs/reqstream/review-mark/self-test.yaml"
     paths:
       - "docs/reqstream/review-mark/self-test/validation.yaml"    # requirements
       - "docs/design/review-mark/self-test/validation.md"         # design
@@ -174,7 +258,7 @@ reviews:
       - "src/**/SelfTest/Validation.cs"                           # implementation
       - "test/**/SelfTest/ValidationTests.cs"                     # tests
 
-  # OTS Items
+  # OTS Items (one review-set per OTS item)
   - id: OTS-BuildMark
     title: Review that BuildMark Provides Required Functionality
     paths:
@@ -240,6 +324,13 @@ reviews:
     paths:
       - "docs/reqstream/ots/sonarmark.yaml"
       - "docs/verification/ots/sonarmark.md"
+
+  - id: OTS-SysML2Tools
+    title: Review that SysML2Tools Provides Required Functionality
+    paths:
+      - "docs/reqstream/ots/sysml2tools.yaml"
+      - "docs/design/ots/sysml2tools.md"
+      - "docs/verification/ots/sysml2tools.md"
 
   - id: OTS-VersionMark
     title: Review that VersionMark Provides Required Functionality

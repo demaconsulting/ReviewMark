@@ -1,5 +1,7 @@
 ## Cli
 
+![Cli Structure](CliView.svg)
+
 The Cli subsystem is responsible for parsing and owning the command-line interface of
 ReviewMark. It exposes a single unit — `Context` — that processes the raw `string[] args`
 array into a structured set of typed properties consumed by the rest of the tool.

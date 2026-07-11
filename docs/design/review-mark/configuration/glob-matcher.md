@@ -1,5 +1,7 @@
 ### GlobMatcher
 
+![Configuration Structure](ConfigurationView.svg)
+
 #### Purpose
 
 `GlobMatcher` is a static utility class that resolves an ordered list of glob patterns

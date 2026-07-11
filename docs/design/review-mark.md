@@ -1,5 +1,7 @@
 # ReviewMark
 
+![ReviewMark Structure](ReviewMarkView.svg)
+
 ReviewMark is a .NET command-line tool for automated file-review evidence management in
 regulated environments. It determines which files are subject to review, identifies the
 review evidence that covers them, and generates Review Plan and Review Report compliance

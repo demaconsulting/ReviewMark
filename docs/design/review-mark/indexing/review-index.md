@@ -1,5 +1,7 @@
 ### ReviewIndex
 
+![Indexing Structure](IndexingView.svg)
+
 #### Purpose
 
 `ReviewIndex` manages the loading, querying, and building of the review evidence index.

@@ -15,8 +15,8 @@ ReviewMark uses three complementary approaches to verify OTS software items.
 - xUnit is qualified through successful execution of the ReviewMark test suites and their TRX
   outputs because the repository depends on xUnit for test discovery, execution, and reporting.
 - Tooling OTS items such as BuildMark, ReqStream, ReviewMark, SarifMark, SonarMark,
-  VersionMark, Pandoc, WeasyPrint, and FileAssert are verified through a combination of
-  self-validation (`--validate`) and output assertions in the GitHub Actions workflow defined in
+  VersionMark, Pandoc, WeasyPrint, SysML2Tools, and FileAssert are verified through a combination
+  of self-validation (`--validate`) and output assertions in the GitHub Actions workflow defined in
   `.github/workflows/build.yaml`.
 
 The detailed evidence source and requirement mapping for each component are recorded in the
@@ -29,8 +29,8 @@ as CI artifacts. Primary evidence includes:
 
 - Self-validation TRX files such as `artifacts/buildmark-self-validation.trx`,
   `artifacts/versionmark-self-validation.trx`, `artifacts/reviewmark-self-validation.trx`,
-  `artifacts/sarifmark-self-validation.trx`, `artifacts/sonarmark-self-validation.trx`, and
-  `artifacts/reqstream-self-validation.trx`
+  `artifacts/sarifmark-self-validation.trx`, `artifacts/sonarmark-self-validation.trx`,
+  `artifacts/sysml2tools-self-validation.trx`, and `artifacts/reqstream-self-validation.trx`
 - `dotnet test` TRX output from the repository test projects, which provides evidence for xUnit
   and for runtime libraries exercised by ReviewMark unit and integration tests
 - FileAssert TRX outputs such as `artifacts/fileassert-build-notes.trx`,

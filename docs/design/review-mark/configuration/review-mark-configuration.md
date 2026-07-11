@@ -1,5 +1,7 @@
 ### ReviewMarkConfiguration
 
+![Configuration Structure](ConfigurationView.svg)
+
 #### Purpose
 
 `ReviewMarkConfiguration` is responsible for parsing the `.reviewmark.yaml` configuration
