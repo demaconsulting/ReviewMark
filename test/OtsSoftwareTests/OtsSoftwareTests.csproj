@@ -53,7 +53,7 @@
 
   <!-- Build Tool Dependencies -->
   <ItemGroup>
-    <PackageReference Include="Polyfill" Version="11.0.1" PrivateAssets="All" />
+    <PackageReference Include="Polyfill" Version="11.0.2" PrivateAssets="All" />
   </ItemGroup>
 
   <!-- Code Analysis Dependencies -->
