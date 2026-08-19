@@ -18,4 +18,7 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
-[assembly: CollectionBehavior(DisableTestParallelization = true)]
+using Xunit.Sdk;
+using Xunit.v3;
+
+[assembly: Parallelization(Mode = ParallelMode.None)]
