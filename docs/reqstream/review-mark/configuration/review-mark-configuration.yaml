@@ -29,6 +29,10 @@ sections:
                   - ReviewMarkConfiguration_Load_FileshareRelativeLocation_ResolvesToAbsolutePath
                   - ReviewMarkConfiguration_Parse_NoneEvidenceSource_ParsedCorrectly
                   - ReviewMarkConfiguration_Parse_NoneEvidenceSource_NoLocationRequired
+                children:
+                  - ReviewMark-OTS-YamlDotNet-Deserialize
+                  - ReviewMark-OTS-YamlDotNet-ErrorHandling
+                  - ReviewMark-OTS-YamlDotNet-UnknownKeys
 
               - id: ReviewMark-Config-Loading
                 title: >-

@@ -72,4 +72,4 @@ sections:
             tests:
               - Indexing_SafePathCombine_WithIndexPath_LoadsIndex
               - Indexing_SafePathCombine_WithTraversalInputs_Throws
-            children: [ReviewMark-PathHelpers-SafeCombine, ReviewMark-PathHelpers-NullRejection]
+            children: [ReviewMark-PathHelpers-SafeCombine, ReviewMark-PathHelpers-NullRejection, ReviewMark-PathHelpers-TraversalRejection]

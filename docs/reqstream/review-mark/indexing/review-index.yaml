@@ -90,6 +90,8 @@ sections:
                   - ReviewIndex_Scan_PdfWithNoKeywords_SkipsWithWarning
                   - ReviewIndex_Scan_NoMatchingFiles_LeavesIndexEmpty
                   - ReviewIndex_Scan_MultiplePdfs_PopulatesAllEntries
+                children:
+                  - ReviewMark-OTS-PDFsharp-ReadMetadata
 
               - id: ReviewMark-Index-Freshness
                 title: >-
