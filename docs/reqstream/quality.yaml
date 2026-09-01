@@ -24,8 +24,9 @@ sections:
           identity, commit, timestamp) automatically as part of the CI pipeline, rather
           than relying on manual record-keeping, ensures the record is always present,
           accurate, and resistant to after-the-fact tampering.
-          This requirement is satisfied by its children: it is a non-requirement grouping
-          node, and verification evidence is carried by the atomic child requirement's tests.
+          This requirement is satisfied by its children: it is a non-atomic (grouping)
+          requirement, and verification evidence is carried by the atomic child requirement's
+          tests.
         tags: [quality]
         children:
           - BuildMark-Core-GenerateBuildNotes
@@ -41,8 +42,9 @@ sections:
           information automatically as part of the release pipeline prevents version
           drift and the manual record-keeping errors that would otherwise undermine
           traceability.
-          This requirement is satisfied by its children: it is a non-requirement grouping
-          node, and verification evidence is carried by each atomic child requirement's tests.
+          This requirement is satisfied by its children: it is a non-atomic (grouping)
+          requirement, and verification evidence is carried by each atomic child requirement's
+          tests.
         tags: [quality]
         children:
           - ReviewMark-OTS-VersionMark-Capture
@@ -59,8 +61,9 @@ sections:
           provides continuous, objective quality and security assurance that scales
           with the size of the codebase and does not depend solely on reviewer
           attentiveness.
-          This requirement is satisfied by its children: it is a non-requirement grouping
-          node, and verification evidence is carried by each atomic child requirement's tests.
+          This requirement is satisfied by its children: it is a non-atomic (grouping)
+          requirement, and verification evidence is carried by each atomic child requirement's
+          tests.
         tags: [quality]
         children:
           - ReviewMark-OTS-SarifMark
@@ -81,8 +84,9 @@ sections:
           version of the tool is used in CI to scan, plan, report, and enforce
           review coverage for the repository's own source (a project cannot treat
           its own package as OTS).
-          This requirement is satisfied by its children: it is a non-requirement grouping
-          node, and verification evidence is carried by each atomic child requirement's tests.
+          This requirement is satisfied by its children: it is a non-atomic (grouping)
+          requirement, and verification evidence is carried by each atomic child requirement's
+          tests.
         tags: [quality]
         children:
           - ReviewMark-OTS-ReviewMark-Scan
@@ -102,8 +106,9 @@ sections:
           well-formed, and contains the expected content, so that a broken
           conversion step cannot silently ship incomplete or corrupt compliance
           documentation.
-          This requirement is satisfied by its children: it is a non-requirement grouping
-          node, and verification evidence is carried by each atomic child requirement's tests.
+          This requirement is satisfied by its children: it is a non-atomic (grouping)
+          requirement, and verification evidence is carried by each atomic child requirement's
+          tests.
         tags: [quality]
         children:
           - ReviewMark-Pandoc-ConvertMarkdown
@@ -119,8 +124,9 @@ sections:
           and passed; that evidence has no value unless the test framework reliably
           discovers, runs, and reports every test method on every CI run, across all
           supported platforms and .NET versions, without manual intervention.
-          This requirement is satisfied by its children: it is a non-requirement grouping
-          node, and verification evidence is carried by each atomic child requirement's tests.
+          This requirement is satisfied by its children: it is a non-atomic (grouping)
+          requirement, and verification evidence is carried by each atomic child requirement's
+          tests.
         tags: [quality]
         children:
           - ReviewMark-OTS-xUnit-Execute
@@ -136,8 +142,9 @@ sections:
           behaves as documented. Automatically enforcing requirements-to-test
           traceability on every CI run ensures untested or orphaned requirements are
           caught before release rather than discovered later.
-          This requirement is satisfied by its children: it is a non-requirement grouping
-          node, and verification evidence is carried by the atomic child requirement's tests.
+          This requirement is satisfied by its children: it is a non-atomic (grouping)
+          requirement, and verification evidence is carried by the atomic child requirement's
+          tests.
         tags: [quality]
         children:
           - ReviewMark-OTS-ReqStream
@@ -154,8 +161,9 @@ sections:
           validated for structural correctness and rendered as diagrams embedded in
           design documentation ensures the documented architecture remains
           internally consistent and stays usable as a standalone reference.
-          This requirement is satisfied by its children: it is a non-requirement grouping
-          node, and verification evidence is carried by each atomic child requirement's tests.
+          This requirement is satisfied by its children: it is a non-atomic (grouping)
+          requirement, and verification evidence is carried by each atomic child requirement's
+          tests.
         tags: [quality]
         children:
           - ReviewMark-OTS-SysML2Tools-Lint
