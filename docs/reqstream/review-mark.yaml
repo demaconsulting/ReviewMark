@@ -11,6 +11,7 @@ sections:
           In regulated environments, auditors require evidence that every file subject to review
           is covered by at least one named review-set. The Review Plan document provides this
           evidence automatically on each CI/CD run, replacing manual tracking spreadsheets.
+        tags: [system]
         tests:
           - ReviewMark_PlanFlag_WithDefinitionFile_GeneratesReviewPlan
         children:
@@ -25,6 +26,7 @@ sections:
           that the reviewed files have not changed since the review was conducted. The Review
           Report provides this evidence automatically, showing Current, Stale, Missing, or
           Failed status for each review-set.
+        tags: [system]
         tests:
           - ReviewMark_ReportFlag_WithDefinitionFile_GeneratesReviewReport
         children:
@@ -32,6 +34,7 @@ sections:
           - ReviewMark-Configuration-Fingerprinting
           - ReviewMark-Configuration-ReportGeneration
           - ReviewMark-Indexing-LoadEvidence
+          - ReviewMark-Indexing-CreateEvidence
 
       - id: ReviewMark-System-Enforce
         title: The tool shall return a non-zero exit code when enforcement is enabled and any review-set is not current.
@@ -42,6 +45,7 @@ sections:
           review-set, or when the Review Report shows that any review-set has Stale, Missing, or
           Failed status. This makes incomplete file coverage, out-of-date reviews, and failed
           reviews all build-breaking conditions.
+        tags: [system]
         tests:
           - ReviewMark_EnforceFlag_WithNoEvidence_ReturnsNonZero
         children:
@@ -57,6 +61,7 @@ sections:
           intervention. Reading credentials from environment variables (username-env and
           password-env) avoids storing secrets in the configuration file and integrates
           cleanly with CI/CD secret management.
+        tags: [system]
         tests:
           - ReviewMark_LintFlag_WithValidConfig_ProducesNoOutput
           - ReviewMarkConfiguration_Parse_EvidenceSourceWithCredentials_ParsedCorrectly
@@ -70,6 +75,7 @@ sections:
           Keywords field. The --index command scans a directory of such PDFs and writes an
           index.json, enabling the evidence store to be refreshed after new review PDFs are added
           without manual maintenance of the index file.
+        tags: [system]
         tests:
           - ReviewMark_IndexFlag_OnEmptyDirectory_CreatesIndexJson
         children:
@@ -88,6 +94,7 @@ sections:
           repeated --index flags allows users to aggregate evidence from all relevant
           locations into a single index.json without requiring separate tool invocations
           or manual merging.
+        tags: [system]
         tests:
           - ReviewMark_IndexFlag_WithRepeat_ScansAllPaths
         children:
@@ -100,6 +107,7 @@ sections:
           Regulated environments require tool qualification evidence to demonstrate that the tool
           functions correctly in its specific deployment environment. The --validate flag triggers
           a built-in test suite that exercises core tool behaviors and produces a pass/fail report.
+        tags: [system]
         tests:
           - ReviewMark_ValidateFlag_Invoked_RunsValidation
         children:
@@ -113,16 +121,19 @@ sections:
         justification: |
           Users need to quickly identify the version of the tool they are using for
           troubleshooting and compatibility verification.
+        tags: [system]
         tests:
           - ReviewMark_VersionFlag_Invoked_OutputsVersion
         children:
           - ReviewMark-Cmd-Version
           - ReviewMark-Program-Dispatch
+          - ReviewMark-Program-ExecuteOperation
 
       - id: ReviewMark-System-Help
         title: The tool shall display usage information when the --help flag is provided.
         justification: |
           Users need access to command-line usage documentation without requiring external resources.
+        tags: [system]
         tests:
           - ReviewMark_HelpFlag_Invoked_OutputsUsageInformation
         children:
@@ -133,6 +144,7 @@ sections:
         justification: |
           Allows users to target an evidence store or project directory without changing
           the process working directory, enabling consistent scripting and CI/CD usage.
+        tags: [system]
         tests:
           - ReviewMark_DirFlag_Invoked_OverridesWorkingDirectory
         children:
@@ -143,6 +155,7 @@ sections:
         justification: |
           When preparing for a review, the reviewer needs the review set ID, its title,
           its current fingerprint, and the full sorted list of files to be reviewed.
+        tags: [system]
         tests:
           - ReviewMark_ElaborateFlag_WithValidId_OutputsElaboration
         children:
@@ -156,6 +169,7 @@ sections:
           Users need a way to verify that the .reviewmark.yaml configuration file is valid
           before running the main tool. Reporting only the issue messages (not a banner or
           summary) keeps the output suitable for direct use in linting scripts and CI pipelines.
+        tags: [system]
         tests:
           - ReviewMark_LintFlag_WithValidConfig_ProducesNoOutput
           - ReviewMark_LintFlag_WithInvalidConfig_ReportsOnlyIssueMessages
@@ -169,17 +183,20 @@ sections:
           Suppressing all output on successful lint (silence-on-success) allows the exit code
           alone to signal whether the file is valid. This follows the Unix convention and
           improves integration with linting scripts and CI pipelines.
+        tags: [system]
         tests:
           - ReviewMark_LintFlag_WithValidConfig_ProducesNoOutput
         children:
           - ReviewMark-Cmd-Lint
           - ReviewMark-Program-LintVerbosity
+          - ReviewMark-Cmd-LintSilence
 
       - id: ReviewMark-System-Silent
         title: The tool shall support --silent flag to suppress console output.
         justification: |
           Enables automated scripts and CI/CD pipelines to run the tool without cluttering
           output logs when only the exit code is needed.
+        tags: [system]
         tests:
           - ReviewMark_SilentFlag_Invoked_SuppressesOutput
         children:
@@ -190,6 +207,7 @@ sections:
         justification: |
           Provides persistent logging for debugging and audit trails when running in CI/CD
           environments where console output may not be captured.
+        tags: [system]
         tests:
           - ReviewMark_LogFlag_Invoked_WritesOutputToFile
         children:
@@ -202,6 +220,7 @@ sections:
         justification: |
           Allows users to set the heading depth once and have it apply to the review plan,
           review report, and self-validation report. Default depth is 1 when not specified.
+        tags: [system]
         tests:
           - ReviewMark_DepthFlag_Invoked_SetsDefaultHeadingDepth
           - ReviewMark_DepthFlag_WithValidate_SetsValidationHeadingDepth
@@ -216,6 +235,7 @@ sections:
           Allows the review plan to be embedded at any heading level within a larger Markdown
           document, overriding the --depth default when specified. Default depth is 1 when
           neither --plan-depth nor --depth is specified.
+        tags: [system]
         tests:
           - ReviewMark_DepthFlag_Invoked_SetsDefaultHeadingDepth
           - ReviewMark_PlanDepthFlag_Invoked_OverridesPlanHeadingOnly
@@ -230,6 +250,7 @@ sections:
           Allows the review report to be embedded at any heading level within a larger Markdown
           document, overriding the --depth default when specified. Default depth is 1 when
           neither --report-depth nor --depth is specified.
+        tags: [system]
         tests:
           - ReviewMark_DepthFlag_Invoked_SetsDefaultHeadingDepth
           - ReviewMark_ReportDepthFlag_Invoked_OverridesReportHeadingOnly
@@ -241,6 +262,7 @@ sections:
         justification: |
           Providing clear feedback for invalid arguments helps users quickly correct mistakes
           and prevents silent misconfiguration in automated environments.
+        tags: [system]
         tests:
           - ReviewMark_UnknownArgument_Provided_ReturnsNonZeroAndError
         children:
@@ -255,6 +277,7 @@ sections:
         justification: |
           Enables integration with CI/CD systems and requirements traceability tools that
           expect standard TRX or JUnit XML test result formats.
+        tags: [system]
         tests:
           - ReviewMark_ValidateFlag_WithTrxResultsPath_GeneratesTrxFile
           - ReviewMark_ValidateFlag_WithXmlResultsPath_GeneratesJUnitFile
@@ -270,6 +293,7 @@ sections:
           for example when targeting a different project directory or using a non-standard file name.
           The --definition flag enables ReviewMark to be used with multiple configurations in the
           same repository or CI/CD pipeline.
+        tags: [system]
         tests:
           - ReviewMark_PlanFlag_WithDefinitionFile_GeneratesReviewPlan
         children:
@@ -283,6 +307,7 @@ sections:
           runtimes so that teams can use ReviewMark regardless of their development or CI/CD
           platform. Supporting .NET 8 (LTS), 9, and 10 ensures long-term compatibility and
           access to the latest runtime features.
+        tags: [system]
         tests:
           - ReviewMark_VersionFlag_Invoked_OutputsVersion
         children:
@@ -301,6 +326,7 @@ sections:
           derived from the command-line arguments, and all output channels and exit-code
           state must be managed consistently for the full duration of an invocation. This
           ensures predictable, auditable behavior in both interactive and CI/CD environments.
+        tags: [system]
         tests:
           - ReviewMark_VersionFlag_Invoked_OutputsVersion
           - ReviewMark_UnknownArgument_Provided_ReturnsNonZeroAndError

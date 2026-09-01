@@ -21,6 +21,10 @@ sections:
               - ReviewMark-GlobMatcher-NullPatternsRejection
               - ReviewMark-GlobMatcher-EmptyBaseDirectoryRejection
               - ReviewMark-GlobMatcher-PathNormalization
+              - ReviewMark-Config-ContextExcludedFromCoverage
+              - ReviewMark-Config-PathsConstrainedToNeedsReview
+              - ReviewMark-Config-GetFilesUnconstrainedWhenNoConstraint
+              - ReviewMark-Config-NeedsReviewAbsentUnconstrained
 
           - id: ReviewMark-Configuration-Fingerprinting
             title: The tool shall compute content-based fingerprints for review-sets to detect file changes.
@@ -32,7 +36,7 @@ sections:
             tests:
               - Configuration_Fingerprinting_ContentModified_FingerprintDiffers
               - Configuration_Fingerprinting_FileRenamed_FingerprintUnchanged
-            children: [ReviewMark-Config-Reading]
+            children: [ReviewMark-Config-Reading, ReviewMark-Config-ContextExcludedFromFingerprint]
 
           - id: ReviewMark-Configuration-PlanGeneration
             title: The tool shall generate a Review Plan Markdown document listing review-set coverage.
@@ -79,6 +83,10 @@ sections:
               - ReviewMark-Config-ElaborationMarkdownDepth
               - ReviewMark-Config-ElaborationMarkdownDepthValidation
               - ReviewMark-Config-ElaborationNullRejection
+              - ReviewMark-Config-ContextParsing
+              - ReviewMark-Config-ContextInElaboration
+              - ReviewMark-Config-ContextDeduplication
+              - ReviewMark-Config-ContextExclusionPatterns
 
           - id: ReviewMark-Configuration-MalformedYaml
             title: The tool shall return a null configuration with diagnostic issues when the YAML file is malformed.

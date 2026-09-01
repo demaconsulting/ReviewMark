@@ -1,6 +1,8 @@
 ---
+root-tags: [system, quality]
 includes:
   - docs/reqstream/review-mark.yaml
+  - docs/reqstream/quality.yaml
   - docs/reqstream/review-mark/platform-requirements.yaml
   - docs/reqstream/review-mark/program.yaml
   - docs/reqstream/review-mark/cli.yaml

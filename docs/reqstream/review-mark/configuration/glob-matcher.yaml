@@ -25,6 +25,9 @@ sections:
                   - GlobMatcher_GetMatchingFiles_NoMatchingFiles_ReturnsEmptyList
                   - GlobMatcher_GetMatchingFiles_EmptyPatterns_ReturnsEmptyList
                   - GlobMatcher_GetMatchingFiles_MultipleIncludePatterns_ReturnsAllMatching
+                children:
+                  - ReviewMark-OTS-FileSystemGlobbing-WildcardMatching
+                  - ReviewMark-OTS-FileSystemGlobbing-ExclusionPrefix
 
               - id: ReviewMark-GlobMatcher-NullBaseDirectoryRejection
                 title: The GlobMatcher shall reject a null baseDirectory parameter with an ArgumentNullException.
