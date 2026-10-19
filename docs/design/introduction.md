@@ -99,5 +99,7 @@ Review-sets: defined in `.reviewmark.yaml`
 
 ## References
 
+- ReviewMark User Guide — the `README.md` document at the root of the ReviewMark repository.
+- ReviewMark Repository — the `demaconsulting/ReviewMark` source repository hosted on GitHub.
 - [Continuous Compliance](https://github.com/demaconsulting/ContinuousCompliance) — methodology
   framework for automated compliance evidence generation

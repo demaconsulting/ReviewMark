@@ -172,3 +172,4 @@ Review-sets are defined in `.reviewmark.yaml`.
 ## References
 
 - [Continuous Compliance](https://github.com/demaconsulting/ContinuousCompliance)
+- [ReviewMark releases](https://github.com/demaconsulting/ReviewMark/releases)
