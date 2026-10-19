@@ -226,6 +226,179 @@ root:
 reviewmark --dir /path/to/repo --elaborate Core-Logic
 ```
 
+## Find Affected Review Sets
+
+Use `--affected <file|->` to find out which review sets are affected by a list of changed files,
+for example after editing code or before opening a pull request. The changed paths are read from a
+file, or from standard input when the argument is `-`:
+
+```bash
+git diff --name-only HEAD | reviewmark --affected -
+```
+
+ReviewMark never runs git itself; it only reads the list of paths you give it.
+
+### Input Rules
+
+- Entries may be separated by newlines or, if the input contains any NUL character, by NUL
+  characters (see the `-z` note below). Windows (CRLF) line endings are accepted: in newline mode
+  one trailing CR is removed from each entry (in NUL mode CR is part of the name).
+- A single leading byte-order mark is removed. Empty entries are ignored. All other whitespace is
+  preserved, including leading, trailing and whitespace-only names, because it can be part of a
+  real file name.
+- Backslashes are converted to `/`, leading `./` is removed, and absolute paths under `--dir` (or
+  the current directory) are made relative to it. Absolute paths outside that directory are kept
+  as they are, match no review-set glob, and so are reported as `unreviewed` when they match
+  `needs-review` (or when `needs-review` is empty).
+- Duplicates (including `a` versus `./a`) are listed once.
+- Bytes that cannot be decoded are replaced and then matched as text; there is no malformed-input
+  failure other than being unable to read the source.
+- Paths are matched against the `needs-review` and review-set `paths` globs as text; the file
+  system is not consulted. Deleted files therefore still match their review sets.
+- Context files are not fingerprinted, so a file that matches only `context` patterns does not
+  make a review set affected.
+
+### Output
+
+Output is written through the normal log (so `--silent` and `--log` apply), without the banner.
+Fields are separated by a single tab character because review-set IDs and paths may contain
+spaces:
+
+| Line                              | Meaning                                                              |
+| --------------------------------- | -------------------------------------------------------------------- |
+| `affected<TAB><id><TAB><path>`    | The changed file `<path>` belongs to review set `<id>`               |
+| `unreviewed<TAB><path>`           | A changed file that needs review but is in no review set             |
+| `No affected review-sets`         | Written first when no review set is affected (for example no input)  |
+
+"Unreviewed" means the changed path matches `needs-review` (or `needs-review` is empty) but
+matches no review set's `paths` after the ordered include/exclude evaluation; `context` patterns
+do not count as coverage.
+
+Inside `<id>` and `<path>` these characters are escaped: `\` as `\\`, TAB as `\t`, LF as `\n` and
+CR as `\r`. To read a field back, scan left to right replacing `\\`, `\t`, `\n` and `\r` with the
+original characters. The sentinel line is not a record (records always start with `affected<TAB>`
+or `unreviewed<TAB>`), so it cannot be confused with one.
+
+Lint warnings in the definition file are not printed in this mode so that the output stays
+machine-readable; run `--lint` to see them. Lint errors are always reported on standard error, even
+with `--silent`.
+
+Lines are deterministic: review sets appear in definition order, and files are sorted. Changed
+files that do not match `needs-review` (such as build output) are ignored. A file may appear under
+several review sets.
+
+For example:
+
+```text
+affected<TAB>Core-Logic<TAB>src/Core/Parser.cs
+affected<TAB>Core-Logic<TAB>src/Core/Lexer.cs
+unreviewed<TAB>src/Tools/NewTool.cs
+```
+
+In these examples `<TAB>` stands for a single TAB character.
+
+The exit code is 0 even when unreviewed files are listed.
+
+### Errors and Combining Options
+
+The exit code is 1, with `Error: ...` on standard error, when the definition file is missing or
+invalid, when the input file or standard input cannot be read, when the `--affected` value is empty
+or starts with `--` (use `./--name` for such a file name), or when `--affected` is combined
+with `--plan`, `--report`, `--elaborate`, `--index` or `--lint` (the tool performs exactly one
+operation per invocation). These errors are written to standard error even with `--silent`.
+`--definition`, `--dir`, `--silent` and `--log` may be combined with
+`--affected`; `--enforce` and the depth options are accepted but have no effect. `--version`,
+`--help` and `--validate` keep their higher priority.
+
+### Using Git
+
+Uncommitted changes (staged and unstaged) relative to `HEAD`:
+
+```bash
+git diff --name-only HEAD | reviewmark --affected -
+```
+
+Staged changes only:
+
+```bash
+git diff --name-only --cached | reviewmark --affected -
+```
+
+New files that git does not yet track:
+
+```bash
+git ls-files --others --exclude-standard | reviewmark --affected -
+```
+
+All local changes including new files. In bash, group the commands in parentheses:
+
+```bash
+(git diff --name-only HEAD; git ls-files --others --exclude-standard) | reviewmark --affected -
+```
+
+In PowerShell, use a script block:
+
+```powershell
+& { git diff --name-only HEAD; git ls-files --others --exclude-standard } | reviewmark --affected -
+```
+
+All changes on a branch compared with `origin/main`:
+
+```bash
+git diff --name-only origin/main...HEAD | reviewmark --affected -
+```
+
+The same using the merge base explicitly (bash, then PowerShell):
+
+```bash
+git diff --name-only $(git merge-base origin/main HEAD) | reviewmark --affected -
+```
+
+```powershell
+git diff --name-only (git merge-base origin/main HEAD) | reviewmark --affected -
+```
+
+A specific commit or a range of commits:
+
+```bash
+git diff --name-only abc1234^ abc1234 | reviewmark --affected -
+git diff --name-only v1.0.0..HEAD | reviewmark --affected -
+```
+
+Instead of piping, you can save the list to a file and pass the file name:
+
+```bash
+git diff --name-only HEAD > changed.txt
+reviewmark --affected changed.txt
+```
+
+**Deleted files:** `git diff --name-only` includes deleted files. They are matched by path, so a
+deleted file still reports the review set it belonged to, which is the review set that needs to be
+re-reviewed.
+
+**Special characters:** by default git quotes paths containing non-ASCII or special characters
+(`core.quotepath`), which produces entries ReviewMark cannot match. Disable quoting with
+`git -c core.quotepath=false diff --name-only HEAD`, or use NUL-separated output, which is never
+quoted:
+
+```bash
+git diff --name-only -z HEAD | reviewmark --affected -
+```
+
+ReviewMark detects NUL-separated input automatically. PowerShell cannot reliably pass NUL
+characters through a pipeline, so use `-c core.quotepath=false` there. In PowerShell, you may also
+need `[Console]::OutputEncoding = [System.Text.Encoding]::UTF8` for non-ASCII paths.
+
+### Agent Workflow
+
+An agent preparing a review of its changes can chain the commands:
+
+1. Run `git diff --name-only HEAD | reviewmark --affected -` to list the affected review sets.
+2. For each review-set ID on an `affected` line, run `reviewmark --elaborate <id>` to get its
+   fingerprint and file list.
+3. Perform the review of those files for each review set.
+4. Treat `unreviewed` lines as files that need a review set added to the definition file.
+
 # Command-Line Options
 
 The following command-line options are supported:
@@ -249,6 +422,7 @@ The following command-line options are supported:
 | `--dir <directory>`       | Set the working directory for default paths and glob paths                     |
 | `--enforce`               | Exit with non-zero code if there are review issues                             |
 | `--elaborate <id>`        | Print a Markdown elaboration of the specified review set                       |
+| `--affected <file\|->`    | List review sets affected by the changed files in the file (or stdin for `-`)  |
 
 ## Unknown and Invalid Arguments
 

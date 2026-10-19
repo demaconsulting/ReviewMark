@@ -28,6 +28,224 @@ namespace DemaConsulting.ReviewMark.Tests.Indexing;
 public class PathHelpersTests
 {
     /// <summary>
+    ///     Test that ParseChangedPaths handles LF, CRLF, blanks and de-duplication, and preserves whitespace.
+    /// </summary>
+    [Fact]
+    public void PathHelpers_ParseChangedPaths_NewlineSeparated_PreservesWhitespaceRemovesCrAndSorts()
+    {
+        // Act
+        var result = PathHelpers.ParseChangedPaths("b.cs\r\n\r\n  a.cs  \n\nb.cs\n", "/repo");
+
+        // Assert
+        Assert.Equal(["  a.cs  ", "b.cs"], result);
+    }
+
+    /// <summary>
+    ///     Test that ParseChangedPaths auto-detects NUL separation, keeps newlines inside names and CR in NUL mode.
+    /// </summary>
+    [Fact]
+    public void PathHelpers_ParseChangedPaths_NulSeparated_SplitsOnNul()
+    {
+        // Act
+        var result = PathHelpers.ParseChangedPaths("src/a b.cs\0src/c\nd.cs\0src/e\r\0", "/repo");
+
+        // Assert
+        Assert.Equal(["src/a b.cs", "src/c\nd.cs", "src/e\r"], result);
+    }
+
+    /// <summary>
+    ///     Test that empty input yields no paths.
+    /// </summary>
+    [Fact]
+    public void PathHelpers_ParseChangedPaths_EmptyInput_ReturnsEmpty()
+    {
+        // Act
+        var empty = PathHelpers.ParseChangedPaths("", "/repo");
+        var crlfOnly = PathHelpers.ParseChangedPaths("\r\n\r\n", "/repo");
+
+        // Assert
+        Assert.Empty(empty);
+        Assert.Empty(crlfOnly);
+    }
+
+    /// <summary>
+    ///     Test that a leading BOM is removed once and a lone CR entry is dropped.
+    /// </summary>
+    [Fact]
+    public void PathHelpers_ParseChangedPaths_BomAndCrOnly_Removed()
+    {
+        // Act
+        var result = PathHelpers.ParseChangedPaths("\uFEFFa.cs\r\n\r\n", "/repo");
+
+        // Assert
+        Assert.Equal(["a.cs"], result);
+    }
+
+    /// <summary>
+    ///     Test that leading and trailing spaces are preserved in names.
+    /// </summary>
+    [Fact]
+    public void PathHelpers_ParseChangedPaths_LeadingTrailingSpaces_Preserved()
+    {
+        // Act
+        var result = PathHelpers.ParseChangedPaths(" a.cs \n", "/repo");
+
+        // Assert
+        Assert.Equal([" a.cs "], result);
+    }
+
+    /// <summary>
+    ///     Test that whitespace-only entries are kept as names.
+    /// </summary>
+    [Fact]
+    public void PathHelpers_ParseChangedPaths_WhitespaceOnlyEntry_Kept()
+    {
+        // Act
+        var result = PathHelpers.ParseChangedPaths(" \n", "/repo");
+
+        // Assert
+        Assert.Equal([" "], result);
+    }
+
+    /// <summary>
+    ///     Test that different spellings of the same path are de-duplicated.
+    /// </summary>
+    [Fact]
+    public void PathHelpers_ParseChangedPaths_DuplicateForms_Deduplicated()
+    {
+        // Act
+        var result = PathHelpers.ParseChangedPaths("a.cs\n./a.cs\n.\\a.cs\n", "/repo");
+
+        // Assert
+        Assert.Equal(["a.cs"], result);
+    }
+
+    /// <summary>
+    ///     Test that EscapeRecordField escapes backslash, TAB, LF and CR reversibly.
+    /// </summary>
+    [Fact]
+    public void PathHelpers_EscapeRecordField_SpecialCharacters_EscapedAndReversible()
+    {
+        // Arrange
+        const string original = "a\\b\tc\nd\re\\t";
+
+        // Act
+        var escaped = PathHelpers.EscapeRecordField(original);
+
+        // Assert
+        Assert.Equal("a\\\\b\\tc\\nd\\re\\\\t", escaped);
+        Assert.Equal("plain/path.cs", PathHelpers.EscapeRecordField("plain/path.cs"));
+
+        var unescaped = System.Text.RegularExpressions.Regex.Replace(
+            escaped,
+            @"\\(.)",
+            m => m.Groups[1].Value switch { "t" => "\t", "n" => "\n", "r" => "\r", var c => c });
+
+        Assert.Equal(original, unescaped);
+    }
+
+    /// <summary>
+    ///     Test that EscapeRecordField rejects null.
+    /// </summary>
+    [Fact]
+    public void PathHelpers_EscapeRecordField_Null_ThrowsArgumentNullException()
+    {
+        // Act & Assert
+        Assert.Throws<ArgumentNullException>(() => PathHelpers.EscapeRecordField(null!));
+    }
+
+    /// <summary>
+    ///     Test that NormalizeChangedPath converts backslashes, strips leading ./ segments and does not trim.
+    /// </summary>
+    [Fact]
+    public void PathHelpers_NormalizeChangedPath_BackslashesAndDotSlash_Normalized()
+    {
+        // Act
+        var backslashes = PathHelpers.NormalizeChangedPath(".\\src\\Sub\\A.cs", "/repo");
+        var dotSlash = PathHelpers.NormalizeChangedPath("./././src/A.cs", "/repo");
+        var whitespace = PathHelpers.NormalizeChangedPath("   \r", "/repo");
+
+        // Assert
+        Assert.Equal("src/Sub/A.cs", backslashes);
+        Assert.Equal("src/A.cs", dotSlash);
+        Assert.Equal("   \r", whitespace);
+    }
+
+    /// <summary>
+    ///     Test that absolute paths under the directory are made relative and others are kept.
+    /// </summary>
+    [Fact]
+    public void PathHelpers_NormalizeChangedPath_AbsolutePath_MadeRelativeToDirectory()
+    {
+        // Arrange
+        var directory = Path.GetFullPath(Path.Combine(Path.GetTempPath(), "repo-root"));
+        var inside = Path.Combine(directory, "src", "A.cs");
+
+        // Act
+        var result = PathHelpers.NormalizeChangedPath(inside, directory);
+
+        // Assert
+        Assert.Equal("src/A.cs", result);
+    }
+
+    /// <summary>
+    ///     Test that absolute paths outside the directory are retained unchanged (forward slashes).
+    /// </summary>
+    [Fact]
+    public void PathHelpers_NormalizeChangedPath_AbsoluteOutsideDirectory_RetainedUnchanged()
+    {
+        // Arrange
+        var directory = Path.GetFullPath(Path.Combine(Path.GetTempPath(), "repo-root"));
+        var outside = Path.GetFullPath(Path.Combine(directory, "..", "elsewhere", "B.cs"));
+
+        // Act
+        var result = PathHelpers.NormalizeChangedPath(outside, directory);
+
+        // Assert
+        Assert.Equal(outside.Replace('\\', '/'), result);
+    }
+
+    /// <summary>
+    ///     Test that ParseChangedPaths rejects a null list.
+    /// </summary>
+    [Fact]
+    public void PathHelpers_ParseChangedPaths_NullText_ThrowsArgumentNullException()
+    {
+        // Act & Assert
+        Assert.Throws<ArgumentNullException>(() => PathHelpers.ParseChangedPaths(null!, "/repo"));
+    }
+
+    /// <summary>
+    ///     Test that ParseChangedPaths rejects a null directory.
+    /// </summary>
+    [Fact]
+    public void PathHelpers_ParseChangedPaths_NullDirectory_ThrowsArgumentNullException()
+    {
+        // Act & Assert
+        Assert.Throws<ArgumentNullException>(() => PathHelpers.ParseChangedPaths("a", null!));
+    }
+
+    /// <summary>
+    ///     Test that NormalizeChangedPath rejects a null path.
+    /// </summary>
+    [Fact]
+    public void PathHelpers_NormalizeChangedPath_NullPath_ThrowsArgumentNullException()
+    {
+        // Act & Assert
+        Assert.Throws<ArgumentNullException>(() => PathHelpers.NormalizeChangedPath(null!, "/repo"));
+    }
+
+    /// <summary>
+    ///     Test that NormalizeChangedPath rejects a null directory.
+    /// </summary>
+    [Fact]
+    public void PathHelpers_NormalizeChangedPath_NullDirectory_ThrowsArgumentNullException()
+    {
+        // Act & Assert
+        Assert.Throws<ArgumentNullException>(() => PathHelpers.NormalizeChangedPath("a", null!));
+    }
+
+    /// <summary>
     ///     Test that SafePathCombine correctly combines valid paths.
     /// </summary>
     [Fact]

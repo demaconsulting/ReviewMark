@@ -45,7 +45,31 @@ When `Configuration` is non-null, the following instance properties and methods 
 - **`ElaborateReviewSet(string id, string dir, int markdownDepth = 1)`** → `ElaborateResult`
 - **`PublishReviewPlan(string dir, int depth = 1)`** → `ReviewPlanResult`
 - **`PublishReviewReport(ReviewIndex index, string dir, int depth = 1)`** → `ReviewReportResult`
+- **`GetAffectedReviewSets(IEnumerable<string> changedPaths)`** → `AffectedResult`
+- **`ReviewMarkLoadResult.ReportIssues(Context context, bool includeWarnings = true, bool alwaysWriteErrors = false)`**
+  — routes lint errors to `Context.WriteError()` and, when `includeWarnings` is true, warnings to
+  `Context.WriteLine()`; defined in the `ReviewMarkConfiguration` unit source file.
 
+**`ReviewMarkConfiguration.GetAffectedReviewSets(IEnumerable<string> changedPaths)`**
+→ `AffectedResult`
+
+- *Type*: In-process .NET instance method
+- *Role*: Provider — called by `Program.RunAffectedLogic()`
+- *Contract*: Maps normalized changed paths (relative, forward-slash, as produced by
+  `PathHelpers.ParseChangedPaths`) onto review sets using path-string matching only
+  (`GlobMatcher.IsMatch()`), with no file-system access, so deleted paths are handled. A path is
+  considered only if it matches `needs-review` (or `needs-review` is empty); ordered
+  include/exclude (`!`) semantics apply to `needs-review` and to each review set's `paths`.
+  `ReviewSets` lists only affected sets in definition order, each with sorted distinct `Files`
+  (`StringComparer.Ordinal`). `Unreviewed` holds considered paths that match no review set's
+  `paths`, sorted and distinct. The result is deterministic regardless of input order and
+  duplicates; empty input gives an empty result. `context` patterns (global and per review set)
+  never make a set affected and never satisfy coverage
+- *Constraints*: Throws `ArgumentNullException` when `changedPaths` is null. Null elements are not
+  supported (they cause `ArgumentNullException` from matching); blank elements are not special-cased
+  and simply match no pattern unless a pattern matches them
+
+**GlobMatcher** unit interface:
 **`GlobMatcher.GetMatchingFiles(string baseDirectory, IReadOnlyList<string> patterns)`**
 → `IReadOnlyList<string>`
 

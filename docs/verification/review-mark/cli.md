@@ -2,7 +2,7 @@
 
 ### Verification Approach
 
-Cli subsystem verification uses `CliTests.cs` to exercise `Context.Create`, `Program.Run`, and, for invalid-argument behavior, reflection-based calls to the internal `Program.Main` entry point. The tests use real configuration loading, review plan and report generation, index creation, captured console streams, and temporary files and directories so the subsystem boundary is verified end to end rather than through mocks.
+Cli subsystem verification uses `CliTests.cs` to exercise `Context.Create`, `Program.Run`, and, for invalid-argument and `--affected` error-path and modifier behavior, reflection-based calls to the internal `Program.Main` entry point. The tests use real configuration loading, review plan and report generation, index creation, captured console streams, and temporary files and directories so the subsystem boundary is verified end to end rather than through mocks.
 
 ### Test Environment
 
@@ -64,6 +64,34 @@ Tests run under xUnit on .NET 8, 9, and 10 across Windows, Linux, and macOS. `St
 
 **Cli_ElaborateFlag_ValidId_OutputsElaboration**: CLI is invoked with `--elaborate <review-set-id>`. Expected outcome: Output contains the review-set ID; exit code is 0. Requirement coverage: `ReviewMark-Cmd-Elaborate`. This scenario is tested by `Cli_ElaborateFlag_ValidId_OutputsElaboration`.
 
+**Cli_AffectedFlag_ChangedFiles_ListsAffectedReviewSets**: CLI is invoked with `--affected <file>` listing a changed file matched by a review set. Expected outcome: Output contains the tab-delimited `affected` line for the review set and file; exit code is 0. Requirement coverage: `ReviewMark-Cmd-Affected-Option`. This scenario is tested by `Cli_AffectedFlag_ChangedFiles_ListsAffectedReviewSets`.
+
+**Cli_AffectedFlag_Stdin_ListsAffectedReviewSets**: CLI is invoked with `--affected -` and CRLF standard input. Expected outcome: Exactly one `affected` record; exit code is 0. Requirement coverage: `ReviewMark-Cmd-Affected-Option`, `ReviewMark-Cmd-Affected-Separators`, `ReviewMark-Cmd-Affected-NoBanner`. This scenario is tested by `Cli_AffectedFlag_Stdin_ListsAffectedReviewSets`.
+
+**Cli_AffectedFlag_CrlfNamedFile_ListsAffectedReviewSets**: CLI is invoked with a CRLF-separated list file. Expected outcome: One `affected` record per path with no CR in the output. Requirement coverage: `ReviewMark-Cmd-Affected-Separators`. This scenario is tested by `Cli_AffectedFlag_CrlfNamedFile_ListsAffectedReviewSets`.
+
+**Cli_AffectedFlag_NulSeparatedInput_ListsAffectedReviewSets**: CLI is invoked with a NUL-separated list file. Expected outcome: One `affected` record per path in sorted order. Requirement coverage: `ReviewMark-Cmd-Affected-Separators`. This scenario is tested by `Cli_AffectedFlag_NulSeparatedInput_ListsAffectedReviewSets`.
+
+**Cli_AffectedFlag_DeletedPath_IsAffected**: CLI is invoked with a list naming a path that does not exist. Expected outcome: The path is reported as affected (path-only matching). Requirement coverage: `ReviewMark-Cmd-Affected-Option`. This scenario is tested by `Cli_AffectedFlag_DeletedPath_IsAffected`.
+
+**Cli_AffectedFlag_UnreviewedPath_ReportedWithExitZero**: CLI is invoked with a needs-review path that no review set covers. Expected outcome: Output is the sentinel followed by an `unreviewed` record; exit code is 0. Requirement coverage: `ReviewMark-Cmd-Affected-Records`. This scenario is tested by `Cli_AffectedFlag_UnreviewedPath_ReportedWithExitZero`.
+
+**Cli_AffectedFlag_EmptyOrNoMatch_ReportsNoAffectedReviewSets**: CLI is invoked with empty input and with a non-matching path. Expected outcome: Output is exactly `No affected review-sets` with no banner; exit code is 0. Boundary or error path: empty input. Requirement coverage: `ReviewMark-Cmd-Affected-Sentinel`, `ReviewMark-Cmd-Affected-NoBanner`. This scenario is tested by `Cli_AffectedFlag_EmptyOrNoMatch_ReportsNoAffectedReviewSets`.
+
+**Cli_AffectedFlag_SpecialCharacters_AreEscaped**: CLI is invoked with a NUL-separated path containing TAB, LF and CR and a review-set ID containing a backslash. Expected outcome: The record contains `\t`, `\n`, `\r` and `\\` escapes. Requirement coverage: `ReviewMark-Cmd-Affected-Records`. This scenario is tested by `Cli_AffectedFlag_SpecialCharacters_AreEscaped`.
+
+**Cli_AffectedFlag_ConflictingOptions_ExitsOneWithStderr**: The real `Program.Main` entry point is invoked (by reflection) with `--affected -` combined with each of `--plan x.md`, `--report x.md`, `--elaborate X`, `--index *.pdf` and `--lint`. Expected outcome: Exit code is 1, standard error starts with `Error:` and contains `--affected cannot be combined`, and standard output has no `affected` or `unreviewed` records. Boundary or error path: conflicting operations. Requirement coverage: `ReviewMark-Cmd-Affected-Exclusive`. This scenario is tested by `Cli_AffectedFlag_ConflictingOptions_ExitsOneWithStderr`. The `Context.Create` exception itself is verified at unit level in `ContextTests`.
+
+**Cli_AffectedFlag_AllModifiers_Honored**: `Program.Main` is invoked with `--definition`, `--dir` (a temporary directory), `--silent`, `--log` and `--affected` naming a list containing an absolute path inside the `--dir` directory. Expected outcome: Exit code is 0, standard output and standard error are empty, and the log file contains the `affected` record with the path resolved relative to `--dir`. Requirement coverage: `ReviewMark-Cmd-Affected-Modifiers`. This scenario is tested by `Cli_AffectedFlag_AllModifiers_Honored`.
+
+**Cli_AffectedFlag_MissingInputFile_ExitsOneWithStderr**: `Program.Main` is invoked with `--affected` naming a file that does not exist. Expected outcome: Exit code is 1, standard error starts with `Error:`, standard output is empty. Boundary or error path: unreadable input. Requirement coverage: `ReviewMark-Cmd-Affected-Errors`. This scenario is tested by `Cli_AffectedFlag_MissingInputFile_ExitsOneWithStderr`.
+
+**Cli_AffectedFlag_UnreadableStdin_ExitsOneWithStderr**: `Program.Main` is invoked with `--affected -` while standard input throws an `IOException` on read. Expected outcome: Exit code is 1, standard error starts with `Error:` and mentions standard input, standard output is empty. Boundary or error path: unreadable standard input. Requirement coverage: `ReviewMark-Cmd-Affected-Errors`. This scenario is tested by `Cli_AffectedFlag_UnreadableStdin_ExitsOneWithStderr`.
+
+**Cli_AffectedFlag_InvalidDefinition_ExitsOneWithStderr**: `Program.Main` is invoked with `--affected -` and a syntactically invalid definition. Expected outcome: Exit code is 1, standard error contains a `<file>: error:` lint issue line, standard output is empty. Boundary or error path: invalid definition. Requirement coverage: `ReviewMark-Cmd-Affected-Errors`. This scenario is tested by `Cli_AffectedFlag_InvalidDefinition_ExitsOneWithStderr`.
+
+**Cli_AffectedFlag_MissingDefinition_ExitsOneWithStderr**: `Program.Main` is invoked with `--affected -` and a `--definition` file that does not exist. Expected outcome: Exit code is 1, standard error contains a `<file>: error:` lint issue line, standard output is empty. Boundary or error path: missing definition. Requirement coverage: `ReviewMark-Cmd-Affected-Errors`. This scenario is tested by `Cli_AffectedFlag_MissingDefinition_ExitsOneWithStderr`.
+
 **Cli_LintFlag_ValidConfig_ReportsSuccess**: CLI is invoked with `--lint` on a valid definition file. Expected outcome: No output (silence on success); exit code is 0. Requirement coverage: `ReviewMark-Cmd-LintSilence`. This scenario is tested by `Cli_LintFlag_ValidConfig_ReportsSuccess`.
 
 **Cli_LintFlag_InvalidConfig_ReportsIssueMessages**: CLI is invoked with `--lint` on a definition file missing `evidence-source`. Expected outcome: Issue messages appear in error output; exit code is non-zero. Requirement coverage: `ReviewMark-Cmd-Lint`. This scenario is tested by `Cli_LintFlag_InvalidConfig_ReportsIssueMessages`.
@@ -104,5 +132,23 @@ Tests run under xUnit on .NET 8, 9, and 10 across Windows, Linux, and macOS. `St
 - **`ReviewMark-Cmd-Enforce`**: `Cli_EnforceFlag_FlagSupplied_ExitsNonZeroWhenNotCurrent`
 - **`ReviewMark-Cmd-Dir`**: `Cli_DirFlag_FlagSupplied_SetsWorkingDirectory`
 - **`ReviewMark-Cmd-Elaborate`**: `Cli_ElaborateFlag_ValidId_OutputsElaboration`
+- **`ReviewMark-Cmd-Affected-Option`**: `Cli_AffectedFlag_ChangedFiles_ListsAffectedReviewSets`,
+  `Cli_AffectedFlag_Stdin_ListsAffectedReviewSets`,
+  `Cli_AffectedFlag_DeletedPath_IsAffected`
+- **`ReviewMark-Cmd-Affected-Separators`**: `Cli_AffectedFlag_Stdin_ListsAffectedReviewSets`,
+  `Cli_AffectedFlag_CrlfNamedFile_ListsAffectedReviewSets`,
+  `Cli_AffectedFlag_NulSeparatedInput_ListsAffectedReviewSets`
+- **`ReviewMark-Cmd-Affected-Records`**: `Cli_AffectedFlag_UnreviewedPath_ReportedWithExitZero`,
+  `Cli_AffectedFlag_SpecialCharacters_AreEscaped`
+- **`ReviewMark-Cmd-Affected-Sentinel`**: `Cli_AffectedFlag_EmptyOrNoMatch_ReportsNoAffectedReviewSets`
+- **`ReviewMark-Cmd-Affected-NoBanner`**: `Cli_AffectedFlag_EmptyOrNoMatch_ReportsNoAffectedReviewSets`,
+  `Cli_AffectedFlag_Stdin_ListsAffectedReviewSets`
+- **`ReviewMark-Cmd-Affected-Exclusive`**: `Cli_AffectedFlag_ConflictingOptions_ExitsOneWithStderr`
+- **`ReviewMark-Cmd-Affected-Modifiers`**: `Cli_AffectedFlag_ChangedFiles_ListsAffectedReviewSets`,
+  `Cli_AffectedFlag_AllModifiers_Honored`
+- **`ReviewMark-Cmd-Affected-Errors`**: `Cli_AffectedFlag_MissingInputFile_ExitsOneWithStderr`,
+  `Cli_AffectedFlag_UnreadableStdin_ExitsOneWithStderr`,
+  `Cli_AffectedFlag_InvalidDefinition_ExitsOneWithStderr`,
+  `Cli_AffectedFlag_MissingDefinition_ExitsOneWithStderr`
 - **`ReviewMark-Cmd-Lint`**: `Cli_LintFlag_InvalidConfig_ReportsIssueMessages`
 - **`ReviewMark-Cmd-LintSilence`**: `Cli_LintFlag_ValidConfig_ReportsSuccess`

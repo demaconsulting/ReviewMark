@@ -31,22 +31,24 @@ sections:
               - Program_Run_NoArguments_DisplaysDefaultBehavior
 
           - id: ReviewMark-Program-ExitCode
-            title: The Program unit shall return exit code 0 on success and 1 on failure.
+            title: >-
+              The Program unit shall return exit code 0 on success and exit code 1 when an argument
+              error, an operation error, or a reported error occurs.
             justification: |
               Callers (scripts, CI/CD pipelines) must be able to detect success or failure
               programmatically via the process exit code. Argument errors and invalid operations
-              produce exit code 1. Unexpected exceptions are written to error output and rethrown,
-              so callers may observe either a normal exit code or a process termination due to an
-              unhandled exception.
+              produce exit code 1. Unexpected (unhandled) exceptions are written to standard error
+              as 'Unexpected error: ...' and rethrown by Main(); the process then terminates
+              abnormally, which is outside the 0/1 exit-code contract.
             tests:
               - Program_HandleIssues_WithEnforce_SetsExitCode1
 
           - id: ReviewMark-Program-Dispatch
             title: >-
               The Program unit shall dispatch to exactly one operation per invocation based on
-              the priority order of CLI flags.
+              the priority order of CLI flags (--affected is an exclusive operation).
             justification: |
-              --version, --help, --validate, --lint, --index, and plan/report operations must
+              --version, --help, --validate, --lint, --index, --affected, and plan/report operations must
               be evaluated in a fixed priority order so that the behavior is predictable and
               documented. Only the first matching flag action is executed; later flags are
               not reached.
@@ -56,6 +58,7 @@ sections:
               - Program_Run_WithValidateFlag_RunsValidation
               - Program_Run_WithLintFlag_ValidConfig_ReportsSuccess
               - Program_Run_WithHelpFlag_IncludesElaborateOption
+              - Program_Run_WithHelpFlag_IncludesAffectedOption
               - Program_Run_WithHelpFlag_IncludesLintOption
               - Program_Run_WithElaborateFlag_OutputsElaboration
               - Program_Run_WithElaborateFlag_UnknownId_ReportsError
@@ -106,6 +109,197 @@ sections:
               workflow.
             tests:
               - Program_HandleIssues_WithoutEnforce_EmitsWarning
+
+          - id: ReviewMark-Program-Affected-Input-Source
+            title: >-
+              The Program unit shall, when --affected is provided, read the changed-file list from
+              the named file, or from standard input when the value is '-'.
+            justification: |
+              Changed-file lists come from tools such as git; the unit must read either source and
+              hand the text to the path parser.
+            tests:
+              - Program_Run_WithAffectedFlag_Stdin_OutputsAffectedAndUnreviewed
+              - Program_Run_WithAffectedFlag_EmptyFile_ReportsNoAffectedReviewSets
+
+          - id: ReviewMark-Program-Affected-Input-Separators
+            title: >-
+              The Program unit shall accept LF, CRLF and NUL-separated changed-file input.
+            justification: |
+              The separator is detected by the path parser, so git diff --name-only and git diff -z
+              output can both be used.
+            tests:
+              - Program_Run_WithAffectedFlag_Stdin_OutputsAffectedAndUnreviewed
+              - Program_Run_WithAffectedFlag_NulInputAndSilent_SuppressesOutput
+            children:
+              - ReviewMark-PathHelpers-ChangedPaths-Parse-Separator
+              - ReviewMark-PathHelpers-ChangedPaths-Parse-Transport
+              - ReviewMark-PathHelpers-ChangedPaths-Parse-Whitespace
+              - ReviewMark-PathHelpers-ChangedPaths-Parse-NullRejected
+              - ReviewMark-PathHelpers-ChangedPaths-Normalize-Separators
+              - ReviewMark-PathHelpers-ChangedPaths-Normalize-Absolute
+
+          - id: ReviewMark-Program-Affected-Input-Empty
+            title: >-
+              The Program unit shall treat empty changed-file input as no changed files.
+            justification: |
+              An empty change set is valid and must not be an error.
+            tests:
+              - Program_Run_WithAffectedFlag_EmptyFile_ReportsNoAffectedReviewSets
+
+          - id: ReviewMark-Program-Affected-Records-Format
+            title: >-
+              The Program unit shall print 'affected<TAB>id<TAB>path' records for each file of each
+              affected review set.
+            justification: |
+              IDs and paths may contain spaces; tab-delimited records keep the output parseable
+              and deterministic.
+            tests:
+              - Program_Run_WithAffectedFlag_Stdin_OutputsAffectedAndUnreviewed
+            children:
+              - ReviewMark-Config-AffectedReviewSets-Matching-Sets
+              - ReviewMark-Config-AffectedReviewSets-Matching-Order
+              - ReviewMark-Config-AffectedReviewSets-Matching-SortedFiles
+              - ReviewMark-Config-AffectedReviewSets-Matching-ContextExcluded
+              - ReviewMark-Config-AffectedReviewSets-Matching-NullRejected
+
+          - id: ReviewMark-Program-Affected-Records-Escaping
+            title: >-
+              The Program unit shall escape backslash, TAB, LF and CR in record fields.
+            justification: |
+              IDs and paths may contain tabs or newlines; reversible escaping keeps records parseable.
+            tests:
+              - Program_Run_WithAffectedFlag_EscapesSpecialCharacters
+            children: [ReviewMark-PathHelpers-ChangedPaths-Escape]
+
+          - id: ReviewMark-Program-Affected-Records-Dedupe
+            title: >-
+              The Program unit shall list each de-duplicated changed path once.
+            justification: |
+              Different spellings of the same path must not produce duplicate records.
+            tests:
+              - Program_Run_WithAffectedFlag_DuplicatePaths_ListedOnce
+            children: [ReviewMark-PathHelpers-ChangedPaths-Dedupe]
+
+          - id: ReviewMark-Program-Affected-Unreviewed-Records
+            title: >-
+              The Program unit shall print 'unreviewed<TAB>path' records for changed files that need
+              review but match no review-set paths.
+            justification: |
+              Uncovered files identify gaps in the review definition.
+            tests:
+              - Program_Run_WithAffectedFlag_UnreviewedOnly_WritesSentinelAndUnreviewed
+            children: [ReviewMark-Config-AffectedReviewSets-Unreviewed]
+
+          - id: ReviewMark-Program-Affected-Unreviewed-OutsideDir
+            title: >-
+              The Program unit shall report absolute changed paths outside --dir as unreviewed when
+              they match needs-review (or needs-review is empty).
+            justification: |
+              Absolute paths outside the working directory are retained as normalized text and match
+              no review-set glob.
+            tests:
+              - Program_Run_WithAffectedFlag_AbsolutePathOutsideDir_Unreviewed
+
+          - id: ReviewMark-Program-Affected-Unreviewed-ExitZero
+            title: >-
+              The Program unit shall exit with code 0 when unreviewed files are reported.
+            justification: |
+              Unreviewed files are informational and must not fail the run.
+            tests:
+              - Program_Run_WithAffectedFlag_UnreviewedOnly_WritesSentinelAndUnreviewed
+
+          - id: ReviewMark-Program-Affected-NoMatch
+            title: >-
+              The Program unit shall print the line 'No affected review-sets' when no review set is
+              affected, including for empty input.
+            justification: |
+              Scripts need an unambiguous signal that the input was processed and nothing is affected.
+            tests:
+              - Program_Run_WithAffectedFlag_EmptyFile_ReportsNoAffectedReviewSets
+              - Program_Run_WithAffectedFlag_UnreviewedOnly_WritesSentinelAndUnreviewed
+
+          - id: ReviewMark-Program-Affected-Banner
+            title: >-
+              The Program unit shall suppress the banner for --affected.
+            justification: |
+              The banner would pollute the machine-readable stream.
+            tests:
+              - Program_Run_WithAffectedFlag_Stdin_OutputsAffectedAndUnreviewed
+
+          - id: ReviewMark-Program-Affected-Silent
+            title: >-
+              The Program unit shall honor --silent for --affected result output.
+            justification: |
+              Output is written through the normal context so --silent suppresses it.
+            tests:
+              - Program_Run_WithAffectedFlag_NulInputAndSilent_SuppressesOutput
+
+          - id: ReviewMark-Program-Affected-Log
+            title: >-
+              The Program unit shall write --affected result output to the --log file.
+            justification: |
+              Output is written through the normal context so --log captures it.
+            tests:
+              - Program_Run_WithAffectedFlag_LogFile_WritesRecords
+
+          - id: ReviewMark-Program-Affected-Warnings
+            title: >-
+              The Program unit shall not write definition lint warnings in --affected mode.
+            justification: |
+              Warnings on standard output would corrupt the record stream. Users who want warnings
+              run --lint.
+            tests:
+              - Program_Run_WithAffectedFlag_ConfigWarning_NotWrittenToOutput
+              - ReviewMarkLoadResult_ReportIssues_WarningsSuppressed_ReportsErrorsOnly
+
+          - id: ReviewMark-Program-Affected-Errors-Stderr
+            title: >-
+              The Program unit shall report definition lint errors on standard error with exit code 1
+              in --affected mode.
+            justification: |
+              Errors indicate an unusable definition and must fail the run.
+            tests:
+              - Program_Run_WithAffectedFlag_InvalidDefinition_ExitsOne
+
+          - id: ReviewMark-Program-Affected-Errors-Silent
+            title: >-
+              The Program unit shall write definition lint errors to standard error in --affected
+              mode even when --silent is specified.
+            justification: |
+              A failure must never be mistaken for an empty result, so --silent does not hide errors
+              in this mode.
+            tests:
+              - Program_Run_WithAffectedFlag_SilentInvalidDefinition_WritesStderrExitsOne
+              - ReviewMarkLoadResult_ReportIssues_AlwaysWriteErrors_Silent_WritesStderr
+            children:
+              - ReviewMark-Context-ErrorOutput-Forced
+              - ReviewMark-Config-ReportIssues-ErrorsAlwaysWritten
+
+          - id: ReviewMark-Program-Affected-Errors-ReadFailure
+            title: >-
+              The Program unit shall throw InvalidOperationException (reported as an error with exit
+              code 1) when the changed-file list cannot be read, including for an invalid path.
+            justification: |
+              A failed read must not be mistaken for an empty change set.
+            tests:
+              - Program_Run_WithAffectedFlag_UnreadableInput_ThrowsInvalidOperationException
+              - Program_Run_WithAffectedFlag_InvalidPath_ThrowsInvalidOperationException
+
+          - id: ReviewMark-Program-Affected-Errors-StdinFailure
+            title: >-
+              The Program unit shall throw InvalidOperationException when standard input cannot be read.
+            justification: |
+              A failed read must not be mistaken for an empty change set.
+            tests:
+              - Program_Run_WithAffectedFlag_StdinReadFailure_ThrowsInvalidOperationException
+
+          - id: ReviewMark-Program-Affected-Errors-MissingDefinition
+            title: >-
+              The Program unit shall report an error when the definition file is missing in --affected mode.
+            justification: |
+              Without a definition no review sets can be evaluated.
+            tests:
+              - Program_Run_WithAffectedFlag_MissingDefinition_ReportsError
 
           - id: ReviewMark-Program-Index
             title: >-

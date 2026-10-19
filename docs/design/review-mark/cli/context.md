@@ -30,6 +30,7 @@ as both a configuration carrier and an output mechanism.
 | `WorkingDirectory` | `string?` | Base directory for resolving relative paths |
 | `Enforce` | `bool` | Fail if any review-set is not Current |
 | `ElaborateId` | `string?` | Review-set ID to elaborate, or null if `--elaborate` was not specified |
+| `AffectedFile` | `string?` | Changed-file list source for `--affected` (a path, or `-` for stdin), or null if not specified |
 | `ExitCode` | `int` | Computed; 0 = success, 1 = one or more calls to `WriteError()` occurred |
 
 The `--log <file>` argument is consumed during `Context.Create()` to open the log file
@@ -52,14 +53,25 @@ sequentially via `ParseArguments()` → `ParseArgument()`. The `--result` alias 
 for `--results`. `PlanDepth` defaults to `Depth`; `ReportDepth` defaults to `Depth`.
 Integer depth flags require positive integers in the range 1–5.
 
+`--affected <file|->` requires a value (a file path, or `-` for standard input). A missing,
+empty, whitespace-only or `--`-prefixed value throws `ArgumentException` ("--affected requires a
+changed-files filename or '-' argument"); `-` and single-dash values such as `-x` are accepted.
+Use `./--name` for a file whose name starts with `--`. After all arguments are parsed, `--affected` combined with
+`--plan`, `--report`, `--elaborate`, `--index` or `--lint` throws `ArgumentException`
+("--affected cannot be combined with --plan, --report, --elaborate, --index, or --lint").
+`--definition`, `--dir`, `--silent` and `--log` are allowed modifiers; `--enforce` and the depth
+options are accepted but have no effect.
+
 **`Context.WriteLine(string message)`**
 
 Writes a line to stdout (unless `Silent` is set) and to the log file if one is open.
 
-**`Context.WriteError(string message)`**
+**`Context.WriteError(string message, bool alwaysWriteToConsole = false)`**
 
 Sets the internal error flag (causing `ExitCode` to return 1), writes the message to
-stderr in red (unless `Silent` is set), and writes to the log file if one is open. Once
+stderr in red (unless `Silent` is set and `alwaysWriteToConsole` is false), and writes to the
+log file if one is open. `--affected` mode passes `alwaysWriteToConsole: true` so errors reach
+stderr even with `--silent`. Once
 set, the error flag is never cleared; `ExitCode` returns 1 for the remainder of the
 process lifetime.
 

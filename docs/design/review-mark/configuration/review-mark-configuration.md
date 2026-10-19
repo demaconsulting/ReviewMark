@@ -49,6 +49,8 @@ compliance documents.
 | `ReviewPlanResult` | Record: `Markdown`, `HasIssues` |
 | `ReviewReportResult` | Record: `Markdown`, `HasIssues` |
 | `ElaborateResult` | Record: `Markdown` |
+| `AffectedReviewSet` | Record: `Id`, `Files` (sorted changed files matching the review set's paths) |
+| `AffectedResult` | Record: `ReviewSets` (definition order), `Unreviewed` (sorted) |
 
 #### Key Methods
 
@@ -86,7 +88,7 @@ into a shared list. Both parsing and linting are performed in a single file read
 Delegates to `ReviewMarkConfigurationHelpers.DeserializeRaw(yaml, filePath: null)` followed
 by `BuildConfiguration()`. Because no file path is provided, YAML errors surface as
 `ArgumentException` (not `InvalidOperationException`), preserving the unit-test contract.
-Missing required fields (no evidence-source block, empty reviews list) also result in
+Missing required fields (no evidence-source block) also result in
 `ArgumentException`. Used by unit tests to construct a `ReviewMarkConfiguration` directly
 from YAML strings without touching the file system.
 
@@ -119,6 +121,26 @@ from the elaborated file list and fingerprint. Returns a Markdown document with 
 `markdownDepth`, a metadata table (ID, Title, Fingerprint), an optional Context subsection, and a
 Files subheading. The Context subsection lists all resolved context files as plain paths, and is
 omitted when no context files resolve.
+
+**`ReviewMarkConfiguration.GetAffectedReviewSets(IEnumerable<string> changedPaths)`**
+→ `AffectedResult`
+
+Maps normalized changed paths onto review sets using path-string matching only
+(`GlobMatcher.IsMatch()`); no file-system access occurs, so deleted files are handled. A changed
+file is considered only if it matches `NeedsReviewPatterns` (or `NeedsReviewPatterns` is empty);
+other files are ignored. For each review set in definition order, the files matching its `Paths`
+make it affected. Context patterns are not consulted because context files are not fingerprinted.
+Considered files that match no review set's `Paths` (after ordered include/exclude evaluation)
+are returned in `Unreviewed`: "unreviewed" therefore means the path matches `needs-review` (or
+`needs-review` is empty) but no review set's `paths`; `context` patterns do not count.
+Files are de-duplicated and sorted with `StringComparer.Ordinal`.
+
+**`ReviewMarkLoadResult.ReportIssues(Context context, bool includeWarnings = true, bool alwaysWriteErrors = false)`**
+
+Routes errors to `Context.WriteError(message, alwaysWriteErrors)` and, when `includeWarnings` is
+true, warnings to `Context.WriteLine()`. `--affected` mode passes `false` for `includeWarnings` so
+warnings do not pollute stdout, and `true` for `alwaysWriteErrors` so errors reach stderr even
+with `--silent`.
 
 **Needs-review constraint:** `PublishReviewPlan`, `PublishReviewReport`, and `ElaborateReviewSet`
 each compute a needs-review constraint before iterating review sets. When `NeedsReviewPatterns`
@@ -181,7 +203,7 @@ types.
 
 | Exception | Source | Handling |
 | --------- | ------ | -------- |
-| `InvalidOperationException` | File open failure or unexpected I/O in `Load()` | Propagated to `Program.RunLintLogic()` or `Program.RunDefinitionLogic()` |
+| None | File open failure or unexpected I/O in `Load()` | Caught inside `Load()` and returned as an error-level `LintIssue` with a null `Configuration`; nothing is propagated. Reported by `ReportIssues()` |
 | `ArgumentException` | Unknown review-set ID in `ElaborateReviewSet()` | Propagated to `Program.RunDefinitionLogic()`, which catches it and calls `context.WriteError()` |
 | `ArgumentOutOfRangeException` | `markdownDepth > 5` in `ElaborateReviewSet()` | Propagated to the caller |
 | `IOException` / `UnauthorizedAccessException` | File-system failure during glob pattern expansion | Propagated to the caller |

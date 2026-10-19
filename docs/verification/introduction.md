@@ -12,6 +12,10 @@ software items are covered by this collection, how verification artifacts align 
 design, source, and tests, and where OTS qualification evidence is recorded so coverage can be
 confirmed without reverse-engineering the test code.
 
+The standard test command is `dotnet test --configuration Release --report-trx` from the repository
+root. The Microsoft.Testing.Platform runner is selected through `global.json`, and tests run on the
+net8.0, net9.0 and net10.0 target frameworks.
+
 ## Scope
 
 This collection covers verification documentation for the following software items.
@@ -168,4 +172,3 @@ Review-sets are defined in `.reviewmark.yaml`.
 ## References
 
 - [Continuous Compliance](https://github.com/demaconsulting/ContinuousCompliance)
-- [ReviewMark releases](https://github.com/demaconsulting/ReviewMark/releases)

@@ -28,6 +28,7 @@ namespace DemaConsulting.ReviewMark.Tests.Configuration;
 ///     Unit tests for <see cref="ReviewMarkConfiguration" />, <see cref="EvidenceSource" />,
 ///     and <see cref="ReviewSet" />.
 /// </summary>
+[Collection("ConsoleTests")]
 public sealed class ReviewMarkConfigurationTests : IDisposable
 {
     /// <summary>
@@ -69,6 +70,136 @@ public sealed class ReviewMarkConfigurationTests : IDisposable
         }
 
         GC.SuppressFinalize(this);
+    }
+
+    /// <summary>
+    ///     YAML with two review sets and a needs-review filter used by the affected tests.
+    /// </summary>
+    private const string AffectedYaml = """
+        needs-review:
+          - "src/**/*.cs"
+          - "docs/**/*.md"
+        evidence-source:
+          type: none
+        reviews:
+          - id: Core Logic
+            title: Core
+            paths:
+              - "src/Core/**/*.cs"
+          - id: Docs
+            title: Docs
+            paths:
+              - "docs/**/*.md"
+              - "!docs/draft/**"
+        """;
+
+    /// <summary>
+    ///     Test that changed files map to the review sets whose paths match them, in definition order.
+    /// </summary>
+    [Fact]
+    public void ReviewMarkConfiguration_GetAffectedReviewSets_MatchingFiles_ReturnsSetsInDefinitionOrder()
+    {
+        // Arrange
+        var config = ReviewMarkConfiguration.Parse(AffectedYaml);
+
+        // Act — the files do not exist on disk (deleted files must still match)
+        var result = config.GetAffectedReviewSets(["docs/b.md", "src/Core/Z.cs", "src/Core/A.cs"]);
+
+        // Assert
+        Assert.Collection(
+            result.ReviewSets,
+            s =>
+            {
+                Assert.Equal("Core Logic", s.Id);
+                Assert.Equal(["src/Core/A.cs", "src/Core/Z.cs"], s.Files);
+            },
+            s =>
+            {
+                Assert.Equal("Docs", s.Id);
+                Assert.Equal(["docs/b.md"], s.Files);
+            });
+        Assert.Empty(result.Unreviewed);
+    }
+
+    /// <summary>
+    ///     Test that files needing review but belonging to no review set are unreviewed.
+    /// </summary>
+    [Fact]
+    public void ReviewMarkConfiguration_GetAffectedReviewSets_NeedsReviewFileInNoSet_IsUnreviewed()
+    {
+        // Arrange
+        var config = ReviewMarkConfiguration.Parse(AffectedYaml);
+
+        // Act — draft doc is excluded from Docs, src/Other is in no set
+        var result = config.GetAffectedReviewSets(["docs/draft/x.md", "src/Other/O.cs"]);
+
+        // Assert
+        Assert.Empty(result.ReviewSets);
+        Assert.Equal(["docs/draft/x.md", "src/Other/O.cs"], result.Unreviewed);
+    }
+
+    /// <summary>
+    ///     Test that files outside needs-review are ignored and empty input yields an empty result.
+    /// </summary>
+    [Fact]
+    public void ReviewMarkConfiguration_GetAffectedReviewSets_NotNeedingReviewOrEmpty_ReturnsEmpty()
+    {
+        // Arrange
+        var config = ReviewMarkConfiguration.Parse(AffectedYaml);
+
+        // Act
+        var ignored = config.GetAffectedReviewSets(["bin/out.dll", "README.txt"]);
+        var empty = config.GetAffectedReviewSets([]);
+
+        // Assert
+        Assert.Empty(ignored.ReviewSets);
+        Assert.Empty(ignored.Unreviewed);
+        Assert.Empty(empty.ReviewSets);
+        Assert.Empty(empty.Unreviewed);
+    }
+
+    /// <summary>
+    ///     Test that context-only matches do not make a review set affected.
+    /// </summary>
+    [Fact]
+    public void ReviewMarkConfiguration_GetAffectedReviewSets_ContextOnlyMatch_NotAffected()
+    {
+        // Arrange
+        var config = ReviewMarkConfiguration.Parse("""
+            needs-review:
+              - "**/*.cs"
+            evidence-source:
+              type: none
+            context:
+              - "ctx/**"
+            reviews:
+              - id: A
+                title: A
+                paths:
+                  - "src/**/*.cs"
+                context:
+                  - "ref/**/*.cs"
+            """);
+
+        // Act
+        var result = config.GetAffectedReviewSets(["ref/R.cs"]);
+
+        // Assert — ref/R.cs needs review but is only context, so it is unreviewed, not affecting A
+        Assert.Empty(result.ReviewSets);
+        Assert.Equal(["ref/R.cs"], result.Unreviewed);
+    }
+
+    /// <summary>
+    ///     Test that a null path list is rejected.
+    /// </summary>
+    [Fact]
+    public void ReviewMarkConfiguration_GetAffectedReviewSets_NullPaths_ThrowsArgumentNullException()
+    {
+        // Arrange
+        var config = ReviewMarkConfiguration.Parse(AffectedYaml);
+
+        // Act & Assert
+        Assert.Throws<ArgumentNullException>(() => config.GetAffectedReviewSets(null!));
     }
 
     /// <summary>
@@ -1003,6 +1134,93 @@ public sealed class ReviewMarkConfigurationTests : IDisposable
         Assert.Contains("A warning message", log);
         Assert.Contains("error", log);
         Assert.Contains("An error message", log);
+    }
+
+    /// <summary>
+    ///     Test that ReportIssues with includeWarnings false suppresses warnings but still reports errors.
+    /// </summary>
+    [Fact]
+    public void ReviewMarkLoadResult_ReportIssues_WarningsSuppressed_ReportsErrorsOnly()
+    {
+        // Arrange
+        var logFile = PathHelpers.SafePathCombine(_testDirectory, "report-suppressed.log");
+        var issues = new List<LintIssue>
+        {
+            new("file.yaml", LintSeverity.Warning, "A warning message"),
+            new("file.yaml", LintSeverity.Error, "An error message")
+        };
+        var result = new ReviewMarkLoadResult(null, issues);
+
+        // Act
+        int exitCode;
+        using (var context = Context.Create(["--silent", "--log", logFile]))
+        {
+            result.ReportIssues(context, includeWarnings: false);
+            exitCode = context.ExitCode;
+        }
+
+        // Assert
+        Assert.Equal(1, exitCode);
+        var log = File.ReadAllText(logFile);
+        Assert.DoesNotContain("A warning message", log);
+        Assert.Contains("An error message", log);
+    }
+
+    /// <summary>
+    ///     Test that ReportIssues with alwaysWriteErrors writes errors to stderr even in silent mode.
+    /// </summary>
+    [Fact]
+    public void ReviewMarkLoadResult_ReportIssues_AlwaysWriteErrors_Silent_WritesStderr()
+    {
+        // Arrange
+        var issues = new List<LintIssue>
+        {
+            new("file.yaml", LintSeverity.Error, "An error message")
+        };
+        var result = new ReviewMarkLoadResult(null, issues);
+        var originalError = Console.Error;
+        try
+        {
+            using var errWriter = new StringWriter();
+            Console.SetError(errWriter);
+            using var context = Context.Create(["--silent"]);
+
+            // Act
+            result.ReportIssues(context, includeWarnings: false, alwaysWriteErrors: true);
+
+            // Assert
+            Assert.Contains("An error message", errWriter.ToString());
+            Assert.Equal(1, context.ExitCode);
+        }
+        finally
+        {
+            Console.SetError(originalError);
+        }
+    }
+
+    /// <summary>
+    ///     Test that an empty needs-review list makes every path unreviewed when it is in no review set.
+    /// </summary>
+    [Fact]
+    public void ReviewMarkConfiguration_GetAffectedReviewSets_EmptyNeedsReview_AllUnmatchedAreUnreviewed()
+    {
+        // Arrange
+        var config = ReviewMarkConfiguration.Parse("""
+            evidence-source:
+              type: none
+            reviews:
+              - id: A
+                title: A
+                paths:
+                  - "src/**/*.cs"
+            """);
+
+        // Act
+        var result = config.GetAffectedReviewSets(["src/X.cs", "other/y.txt"]);
+
+        // Assert
+        Assert.Single(result.ReviewSets);
+        Assert.Equal(["other/y.txt"], result.Unreviewed);
     }
 
     /// <summary>

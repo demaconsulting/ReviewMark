@@ -12,8 +12,9 @@ sections:
                 justification: |
                   When constructing file paths from user-supplied or externally-sourced components
                   (such as relative paths read from an evidence index), the tool must be able to
-                  combine a base directory path with a relative path to produce a valid result.
-                  This is a prerequisite for any subsequent path-traversal validation.
+                  combine a base directory path with a relative path to produce a valid combined
+                  path (the caller's relative or absolute style is preserved). This is a
+                  prerequisite for any subsequent path-traversal validation.
                 tests:
                   - PathHelpers_SafePathCombine_ValidPaths_CombinesCorrectly
                   - PathHelpers_SafePathCombine_NestedPaths_CombinesCorrectly
@@ -43,3 +44,88 @@ sections:
                 tests:
                   - PathHelpers_SafePathCombine_NullBasePath_ThrowsArgumentNullException
                   - PathHelpers_SafePathCombine_NullRelativePath_ThrowsArgumentNullException
+
+              - id: ReviewMark-PathHelpers-ChangedPaths-Parse-Separator
+                title: >-
+                  The PathHelpers shall parse a changed-file list, auto-detecting NUL or newline
+                  separation, and return an empty result for empty input.
+                justification: |
+                  Changed-file lists come from tools such as git: LF, CRLF, or NUL separators
+                  (git -z); in NUL mode CR and LF are part of the name.
+                tests:
+                  - PathHelpers_ParseChangedPaths_NewlineSeparated_PreservesWhitespaceRemovesCrAndSorts
+                  - PathHelpers_ParseChangedPaths_NulSeparated_SplitsOnNul
+                  - PathHelpers_ParseChangedPaths_EmptyInput_ReturnsEmpty
+
+              - id: ReviewMark-PathHelpers-ChangedPaths-Parse-Transport
+                title: >-
+                  The PathHelpers shall remove one leading byte-order mark and, in newline mode, one
+                  trailing CR per entry from a changed-file list.
+                justification: |
+                  A BOM and CR are transport artifacts of files produced on different platforms and
+                  must not become part of a path.
+                tests:
+                  - PathHelpers_ParseChangedPaths_BomAndCrOnly_Removed
+                  - PathHelpers_ParseChangedPaths_NewlineSeparated_PreservesWhitespaceRemovesCrAndSorts
+
+              - id: ReviewMark-PathHelpers-ChangedPaths-Parse-Whitespace
+                title: >-
+                  The PathHelpers shall preserve leading, trailing and whitespace-only content of
+                  changed-file entries.
+                justification: |
+                  Whitespace can be significant in real file names, so only transport artifacts are removed.
+                tests:
+                  - PathHelpers_ParseChangedPaths_LeadingTrailingSpaces_Preserved
+                  - PathHelpers_ParseChangedPaths_WhitespaceOnlyEntry_Kept
+
+              - id: ReviewMark-PathHelpers-ChangedPaths-Parse-NullRejected
+                title: >-
+                  The PathHelpers shall throw ArgumentNullException when ParseChangedPaths or
+                  NormalizeChangedPath receives a null argument.
+                justification: |
+                  Null arguments are programming errors and must be reported explicitly.
+                tests:
+                  - PathHelpers_ParseChangedPaths_NullText_ThrowsArgumentNullException
+                  - PathHelpers_ParseChangedPaths_NullDirectory_ThrowsArgumentNullException
+                  - PathHelpers_NormalizeChangedPath_NullPath_ThrowsArgumentNullException
+                  - PathHelpers_NormalizeChangedPath_NullDirectory_ThrowsArgumentNullException
+
+              - id: ReviewMark-PathHelpers-ChangedPaths-Normalize-Separators
+                title: >-
+                  The PathHelpers shall normalize each changed path to forward slashes without
+                  leading ./ segments.
+                justification: |
+                  Normalizing makes glob matching deterministic across platforms.
+                tests:
+                  - PathHelpers_NormalizeChangedPath_BackslashesAndDotSlash_Normalized
+
+              - id: ReviewMark-PathHelpers-ChangedPaths-Normalize-Absolute
+                title: >-
+                  The PathHelpers shall make absolute changed paths under the directory relative and
+                  retain absolute paths outside the directory unchanged (with forward slashes).
+                justification: |
+                  Absolute paths outside the working directory cannot be made relative, so they are
+                  kept as normalized text and match no review-set glob.
+                tests:
+                  - PathHelpers_NormalizeChangedPath_AbsolutePath_MadeRelativeToDirectory
+                  - PathHelpers_NormalizeChangedPath_AbsoluteOutsideDirectory_RetainedUnchanged
+
+              - id: ReviewMark-PathHelpers-ChangedPaths-Dedupe
+                title: >-
+                  The PathHelpers shall return changed paths de-duplicated after normalization and
+                  sorted ordinally.
+                justification: |
+                  Different spellings of the same path (a, ./a, .\a) must produce a single, deterministic entry.
+                tests:
+                  - PathHelpers_ParseChangedPaths_DuplicateForms_Deduplicated
+
+              - id: ReviewMark-PathHelpers-ChangedPaths-Escape
+                title: >-
+                  The PathHelpers shall escape backslash, TAB, LF and CR in record fields as
+                  \\, \t, \n and \r in a reversible way.
+                justification: |
+                  Record fields may contain delimiter characters; reversible escaping keeps the
+                  tab-delimited output unambiguous.
+                tests:
+                  - PathHelpers_EscapeRecordField_SpecialCharacters_EscapedAndReversible
+                  - PathHelpers_EscapeRecordField_Null_ThrowsArgumentNullException

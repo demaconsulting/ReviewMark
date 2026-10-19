@@ -26,6 +26,7 @@ every CI/CD run.
 - 📋 **Coverage Reporting** - Review plan shows which files are covered and flags uncovered files
 - 📊 **Status Reporting** - Review report shows whether each review-set is Current, Stale, Missing, or Failed
 - 🔍 **Review Elaboration** - `--elaborate` prints the ID, title, fingerprint, optional context files, and file list for a review set
+- 🧭 **Affected Review Sets** - `--affected` maps a list of changed files (for example from `git diff --name-only`) to the review sets that need re-review
 - 🔎 **Configuration Linting** - `--lint` validates the definition file and reports all structural and semantic issues
 - 🚦 **Enforcement** - `--enforce` exits non-zero if any review-set is stale, missing, or failed, or any file is uncovered
 - 🔄 **Re-indexing** - `--index` scans PDF evidence files and writes an up-to-date `index.json`
@@ -166,6 +167,26 @@ reviewmark --dir \\reviews.example.com\evidence\ --index "2025/**/*.pdf" --index
 | `--dir <directory>`       | Set the working directory for default paths and glob paths                     |
 | `--enforce`               | Exit with non-zero code if there are review issues                             |
 | `--elaborate <id>`        | Print a Markdown elaboration of the specified review set                       |
+| `--affected <file\|->`    | List review sets affected by the changed files in the file (or stdin for `-`)  |
+
+## Find Affected Review Sets
+
+`--affected` reads changed file paths (one per line, or NUL-separated) from a file or from standard
+input (`-`) and prints the review sets they affect, plus changed files that need review but belong
+to no review set. Paths are matched as text, so deleted files are included, and ReviewMark never
+runs git itself.
+
+```bash
+git diff --name-only HEAD | reviewmark --affected -
+```
+
+Output lines are tab-separated: `affected<TAB><id><TAB><path>` and `unreviewed<TAB><path>`, or
+`No affected review-sets`. Backslash, TAB, LF and CR inside an ID or path are escaped as `\\`,
+`\t`, `\n` and `\r`; `<TAB>` stands for a single TAB character. Lint warnings are not printed in this mode (run `--lint` to see them). The exit
+code is 0 even when unreviewed files exist; unreadable input, an invalid or missing definition, an
+`--affected` value that is empty or starts with `--` (use `./--name`), or
+combining `--affected` with `--plan`, `--report`, `--elaborate`, `--index` or `--lint` exits with
+code 1, and these errors go to stderr even with `--silent`. See the [User Guide][link-guide] for more git examples and the agent workflow.
 
 ## Error Handling
 

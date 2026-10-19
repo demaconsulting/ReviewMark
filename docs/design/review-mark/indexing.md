@@ -45,7 +45,10 @@ See the *ReviewIndex Design* and *PathHelpers Design* for full unit details.
 
 - **`SafePathCombine(string basePath, string relativePath)`** → `string` — combines paths,
   rejecting traversal sequences
-
+- **`ParseChangedPaths(string text, string directory)`** → `IReadOnlyList<string>` — parses a
+  changed-files list
+- **`NormalizeChangedPath(string path, string directory)`** → `string` — normalizes one path
+- **`EscapeRecordField(string value)`** → `string` — escapes an `--affected` output field
 The subsystem exposes no public types beyond `ReviewIndex`, `ReviewEvidence`, and
 `PathHelpers`; all members are `internal` to the assembly.
 

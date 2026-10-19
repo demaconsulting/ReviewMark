@@ -592,6 +592,455 @@ public class CliTests
     }
 
     /// <summary>
+    ///     Definition used by the --affected CLI tests.
+    /// </summary>
+    private const string AffectedCliDefinition = """
+        needs-review:
+          - "src/**/*.cs"
+        evidence-source:
+          type: none
+        reviews:
+          - id: Test-Review
+            title: Test review
+            paths:
+              - "src/Core/**/*.cs"
+        """;
+
+    /// <summary>
+    ///     Runs the program with --affected and captured console I/O.
+    /// </summary>
+    private static (string Output, int ExitCode) RunAffected(
+        string? stdin,
+        string listArg,
+        string? listContent = null,
+        string? definition = null)
+    {
+        var defFile = Path.Combine(Path.GetTempPath(), Path.ChangeExtension(Path.GetRandomFileName(), ".yaml"));
+        var listFile = Path.Combine(Path.GetTempPath(), Path.ChangeExtension(Path.GetRandomFileName(), ".txt"));
+        var originalOut = Console.Out;
+        var originalIn = Console.In;
+        try
+        {
+            File.WriteAllText(defFile, definition ?? AffectedCliDefinition);
+            if (listContent != null)
+            {
+                File.WriteAllText(listFile, listContent);
+            }
+
+            using var outWriter = new StringWriter();
+            Console.SetOut(outWriter);
+            if (stdin != null)
+            {
+                Console.SetIn(new StringReader(stdin));
+            }
+
+            using var context = Context.Create(
+                ["--definition", defFile, "--affected", listArg == "FILE" ? listFile : listArg]);
+            Program.Run(context);
+            return (outWriter.ToString(), context.ExitCode);
+        }
+        finally
+        {
+            Console.SetOut(originalOut);
+            Console.SetIn(originalIn);
+            File.Delete(defFile);
+            File.Delete(listFile);
+        }
+    }
+
+    /// <summary>
+    ///     Test that --affected reads the changed-files list from standard input.
+    /// </summary>
+    [Fact]
+    public void Cli_AffectedFlag_Stdin_ListsAffectedReviewSets()
+    {
+        // Arrange
+        const string stdin = "src/Core/A.cs\r\n";
+
+        // Act
+        var (output, exitCode) = RunAffected(stdin, "-");
+
+        // Assert
+        Assert.Equal(0, exitCode);
+        Assert.Equal($"affected\tTest-Review\tsrc/Core/A.cs{Environment.NewLine}", output);
+    }
+
+    /// <summary>
+    ///     Test that --affected accepts CRLF-separated input from a named file without CR in the output.
+    /// </summary>
+    [Fact]
+    public void Cli_AffectedFlag_CrlfNamedFile_ListsAffectedReviewSets()
+    {
+        // Arrange
+        const string list = "src/Core/A.cs\r\nsrc/Core/B.cs\r\n";
+
+        // Act
+        var (output, exitCode) = RunAffected(null, "FILE", list);
+
+        // Assert
+        Assert.Equal(0, exitCode);
+        Assert.DoesNotContain("\r\t", output);
+        Assert.Equal(
+            $"affected\tTest-Review\tsrc/Core/A.cs{Environment.NewLine}affected\tTest-Review\tsrc/Core/B.cs{Environment.NewLine}",
+            output);
+    }
+
+    /// <summary>
+    ///     Test that --affected accepts NUL-separated input.
+    /// </summary>
+    [Fact]
+    public void Cli_AffectedFlag_NulSeparatedInput_ListsAffectedReviewSets()
+    {
+        // Arrange
+        const string list = "src/Core/A.cs\0src/Core/B.cs\0";
+
+        // Act
+        var (output, exitCode) = RunAffected(null, "FILE", list);
+
+        // Assert
+        Assert.Equal(0, exitCode);
+        Assert.Equal(
+            $"affected\tTest-Review\tsrc/Core/A.cs{Environment.NewLine}affected\tTest-Review\tsrc/Core/B.cs{Environment.NewLine}",
+            output);
+    }
+
+    /// <summary>
+    ///     Test that a deleted path is still matched by path only.
+    /// </summary>
+    [Fact]
+    public void Cli_AffectedFlag_DeletedPath_IsAffected()
+    {
+        // Arrange
+        const string list = "src/Core/DoesNotExist.cs\n";
+
+        // Act
+        var (output, exitCode) = RunAffected(null, "FILE", list);
+
+        // Assert
+        Assert.Equal(0, exitCode);
+        Assert.Contains("affected\tTest-Review\tsrc/Core/DoesNotExist.cs", output);
+    }
+
+    /// <summary>
+    ///     Test that an unreviewed path is reported without failing.
+    /// </summary>
+    [Fact]
+    public void Cli_AffectedFlag_UnreviewedPath_ReportedWithExitZero()
+    {
+        // Arrange
+        const string list = "src/Other/O.cs\n";
+
+        // Act
+        var (output, exitCode) = RunAffected(null, "FILE", list);
+
+        // Assert
+        Assert.Equal(0, exitCode);
+        Assert.Equal($"No affected review-sets{Environment.NewLine}unreviewed\tsrc/Other/O.cs{Environment.NewLine}", output);
+    }
+
+    /// <summary>
+    ///     Test that empty input and non-matching input report the sentinel only, with no banner.
+    /// </summary>
+    [Fact]
+    public void Cli_AffectedFlag_EmptyOrNoMatch_ReportsNoAffectedReviewSets()
+    {
+        // Act
+        var (empty, emptyExit) = RunAffected("", "-");
+        var (noMatch, noMatchExit) = RunAffected("docs/readme.md\n", "-");
+
+        // Assert
+        Assert.Equal(0, emptyExit);
+        Assert.Equal(0, noMatchExit);
+        Assert.Equal($"No affected review-sets{Environment.NewLine}", empty);
+        Assert.Equal($"No affected review-sets{Environment.NewLine}", noMatch);
+    }
+
+    /// <summary>
+    ///     Test that backslash, TAB, LF and CR are escaped in the records.
+    /// </summary>
+    [Fact]
+    public void Cli_AffectedFlag_SpecialCharacters_AreEscaped()
+    {
+        // Arrange — path with TAB, LF and CR (NUL-separated); review-set ID with a backslash
+        const string definition = """
+            needs-review:
+              - "src/**/*.cs"
+            evidence-source:
+              type: none
+            reviews:
+              - id: 'Back\Slash'
+                title: Test review
+                paths:
+                  - "src/Core/**/*.cs"
+            """;
+        const string list = "src/Core/a\tb\nc\rd.cs\0";
+
+        // Act
+        var (output, exitCode) = RunAffected(null, "FILE", list, definition);
+
+        // Assert
+        Assert.Equal(0, exitCode);
+        Assert.Equal($"affected\tBack\\\\Slash\tsrc/Core/a\\tb\\nc\\rd.cs{Environment.NewLine}", output);
+    }
+
+    /// <summary>
+    ///     Test reader that fails on read, simulating an unreadable standard input.
+    /// </summary>
+    private sealed class ThrowingReader : TextReader
+    {
+        /// <inheritdoc />
+        public override string ReadToEnd() => throw new IOException("simulated failure");
+    }
+
+    /// <summary>
+    ///     Invokes the real <c>Program.Main</c> entry point with captured console I/O.
+    /// </summary>
+    private static (int ExitCode, string Stdout, string Stderr) RunMain(string[] args, TextReader? stdin = null)
+    {
+        var originalOut = Console.Out;
+        var originalError = Console.Error;
+        var originalIn = Console.In;
+        try
+        {
+            using var outWriter = new StringWriter();
+            using var errWriter = new StringWriter();
+            Console.SetOut(outWriter);
+            Console.SetError(errWriter);
+            if (stdin != null)
+            {
+                Console.SetIn(stdin);
+            }
+
+            // Note: uses reflection to invoke the internal Main method; Assert.NotNull catches signature changes.
+            var mainMethod = typeof(Program).GetMethod(
+                "Main",
+                System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Static);
+            Assert.NotNull(mainMethod);
+
+            var result = mainMethod.Invoke(null, [args]);
+            return (result is int code ? code : 0, outWriter.ToString(), errWriter.ToString());
+        }
+        finally
+        {
+            Console.SetOut(originalOut);
+            Console.SetError(originalError);
+            Console.SetIn(originalIn);
+        }
+    }
+
+    /// <summary>
+    ///     Test that --affected combined with each exclusive operation exits 1 with an error on stderr.
+    /// </summary>
+    [Theory]
+    [InlineData("--plan", "x.md")]
+    [InlineData("--report", "x.md")]
+    [InlineData("--elaborate", "X")]
+    [InlineData("--index", "*.pdf")]
+    [InlineData("--lint", null)]
+    public void Cli_AffectedFlag_ConflictingOptions_ExitsOneWithStderr(string option, string? value)
+    {
+        // Arrange
+        var args = value == null ? new[] { "--affected", "-", option } : ["--affected", "-", option, value];
+
+        // Act
+        var (exitCode, stdout, stderr) = RunMain(args, new StringReader(""));
+
+        // Assert
+        Assert.Equal(1, exitCode);
+        Assert.StartsWith("Error:", stderr.TrimStart());
+        Assert.Contains("--affected cannot be combined", stderr);
+        Assert.DoesNotContain("affected\t", stdout);
+        Assert.DoesNotContain("unreviewed\t", stdout);
+    }
+
+    /// <summary>
+    ///     Test that a missing --affected input file exits 1 with an error on stderr.
+    /// </summary>
+    [Fact]
+    public void Cli_AffectedFlag_MissingInputFile_ExitsOneWithStderr()
+    {
+        // Arrange
+        var defFile = Path.Combine(Path.GetTempPath(), Path.ChangeExtension(Path.GetRandomFileName(), ".yaml"));
+        var missing = Path.Combine(Path.GetTempPath(), Path.GetRandomFileName() + ".txt");
+        try
+        {
+            File.WriteAllText(defFile, AffectedCliDefinition);
+
+            // Act
+            var (exitCode, stdout, stderr) = RunMain(["--definition", defFile, "--affected", missing]);
+
+            // Assert
+            Assert.Equal(1, exitCode);
+            Assert.StartsWith("Error:", stderr.TrimStart());
+            Assert.Equal("", stdout);
+        }
+        finally
+        {
+            File.Delete(defFile);
+        }
+    }
+
+    /// <summary>
+    ///     Test that an unreadable standard input exits 1 with an error on stderr.
+    /// </summary>
+    [Fact]
+    public void Cli_AffectedFlag_UnreadableStdin_ExitsOneWithStderr()
+    {
+        // Arrange
+        var defFile = Path.Combine(Path.GetTempPath(), Path.ChangeExtension(Path.GetRandomFileName(), ".yaml"));
+        try
+        {
+            File.WriteAllText(defFile, AffectedCliDefinition);
+
+            // Act
+            var (exitCode, stdout, stderr) = RunMain(["--definition", defFile, "--affected", "-"], new ThrowingReader());
+
+            // Assert
+            Assert.Equal(1, exitCode);
+            Assert.StartsWith("Error:", stderr.TrimStart());
+            Assert.Contains("standard input", stderr);
+            Assert.Equal("", stdout);
+        }
+        finally
+        {
+            File.Delete(defFile);
+        }
+    }
+
+    /// <summary>
+    ///     Test that an invalid definition exits 1 with an error on stderr.
+    /// </summary>
+    [Fact]
+    public void Cli_AffectedFlag_InvalidDefinition_ExitsOneWithStderr()
+    {
+        // Arrange
+        var defFile = Path.Combine(Path.GetTempPath(), Path.ChangeExtension(Path.GetRandomFileName(), ".yaml"));
+        try
+        {
+            File.WriteAllText(defFile, "reviews: [");
+
+            // Act
+            var (exitCode, stdout, stderr) = RunMain(
+                ["--definition", defFile, "--affected", "-"], new StringReader("src/Core/A.cs\n"));
+
+            // Assert
+            Assert.Equal(1, exitCode);
+            Assert.Contains(": error:", stderr);
+            Assert.Equal("", stdout);
+        }
+        finally
+        {
+            File.Delete(defFile);
+        }
+    }
+
+    /// <summary>
+    ///     Test that a missing definition file exits 1 with an error on stderr.
+    /// </summary>
+    [Fact]
+    public void Cli_AffectedFlag_MissingDefinition_ExitsOneWithStderr()
+    {
+        // Arrange
+        var missing = Path.Combine(Path.GetTempPath(), Path.GetRandomFileName() + ".yaml");
+
+        // Act
+        var (exitCode, stdout, stderr) = RunMain(
+            ["--definition", missing, "--affected", "-"], new StringReader("src/Core/A.cs\n"));
+
+        // Assert
+        Assert.Equal(1, exitCode);
+        Assert.Contains(": error:", stderr);
+        Assert.Equal("", stdout);
+    }
+
+    /// <summary>
+    ///     Test that --affected honors --definition, --dir, --silent and --log together.
+    /// </summary>
+    [Fact]
+    public void Cli_AffectedFlag_AllModifiers_Honored()
+    {
+        // Arrange
+        var tmpDir = Path.Combine(Path.GetTempPath(), Path.GetRandomFileName());
+        Directory.CreateDirectory(tmpDir);
+        var defFile = Path.Combine(tmpDir, "definition.yaml");
+        var listFile = Path.Combine(tmpDir, "list.txt");
+        var logFile = Path.Combine(tmpDir, "out.log");
+        try
+        {
+            File.WriteAllText(defFile, AffectedCliDefinition);
+
+            // Absolute path inside --dir: must be reported relative to --dir, not the process directory
+            File.WriteAllText(listFile, Path.Combine(tmpDir, "src", "Core", "A.cs") + "\n");
+
+            // Act
+            var (exitCode, stdout, stderr) = RunMain(
+                ["--definition", defFile, "--dir", tmpDir, "--silent", "--log", logFile, "--affected", listFile]);
+
+            // Assert — silent: nothing on stdout; records go to the log file
+            Assert.Equal(0, exitCode);
+            Assert.Equal("", stdout);
+            Assert.Equal("", stderr);
+            var log = File.ReadAllText(logFile);
+            Assert.Contains("affected\tTest-Review\tsrc/Core/A.cs", log);
+        }
+        finally
+        {
+            Directory.Delete(tmpDir, recursive: true);
+        }
+    }
+
+    /// <summary>
+    ///     Test that --affected flag lists affected review sets.
+    /// </summary>
+    [Fact]
+    public void Cli_AffectedFlag_ChangedFiles_ListsAffectedReviewSets()
+    {
+        // Arrange
+        var defFile = Path.Combine(Path.GetTempPath(), Path.ChangeExtension(Path.GetRandomFileName(), ".yaml"));
+        var listFile = Path.Combine(Path.GetTempPath(), Path.ChangeExtension(Path.GetRandomFileName(), ".txt"));
+
+        try
+        {
+            File.WriteAllText(defFile, """
+                needs-review:
+                  - "src/**/*.cs"
+                evidence-source:
+                  type: none
+                reviews:
+                  - id: Test-Review
+                    title: Test review
+                    paths:
+                      - "src/**/*.cs"
+                """);
+            File.WriteAllText(listFile, "src/A.cs\n");
+
+            var originalOut = Console.Out;
+            try
+            {
+                using var outWriter = new StringWriter();
+                Console.SetOut(outWriter);
+                using var context = Context.Create(["--definition", defFile, "--affected", listFile]);
+
+                // Act
+                Program.Run(context);
+
+                // Assert
+                Assert.Equal(0, context.ExitCode);
+                Assert.Contains("affected\tTest-Review\tsrc/A.cs", outWriter.ToString());
+            }
+            finally
+            {
+                Console.SetOut(originalOut);
+            }
+        }
+        finally
+        {
+            File.Delete(defFile);
+            File.Delete(listFile);
+        }
+    }
+
+    /// <summary>
     ///     Test that --elaborate flag outputs elaboration for a valid review-set.
     /// </summary>
     [Fact]

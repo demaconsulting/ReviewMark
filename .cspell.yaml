@@ -15,6 +15,10 @@ language: en
 
 # Project-specific technical terms and tool names
 words:
+  - Dedupe
+  - FEFF
+  - ordinally
+  - unredirected
   - buildmark
   - CIFS
   - Dema
@@ -30,6 +34,7 @@ words:
   - Pdfs
   - planfile
   - postconditions
+  - quotepath
   - Qube
   - reportfile
   - reqstream

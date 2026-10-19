@@ -113,4 +113,41 @@ internal static class GlobMatcher
 
         return result;
     }
+
+    /// <summary>
+    ///     Determines whether a relative path matches the ordered include/exclude
+    ///     <paramref name="patterns" /> using path-string matching only (no file system access).
+    /// </summary>
+    /// <param name="relativePath">The relative path, using forward slashes.</param>
+    /// <param name="patterns">Ordered glob patterns; a <c>!</c> prefix marks an exclude.</param>
+    /// <returns>
+    ///     <c>true</c> if the path is included after applying every pattern in order; otherwise <c>false</c>.
+    /// </returns>
+    /// <remarks>
+    ///     Applies the same ordered semantics as <see cref="GetMatchingFiles" />: an include sets the
+    ///     result to <c>true</c>, an exclude sets it to <c>false</c>, so a later include re-adds a path.
+    ///     Because the file system is not consulted, deleted files can be matched.
+    /// </remarks>
+    /// <exception cref="ArgumentNullException">
+    ///     Thrown when <paramref name="relativePath" /> or <paramref name="patterns" /> is <c>null</c>.
+    /// </exception>
+    internal static bool IsMatch(string relativePath, IReadOnlyList<string> patterns)
+    {
+        ArgumentNullException.ThrowIfNull(relativePath);
+        ArgumentNullException.ThrowIfNull(patterns);
+
+        var matched = false;
+        foreach (var pattern in patterns)
+        {
+            var isExclude = pattern.StartsWith('!');
+            var matcher = new Matcher();
+            matcher.AddInclude(isExclude ? pattern[1..] : pattern);
+            if (matcher.Match(relativePath).HasMatches)
+            {
+                matched = !isExclude;
+            }
+        }
+
+        return matched;
+    }
 }

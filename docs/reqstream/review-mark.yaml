@@ -163,6 +163,177 @@ sections:
           - ReviewMark-Configuration-Elaboration
           - ReviewMark-Configuration-ElaborateUnknownId
 
+      - id: ReviewMark-System-Affected-Input-Source
+        title: The tool shall read the --affected changed-file list from a named file or from standard input.
+        justification: |
+          Changed-file lists come from tools such as git, so the tool must accept a named file or
+          '-' for standard input.
+        tags: [system]
+        tests:
+          - ReviewMark_AffectedFlag_Stdin_ListsAffectedReviewSets
+          - ReviewMark_AffectedFlag_WithChangedFile_ListsAffectedReviewSets
+        children:
+          - ReviewMark-Cmd-Affected-Option
+          - ReviewMark-Cmd-Affected-Modifiers
+          - ReviewMark-Program-Affected-Input-Source
+          - ReviewMark-Program-Affected-Input-Empty
+
+      - id: ReviewMark-System-Affected-Input-Separators
+        title: The tool shall accept LF, CRLF and NUL-separated --affected changed-file lists.
+        justification: |
+          Changed-file lists are produced on different platforms (git diff --name-only,
+          git diff -z), so the tool auto-detects the separator.
+        tags: [system]
+        tests:
+          - ReviewMark_AffectedFlag_Stdin_ListsAffectedReviewSets
+          - ReviewMark_AffectedFlag_NamedFileCrlf_ListsAffectedReviewSets
+          - ReviewMark_AffectedFlag_NulSeparatedInput_ListsAffectedReviewSets
+        children:
+          - ReviewMark-Cmd-Affected-Separators
+
+      - id: ReviewMark-System-Affected-Matching
+        title: The tool shall match --affected paths against review-set paths by path only, without needing the files to exist.
+        justification: |
+          After a change, reviewers and agents need to know which review sets are affected
+          without the files still existing, so matching never touches the file system and
+          deleted files are matched.
+        tags: [system]
+        tests:
+          - ReviewMark_AffectedFlag_DeletedPath_ListsAffectedReviewSets
+          - ReviewMark_AffectedFlag_WithChangedFile_ListsAffectedReviewSets
+        children:
+          - ReviewMark-Program-Affected-Records-Format
+          - ReviewMark-Program-Affected-Records-Dedupe
+
+      - id: ReviewMark-System-Affected-Unreviewed
+        title: The tool shall report changed files that need review but match no review set as unreviewed.
+        justification: |
+          Uncovered files identify gaps in the review definition.
+        tags: [system]
+        tests:
+          - ReviewMark_AffectedFlag_UnreviewedPath_ReportsUnreviewedExitZero
+        children:
+          - ReviewMark-Program-Affected-Unreviewed-Records
+          - ReviewMark-Program-Affected-Unreviewed-OutsideDir
+
+      - id: ReviewMark-System-Affected-Unreviewed-ExitZero
+        title: The tool shall exit with code 0 when --affected reports unreviewed files.
+        justification: |
+          Uncovered files are informational and must not make the run fail.
+        tags: [system]
+        tests:
+          - ReviewMark_AffectedFlag_UnreviewedPath_ReportsUnreviewedExitZero
+        children:
+          - ReviewMark-Program-Affected-Unreviewed-ExitZero
+
+      - id: ReviewMark-System-Affected-Output-Records
+        title: >-
+          The tool shall write --affected results as escaped tab-delimited records on standard output.
+        justification: |
+          Scripts and agents parse the output, so the format must be deterministic: records are
+          'affected<TAB>id<TAB>path' and 'unreviewed<TAB>path' with backslash, TAB, LF and CR escaped.
+        tags: [system]
+        tests:
+          - ReviewMark_AffectedFlag_ExactOutputFormat_NoBannerNoStderr
+          - ReviewMark_AffectedFlag_EscapedNames_AreEscaped
+        children:
+          - ReviewMark-Cmd-Affected-Records
+          - ReviewMark-Program-Affected-Records-Escaping
+
+      - id: ReviewMark-System-Affected-Output-Sentinel
+        title: >-
+          The tool shall write the line 'No affected review-sets' for --affected when nothing is affected.
+        justification: |
+          Scripts need an unambiguous signal that the input was processed and nothing is affected.
+        tags: [system]
+        tests:
+          - ReviewMark_AffectedFlag_NoMatch_ReportsNoAffected
+          - ReviewMark_AffectedFlag_EmptyInput_ReportsNoAffected
+        children:
+          - ReviewMark-Cmd-Affected-Sentinel
+          - ReviewMark-Program-Affected-NoMatch
+
+      - id: ReviewMark-System-Affected-Output-NoBanner
+        title: >-
+          The tool shall write no banner and no lint warnings for --affected.
+        justification: |
+          A banner or warnings would pollute the machine-readable stream.
+        tags: [system]
+        tests:
+          - ReviewMark_AffectedFlag_ExactOutputFormat_NoBannerNoStderr
+        children:
+          - ReviewMark-Cmd-Affected-NoBanner
+          - ReviewMark-Program-Affected-Banner
+          - ReviewMark-Program-Affected-Warnings
+          - ReviewMark-Program-Affected-Silent
+          - ReviewMark-Program-Affected-Log
+
+      - id: ReviewMark-System-Affected-Errors-Input
+        title: >-
+          The tool shall report an unreadable --affected input on standard error and exit with code 1.
+        justification: |
+          A failed read must not be mistaken for an empty change set.
+        tags: [system]
+        tests:
+          - ReviewMark_AffectedFlag_MissingInputFile_ExitsOne
+        children:
+          - ReviewMark-Program-Affected-Errors-ReadFailure
+          - ReviewMark-Program-Affected-Errors-StdinFailure
+          - ReviewMark-Cmd-Affected-Errors
+
+      - id: ReviewMark-System-Affected-Errors-Definition
+        title: >-
+          The tool shall report an invalid or missing definition for --affected on standard error and
+          exit with code 1.
+        justification: |
+          Without a usable definition no review sets can be evaluated and CI scripts must not treat
+          the run as "nothing affected".
+        tags: [system]
+        tests:
+          - ReviewMark_AffectedFlag_MissingDefinition_ExitsOne
+          - ReviewMark_AffectedFlag_InvalidDefinition_ReportsStderr
+        children:
+          - ReviewMark-Program-Affected-Errors-MissingDefinition
+          - ReviewMark-Program-Affected-Errors-Stderr
+
+      - id: ReviewMark-System-Affected-Errors-Conflict
+        title: >-
+          The tool shall report --affected combined with --plan, --report, --elaborate, --index or
+          --lint on standard error and exit with code 1.
+        justification: |
+          Combining operations is ambiguous and must fail visibly.
+        tags: [system]
+        tests:
+          - ReviewMark_AffectedFlag_ProhibitedCombination_ExitsOne
+        children:
+          - ReviewMark-Cmd-Affected-Exclusive
+
+      - id: ReviewMark-System-Affected-Errors-Value
+        title: >-
+          The tool shall report an empty, whitespace-only or option-like --affected value on standard
+          error and exit with code 1.
+        justification: |
+          A value such as --lint is almost certainly a missing filename; rejecting it avoids
+          silently consuming the next option.
+        tags: [system]
+        tests:
+          - ReviewMark_AffectedFlag_OptionLikeValue_ExitsOne
+          - ReviewMark_AffectedFlag_EmptyOrWhitespaceValue_ExitsOne
+        children:
+          - ReviewMark-Context-AffectedValue-Missing
+          - ReviewMark-Context-AffectedValue-Invalid
+
+      - id: ReviewMark-System-Affected-Errors-Silent
+        title: >-
+          The tool shall write --affected errors to standard error even when --silent is specified.
+        justification: |
+          --silent suppresses normal output but a failure must never look like an empty result.
+        tags: [system]
+        tests:
+          - ReviewMark_AffectedFlag_Silent_InvalidDefinition_ReportsStderr
+        children:
+          - ReviewMark-Program-Affected-Errors-Silent
+
       - id: ReviewMark-System-LintValidation
         title: The tool shall validate the definition file and report only issue messages when --lint is provided.
         justification: |

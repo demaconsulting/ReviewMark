@@ -643,6 +643,22 @@ internal sealed record ReviewReportResult(string Markdown, bool HasIssues);
 internal sealed record ElaborateResult(string Markdown);
 
 /// <summary>
+///     A review set affected by a set of changed files.
+/// </summary>
+/// <param name="Id">The review-set ID.</param>
+/// <param name="Files">The changed files (in ordinal order) that matched the review set.</param>
+internal sealed record AffectedReviewSet(string Id, IReadOnlyList<string> Files);
+
+/// <summary>
+///     The result of mapping changed files onto review sets.
+/// </summary>
+/// <param name="ReviewSets">The affected review sets, in definition order.</param>
+/// <param name="Unreviewed">Changed files needing review that match no review set (in ordinal order).</param>
+internal sealed record AffectedResult(
+    IReadOnlyList<AffectedReviewSet> ReviewSets,
+    IReadOnlyList<string> Unreviewed);
+
+/// <summary>
 ///     Severity level of a lint issue.
 /// </summary>
 internal enum LintSeverity
@@ -688,15 +704,21 @@ internal sealed record ReviewMarkLoadResult(
     ///     to <see cref="Context.WriteError" /> and warnings to <see cref="Context.WriteLine" />.
     /// </summary>
     /// <param name="context">The context to report issues to.</param>
-    internal void ReportIssues(Context context)
+    /// <param name="includeWarnings">
+    ///     When <see langword="false" />, warnings are suppressed and only errors are reported.
+    /// </param>
+    /// <param name="alwaysWriteErrors">
+    ///     When <see langword="true" />, errors are written to standard error even in silent mode.
+    /// </param>
+    internal void ReportIssues(Context context, bool includeWarnings = true, bool alwaysWriteErrors = false)
     {
         foreach (var issue in Issues)
         {
             if (issue.Severity == LintSeverity.Error)
             {
-                context.WriteError(issue.ToString());
+                context.WriteError(issue.ToString(), alwaysWriteErrors);
             }
-            else
+            else if (includeWarnings)
             {
                 context.WriteLine(issue.ToString());
             }
@@ -1085,6 +1107,48 @@ internal sealed class ReviewMarkConfiguration
         }
 
         return new ReviewReportResult(sb.ToString(), hasIssues);
+    }
+
+    /// <summary>
+    ///     Maps changed file paths onto the review sets they affect, without touching the file system.
+    /// </summary>
+    /// <param name="changedPaths">Normalized relative paths (forward slashes); deleted files are allowed.</param>
+    /// <returns>
+    ///     An <see cref="AffectedResult" /> with the affected review sets in definition order and the
+    ///     changed files that need review but belong to no review set.
+    /// </returns>
+    /// <exception cref="ArgumentNullException">Thrown when <paramref name="changedPaths" /> is <c>null</c>.</exception>
+    /// <remarks>
+    ///     A file needs review when it matches <see cref="NeedsReviewPatterns" /> (or when that list is
+    ///     empty). Files that do not need review are ignored. Only <c>paths</c> patterns make a review
+    ///     set affected; <c>context</c> patterns do not, because context files are not fingerprinted.
+    /// </remarks>
+    internal AffectedResult GetAffectedReviewSets(IEnumerable<string> changedPaths)
+    {
+        ArgumentNullException.ThrowIfNull(changedPaths);
+
+        // Keep only files that need review, de-duplicated and sorted
+        var files = changedPaths
+            .Distinct(StringComparer.Ordinal)
+            .Where(f => NeedsReviewPatterns.Count == 0 || GlobMatcher.IsMatch(f, NeedsReviewPatterns))
+            .Order(StringComparer.Ordinal)
+            .ToList();
+
+        // Match files to review sets in definition order
+        var affected = new List<AffectedReviewSet>();
+        var reviewed = new HashSet<string>(StringComparer.Ordinal);
+        foreach (var review in Reviews)
+        {
+            var matches = files.Where(f => GlobMatcher.IsMatch(f, review.Paths)).ToList();
+            if (matches.Count > 0)
+            {
+                affected.Add(new AffectedReviewSet(review.Id, matches));
+                reviewed.UnionWith(matches);
+            }
+        }
+
+        var unreviewed = files.Where(f => !reviewed.Contains(f)).ToList();
+        return new AffectedResult(affected, unreviewed);
     }
 
     /// <summary>
