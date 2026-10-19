@@ -109,8 +109,15 @@ internal static class Runner
         // Feed standard input and close it
         if (stdin != null)
         {
-            process.StandardInput.Write(stdin);
-            process.StandardInput.Close();
+            try
+            {
+                process.StandardInput.Write(stdin);
+                process.StandardInput.Close();
+            }
+            catch (IOException)
+            {
+                // The child may exit before reading stdin (e.g. on early error); the exit code and output still apply
+            }
         }
 
         // Wait for the process to exit
