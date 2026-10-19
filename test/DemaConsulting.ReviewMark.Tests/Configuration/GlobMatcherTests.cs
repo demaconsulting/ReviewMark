@@ -90,6 +90,32 @@ public sealed class GlobMatcherTests : IDisposable
     }
 
     /// <summary>
+    ///     Test that IsMatch never matches paths outside the base directory.
+    /// </summary>
+    [Theory]
+    [InlineData("/x/a.cs")]
+    [InlineData("C:/x/a.cs")]
+    [InlineData("C:\\x\\a.cs")]
+    [InlineData("\\x\\a.cs")]
+    [InlineData("../a.cs")]
+    [InlineData("../../a.cs")]
+    [InlineData("..")]
+    public void GlobMatcher_IsMatch_OutsidePath_ReturnsFalse(string path)
+    {
+        Assert.False(GlobMatcher.IsMatch(path, ["**"]));
+        Assert.False(GlobMatcher.IsMatch(path, ["**/*.cs"]));
+    }
+
+    /// <summary>
+    ///     Test that a name merely starting with two dots is still matched (negative control).
+    /// </summary>
+    [Fact]
+    public void GlobMatcher_IsMatch_DotDotPrefixedName_StillMatches()
+    {
+        Assert.True(GlobMatcher.IsMatch("..foo/a.cs", ["**/*.cs"]));
+    }
+
+    /// <summary>
     ///     Test that IsMatch rejects null arguments.
     /// </summary>
     [Fact]

@@ -60,9 +60,10 @@ result is de-duplicated after normalization (so `a` and `./a` collapse) and sort
 
 **`PathHelpers.NormalizeChangedPath(string rawPath, string directory)`** → `string`
 
-Does not trim (whitespace is significant); replaces `\` with `/`; makes an absolute path
+Does not trim (whitespace is significant); replaces `\` with `/` only where `\` is the directory separator (Windows; elsewhere it is an
+ordinary file-name character and is preserved); makes an absolute path
 relative to `directory` when it lies under it (absolute paths outside `directory` are retained
-unchanged apart from the forward slashes, so they match no glob); and strips leading `./`
+unchanged apart from platform separator conversion, and `GlobMatcher.IsMatch` never matches them); and strips leading `./`
 segments. `..` segments are not collapsed.
 
 **`PathHelpers.EscapeRecordField(string value)`** → `string`

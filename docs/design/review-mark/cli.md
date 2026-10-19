@@ -31,8 +31,8 @@ argument parser and I/O owner. See the *Context Design* for full details.
   `--index` or `--lint`.
 - **Modifiers**: `--definition`, `--dir`, `--silent` and `--log` are allowed.
 - **Output**: stdout carries escaped tab-delimited `affected<TAB>id<TAB>path` and
-  `unreviewed<TAB>path` records, or the sentinel `No affected review-sets`; no banner and no lint
-  warnings are printed.
+  `unreviewed<TAB>path` records, or the sentinel `No affected review-sets`; no banner (when affected mode runs; `--help` and `--validate`
+  still print it) and no lint warnings are printed.
 - **Errors**: errors are written to stderr (even with `--silent`) and the exit code is 1.
 
 ### Interfaces

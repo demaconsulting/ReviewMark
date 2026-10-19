@@ -74,10 +74,11 @@ review-set globs by path string only (deleted files match), and writes tab-delim
 `affected<TAB>id<TAB>path` and `unreviewed<TAB>path` records to the normal output. The id and path
 fields escape `\`, TAB, LF and CR as `\\`, `\t`, `\n` and `\r`. When no review set is affected the
 sentinel line `No affected review-sets` (not a record) is written first. The banner is suppressed
-and lint warnings are not written (errors still are, on stderr, with exit code 1); the exit code is
+when affected mode runs (it is still printed with `--help` or `--validate`) and lint warnings are not written (errors still are, on stderr, with exit code 1); the exit code is
 0 even when unreviewed files exist. A changed path is "unreviewed" when it matches `needs-review`
 (or `needs-review` is empty) but matches no review set's `paths` (context patterns do not count).
-Absolute paths outside `--dir` are retained as normalized text and therefore match no glob.
+Paths outside `--dir` (absolute, drive-letter or `../`) are never matched, so they are neither
+affected nor unreviewed.
 Unreadable input (including standard input), a missing or invalid definition, or combining
 `--affected` with `--plan`, `--report`, `--elaborate`, `--index` or `--lint` is an error (stderr,
 exit code 1). `--version`, `--help` and `--validate` keep their higher dispatch priority.

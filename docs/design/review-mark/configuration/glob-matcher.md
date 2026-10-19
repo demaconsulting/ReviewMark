@@ -47,7 +47,9 @@ to forward slashes and sorted using `StringComparer.Ordinal`.
 - *Returns*: `true` if the path is included after applying all patterns in order
 - *Postconditions*: No file-system access occurs, so paths of deleted files can be matched
 
-Starts with `false`. For each pattern in declaration order, a single-pattern `Matcher`
+Returns `false` immediately for paths outside the base directory: rooted paths, a leading `/`
+or `\`, a drive-letter prefix (recognized on every operating system) or a leading `../` (or
+exactly `..`). Names such as `..foo/a.cs` are not outside paths. Otherwise starts with `false`. For each pattern in declaration order, a single-pattern `Matcher`
 evaluates the path string (`Matcher.Match(string)`); a matching include sets the result to
 `true` and a matching `!` exclude sets it to `false`. This reproduces the ordered semantics
 of `GetMatchingFiles()` (including re-include after exclude) and uses the same matching

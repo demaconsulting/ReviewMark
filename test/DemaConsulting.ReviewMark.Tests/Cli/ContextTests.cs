@@ -25,6 +25,7 @@ namespace DemaConsulting.ReviewMark.Tests.Cli;
 /// <summary>
 ///     Unit tests for the Context class.
 /// </summary>
+[Collection("ConsoleTests")]
 public class ContextTests
 {
     /// <summary>

@@ -92,20 +92,23 @@ sections:
 
               - id: ReviewMark-PathHelpers-ChangedPaths-Normalize-Separators
                 title: >-
-                  The PathHelpers shall normalize each changed path to forward slashes without
-                  leading ./ segments.
+                  The PathHelpers shall normalize each changed path to forward slashes (converting
+                  backslashes only where backslash is the directory separator) without leading ./
+                  segments.
                 justification: |
-                  Normalizing makes glob matching deterministic across platforms.
+                  Normalizing makes glob matching deterministic, while preserving backslash as a valid
+                  file-name character on POSIX platforms.
                 tests:
                   - PathHelpers_NormalizeChangedPath_BackslashesAndDotSlash_Normalized
 
               - id: ReviewMark-PathHelpers-ChangedPaths-Normalize-Absolute
                 title: >-
                   The PathHelpers shall make absolute changed paths under the directory relative and
-                  retain absolute paths outside the directory unchanged (with forward slashes).
+                  retain absolute paths outside the directory unchanged (apart from platform separator
+                  conversion).
                 justification: |
                   Absolute paths outside the working directory cannot be made relative, so they are
-                  kept as normalized text and match no review-set glob.
+                  kept as text and are never matched by any glob.
                 tests:
                   - PathHelpers_NormalizeChangedPath_AbsolutePath_MadeRelativeToDirectory
                   - PathHelpers_NormalizeChangedPath_AbsoluteOutsideDirectory_RetainedUnchanged

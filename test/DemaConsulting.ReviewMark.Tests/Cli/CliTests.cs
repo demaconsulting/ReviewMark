@@ -25,6 +25,7 @@ namespace DemaConsulting.ReviewMark.Tests.Cli;
 /// <summary>
 ///     Subsystem integration tests for the CLI subsystem (Context + Program).
 /// </summary>
+[Collection("ConsoleTests")]
 public class CliTests
 {
     /// <summary>

@@ -113,8 +113,9 @@ public class PathHelpersTests
     [Fact]
     public void PathHelpers_ParseChangedPaths_DuplicateForms_Deduplicated()
     {
-        // Act
-        var result = PathHelpers.ParseChangedPaths("a.cs\n./a.cs\n.\\a.cs\n", "/repo");
+        // Act — the backslash form is a duplicate only where backslash is the directory separator
+        var windows = Path.DirectorySeparatorChar == '\\';
+        var result = PathHelpers.ParseChangedPaths("a.cs\n./a.cs\n" + (windows ? ".\\a.cs\n" : ""), "/repo");
 
         // Assert
         Assert.Equal(["a.cs"], result);
@@ -166,7 +167,16 @@ public class PathHelpersTests
         var whitespace = PathHelpers.NormalizeChangedPath("   \r", "/repo");
 
         // Assert
-        Assert.Equal("src/Sub/A.cs", backslashes);
+        if (Path.DirectorySeparatorChar == '\\')
+        {
+            Assert.Equal("src/Sub/A.cs", backslashes);
+        }
+        else
+        {
+            // Backslash is an ordinary file-name character on POSIX and is preserved
+            Assert.Equal(".\\src\\Sub\\A.cs", backslashes);
+        }
+
         Assert.Equal("src/A.cs", dotSlash);
         Assert.Equal("   \r", whitespace);
     }
@@ -202,7 +212,7 @@ public class PathHelpersTests
         var result = PathHelpers.NormalizeChangedPath(outside, directory);
 
         // Assert
-        Assert.Equal(outside.Replace('\\', '/'), result);
+        Assert.Equal(Path.DirectorySeparatorChar == '\\' ? outside.Replace('\\', '/') : outside, result);
     }
 
     /// <summary>

@@ -108,9 +108,10 @@ public class ProgramTests
         var definitionFile = PathHelpers.SafePathCombine(tempDir.DirectoryPath, "definition.yaml");
         File.WriteAllText(definitionFile, AffectedDefinition);
 
-        // Act — CRLF input, a leading ./, backslashes, a blank line, and a file that does not exist
+        // Act — CRLF input, a leading ./, backslashes (Windows only), a blank line, and a file that does not exist
+        var goneLine = Path.DirectorySeparatorChar == '\\' ? ".\\src\\Core\\Gone.cs" : "./src/Core/Gone.cs";
         var (output, _, exitCode) = RunCaptured(
-            ".\\src\\Core\\Gone.cs\r\n\r\nsrc/Other/O.cs\r\nbin/x.dll\r\n",
+            goneLine + "\r\n\r\nsrc/Other/O.cs\r\nbin/x.dll\r\n",
             "--definition", definitionFile, "--dir", tempDir.DirectoryPath, "--affected", "-");
 
         // Assert
@@ -359,6 +360,35 @@ public class ProgramTests
     }
 
     /// <summary>
+    ///     Test that a backslash in a changed file path is preserved and escaped on POSIX, and treated as a
+    ///     separator on Windows.
+    /// </summary>
+    [Fact]
+    public void Program_Run_WithAffectedFlag_BackslashInPath_EscapedOrConvertedByPlatform()
+    {
+        // Arrange
+        using var tempDir = new TestDirectory();
+        var definitionFile = PathHelpers.SafePathCombine(tempDir.DirectoryPath, "definition.yaml");
+        File.WriteAllText(definitionFile, AffectedDefinition);
+
+        // Act
+        var (output, _, exitCode) = RunCaptured(
+            "src/Core/e\\f.cs\n",
+            "--definition", definitionFile, "--dir", tempDir.DirectoryPath, "--affected", "-");
+
+        // Assert
+        Assert.Equal(0, exitCode);
+        if (Path.DirectorySeparatorChar == '\\')
+        {
+            Assert.Equal($"affected\tCore Logic\tsrc/Core/e/f.cs{Environment.NewLine}", output);
+        }
+        else
+        {
+            Assert.Equal($"affected\tCore Logic\tsrc/Core/e\\\\f.cs{Environment.NewLine}", output);
+        }
+    }
+
+    /// <summary>
     ///     Test that duplicate paths (including ./ forms) are listed once.
     /// </summary>
     [Fact]
@@ -401,11 +431,11 @@ public class ProgramTests
     }
 
     /// <summary>
-    ///     Test that an absolute path outside --dir is retained and reported as unreviewed when
+    ///     Test that an absolute path outside --dir is neither affected nor unreviewed, even when
     ///     needs-review is empty (everything is considered).
     /// </summary>
     [Fact]
-    public void Program_Run_WithAffectedFlag_AbsolutePathOutsideDir_Unreviewed()
+    public void Program_Run_WithAffectedFlag_AbsolutePathOutsideDir_Ignored()
     {
         // Arrange
         using var tempDir = new TestDirectory();
@@ -428,9 +458,35 @@ public class ProgramTests
 
         // Assert
         Assert.Equal(0, exitCode);
-        Assert.Equal(
-            $"No affected review-sets{Environment.NewLine}unreviewed\t{PathHelpers.EscapeRecordField(outside)}{Environment.NewLine}",
-            output);
+        Assert.Equal($"No affected review-sets{Environment.NewLine}", output);
+    }
+
+    /// <summary>
+    ///     Test that --affected combined with --help still prints the banner, while a normal
+    ///     affected run does not.
+    /// </summary>
+    [Fact]
+    public void Program_Run_WithAffectedFlag_Help_PrintsBanner()
+    {
+        // Act
+        var (helpOutput, _, helpExit) = RunCaptured(null, "--affected", "changed.txt", "--help");
+
+        // Assert
+        Assert.Equal(0, helpExit);
+        Assert.Contains("ReviewMark version", helpOutput);
+    }
+
+    /// <summary>
+    ///     Test that --affected combined with --validate still prints the banner.
+    /// </summary>
+    [Fact]
+    public void Program_Run_WithAffectedFlag_Validate_PrintsBanner()
+    {
+        // Act
+        var (output, _, _) = RunCaptured(null, "--affected", "changed.txt", "--validate");
+
+        // Assert
+        Assert.Contains("ReviewMark version", output);
     }
 
     /// <summary>

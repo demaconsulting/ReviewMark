@@ -1224,6 +1224,33 @@ public sealed class ReviewMarkConfigurationTests : IDisposable
     }
 
     /// <summary>
+    ///     Test that paths outside the base directory are neither affected nor unreviewed,
+    ///     with or without a needs-review list.
+    /// </summary>
+    [Fact]
+    public void ReviewMarkConfiguration_GetAffectedReviewSets_OutsidePaths_NeitherAffectedNorUnreviewed()
+    {
+        // Arrange
+        var config = ReviewMarkConfiguration.Parse("""
+            evidence-source:
+              type: none
+            reviews:
+              - id: A
+                title: A
+                paths:
+                  - "**/*.cs"
+            """);
+        string[] outside = ["/x/a.cs", "C:/x/a.cs", "../a.cs"];
+
+        // Act
+        var result = config.GetAffectedReviewSets(outside);
+
+        // Assert
+        Assert.Empty(result.ReviewSets);
+        Assert.Empty(result.Unreviewed);
+    }
+
+    /// <summary>
     ///     Test that Load returns a lint error when a review set has only whitespace entries in its paths list.
     /// </summary>
     [Fact]

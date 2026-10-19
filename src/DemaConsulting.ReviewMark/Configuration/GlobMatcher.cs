@@ -127,6 +127,8 @@ internal static class GlobMatcher
     ///     Applies the same ordered semantics as <see cref="GetMatchingFiles" />: an include sets the
     ///     result to <c>true</c>, an exclude sets it to <c>false</c>, so a later include re-adds a path.
     ///     Because the file system is not consulted, deleted files can be matched.
+    ///     Paths outside the base directory (rooted, leading <c>/</c> or <c>\</c>, a drive-letter prefix on any
+    ///     operating system, or a leading <c>../</c> segment) are never matched.
     /// </remarks>
     /// <exception cref="ArgumentNullException">
     ///     Thrown when <paramref name="relativePath" /> or <paramref name="patterns" /> is <c>null</c>.
@@ -135,6 +137,12 @@ internal static class GlobMatcher
     {
         ArgumentNullException.ThrowIfNull(relativePath);
         ArgumentNullException.ThrowIfNull(patterns);
+
+        // Paths outside the base directory never match
+        if (IsOutsidePath(relativePath))
+        {
+            return false;
+        }
 
         var matched = false;
         foreach (var pattern in patterns)
@@ -149,5 +157,26 @@ internal static class GlobMatcher
         }
 
         return matched;
+    }
+
+    /// <summary>
+    ///     Determines whether a path lies outside the base directory (rooted, drive-letter or parent-relative).
+    /// </summary>
+    /// <param name="path">The path to test.</param>
+    /// <returns><c>true</c> if the path is outside the base directory; otherwise <c>false</c>.</returns>
+    private static bool IsOutsidePath(string path)
+    {
+        if (Path.IsPathRooted(path) || path.StartsWith('/') || path.StartsWith('\\'))
+        {
+            return true;
+        }
+
+        // Drive-letter prefix is recognized on every operating system
+        if (path.Length >= 2 && char.IsAsciiLetter(path[0]) && path[1] == ':')
+        {
+            return true;
+        }
+
+        return path == ".." || path.StartsWith("../", StringComparison.Ordinal) || path.StartsWith("..\\", StringComparison.Ordinal);
     }
 }

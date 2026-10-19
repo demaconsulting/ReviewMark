@@ -246,10 +246,10 @@ ReviewMark never runs git itself; it only reads the list of paths you give it.
 - A single leading byte-order mark is removed. Empty entries are ignored. All other whitespace is
   preserved, including leading, trailing and whitespace-only names, because it can be part of a
   real file name.
-- Backslashes are converted to `/`, leading `./` is removed, and absolute paths under `--dir` (or
-  the current directory) are made relative to it. Absolute paths outside that directory are kept
-  as they are, match no review-set glob, and so are reported as `unreviewed` when they match
-  `needs-review` (or when `needs-review` is empty).
+- On Windows, backslashes are converted to `/`; on other platforms a backslash is an ordinary
+  file-name character and is kept. Leading `./` is removed, and absolute paths under `--dir` (or
+  the current directory) are made relative to it. Paths outside that directory (absolute,
+  drive-letter or `../`) are ignored: they are neither affected nor `unreviewed`.
 - Duplicates (including `a` versus `./a`) are listed once.
 - Bytes that cannot be decoded are replaced and then matched as text; there is no malformed-input
   failure other than being unable to read the source.
@@ -260,7 +260,8 @@ ReviewMark never runs git itself; it only reads the list of paths you give it.
 
 ### Output
 
-Output is written through the normal log (so `--silent` and `--log` apply), without the banner.
+Output is written through the normal log (so `--silent` and `--log` apply), without the banner (the banner is still printed when `--affected` is combined with `--help`
+or `--validate`, because affected mode does not run).
 Fields are separated by a single tab character because review-set IDs and paths may contain
 spaces:
 

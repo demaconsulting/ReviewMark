@@ -27,6 +27,7 @@ namespace DemaConsulting.ReviewMark.Tests.SelfTest;
 /// <summary>
 ///     Subsystem integration tests for the SelfTest subsystem.
 /// </summary>
+[Collection("ConsoleTests")]
 public class SelfTestTests
 {
     /// <summary>

@@ -1122,6 +1122,8 @@ internal sealed class ReviewMarkConfiguration
     ///     A file needs review when it matches <see cref="NeedsReviewPatterns" /> (or when that list is
     ///     empty). Files that do not need review are ignored. Only <c>paths</c> patterns make a review
     ///     set affected; <c>context</c> patterns do not, because context files are not fingerprinted.
+    ///     Paths outside the base directory (rooted, drive-letter or <c>../</c>) are never matched, so they
+    ///     are neither affected nor unreviewed.
     /// </remarks>
     internal AffectedResult GetAffectedReviewSets(IEnumerable<string> changedPaths)
     {
@@ -1130,7 +1132,7 @@ internal sealed class ReviewMarkConfiguration
         // Keep only files that need review, de-duplicated and sorted
         var files = changedPaths
             .Distinct(StringComparer.Ordinal)
-            .Where(f => NeedsReviewPatterns.Count == 0 || GlobMatcher.IsMatch(f, NeedsReviewPatterns))
+            .Where(f => GlobMatcher.IsMatch(f, NeedsReviewPatterns.Count == 0 ? ["**"] : NeedsReviewPatterns))
             .Order(StringComparer.Ordinal)
             .ToList();
 

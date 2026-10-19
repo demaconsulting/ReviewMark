@@ -58,7 +58,7 @@ Tests run under xUnit on .NET 8, 9, and 10 across Windows, Linux, and macOS. Con
 
 **Program_Run_WithHelpFlag_IncludesAffectedOption**: `Program.Run` is called with `["--help"]`. Expected outcome: Help text includes "--affected". Requirement coverage: `ReviewMark-Program-Dispatch`. This scenario is tested by `Program_Run_WithHelpFlag_IncludesAffectedOption`.
 
-**Program_Run_WithAffectedFlag_Stdin_OutputsAffectedAndUnreviewed**: `Program.Run` is called with `--definition`, `--dir`, and `--affected -` with standard input containing CRLF line endings, a leading `.\` with backslashes, a blank line, a deleted file under a review-set path, a needs-review file in no review set, and a file outside needs-review. Expected outcome: Output is exactly one `affected<TAB>Core Logic<TAB>src/Core/Gone.cs` line and one `unreviewed<TAB>src/Other/O.cs` line, with no banner; exit code is 0. Requirement coverage: `ReviewMark-Program-Affected-Records-Format`, `ReviewMark-Program-Affected-Input-Source`, `ReviewMark-Program-Affected-Input-Separators`, `ReviewMark-Program-Affected-Banner`. This scenario is tested by `Program_Run_WithAffectedFlag_Stdin_OutputsAffectedAndUnreviewed`.
+**Program_Run_WithAffectedFlag_Stdin_OutputsAffectedAndUnreviewed**: `Program.Run` is called with `--definition`, `--dir`, and `--affected -` with standard input containing CRLF line endings, a leading `./` (and backslashes on Windows), a blank line, a deleted file under a review-set path, a needs-review file in no review set, and a file outside needs-review. Expected outcome: Output is exactly one `affected<TAB>Core Logic<TAB>src/Core/Gone.cs` line and one `unreviewed<TAB>src/Other/O.cs` line, with no banner; exit code is 0. Requirement coverage: `ReviewMark-Program-Affected-Records-Format`, `ReviewMark-Program-Affected-Input-Source`, `ReviewMark-Program-Affected-Input-Separators`, `ReviewMark-Program-Affected-Banner`. This scenario is tested by `Program_Run_WithAffectedFlag_Stdin_OutputsAffectedAndUnreviewed`.
 
 **Program_Run_WithAffectedFlag_EmptyFile_ReportsNoAffectedReviewSets**: `Program.Run` is called with `--affected <empty-file>`. Expected outcome: Output is exactly `No affected review-sets`; exit code is 0. Boundary or error path: empty input. Requirement coverage: `ReviewMark-Program-Affected-Input-Source`, `ReviewMark-Program-Affected-Input-Empty`, `ReviewMark-Program-Affected-NoMatch`. This scenario is tested by `Program_Run_WithAffectedFlag_EmptyFile_ReportsNoAffectedReviewSets`.
 
@@ -86,7 +86,13 @@ Tests run under xUnit on .NET 8, 9, and 10 across Windows, Linux, and macOS. Con
 
 **Program_Run_WithAffectedFlag_UnreviewedOnly_WritesSentinelAndUnreviewed**: `Program.Run` is called with a single needs-review path in no review set. Expected outcome: The sentinel line followed by one `unreviewed` record; exit code is 0. Requirement coverage: `ReviewMark-Program-Affected-Unreviewed-Records`, `ReviewMark-Program-Affected-Unreviewed-ExitZero`, `ReviewMark-Program-Affected-NoMatch`. This scenario is tested by `Program_Run_WithAffectedFlag_UnreviewedOnly_WritesSentinelAndUnreviewed`.
 
-**Program_Run_WithAffectedFlag_AbsolutePathOutsideDir_Unreviewed**: `Program.Run` is called with an absolute path outside `--dir` and a definition with an empty `needs-review` list. Expected outcome: The path is retained (forward slashes) and reported as `unreviewed`. Requirement coverage: `ReviewMark-Program-Affected-Unreviewed-OutsideDir`. This scenario is tested by `Program_Run_WithAffectedFlag_AbsolutePathOutsideDir_Unreviewed`.
+**Program_Run_WithAffectedFlag_AbsolutePathOutsideDir_Ignored**: `Program.Run` is called with an absolute path outside `--dir` and a definition with an empty `needs-review` list. Expected outcome: The path is neither affected nor unreviewed; output is `No affected review-sets`. Requirement coverage: `ReviewMark-Program-Affected-Unreviewed-OutsideDir`. This scenario is tested by `Program_Run_WithAffectedFlag_AbsolutePathOutsideDir_Ignored`.
+
+**Program_Run_WithAffectedFlag_Help_PrintsBanner**: `Program.Run` is called with `--affected changed.txt --help`. Expected outcome: The banner and help are printed; exit code is 0. Requirement coverage: `ReviewMark-Program-Affected-Banner`. This scenario is tested by `Program_Run_WithAffectedFlag_Help_PrintsBanner`.
+
+**Program_Run_WithAffectedFlag_Validate_PrintsBanner**: `Program.Run` is called with `--affected changed.txt --validate`. Expected outcome: The banner is printed because affected mode does not run. Requirement coverage: `ReviewMark-Program-Affected-Banner`. This scenario is tested by `Program_Run_WithAffectedFlag_Validate_PrintsBanner`.
+
+**Program_Run_WithAffectedFlag_BackslashInPath_EscapedOrConvertedByPlatform**: `Program.Run` is called with a changed path containing a backslash. Expected outcome: On Windows the backslash is a separator; on other platforms it is preserved and escaped as `\\`. Requirement coverage: `ReviewMark-Program-Affected-Records-Escaping`. This scenario is tested by `Program_Run_WithAffectedFlag_BackslashInPath_EscapedOrConvertedByPlatform`.
 
 **Program_Run_WithIndexFlag_ScansAndWritesIndexFile**: `Program.Run` is called with `["--index", <tempDir>]`. Expected outcome: An `index.json` file is written to the current directory; exit code is 0. Requirement coverage: `ReviewMark-Program-Index`. This scenario is tested by `Program_Run_WithIndexFlag_ScansAndWritesIndexFile`.
 
@@ -125,14 +131,16 @@ Tests run under xUnit on .NET 8, 9, and 10 across Windows, Linux, and macOS. Con
   Program_Run_WithAffectedFlag_NulInputAndSilent_SuppressesOutput
 - **ReviewMark-Program-Affected-Input-Empty**: Program_Run_WithAffectedFlag_EmptyFile_ReportsNoAffectedReviewSets
 - **ReviewMark-Program-Affected-Records-Format**: Program_Run_WithAffectedFlag_Stdin_OutputsAffectedAndUnreviewed
-- **ReviewMark-Program-Affected-Records-Escaping**: Program_Run_WithAffectedFlag_EscapesSpecialCharacters
+- **ReviewMark-Program-Affected-Records-Escaping**: Program_Run_WithAffectedFlag_EscapesSpecialCharacters,
+  Program_Run_WithAffectedFlag_BackslashInPath_EscapedOrConvertedByPlatform
 - **ReviewMark-Program-Affected-Records-Dedupe**: Program_Run_WithAffectedFlag_DuplicatePaths_ListedOnce
 - **ReviewMark-Program-Affected-Unreviewed-Records**: Program_Run_WithAffectedFlag_UnreviewedOnly_WritesSentinelAndUnreviewed
-- **ReviewMark-Program-Affected-Unreviewed-OutsideDir**: Program_Run_WithAffectedFlag_AbsolutePathOutsideDir_Unreviewed
+- **ReviewMark-Program-Affected-Unreviewed-OutsideDir**: Program_Run_WithAffectedFlag_AbsolutePathOutsideDir_Ignored
 - **ReviewMark-Program-Affected-Unreviewed-ExitZero**: Program_Run_WithAffectedFlag_UnreviewedOnly_WritesSentinelAndUnreviewed
 - **ReviewMark-Program-Affected-NoMatch**: Program_Run_WithAffectedFlag_EmptyFile_ReportsNoAffectedReviewSets,
   Program_Run_WithAffectedFlag_UnreviewedOnly_WritesSentinelAndUnreviewed
-- **ReviewMark-Program-Affected-Banner**: Program_Run_WithAffectedFlag_Stdin_OutputsAffectedAndUnreviewed
+- **ReviewMark-Program-Affected-Banner**: Program_Run_WithAffectedFlag_Stdin_OutputsAffectedAndUnreviewed,
+  Program_Run_WithAffectedFlag_Help_PrintsBanner, Program_Run_WithAffectedFlag_Validate_PrintsBanner
 - **ReviewMark-Program-Affected-Silent**: Program_Run_WithAffectedFlag_NulInputAndSilent_SuppressesOutput
 - **ReviewMark-Program-Affected-Log**: Program_Run_WithAffectedFlag_LogFile_WritesRecords
 - **ReviewMark-Program-Affected-Warnings**: Program_Run_WithAffectedFlag_ConfigWarning_NotWrittenToOutput,

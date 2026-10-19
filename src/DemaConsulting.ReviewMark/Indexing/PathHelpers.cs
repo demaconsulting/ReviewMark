@@ -132,9 +132,11 @@ internal static class PathHelpers
     /// </returns>
     /// <exception cref="ArgumentNullException">Thrown when <paramref name="rawPath"/> or <paramref name="directory"/> is <see langword="null"/>.</exception>
     /// <remarks>
-    ///     Whitespace is preserved (no trimming). Backslashes become forward slashes, absolute paths under
-    ///     <paramref name="directory"/> are made relative to it, and leading <c>./</c> segments are removed.
-    ///     Absolute paths outside the directory are retained unchanged (with forward slashes).
+    ///     Whitespace is preserved (no trimming). Backslashes become forward slashes only on platforms where
+    ///     the backslash is the directory separator (Windows); on other platforms it is an ordinary file-name
+    ///     character and is preserved. Absolute paths under <paramref name="directory"/> are made relative to
+    ///     it, and leading <c>./</c> segments are removed. Absolute paths outside the directory are retained
+    ///     unchanged (apart from the platform-specific separator conversion).
     /// </remarks>
     internal static string NormalizeChangedPath(string rawPath, string directory)
     {
@@ -142,12 +144,19 @@ internal static class PathHelpers
         ArgumentNullException.ThrowIfNull(directory);
 
         // Unify separators (whitespace is significant and preserved)
-        var path = rawPath.Replace('\\', '/');
+        // (only where backslash is the directory separator)
+        var windowsSeparators = Path.DirectorySeparatorChar == '\\';
+        var path = windowsSeparators ? rawPath.Replace('\\', '/') : rawPath;
 
         // Make absolute paths under the directory relative to it
         if (path.Length > 0 && Path.IsPathRooted(path))
         {
-            var relative = Path.GetRelativePath(Path.GetFullPath(directory), path).Replace('\\', '/');
+            var relative = Path.GetRelativePath(Path.GetFullPath(directory), path);
+            if (windowsSeparators)
+            {
+                relative = relative.Replace('\\', '/');
+            }
+
             if (relative != ".." && !relative.StartsWith("../", StringComparison.Ordinal) && !Path.IsPathRooted(relative))
             {
                 path = relative;

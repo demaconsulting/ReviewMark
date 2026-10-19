@@ -124,7 +124,8 @@ internal static class Program
     ///     priority-3 (<c>--help</c>) so it appears for every interactive
     ///     invocation but is suppressed for <c>--lint</c> to keep that output
     ///     clean for CI pipelines.  The banner is likewise suppressed for
-    ///     <c>--affected</c> so its output can be parsed or piped directly.
+    ///     <c>--affected</c> when affected mode actually runs (not with <c>--help</c> or <c>--validate</c>)
+    ///     so its output can be parsed or piped directly.
     /// </remarks>
     /// <param name="context">The context containing command line arguments and program state.</param>
     /// <exception cref="InvalidOperationException">
@@ -141,8 +142,10 @@ internal static class Program
             return;
         }
 
-        // Print application banner (suppressed for --lint and --affected to keep output parseable)
-        if (!context.Lint && context.AffectedFile == null)
+        // Print application banner (suppressed for --lint, and for --affected only when affected mode
+        // actually runs, i.e. not combined with --help or --validate, to keep output parseable)
+        var affectedModeRuns = context.AffectedFile != null && !context.Help && !context.Validate;
+        if (!context.Lint && !affectedModeRuns)
         {
             PrintBanner(context);
         }

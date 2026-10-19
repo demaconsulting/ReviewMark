@@ -38,6 +38,8 @@ N/A - standard test environment. Tests run under xUnit on .NET 8, 9, and 10, cre
 
 **ReviewMarkConfiguration_GetAffectedReviewSets_EmptyNeedsReview_AllUnmatchedAreUnreviewed**: `GetAffectedReviewSets` is called on a definition with no `needs-review` entries, with one path in a review set and one in none. Expected outcome: The covered path makes the review set affected; the other path is unreviewed (an empty `needs-review` list means every path needs review). Requirement coverage: `ReviewMark-Config-AffectedReviewSets-Unreviewed`. This scenario is tested by `ReviewMarkConfiguration_GetAffectedReviewSets_EmptyNeedsReview_AllUnmatchedAreUnreviewed`.
 
+**ReviewMarkConfiguration_GetAffectedReviewSets_OutsidePaths_NeitherAffectedNorUnreviewed**: `GetAffectedReviewSets` is called with rooted, drive-letter and `../` paths. Expected outcome: No affected review sets and no unreviewed files. Boundary or error path: Paths outside the base directory. Requirement coverage: `ReviewMark-Config-AffectedReviewSets-Matching-Sets`. This scenario is tested by `ReviewMarkConfiguration_GetAffectedReviewSets_OutsidePaths_NeitherAffectedNorUnreviewed`.
+
 **ReviewMarkConfiguration_GetAffectedReviewSets_NotNeedingReviewOrEmpty_ReturnsEmpty**: `GetAffectedReviewSets` is called with files outside needs-review, and with an empty list. Expected outcome: Empty results. Boundary or error path: Empty input and ignored files. Requirement coverage: `ReviewMark-Config-AffectedReviewSets-Matching-Sets`. This scenario is tested by `ReviewMarkConfiguration_GetAffectedReviewSets_NotNeedingReviewOrEmpty_ReturnsEmpty`.
 
 **ReviewMarkConfiguration_GetAffectedReviewSets_ContextOnlyMatch_NotAffected**: `GetAffectedReviewSets` is called with a file that matches only a review set's `context` patterns. Expected outcome: The review set is not affected and the file is unreviewed. Requirement coverage: `ReviewMark-Config-AffectedReviewSets-Matching-ContextExcluded`, `ReviewMark-Config-AffectedReviewSets-Unreviewed`. This scenario is tested by `ReviewMarkConfiguration_GetAffectedReviewSets_ContextOnlyMatch_NotAffected`.
@@ -295,7 +297,8 @@ tested by `ReviewMarkConfiguration_PublishReviewReport_FingerprintConsistentWith
 - **ReviewMark-Config-Elaboration**: ReviewMarkConfiguration_ElaborateReviewSet_ValidId_ReturnsElaboration, ReviewMarkConfiguration_ElaborateReviewSet_ContainsFullFingerprint
 - **ReviewMark-Config-AffectedReviewSets-Matching-Sets**:
   ReviewMarkConfiguration_GetAffectedReviewSets_MatchingFiles_ReturnsSetsInDefinitionOrder,
-  ReviewMarkConfiguration_GetAffectedReviewSets_NotNeedingReviewOrEmpty_ReturnsEmpty
+  ReviewMarkConfiguration_GetAffectedReviewSets_NotNeedingReviewOrEmpty_ReturnsEmpty,
+  ReviewMarkConfiguration_GetAffectedReviewSets_OutsidePaths_NeitherAffectedNorUnreviewed
 - **ReviewMark-Config-AffectedReviewSets-Matching-Order**:
   ReviewMarkConfiguration_GetAffectedReviewSets_MatchingFiles_ReturnsSetsInDefinitionOrder
 - **ReviewMark-Config-AffectedReviewSets-Matching-SortedFiles**:

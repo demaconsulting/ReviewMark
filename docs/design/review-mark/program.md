@@ -48,7 +48,8 @@ handler:
 Evaluates parsed flags in a fixed priority order and executes the first matching action:
 
 1. If `context.Version` — print version string via `context.WriteLine(Version)` and return
-2. Print application banner (suppressed when `context.Lint` is true)
+2. Print application banner (suppressed when `context.Lint` is true, or when `--affected` is supplied
+   and affected mode will actually run, i.e. without `--help` or `--validate`)
 3. If `context.Help` — print help text and return
 4. If `context.Validate` — call `Validation.Run(context)` and return
 5. If `context.Lint` — call `RunLintLogic(context)` and return

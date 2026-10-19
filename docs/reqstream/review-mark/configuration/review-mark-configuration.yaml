@@ -157,10 +157,12 @@ sections:
                   to the review sets whose paths match them, without accessing the file system.
                 justification: |
                   Callers need to know which review sets a change affects without scanning the file
-                  system, so deleted files are included. Files outside needs-review are ignored.
+                  system, so deleted files are included. Files outside needs-review, and paths outside
+                  the base directory, are ignored.
                 tests:
                   - ReviewMarkConfiguration_GetAffectedReviewSets_MatchingFiles_ReturnsSetsInDefinitionOrder
                   - ReviewMarkConfiguration_GetAffectedReviewSets_NotNeedingReviewOrEmpty_ReturnsEmpty
+                  - ReviewMarkConfiguration_GetAffectedReviewSets_OutsidePaths_NeitherAffectedNorUnreviewed
                 children:
                   - ReviewMark-GlobMatcher-PathMatching
 

@@ -192,13 +192,13 @@ sections:
 
           - id: ReviewMark-Program-Affected-Unreviewed-OutsideDir
             title: >-
-              The Program unit shall report absolute changed paths outside --dir as unreviewed when
-              they match needs-review (or needs-review is empty).
+              The Program unit shall ignore absolute changed paths outside --dir, reporting them as
+              neither affected nor unreviewed.
             justification: |
-              Absolute paths outside the working directory are retained as normalized text and match
-              no review-set glob.
+              Paths outside the working directory cannot belong to any review set and are never
+              matched, so they are not coverage gaps in the review definition.
             tests:
-              - Program_Run_WithAffectedFlag_AbsolutePathOutsideDir_Unreviewed
+              - Program_Run_WithAffectedFlag_AbsolutePathOutsideDir_Ignored
 
           - id: ReviewMark-Program-Affected-Unreviewed-ExitZero
             title: >-
@@ -220,11 +220,15 @@ sections:
 
           - id: ReviewMark-Program-Affected-Banner
             title: >-
-              The Program unit shall suppress the banner for --affected.
+              The Program unit shall suppress the banner for --affected when affected mode runs
+              (not when combined with --help or --validate).
             justification: |
-              The banner would pollute the machine-readable stream.
+              The banner would pollute the machine-readable stream, but help and validation output
+              are not machine-readable affected output and keep the banner.
             tests:
               - Program_Run_WithAffectedFlag_Stdin_OutputsAffectedAndUnreviewed
+              - Program_Run_WithAffectedFlag_Help_PrintsBanner
+              - Program_Run_WithAffectedFlag_Validate_PrintsBanner
 
           - id: ReviewMark-Program-Affected-Silent
             title: >-
