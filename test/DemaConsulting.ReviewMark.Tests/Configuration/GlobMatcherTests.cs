@@ -100,6 +100,10 @@ public sealed class GlobMatcherTests : IDisposable
     [InlineData("../a.cs")]
     [InlineData("../../a.cs")]
     [InlineData("..")]
+    [InlineData("src/../../outside.cs")]
+    [InlineData("src/../a.cs")]
+    [InlineData("src/..")]
+    [InlineData("a/b/../../../c.cs")]
     public void GlobMatcher_IsMatch_OutsidePath_ReturnsFalse(string path)
     {
         Assert.False(GlobMatcher.IsMatch(path, ["**"]));
@@ -107,12 +111,27 @@ public sealed class GlobMatcherTests : IDisposable
     }
 
     /// <summary>
-    ///     Test that a name merely starting with two dots is still matched (negative control).
+    ///     Test that names merely containing dots are still matched (negative control).
+    /// </summary>
+    [Theory]
+    [InlineData("..foo/a.cs")]
+    [InlineData("a..b/x.cs")]
+    [InlineData("src/a..b.cs")]
+    [InlineData("src/foo../x.cs")]
+    public void GlobMatcher_IsMatch_DotDotPrefixedName_StillMatches(string path)
+    {
+        Assert.True(GlobMatcher.IsMatch(path, ["**/*.cs"]));
+    }
+
+    /// <summary>
+    ///     Test that a backslash is a separator only on Windows.
     /// </summary>
     [Fact]
-    public void GlobMatcher_IsMatch_DotDotPrefixedName_StillMatches()
+    public void GlobMatcher_IsMatch_BackslashDotDot_PlatformSpecific()
     {
-        Assert.True(GlobMatcher.IsMatch("..foo/a.cs", ["**/*.cs"]));
+        var isWindows = Path.DirectorySeparatorChar == '\\';
+        Assert.Equal(!isWindows, GlobMatcher.IsMatch("a\\..\\b.cs", ["**/*.cs"]));
+        Assert.Equal(!isWindows, GlobMatcher.IsMatch("..\\b.cs", ["**/*.cs"]));
     }
 
     /// <summary>

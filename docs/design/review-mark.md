@@ -77,7 +77,7 @@ sentinel line `No affected review-sets` (not a record) is written first. The ban
 when affected mode runs (it is still printed with `--help` or `--validate`) and lint warnings are not written (errors still are, on stderr, with exit code 1); the exit code is
 0 even when unreviewed files exist. A changed path is "unreviewed" when it matches `needs-review`
 (or `needs-review` is empty) but matches no review set's `paths` (context patterns do not count).
-Paths outside `--dir` (absolute, drive-letter or `../`) are never matched, so they are neither
+Paths outside `--dir` (absolute, drive-letter or containing a `..` segment) are never matched, so they are neither
 affected nor unreviewed.
 Unreadable input (including standard input), a missing or invalid definition, or combining
 `--affected` with `--plan`, `--report`, `--elaborate`, `--index` or `--lint` is an error (stderr,

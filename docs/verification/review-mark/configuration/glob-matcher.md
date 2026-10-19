@@ -46,9 +46,11 @@ N/A - standard test environment. Tests run under xUnit on .NET 8, 9, and 10 and 
 
 **GlobMatcher_IsMatch_EmptyPatterns_ReturnsFalse**: `IsMatch` is called with an empty pattern list. Expected outcome: Returns false. Requirement coverage: `ReviewMark-GlobMatcher-PathMatching`. This scenario is tested by `GlobMatcher_IsMatch_EmptyPatterns_ReturnsFalse`.
 
-**GlobMatcher_IsMatch_OutsidePath_ReturnsFalse**: `IsMatch` is called with rooted POSIX, drive-letter (forward and back slashes), leading-backslash, `../`, `../../` and `..` paths and patterns `**` and `**/*.cs`. Expected outcome: Returns false for every path. Boundary or error path: Paths outside the base directory. Requirement coverage: `ReviewMark-GlobMatcher-PathMatching`. This scenario is tested by `GlobMatcher_IsMatch_OutsidePath_ReturnsFalse`.
+**GlobMatcher_IsMatch_OutsidePath_ReturnsFalse**: `IsMatch` is called with rooted POSIX, drive-letter (forward and back slashes), leading-backslash, `../`, `../../`, `..`, middle (`src/../../outside.cs`, `src/../a.cs`), and trailing (`src/..`) traversal paths and patterns `**` and `**/*.cs`. Expected outcome: Returns false for every path (any `..` segment is rejected). Boundary or error path: Paths outside the base directory. Requirement coverage: `ReviewMark-GlobMatcher-PathMatching`. This scenario is tested by `GlobMatcher_IsMatch_OutsidePath_ReturnsFalse`.
 
-**GlobMatcher_IsMatch_DotDotPrefixedName_StillMatches**: `IsMatch` is called with `..foo/a.cs` and `**/*.cs`. Expected outcome: Returns true (negative control; only `../` and `..` are outside paths). Requirement coverage: `ReviewMark-GlobMatcher-PathMatching`. This scenario is tested by `GlobMatcher_IsMatch_DotDotPrefixedName_StillMatches`.
+**GlobMatcher_IsMatch_DotDotPrefixedName_StillMatches**: `IsMatch` is called with `..foo/a.cs`, `a..b/x.cs`, `src/a..b.cs` and `src/foo../x.cs` and `**/*.cs`. Expected outcome: Returns true (negative control; only whole `..` segments are rejected). Requirement coverage: `ReviewMark-GlobMatcher-PathMatching`. This scenario is tested by `GlobMatcher_IsMatch_DotDotPrefixedName_StillMatches`.
+
+**GlobMatcher_IsMatch_BackslashDotDot_PlatformSpecific**: `IsMatch` is called with `a\..\b.cs` and `..\b.cs` and `**/*.cs`. Expected outcome: Returns false on Windows (backslash is a separator) and true on POSIX (backslash is a literal filename character). Requirement coverage: `ReviewMark-GlobMatcher-PathMatching`. This scenario is tested by `GlobMatcher_IsMatch_BackslashDotDot_PlatformSpecific`.
 
 **GlobMatcher_IsMatch_NullArguments_ThrowsArgumentNullException**: `IsMatch` is called with a null path and with a null pattern list. Expected outcome: `ArgumentNullException` is thrown. Boundary or error path: Null input rejection. Requirement coverage: `ReviewMark-GlobMatcher-PathMatching`. This scenario is tested by `GlobMatcher_IsMatch_NullArguments_ThrowsArgumentNullException`.
 
@@ -73,4 +75,5 @@ N/A - standard test environment. Tests run under xUnit on .NET 8, 9, and 10 and 
 - **ReviewMark-GlobMatcher-PathMatching**: GlobMatcher_IsMatch_IncludePattern_MatchesPath,
   GlobMatcher_IsMatch_ExcludeAndReInclude_AppliesOrder, GlobMatcher_IsMatch_EmptyPatterns_ReturnsFalse,
   GlobMatcher_IsMatch_NullArguments_ThrowsArgumentNullException, GlobMatcher_IsMatch_AgreesWithGetMatchingFiles,
-  GlobMatcher_IsMatch_OutsidePath_ReturnsFalse, GlobMatcher_IsMatch_DotDotPrefixedName_StillMatches
+  GlobMatcher_IsMatch_OutsidePath_ReturnsFalse, GlobMatcher_IsMatch_DotDotPrefixedName_StillMatches,
+  GlobMatcher_IsMatch_BackslashDotDot_PlatformSpecific

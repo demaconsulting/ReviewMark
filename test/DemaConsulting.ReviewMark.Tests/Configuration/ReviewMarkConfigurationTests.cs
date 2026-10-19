@@ -1240,7 +1240,7 @@ public sealed class ReviewMarkConfigurationTests : IDisposable
                 paths:
                   - "**/*.cs"
             """);
-        string[] outside = ["/x/a.cs", "C:/x/a.cs", "../a.cs"];
+        string[] outside = ["/x/a.cs", "C:/x/a.cs", "../a.cs", "src/../../outside.cs", "src/.."];
 
         // Act
         var result = config.GetAffectedReviewSets(outside);

@@ -128,7 +128,8 @@ internal static class GlobMatcher
     ///     result to <c>true</c>, an exclude sets it to <c>false</c>, so a later include re-adds a path.
     ///     Because the file system is not consulted, deleted files can be matched.
     ///     Paths outside the base directory (rooted, leading <c>/</c> or <c>\</c>, a drive-letter prefix on any
-    ///     operating system, or a leading <c>../</c> segment) are never matched.
+    ///     operating system, or containing any <c>..</c> segment) are never matched. <c>\</c> is a segment
+    ///     separator only on Windows.
     /// </remarks>
     /// <exception cref="ArgumentNullException">
     ///     Thrown when <paramref name="relativePath" /> or <paramref name="patterns" /> is <c>null</c>.
@@ -177,6 +178,9 @@ internal static class GlobMatcher
             return true;
         }
 
-        return path == ".." || path.StartsWith("../", StringComparison.Ordinal) || path.StartsWith("..\\", StringComparison.Ordinal);
+        // Any ".." segment is rejected (even one that would stay inside); '/' always separates segments,
+        // '\' only on Windows (on POSIX it is a literal filename character)
+        char[] separators = Path.DirectorySeparatorChar == '\\' ? ['/', '\\'] : ['/'];
+        return path.Split(separators).Contains("..", StringComparer.Ordinal);
     }
 }
