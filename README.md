@@ -218,8 +218,8 @@ Running self-validation produces a report containing the following information:
 ✓ ReviewMark_Elaborate - Passed
 ✓ ReviewMark_Lint - Passed
 
-Total Tests: 9
-Passed: 9
+Total Tests: 10
+Passed: 10
 Failed: 0
 ```
 

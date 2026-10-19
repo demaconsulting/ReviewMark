@@ -105,13 +105,16 @@ sections:
                 title: >-
                   The PathHelpers shall make absolute changed paths under the directory relative and
                   retain absolute paths outside the directory unchanged (apart from platform separator
-                  conversion).
+                  conversion); an absolute or relative path containing a .. segment shall never be
+                  canonicalized into a matching path.
                 justification: |
                   Absolute paths outside the working directory cannot be made relative, so they are
-                  kept as text and are never matched by any glob.
+                  kept as text and are never matched by any glob. A .. segment is rejected before
+                  relativizing, so absolute and relative inputs follow the same rule.
                 tests:
                   - PathHelpers_NormalizeChangedPath_AbsolutePath_MadeRelativeToDirectory
                   - PathHelpers_NormalizeChangedPath_AbsoluteOutsideDirectory_RetainedUnchanged
+                  - PathHelpers_NormalizeChangedPath_ParentSegment_NeverMatches
 
               - id: ReviewMark-PathHelpers-ChangedPaths-Dedupe
                 title: >-

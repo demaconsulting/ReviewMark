@@ -64,7 +64,9 @@ Does not trim (whitespace is significant); replaces `\` with `/` only where `\` 
 ordinary file-name character and is preserved); makes an absolute path
 relative to `directory` when it lies under it (absolute paths outside `directory` are retained
 unchanged apart from platform separator conversion, and `GlobMatcher.IsMatch` never matches them); and strips leading `./`
-segments. `..` segments are not collapsed.
+segments. `..` segments are not collapsed, and an absolute path containing a `..` segment (checked before
+relativizing, using `GlobMatcher.HasParentSegment`, the same platform-specific separator rule as relative paths) is
+left rooted and therefore never matched, even if the traversal would stay inside `directory`.
 
 **`PathHelpers.EscapeRecordField(string value)`** → `string`
 

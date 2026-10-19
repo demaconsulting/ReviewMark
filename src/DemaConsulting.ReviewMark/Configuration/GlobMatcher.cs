@@ -178,8 +178,21 @@ internal static class GlobMatcher
             return true;
         }
 
-        // Any ".." segment is rejected (even one that would stay inside); '/' always separates segments,
-        // '\' only on Windows (on POSIX it is a literal filename character)
+        // Any ".." segment is rejected (even one that would stay inside)
+        return HasParentSegment(path);
+    }
+
+    /// <summary>
+    ///     Determines whether a path contains a <c>..</c> segment.
+    /// </summary>
+    /// <param name="path">The path to test.</param>
+    /// <returns><c>true</c> if any segment is exactly <c>..</c>; otherwise <c>false</c>.</returns>
+    /// <remarks>
+    ///     <c>/</c> always separates segments; <c>\</c> only on Windows (on POSIX it is a literal filename
+    ///     character).
+    /// </remarks>
+    internal static bool HasParentSegment(string path)
+    {
         char[] separators = Path.DirectorySeparatorChar == '\\' ? ['/', '\\'] : ['/'];
         return path.Split(separators).Contains("..", StringComparer.Ordinal);
     }

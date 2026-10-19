@@ -56,6 +56,8 @@ N/A - standard test environment. Tests run under xUnit on .NET 8, 9, and 10 and 
 
 **PathHelpers_NormalizeChangedPath_AbsoluteOutsideDirectory_RetainedUnchanged**: `NormalizeChangedPath` is called with an absolute path outside the directory. Expected outcome: The path is retained unchanged (apart from separator conversion on Windows). Boundary or error path: Path outside the directory. Requirement coverage: `ReviewMark-PathHelpers-ChangedPaths-Normalize-Absolute`. This scenario is tested by `PathHelpers_NormalizeChangedPath_AbsoluteOutsideDirectory_RetainedUnchanged`.
 
+**PathHelpers_NormalizeChangedPath_ParentSegment_NeverMatches**: `NormalizeChangedPath` is called with absolute and relative paths containing a `..` segment that would stay inside the directory (`<dir>/src/../src/Core/A.cs`, `src/../src/Core/A.cs`) and with their `..`-free equivalents, and each result is passed to `GlobMatcher.IsMatch` with `src/**/*.cs`. Expected outcome: Paths with a `..` segment never match (absolute paths are not canonicalized first); `..`-free paths match. Boundary or error path: Traversal that stays inside the directory. Requirement coverage: `ReviewMark-PathHelpers-ChangedPaths-Normalize-Absolute`. This scenario is tested by `PathHelpers_NormalizeChangedPath_ParentSegment_NeverMatches`.
+
 **PathHelpers_ParseChangedPaths_NullText_ThrowsArgumentNullException**: `ParseChangedPaths` is called with null text. Expected outcome: `ArgumentNullException` is thrown. Boundary or error path: Null input rejection. Requirement coverage: `ReviewMark-PathHelpers-ChangedPaths-Parse-NullRejected`. This scenario is tested by `PathHelpers_ParseChangedPaths_NullText_ThrowsArgumentNullException`.
 
 **PathHelpers_ParseChangedPaths_NullDirectory_ThrowsArgumentNullException**: `ParseChangedPaths` is called with a null directory. Expected outcome: `ArgumentNullException` is thrown. Boundary or error path: Null input rejection. Requirement coverage: `ReviewMark-PathHelpers-ChangedPaths-Parse-NullRejected`. This scenario is tested by `PathHelpers_ParseChangedPaths_NullDirectory_ThrowsArgumentNullException`.
@@ -98,7 +100,8 @@ N/A - standard test environment. Tests run under xUnit on .NET 8, 9, and 10 and 
   PathHelpers_NormalizeChangedPath_BackslashesAndDotSlash_Normalized
 - **ReviewMark-PathHelpers-ChangedPaths-Normalize-Absolute**:
   PathHelpers_NormalizeChangedPath_AbsolutePath_MadeRelativeToDirectory,
-  PathHelpers_NormalizeChangedPath_AbsoluteOutsideDirectory_RetainedUnchanged
+  PathHelpers_NormalizeChangedPath_AbsoluteOutsideDirectory_RetainedUnchanged,
+  PathHelpers_NormalizeChangedPath_ParentSegment_NeverMatches
 - **ReviewMark-PathHelpers-ChangedPaths-Dedupe**: PathHelpers_ParseChangedPaths_DuplicateForms_Deduplicated
 - **ReviewMark-PathHelpers-ChangedPaths-Escape**:
   PathHelpers_EscapeRecordField_SpecialCharacters_EscapedAndReversible,

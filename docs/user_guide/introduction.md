@@ -118,8 +118,8 @@ Example validation report:
 ✓ ReviewMark_Elaborate - Passed
 ✓ ReviewMark_Lint - Passed
 
-Total Tests: 9
-Passed: 9
+Total Tests: 10
+Passed: 10
 Failed: 0
 ```
 
@@ -249,7 +249,7 @@ ReviewMark never runs git itself; it only reads the list of paths you give it.
 - On Windows, backslashes are converted to `/`; on other platforms a backslash is an ordinary
   file-name character and is kept. Leading `./` is removed, and absolute paths under `--dir` (or
   the current directory) are made relative to it. Paths outside that directory (absolute,
-  drive-letter or containing a `..` segment) are ignored: they are neither affected nor `unreviewed`.
+  drive-letter or containing a `..` segment, in absolute paths as well as relative ones, even if it would stay inside) are ignored: they are neither affected nor `unreviewed`.
 - Duplicates (including `a` versus `./a`) are listed once.
 - Bytes that cannot be decoded are replaced and then matched as text; there is no malformed-input
   failure other than being unable to read the source.

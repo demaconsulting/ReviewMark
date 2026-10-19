@@ -18,6 +18,7 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
+using DemaConsulting.ReviewMark.Configuration;
 using DemaConsulting.ReviewMark.Indexing;
 
 namespace DemaConsulting.ReviewMark.Tests.Indexing;
@@ -213,6 +214,32 @@ public class PathHelpersTests
 
         // Assert
         Assert.Equal(Path.DirectorySeparatorChar == '\\' ? outside.Replace('\\', '/') : outside, result);
+    }
+
+    /// <summary>
+    ///     Test that paths containing a .. segment (absolute or relative) are never reported as matching,
+    ///     even when the traversal would stay inside the directory.
+    /// </summary>
+    [Fact]
+    public void PathHelpers_NormalizeChangedPath_ParentSegment_NeverMatches()
+    {
+        // Arrange
+        var directory = Path.GetFullPath(Path.Combine(Path.GetTempPath(), "repo-root"));
+        var absoluteInside = Path.Combine(directory, "src", "..", "src", "Core", "A.cs");
+        var absoluteClean = Path.Combine(directory, "src", "Core", "A.cs");
+        string[] patterns = ["src/**/*.cs"];
+
+        // Act
+        var absoluteDotDot = PathHelpers.NormalizeChangedPath(absoluteInside, directory);
+        var absoluteOk = PathHelpers.NormalizeChangedPath(absoluteClean, directory);
+        var relativeDotDot = PathHelpers.NormalizeChangedPath("src/../src/Core/A.cs", directory);
+        var relativeOk = PathHelpers.NormalizeChangedPath("src/Core/A.cs", directory);
+
+        // Assert
+        Assert.False(GlobMatcher.IsMatch(absoluteDotDot, patterns));
+        Assert.True(GlobMatcher.IsMatch(absoluteOk, patterns));
+        Assert.False(GlobMatcher.IsMatch(relativeDotDot, patterns));
+        Assert.True(GlobMatcher.IsMatch(relativeOk, patterns));
     }
 
     /// <summary>

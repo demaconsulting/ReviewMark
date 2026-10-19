@@ -18,6 +18,8 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
+using DemaConsulting.ReviewMark.Configuration;
+
 namespace DemaConsulting.ReviewMark.Indexing;
 
 /// <summary>
@@ -136,7 +138,9 @@ internal static class PathHelpers
     ///     the backslash is the directory separator (Windows); on other platforms it is an ordinary file-name
     ///     character and is preserved. Absolute paths under <paramref name="directory"/> are made relative to
     ///     it, and leading <c>./</c> segments are removed. Absolute paths outside the directory are retained
-    ///     unchanged (apart from the platform-specific separator conversion).
+    ///     unchanged (apart from the platform-specific separator conversion). Any path containing a <c>..</c>
+    ///     segment, absolute or relative, is never canonicalized (an absolute one is not made relative), so
+    ///     <c>GlobMatcher.IsMatch</c> rejects it even when the traversal would stay inside the directory.
     /// </remarks>
     internal static string NormalizeChangedPath(string rawPath, string directory)
     {
@@ -148,8 +152,9 @@ internal static class PathHelpers
         var windowsSeparators = Path.DirectorySeparatorChar == '\\';
         var path = windowsSeparators ? rawPath.Replace('\\', '/') : rawPath;
 
-        // Make absolute paths under the directory relative to it
-        if (path.Length > 0 && Path.IsPathRooted(path))
+        // Make absolute paths under the directory relative to it, unless they contain a ".." segment
+        // (rejected before canonicalization, exactly like relative paths; it stays rooted and never matches)
+        if (path.Length > 0 && Path.IsPathRooted(path) && !GlobMatcher.HasParentSegment(rawPath))
         {
             var relative = Path.GetRelativePath(Path.GetFullPath(directory), path);
             if (windowsSeparators)
