@@ -54,13 +54,6 @@
     <PackageReference Include="YamlDotNet" Version="18.1.0" />
   </ItemGroup>
 
-  <!-- Security Pins -->
-  <ItemGroup>
-    <!-- TODO: Retire this pin once no dependency references a vulnerable
-         System.Security.Cryptography.Pkcs version (NU1902/NU1903). -->
-    <PackageReference Include="System.Security.Cryptography.Pkcs" Version="8.0.2" />
-  </ItemGroup>
-
   <!-- Build Tool Dependencies -->
   <ItemGroup>
     <PackageReference Include="Polyfill" Version="11.4.4" PrivateAssets="All" />
