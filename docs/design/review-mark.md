@@ -138,8 +138,8 @@ ReviewMark depends on the following OTS software items:
 
 - **YamlDotNet**: YAML deserialization used by the Configuration subsystem to parse
   `.reviewmark.yaml` — see *YamlDotNet Integration Design*
-- **PDFsharp**: PDF document reading used by the Indexing subsystem to extract metadata
-  from evidence PDF files — see *PDFsharp Integration Design*
+- **PdfPig**: PDF document reading used by the Indexing subsystem to extract metadata
+  from evidence PDF files — see *PdfPig Integration Design*
 - **DemaConsulting.TestResults**: TRX and JUnit XML test-results serialization used by the
   SelfTest subsystem — see *DemaConsulting.TestResults Integration Design*
 - **Microsoft.Extensions.FileSystemGlobbing**: glob-pattern file matching used by the

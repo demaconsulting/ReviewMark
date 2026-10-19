@@ -18,7 +18,8 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
-using PdfSharp.Pdf;
+using UglyToad.PdfPig.Content;
+using UglyToad.PdfPig.Writer;
 
 namespace DemaConsulting.ReviewMark.Tests;
 
@@ -34,10 +35,10 @@ internal static class PdfTestHelper
     /// <param name="keywords">Value to write into the PDF /Keywords entry.</param>
     internal static void CreateMinimalPdf(string path, string keywords)
     {
-        // Use PDFsharp in tests because the production project already depends on it at runtime.
-        using var document = new PdfDocument();
-        document.Info.Keywords = keywords;
-        document.AddPage();
-        document.Save(path);
+        // Use PdfPig in tests because the production project already depends on it at runtime.
+        var builder = new PdfDocumentBuilder();
+        builder.DocumentInformation.Keywords = keywords;
+        builder.AddPage(PageSize.A4);
+        File.WriteAllBytes(path, builder.Build());
     }
 }

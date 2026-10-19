@@ -293,13 +293,13 @@ reviews:
       - "docs/reqstream/ots/pandoc.yaml"
       - "docs/verification/ots/pandoc.md"
 
-  - id: OTS-PDFsharp
-    title: Review that PDFsharp Provides Required Functionality
+  - id: OTS-PdfPig
+    title: Review that PdfPig Provides Required Functionality
     paths:
-      - "docs/reqstream/ots/pdfsharp.yaml"
-      - "docs/design/ots/pdfsharp.md"
-      - "docs/verification/ots/pdfsharp.md"
-      - "test/OtsSoftwareTests/PDFsharpTests.cs"
+      - "docs/reqstream/ots/pdfpig.yaml"
+      - "docs/design/ots/pdfpig.md"
+      - "docs/verification/ots/pdfpig.md"
+      - "test/OtsSoftwareTests/PdfPigTests.cs"
 
   - id: OTS-ReqStream
     title: Review that ReqStream Provides Required Functionality

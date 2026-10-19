@@ -9,12 +9,12 @@ package OtsDependencies {
         comment reqRef /* Requirements: docs/reqstream/ots/yamldotnet.yaml */
     }
 
-    part def PdfSharp {
-        doc /* OTS: PDFsharp. */
+    part def PdfPig {
+        doc /* OTS: PdfPig. */
 
-        comment designRef /* Design: docs/design/ots/pdfsharp.md */
-        comment verificationRef /* Verification: docs/verification/ots/pdfsharp.md */
-        comment reqRef /* Requirements: docs/reqstream/ots/pdfsharp.yaml */
+        comment designRef /* Design: docs/design/ots/pdfpig.md */
+        comment verificationRef /* Verification: docs/verification/ots/pdfpig.md */
+        comment reqRef /* Requirements: docs/reqstream/ots/pdfpig.yaml */
     }
 
     part def DemaConsultingTestResults {

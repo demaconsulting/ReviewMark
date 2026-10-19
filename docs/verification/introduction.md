@@ -36,7 +36,7 @@ OTS items:
 - **FileAssert**
 - **Microsoft.Extensions.FileSystemGlobbing**
 - **Pandoc**
-- **PDFsharp**
+- **PdfPig**
 - **ReqStream**
 - **ReviewMark**
 - **SarifMark**
@@ -84,7 +84,7 @@ docs/verification/ots/):
 ├── FileAssert
 ├── Microsoft.Extensions.FileSystemGlobbing
 ├── Pandoc
-├── PDFsharp
+├── PdfPig
 ├── ReqStream
 ├── ReviewMark
 ├── SarifMark

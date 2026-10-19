@@ -22,7 +22,7 @@ package ReviewMark {
         part selfTest : SelfTestSubsystem;
 
         part yamlDotNet : YamlDotNet;
-        part pdfSharp : PdfSharp;
+        part pdfPig : PdfPig;
         part testResults : DemaConsultingTestResults;
         part fileSystemGlobbing : FileSystemGlobbing;
     }

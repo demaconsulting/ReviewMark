@@ -72,7 +72,7 @@ called by `ReviewIndex.Scan()`.
 
 1. `Program` calls `ReviewIndex.Scan(directory, paths, onWarning)`.
 2. `GlobMatcher.GetMatchingFiles()` resolves the glob patterns into sorted PDF file paths.
-3. For each matched file, `ReviewIndex` opens the PDF with PDFsharp and reads the
+3. For each matched file, `ReviewIndex` opens the PDF with PdfPig and reads the
    `Keywords` document property; the keywords string is parsed into key-value pairs.
 4. Entries with all required fields (`id`, `fingerprint`, `date`, `result`) are added to
    the index; PDFs that cannot be opened or are missing required metadata trigger the

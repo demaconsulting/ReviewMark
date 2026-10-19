@@ -18,37 +18,36 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
-using PdfSharp.Pdf;
-using PdfSharp.Pdf.IO;
+using UglyToad.PdfPig;
+using UglyToad.PdfPig.Content;
+using UglyToad.PdfPig.Writer;
 
 namespace OtsSoftwareTests;
 
 /// <summary>
-///     OTS software tests for the PDFsharp PDF import library.
+///     OTS software tests for the PdfPig PDF reading library.
 /// </summary>
-public sealed class PDFsharpTests
+public sealed class PdfPigTests
 {
     /// <summary>
-    ///     Verifies that <see cref="PdfReader" /> opened in import mode exposes the Keywords
+    ///     Verifies that <see cref="PdfDocument" /> opened read-only exposes the Keywords
     ///     metadata field with the value that was written to the PDF.
     /// </summary>
     [Fact]
-    public void PdfReader_Open_ImportMode_ExposesKeywordsField()
+    public void PdfDocument_Open_ExposesKeywordsField()
     {
         // Arrange — create a temporary PDF with a known Keywords value
         var pdfPath = Path.Combine(Path.GetTempPath(), $"OtsPdfTest_{Guid.NewGuid()}.pdf");
         try
         {
-            using (var doc = new PdfDocument())
-            {
-                doc.Info.Keywords = "review-id=ABC fingerprint=XYZ";
-                doc.AddPage();
-                doc.Save(pdfPath);
-            }
+            var builder = new PdfDocumentBuilder();
+            builder.DocumentInformation.Keywords = "review-id=ABC fingerprint=XYZ";
+            builder.AddPage(PageSize.A4);
+            File.WriteAllBytes(pdfPath, builder.Build());
 
-            // Act — open the PDF in import mode and read Keywords
-            using var importedDoc = PdfReader.Open(pdfPath, PdfDocumentOpenMode.Import);
-            var keywords = importedDoc.Info.Keywords;
+            // Act — open the PDF and read Keywords
+            using var importedDoc = PdfDocument.Open(pdfPath);
+            var keywords = importedDoc.Information.Keywords;
 
             // Assert — the Keywords field contains the expected value
             Assert.Equal("review-id=ABC fingerprint=XYZ", keywords);
@@ -63,25 +62,23 @@ public sealed class PDFsharpTests
     }
 
     /// <summary>
-    ///     Verifies that opening a PDF that contains no Keywords field in import mode returns a
+    ///     Verifies that opening a PDF that contains no Keywords field returns a
     ///     null or empty value, confirming graceful handling of absent metadata.
     /// </summary>
     [Fact]
-    public void PdfReader_Open_ImportMode_NoKeywords_ReturnsNullOrEmpty()
+    public void PdfDocument_Open_NoKeywords_ReturnsNullOrEmpty()
     {
         // Arrange — create a temporary PDF without setting any Keywords value
         var pdfPath = Path.Combine(Path.GetTempPath(), $"OtsPdfTestNoKw_{Guid.NewGuid()}.pdf");
         try
         {
-            using (var doc = new PdfDocument())
-            {
-                doc.AddPage();
-                doc.Save(pdfPath);
-            }
+            var builder = new PdfDocumentBuilder();
+            builder.AddPage(PageSize.A4);
+            File.WriteAllBytes(pdfPath, builder.Build());
 
-            // Act — open the PDF in import mode and read Keywords
-            using var importedDoc = PdfReader.Open(pdfPath, PdfDocumentOpenMode.Import);
-            var keywords = importedDoc.Info.Keywords;
+            // Act — open the PDF and read Keywords
+            using var importedDoc = PdfDocument.Open(pdfPath);
+            var keywords = importedDoc.Information.Keywords;
 
             // Assert — no Keywords field means null or empty is returned
             Assert.True(

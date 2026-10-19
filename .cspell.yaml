@@ -30,7 +30,7 @@ words:
   - nendobj
   - nstartxref
   - pandoc
-  - pdfsharp
+  - pdfpig
   - Pdfs
   - planfile
   - postconditions

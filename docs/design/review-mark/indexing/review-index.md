@@ -64,8 +64,8 @@ single-argument overload.
 - *Postconditions*: All PDFs with valid metadata are in the returned index
 
 Calls `GlobMatcher.GetMatchingFiles(dir, paths)` to enumerate PDFs. For each matched
-file, calls `PdfReader.Open(fullPath, PdfDocumentOpenMode.Import)` via PDFsharp and reads
-`doc.Info.Keywords`. The keywords string is parsed into key-value pairs; entries with all
+file, calls `PdfDocument.Open(fullPath)` via PdfPig and reads
+`doc.Information.Keywords`. The keywords string is parsed into key-value pairs; entries with all
 required fields are added to the index. PDFs that cannot be opened or are missing required
 fields trigger `onWarning` and are skipped; the scan continues.
 
@@ -109,7 +109,7 @@ During `Scan()`, PDFs that cannot be opened or are missing required metadata tri
   evidence glob patterns into file paths
 - **`PathHelpers`** (Indexing subsystem) — called by `Scan()` for safe path combination
   when constructing the absolute path of each matched PDF
-- **`PDFsharp`** (OTS) — used by `Scan()` to open PDF files and read the `Keywords`
+- **`PdfPig`** (OTS) — used by `Scan()` to open PDF files and read the `Keywords`
   metadata field
 
 #### Callers
