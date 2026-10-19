@@ -71,6 +71,66 @@ sections:
                   - Context_Create_ReportFlag_WithoutValue_ThrowsArgumentException
                   - Context_Create_IndexFlag_WithoutValue_ThrowsArgumentException
 
+              - id: ReviewMark-Context-AffectedValue
+                title: >-
+                  The Context unit shall parse --affected with a value (a file path or '-' for
+                  standard input) into AffectedFile.
+                justification: |
+                  The Program unit needs the changed-file list source; '-' selects standard input.
+                tests:
+                  - Context_Create_AffectedFlag_SetsAffectedFile
+                  - Context_Create_AffectedFlag_Dash_SetsAffectedFileToDash
+                  - Context_Create_NoArguments_AffectedFileIsNull
+                  - Context_Create_AffectedFlag_SingleDashPrefixedValue_Accepted
+
+              - id: ReviewMark-Context-AffectedValue-Missing
+                title: >-
+                  The Context unit shall throw ArgumentException when --affected has no value.
+                justification: |
+                  A missing value is a usage error.
+                tests:
+                  - Context_Create_AffectedFlag_WithoutValue_ThrowsArgumentException
+
+              - id: ReviewMark-Context-AffectedValue-Invalid
+                title: >-
+                  The Context unit shall throw ArgumentException when the --affected value is empty,
+                  whitespace-only or starts with '--'.
+                justification: |
+                  An option-like value (for example --affected --lint) is almost certainly a missing
+                  filename; rejecting it avoids silently consuming the next option. Files whose names
+                  start with -- can be given as ./--name.
+                tests:
+                  - Context_Create_AffectedFlag_InvalidValue_ThrowsArgumentException
+
+              - id: ReviewMark-Context-AffectedExclusive
+                title: >-
+                  The Context unit shall throw ArgumentException when --affected is combined with
+                  --plan, --report, --elaborate, --index or --lint.
+                justification: |
+                  --affected is an exclusive operation; rejecting ambiguous combinations at parse time
+                  keeps the one-operation-per-invocation rule and produces a clear error.
+                tests:
+                  - Context_Create_AffectedWithExclusiveOperation_ThrowsArgumentException
+
+              - id: ReviewMark-Context-AffectedModifiers
+                title: >-
+                  The Context unit shall allow --affected to be combined with --definition, --dir,
+                  --silent and --log.
+                justification: |
+                  These options modify how the single operation runs and do not select another operation.
+                tests:
+                  - Context_Create_AffectedWithDefinitionDirSilent_Succeeds
+
+              - id: ReviewMark-Context-ErrorOutput-Forced
+                title: >-
+                  The Context unit shall write an error to standard error even in silent mode when
+                  WriteError is called with alwaysWriteToConsole, and set the error exit code.
+                justification: |
+                  Failures in --affected mode must stay visible under --silent, which otherwise
+                  suppresses console output.
+                tests:
+                  - Context_WriteError_AlwaysWriteToConsole_Silent_WritesStderrAndSetsExitCode
+
               - id: ReviewMark-Context-LogFileError
                 title: The Context unit shall throw InvalidOperationException when the log file cannot be opened.
                 justification: |

@@ -48,7 +48,8 @@ handler:
 Evaluates parsed flags in a fixed priority order and executes the first matching action:
 
 1. If `context.Version` — print version string via `context.WriteLine(Version)` and return
-2. Print application banner (suppressed when `context.Lint` is true)
+2. Print application banner (suppressed when `context.Lint` is true, or when `--affected` is supplied
+   and affected mode will actually run, i.e. without `--help` or `--validate`)
 3. If `context.Help` — print help text and return
 4. If `context.Validate` — call `Validation.Run(context)` and return
 5. If `context.Lint` — call `RunLintLogic(context)` and return
@@ -66,7 +67,7 @@ the definition file is valid.
 Determines the working directory from `context.WorkingDirectory` or
 `Directory.GetCurrentDirectory()`. If `context.IndexPaths` is non-empty, calls
 `RunIndexLogic()`. If any definition-based action is requested (`--plan`, `--report`,
-`--definition`, or `--elaborate`), calls `RunDefinitionLogic()`. If neither is requested,
+`--definition`, `--elaborate`, or `--affected`), calls `RunDefinitionLogic()`. If neither is requested,
 prints a usage hint.
 
 **`Program.RunIndexLogic(Context context, string directory)`**
@@ -78,8 +79,10 @@ before and after the scan. Per-file scan failures are forwarded as warnings via
 
 **`Program.RunDefinitionLogic(Context context, string directory, string definitionFile)`**
 
-Loads the configuration via `ReviewMarkConfiguration.Load()`, reports lint issues, and
-stops if `Configuration` is null. Then:
+Loads the configuration via `ReviewMarkConfiguration.Load()`, reports lint issues via
+`ReportIssues(context, includeWarnings: context.AffectedFile == null, alwaysWriteErrors: context.AffectedFile != null)`
+(in `--affected` mode warnings are suppressed so stdout stays machine-readable, and errors are
+always written to stderr, even with `--silent`), and stops if `Configuration` is null. Then:
 
 - If `--plan`: generates the Review Plan via `PublishReviewPlan(directory, context.PlanDepth)`,
   writes it to `context.PlanFile`, and calls `HandleIssues()`.
@@ -89,6 +92,38 @@ stops if `Configuration` is null. Then:
 - If `--elaborate`: calls `config.ElaborateReviewSet(context.ElaborateId, directory)` and
   writes the result to the console; catches `ArgumentException` for unknown IDs and calls
   `context.WriteError($"Error: {ex.Message}")`.
+- If `--affected`: calls `RunAffectedLogic()`.
+
+**`Program.RunAffectedLogic(Context context, ReviewMarkConfiguration config, string directory)`**
+
+Reads the changed-file list from standard input (`--affected -`) or from the named file.
+Read failures (`IOException`, `UnauthorizedAccessException`, `NotSupportedException`,
+`ObjectDisposedException`, `ArgumentException`, `SecurityException`) for either source are wrapped in `InvalidOperationException`
+("Failed to read changed-files list '<source>': ..."; the source text for stdin is
+`standard input`). The text is parsed with `PathHelpers.ParseChangedPaths(text, directory)` and
+passed to `config.GetAffectedReviewSets()`. The list is read once and no git command or
+file-system lookup of the changed paths is performed. Output is written via `context.WriteLine()`
+(so `--silent` and `--log` apply), and the application banner is suppressed for
+`--affected` so the output can be piped or parsed. Output lines are tab-delimited because
+review-set IDs may contain spaces and paths may too; the id and path fields are escaped with
+`PathHelpers.EscapeRecordField()` (`\` → `\\`, TAB → `\t`, LF → `\n`, CR → `\r`):
+
+| Line | Meaning |
+| ---- | ------- |
+| `No affected review-sets` | Sentinel (not a record) written first when no review set is affected (including empty input) |
+| `affected<TAB><id><TAB><path>` | One line per affected review set and matching changed file, in definition order then path order |
+| `unreviewed<TAB><path>` | A changed file that matches `needs-review` (or any file when it is empty) but matches no review set's `paths`; context patterns do not count |
+
+The exit code is 0 even when unreviewed files are reported. Lint warnings are not written in this
+mode (use `--lint`). The failure modes are:
+
+| Failure | Result |
+| ------- | ------ |
+| Unreadable list file or stdin | `InvalidOperationException`; `Main()` writes `Error: ...` to stderr, exit 1 |
+| Missing or invalid definition | Lint errors via `WriteError` to stderr, even with `--silent`; exit 1 |
+| `--affected` with `--plan`, `--report`, `--elaborate`, `--index` or `--lint` | `ArgumentException` from `Context.Create()`; `Main()` writes `Error: ...` to stderr, exit 1 |
+
+Undecodable input bytes are replacement-decoded and matched as text.
 
 **`Program.HandleIssues(Context context, bool hasIssues, string message)`**
 
@@ -101,9 +136,9 @@ If `hasIssues` is false, does nothing. If `context.Enforce` is true, calls
 | Exception | Source | Handling |
 | --------- | ------ | -------- |
 | `ArgumentException` | `Context.Create()` — unrecognized or malformed argument | Caught in `Main()`; message to `Console.Error`; return 1 |
-| `InvalidOperationException` | `Context.Create()` (log file) or `RunDefinitionLogic()` (file I/O) | Caught in `Main()`; message to `Console.Error`; return 1 |
+| `InvalidOperationException` | `Context.Create()` (log file) or `RunDefinitionLogic()` (file I/O, unreadable `--affected` list or stdin) | Caught in `Main()`; message to `Console.Error`; return 1 |
 | `ArgumentException` | `ElaborateReviewSet()` — unknown review-set ID | Caught in `RunDefinitionLogic()`; routed through `context.WriteError()` |
-| Any other exception | Unexpected failure | Message to `Console.Error` as `"Unexpected error: {message}"`; rethrown |
+| Any other exception | Unexpected failure | Message to `Console.Error` as `"Unexpected error: {message}"`; rethrown. Unhandled exceptions are outside the 0/1 exit-code contract |
 
 ### Dependencies
 
@@ -112,7 +147,10 @@ If `hasIssues` is false, does nothing. If `context.Enforce` is true, calls
   throughout
 - **`Validation`** (SelfTest subsystem) — `Validation.Run(context)` invoked for `--validate`
 - **`ReviewMarkConfiguration`** (Configuration subsystem) — `Load()`, `PublishReviewPlan()`,
-  `PublishReviewReport()`, `ElaborateReviewSet()` invoked for lint and definition-based workflows
+  `PublishReviewReport()`, `ElaborateReviewSet()`, `GetAffectedReviewSets()` and
+  `ReviewMarkLoadResult.ReportIssues()` invoked for lint and definition-based workflows
+- **`PathHelpers`** (Indexing subsystem) — `ParseChangedPaths()` and `EscapeRecordField()` invoked
+  for `--affected`
 - **`ReviewIndex`** (Indexing subsystem) — `Scan()`, `Load()`, `Save()` invoked for index
   scanning and report generation
 - **`PathHelpers`** (Indexing subsystem) — `SafePathCombine()` used to resolve default

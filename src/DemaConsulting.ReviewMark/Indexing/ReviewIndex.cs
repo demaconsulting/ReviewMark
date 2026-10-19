@@ -24,8 +24,7 @@ using System.Text;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using DemaConsulting.ReviewMark.Configuration;
-using PdfSharp.Pdf;
-using PdfSharp.Pdf.IO;
+using UglyToad.PdfPig;
 
 namespace DemaConsulting.ReviewMark.Indexing;
 
@@ -535,11 +534,11 @@ internal sealed class ReviewIndex
     /// <param name="onWarning">Optional warning callback for skipped entries.</param>
     private void ProcessPdf(string fullPath, string relativePath, Action<string>? onWarning)
     {
-        // Open the PDF in import mode (read-only, no modification)
-        using var doc = PdfReader.Open(fullPath, PdfDocumentOpenMode.Import);
+        // Open the PDF (PdfPig opens documents read-only)
+        using var doc = PdfDocument.Open(fullPath);
 
         // Extract the Keywords metadata field; treat missing as an empty string
-        var keywords = doc.Info.Keywords ?? string.Empty;
+        var keywords = doc.Information.Keywords ?? string.Empty;
 
         // Parse the space-separated name=value pairs into a dictionary
         var pairs = ParseKeywordPairs(keywords);

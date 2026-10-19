@@ -112,6 +112,24 @@ N/A - standard test environment. Tests run under xUnit on .NET 8, 9, and 10, cap
 
 **Context_Create_ElaborateFlag_WithoutValue_ThrowsArgumentException**: `Context.Create` is called with `["--elaborate"]` (no value). Expected outcome: `ArgumentException` is thrown. Boundary or error path: Missing value. Requirement coverage: `ReviewMark-Context-Parsing`. This scenario is tested by `Context_Create_ElaborateFlag_WithoutValue_ThrowsArgumentException`.
 
+**Context_Create_AffectedFlag_SetsAffectedFile**: `Context.Create` is called with `["--affected", "changed.txt"]`. Expected outcome: `AffectedFile` is `"changed.txt"`. Requirement coverage: `ReviewMark-Context-AffectedValue`. This scenario is tested by `Context_Create_AffectedFlag_SetsAffectedFile`.
+
+**Context_Create_AffectedFlag_Dash_SetsAffectedFileToDash**: `Context.Create` is called with `["--affected", "-"]`. Expected outcome: `AffectedFile` is `"-"` (standard input). Requirement coverage: `ReviewMark-Context-AffectedValue`. This scenario is tested by `Context_Create_AffectedFlag_Dash_SetsAffectedFileToDash`.
+
+**Context_Create_NoArguments_AffectedFileIsNull**: `Context.Create` is called with no arguments. Expected outcome: `AffectedFile` is null. Requirement coverage: `ReviewMark-Context-AffectedValue`. This scenario is tested by `Context_Create_NoArguments_AffectedFileIsNull`.
+
+**Context_Create_AffectedFlag_WithoutValue_ThrowsArgumentException**: `Context.Create` is called with `["--affected"]` (no value). Expected outcome: `ArgumentException` is thrown whose message contains `--affected requires`. Boundary or error path: Missing value. Requirement coverage: `ReviewMark-Context-AffectedValue-Missing`. This scenario is tested by `Context_Create_AffectedFlag_WithoutValue_ThrowsArgumentException`.
+
+**Context_Create_AffectedFlag_InvalidValue_ThrowsArgumentException**: `Context.Create` is called with `--affected` and an empty, whitespace-only, `--lint`, `--plan` or `--` value. Expected outcome: `ArgumentException` is thrown whose message contains `--affected requires`. Boundary or error path: Option-like or blank value. Requirement coverage: `ReviewMark-Context-AffectedValue-Invalid`. This scenario is tested by `Context_Create_AffectedFlag_InvalidValue_ThrowsArgumentException`.
+
+**Context_Create_AffectedFlag_SingleDashPrefixedValue_Accepted**: `Context.Create` is called with `--affected` and `-x` or `-`. Expected outcome: `AffectedFile` equals the supplied value. Boundary or error path: Single-dash values are valid file names or standard input. Requirement coverage: `ReviewMark-Context-AffectedValue`. This scenario is tested by `Context_Create_AffectedFlag_SingleDashPrefixedValue_Accepted`.
+
+**Context_WriteError_AlwaysWriteToConsole_Silent_WritesStderrAndSetsExitCode**: A silent `Context` calls `WriteError(message, alwaysWriteToConsole: true)`. Expected outcome: The message appears on standard error and `ExitCode` is 1. Requirement coverage: `ReviewMark-Context-ErrorOutput-Forced`. This scenario is tested by `Context_WriteError_AlwaysWriteToConsole_Silent_WritesStderrAndSetsExitCode`.
+
+**Context_Create_AffectedWithExclusiveOperation_ThrowsArgumentException**: `Context.Create` is called with `--affected -` combined, in turn, with `--plan`, `--report`, `--elaborate`, `--index` and `--lint`. Expected outcome: `ArgumentException` is thrown with a message stating that `--affected` cannot be combined. Boundary or error path: Conflicting operations. Requirement coverage: `ReviewMark-Context-AffectedExclusive`. This scenario is tested by `Context_Create_AffectedWithExclusiveOperation_ThrowsArgumentException`.
+
+**Context_Create_AffectedWithDefinitionDirSilent_Succeeds**: `Context.Create` is called with `--affected -` plus `--definition`, `--dir`, `--silent` and `--log`. Expected outcome: Parsing succeeds. Requirement coverage: `ReviewMark-Context-AffectedModifiers`. This scenario is tested by `Context_Create_AffectedWithDefinitionDirSilent_Succeeds`.
+
 **Context_Create_LintFlag_SetsLintTrue**: `Context.Create` is called with `["--lint"]`. Expected outcome: `Lint` is true; `Version` and `Help` are false. Requirement coverage: `ReviewMark-Context-Parsing`. This scenario is tested by `Context_Create_LintFlag_SetsLintTrue`.
 
 **Context_Create_NoArguments_LintIsFalse**: `Context.Create` is called with no arguments. Expected outcome: `Lint` is false. Requirement coverage: `ReviewMark-Context-Parsing`. This scenario is tested by `Context_Create_NoArguments_LintIsFalse`.
@@ -192,6 +210,21 @@ N/A - standard test environment. Tests run under xUnit on .NET 8, 9, and 10, cap
   Context_Create_PlanFlag_WithoutValue_ThrowsArgumentException,
   Context_Create_ReportFlag_WithoutValue_ThrowsArgumentException,
   Context_Create_IndexFlag_WithoutValue_ThrowsArgumentException
+- **`ReviewMark-Context-AffectedValue`**:
+  Context_Create_AffectedFlag_SetsAffectedFile,
+  Context_Create_AffectedFlag_Dash_SetsAffectedFileToDash,
+  Context_Create_NoArguments_AffectedFileIsNull,
+  Context_Create_AffectedFlag_SingleDashPrefixedValue_Accepted
+- **`ReviewMark-Context-AffectedValue-Missing`**:
+  Context_Create_AffectedFlag_WithoutValue_ThrowsArgumentException
+- **`ReviewMark-Context-AffectedValue-Invalid`**:
+  Context_Create_AffectedFlag_InvalidValue_ThrowsArgumentException
+- **`ReviewMark-Context-AffectedExclusive`**:
+  Context_Create_AffectedWithExclusiveOperation_ThrowsArgumentException
+- **`ReviewMark-Context-AffectedModifiers`**:
+  Context_Create_AffectedWithDefinitionDirSilent_Succeeds
+- **`ReviewMark-Context-ErrorOutput-Forced`**:
+  Context_WriteError_AlwaysWriteToConsole_Silent_WritesStderrAndSetsExitCode
 - **`ReviewMark-Context-LogFileError`**: Context_Create_LogFlag_InvalidPath_ThrowsInvalidOperationException
 - **`ReviewMark-Context-Output`**:
   Context_WriteLine_NotSilent_WritesToConsole,

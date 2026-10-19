@@ -91,7 +91,7 @@ sections:
                   - ReviewIndex_Scan_NoMatchingFiles_LeavesIndexEmpty
                   - ReviewIndex_Scan_MultiplePdfs_PopulatesAllEntries
                 children:
-                  - ReviewMark-OTS-PDFsharp-ReadMetadata
+                  - ReviewMark-OTS-PdfPig-ReadMetadata
 
               - id: ReviewMark-Index-Freshness
                 title: >-

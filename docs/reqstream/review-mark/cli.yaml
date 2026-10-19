@@ -209,6 +209,100 @@ sections:
               - Cli_ElaborateFlag_ValidId_OutputsElaboration
             children: [ReviewMark-Config-Reading, ReviewMark-Program-Dispatch]
 
+          - id: ReviewMark-Cmd-Affected-Option
+            title: >-
+              The tool shall accept --affected <file|-> to read a changed-file list from a file or
+              standard input.
+            justification: |
+              Reviewers and agents need to know which review sets must be re-reviewed after a
+              change. The flag takes a required value: a file path, or '-' for standard input.
+            tests:
+              - Cli_AffectedFlag_ChangedFiles_ListsAffectedReviewSets
+              - Cli_AffectedFlag_Stdin_ListsAffectedReviewSets
+              - Cli_AffectedFlag_DeletedPath_IsAffected
+            children: [ReviewMark-Context-AffectedValue, ReviewMark-Program-Affected-Input-Source]
+
+          - id: ReviewMark-Cmd-Affected-Separators
+            title: >-
+              The tool shall accept LF, CRLF and NUL-separated changed-file lists for --affected.
+            justification: |
+              Lists come from tools such as git (git diff --name-only, git diff -z) on different platforms.
+            tests:
+              - Cli_AffectedFlag_Stdin_ListsAffectedReviewSets
+              - Cli_AffectedFlag_CrlfNamedFile_ListsAffectedReviewSets
+              - Cli_AffectedFlag_NulSeparatedInput_ListsAffectedReviewSets
+            children: [ReviewMark-Program-Affected-Input-Separators]
+
+          - id: ReviewMark-Cmd-Affected-Records
+            title: >-
+              The tool shall print --affected results as escaped tab-delimited affected and
+              unreviewed records, exiting 0.
+            justification: |
+              The output is consumed by scripts, so it consists only of escaped tab-delimited
+              records (backslash, TAB, LF and CR escaped); unreviewed files do not fail the run.
+            tests:
+              - Cli_AffectedFlag_UnreviewedPath_ReportedWithExitZero
+              - Cli_AffectedFlag_SpecialCharacters_AreEscaped
+            children: [ReviewMark-Program-Affected-Records-Format, ReviewMark-Program-Affected-Records-Escaping]
+
+          - id: ReviewMark-Cmd-Affected-Sentinel
+            title: >-
+              The tool shall print the sentinel 'No affected review-sets' for --affected when no
+              review set is affected, including for empty input.
+            justification: |
+              Scripts need an unambiguous signal that the input was processed and nothing is affected.
+            tests:
+              - Cli_AffectedFlag_EmptyOrNoMatch_ReportsNoAffectedReviewSets
+            children: [ReviewMark-Program-Affected-NoMatch]
+
+          - id: ReviewMark-Cmd-Affected-NoBanner
+            title: >-
+              The tool shall not print the banner for --affected.
+            justification: |
+              The banner would pollute the machine-readable output stream.
+            tests:
+              - Cli_AffectedFlag_EmptyOrNoMatch_ReportsNoAffectedReviewSets
+              - Cli_AffectedFlag_Stdin_ListsAffectedReviewSets
+            children: [ReviewMark-Program-Affected-Banner]
+
+          - id: ReviewMark-Cmd-Affected-Exclusive
+            title: >-
+              The tool shall reject --affected combined with --plan, --report, --elaborate, --index or --lint.
+            justification: |
+              The tool performs exactly one operation per invocation; combining --affected with
+              another operation is ambiguous and is rejected with an error and exit code 1.
+            tests:
+              - Cli_AffectedFlag_ConflictingOptions_ExitsOneWithStderr
+            children: [ReviewMark-Context-AffectedExclusive, ReviewMark-Program-Dispatch]
+
+          - id: ReviewMark-Cmd-Affected-Modifiers
+            title: >-
+              The tool shall allow --affected to be combined with --definition, --dir, --silent and --log.
+            justification: |
+              These options modify how the single operation runs.
+            tests:
+              - Cli_AffectedFlag_ChangedFiles_ListsAffectedReviewSets
+              - Cli_AffectedFlag_AllModifiers_Honored
+            children: [ReviewMark-Context-AffectedModifiers]
+
+          - id: ReviewMark-Cmd-Affected-Errors
+            title: >-
+              The tool shall report unreadable --affected input and an invalid or missing definition on
+              standard error and exit with code 1.
+            justification: |
+              A failed read or an unusable definition must never look like an empty change set; the
+              entry point reports the error and returns a failure exit code.
+            tests:
+              - Cli_AffectedFlag_MissingInputFile_ExitsOneWithStderr
+              - Cli_AffectedFlag_UnreadableStdin_ExitsOneWithStderr
+              - Cli_AffectedFlag_InvalidDefinition_ExitsOneWithStderr
+              - Cli_AffectedFlag_MissingDefinition_ExitsOneWithStderr
+            children:
+              - ReviewMark-Program-Affected-Errors-ReadFailure
+              - ReviewMark-Program-Affected-Errors-StdinFailure
+              - ReviewMark-Program-Affected-Errors-MissingDefinition
+              - ReviewMark-Program-Affected-Errors-Stderr
+
           - id: ReviewMark-Cmd-Lint
             title: The CLI shall validate the definition file and report issue messages on failure.
             justification: |

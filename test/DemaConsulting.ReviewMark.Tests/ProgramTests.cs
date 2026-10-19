@@ -33,6 +33,491 @@ public class ProgramTests
     ///     Log file name used across lint tests.
     /// </summary>
     private const string LintLogFile = "lint.log";
+
+    /// <summary>
+    ///     Definition used by the --affected tests.
+    /// </summary>
+    private const string AffectedDefinition = """
+        needs-review:
+          - "src/**/*.cs"
+        evidence-source:
+          type: none
+        reviews:
+          - id: Core Logic
+            title: Core
+            paths:
+              - "src/Core/**/*.cs"
+        """;
+
+    /// <summary>
+    ///     Runs the program with the supplied arguments and optional stdin, capturing output.
+    /// </summary>
+    private static (string Output, string Error, int ExitCode) RunCaptured(string? stdin, params string[] args)
+    {
+        var originalOut = Console.Out;
+        var originalErr = Console.Error;
+        var originalIn = Console.In;
+        try
+        {
+            using var outWriter = new StringWriter();
+            using var errWriter = new StringWriter();
+            Console.SetOut(outWriter);
+            Console.SetError(errWriter);
+            if (stdin != null)
+            {
+                Console.SetIn(new StringReader(stdin));
+            }
+
+            using var context = Context.Create(args);
+            Program.Run(context);
+            return (outWriter.ToString(), errWriter.ToString(), context.ExitCode);
+        }
+        finally
+        {
+            Console.SetOut(originalOut);
+            Console.SetError(originalErr);
+            Console.SetIn(originalIn);
+        }
+    }
+
+    /// <summary>
+    ///     Test that --help lists the --affected option.
+    /// </summary>
+    [Fact]
+    public void Program_Run_WithHelpFlag_IncludesAffectedOption()
+    {
+        // Arrange
+        string[] args = ["--help"];
+
+        // Act
+        var (output, _, _) = RunCaptured(null, args);
+
+        // Assert
+        Assert.Contains("--affected", output);
+    }
+
+    /// <summary>
+    ///     Test that --affected reading stdin prints tab-delimited affected and unreviewed lines
+    ///     without a banner, and exits 0 even when unreviewed files exist.
+    /// </summary>
+    [Fact]
+    public void Program_Run_WithAffectedFlag_Stdin_OutputsAffectedAndUnreviewed()
+    {
+        // Arrange
+        using var tempDir = new TestDirectory();
+        var definitionFile = PathHelpers.SafePathCombine(tempDir.DirectoryPath, "definition.yaml");
+        File.WriteAllText(definitionFile, AffectedDefinition);
+
+        // Act — CRLF input, a leading ./, backslashes (Windows only), a blank line, and a file that does not exist
+        var goneLine = Path.DirectorySeparatorChar == '\\' ? ".\\src\\Core\\Gone.cs" : "./src/Core/Gone.cs";
+        var (output, _, exitCode) = RunCaptured(
+            goneLine + "\r\n\r\nsrc/Other/O.cs\r\nbin/x.dll\r\n",
+            "--definition", definitionFile, "--dir", tempDir.DirectoryPath, "--affected", "-");
+
+        // Assert
+        Assert.Equal(0, exitCode);
+        Assert.DoesNotContain("ReviewMark version", output);
+        Assert.Equal(
+            $"affected\tCore Logic\tsrc/Core/Gone.cs{Environment.NewLine}unreviewed\tsrc/Other/O.cs{Environment.NewLine}",
+            output);
+    }
+
+    /// <summary>
+    ///     Test that --affected reading a file works, and empty input reports no affected review-sets.
+    /// </summary>
+    [Fact]
+    public void Program_Run_WithAffectedFlag_EmptyFile_ReportsNoAffectedReviewSets()
+    {
+        // Arrange
+        using var tempDir = new TestDirectory();
+        var definitionFile = PathHelpers.SafePathCombine(tempDir.DirectoryPath, "definition.yaml");
+        File.WriteAllText(definitionFile, AffectedDefinition);
+        var changed = PathHelpers.SafePathCombine(tempDir.DirectoryPath, "changed.txt");
+        File.WriteAllText(changed, "");
+
+        // Act
+        var (output, _, exitCode) = RunCaptured(
+            null, "--definition", definitionFile, "--dir", tempDir.DirectoryPath, "--affected", changed);
+
+        // Assert
+        Assert.Equal(0, exitCode);
+        Assert.Equal($"No affected review-sets{Environment.NewLine}", output);
+    }
+
+    /// <summary>
+    ///     Test that --affected honors NUL-separated input and --silent.
+    /// </summary>
+    [Fact]
+    public void Program_Run_WithAffectedFlag_NulInputAndSilent_SuppressesOutput()
+    {
+        // Arrange
+        using var tempDir = new TestDirectory();
+        var definitionFile = PathHelpers.SafePathCombine(tempDir.DirectoryPath, "definition.yaml");
+        File.WriteAllText(definitionFile, AffectedDefinition);
+        var changed = PathHelpers.SafePathCombine(tempDir.DirectoryPath, "changed.bin");
+        File.WriteAllText(changed, "src/Core/A.cs\0src/Core/B.cs\0");
+
+        // Act
+        var (normal, _, normalExit) = RunCaptured(
+            null, "--definition", definitionFile, "--dir", tempDir.DirectoryPath, "--affected", changed);
+        var (silent, _, silentExit) = RunCaptured(
+            null, "--silent", "--definition", definitionFile, "--dir", tempDir.DirectoryPath, "--affected", changed);
+
+        // Assert
+        Assert.Equal(0, normalExit);
+        Assert.Equal(0, silentExit);
+        Assert.Equal(
+            $"affected\tCore Logic\tsrc/Core/A.cs{Environment.NewLine}affected\tCore Logic\tsrc/Core/B.cs{Environment.NewLine}",
+            normal);
+        Assert.Equal("", silent);
+    }
+
+    /// <summary>
+    ///     Test that --affected writes its records to the --log file.
+    /// </summary>
+    [Fact]
+    public void Program_Run_WithAffectedFlag_LogFile_WritesRecords()
+    {
+        // Arrange
+        using var tempDir = new TestDirectory();
+        var definitionFile = PathHelpers.SafePathCombine(tempDir.DirectoryPath, "definition.yaml");
+        File.WriteAllText(definitionFile, AffectedDefinition);
+        var logFile = PathHelpers.SafePathCombine(tempDir.DirectoryPath, "affected.log");
+
+        // Act
+        var (_, _, exitCode) = RunCaptured(
+            "src/Core/A.cs\n",
+            "--silent", "--log", logFile, "--definition", definitionFile, "--dir", tempDir.DirectoryPath, "--affected", "-");
+
+        // Assert
+        Assert.Equal(0, exitCode);
+        Assert.Contains("affected\tCore Logic\tsrc/Core/A.cs", File.ReadAllText(logFile));
+    }
+
+    /// <summary>
+    ///     Test that --affected with a missing definition file exits non-zero.
+    /// </summary>
+    [Fact]
+    public void Program_Run_WithAffectedFlag_MissingDefinition_ReportsError()
+    {
+        // Arrange
+        using var tempDir = new TestDirectory();
+        var missing = PathHelpers.SafePathCombine(tempDir.DirectoryPath, "nope.yaml");
+
+        // Act
+        var (_, _, exitCode) = RunCaptured("src/Core/A.cs\n", "--definition", missing, "--affected", "-");
+
+        // Assert
+        Assert.Equal(1, exitCode);
+    }
+
+    /// <summary>
+    ///     Test that --affected with an unreadable list file throws InvalidOperationException.
+    /// </summary>
+    [Fact]
+    public void Program_Run_WithAffectedFlag_UnreadableInput_ThrowsInvalidOperationException()
+    {
+        // Arrange
+        using var tempDir = new TestDirectory();
+        var definitionFile = PathHelpers.SafePathCombine(tempDir.DirectoryPath, "definition.yaml");
+        File.WriteAllText(definitionFile, AffectedDefinition);
+        var missing = PathHelpers.SafePathCombine(tempDir.DirectoryPath, "missing.txt");
+
+        // Act
+        var ex = Assert.Throws<InvalidOperationException>(() => RunCaptured(
+            null, "--definition", definitionFile, "--dir", tempDir.DirectoryPath, "--affected", missing));
+
+        // Assert
+        Assert.StartsWith("Failed to read changed-files list", ex.Message);
+    }
+
+    /// <summary>
+    ///     Test that --affected with an invalid path (embedded NUL) throws the wrapped InvalidOperationException.
+    /// </summary>
+    [Fact]
+    public void Program_Run_WithAffectedFlag_InvalidPath_ThrowsInvalidOperationException()
+    {
+        // Arrange
+        using var tempDir = new TestDirectory();
+        var definitionFile = PathHelpers.SafePathCombine(tempDir.DirectoryPath, "definition.yaml");
+        File.WriteAllText(definitionFile, AffectedDefinition);
+
+        // Act — a NUL cannot be passed through argv, so run in-process
+        var ex = Assert.Throws<InvalidOperationException>(() => RunCaptured(
+            null, "--definition", definitionFile, "--dir", tempDir.DirectoryPath, "--affected", "bad\0name.txt"));
+
+        // Assert
+        Assert.StartsWith("Failed to read changed-files list", ex.Message);
+    }
+
+    /// <summary>
+    ///     Test that --affected with --silent and an invalid definition still writes the error to stderr and exits 1.
+    /// </summary>
+    [Fact]
+    public void Program_Run_WithAffectedFlag_SilentInvalidDefinition_WritesStderrExitsOne()
+    {
+        // Arrange
+        using var tempDir = new TestDirectory();
+        var definitionFile = PathHelpers.SafePathCombine(tempDir.DirectoryPath, "definition.yaml");
+        File.WriteAllText(definitionFile, "reviews: [");
+
+        // Act
+        var (output, error, exitCode) = RunCaptured(
+            "src/Core/A.cs\n", "--silent", "--definition", definitionFile, "--dir", tempDir.DirectoryPath, "--affected", "-");
+
+        // Assert
+        Assert.Equal(1, exitCode);
+        Assert.NotEqual("", error.Trim());
+        Assert.Equal("", output);
+    }
+
+    /// <summary>
+    ///     Test that --affected reading stdin that fails throws InvalidOperationException.
+    /// </summary>
+    [Fact]
+    public void Program_Run_WithAffectedFlag_StdinReadFailure_ThrowsInvalidOperationException()
+    {
+        // Arrange
+        using var tempDir = new TestDirectory();
+        var definitionFile = PathHelpers.SafePathCombine(tempDir.DirectoryPath, "definition.yaml");
+        File.WriteAllText(definitionFile, AffectedDefinition);
+        var originalIn = Console.In;
+        var originalOut = Console.Out;
+        try
+        {
+            using var outWriter = new StringWriter();
+            Console.SetOut(outWriter);
+            Console.SetIn(new ThrowingReader());
+            using var context = Context.Create(
+                ["--definition", definitionFile, "--dir", tempDir.DirectoryPath, "--affected", "-"]);
+
+            // Act
+            var ex = Assert.Throws<InvalidOperationException>(() => Program.Run(context));
+
+            // Assert
+            Assert.Contains("standard input", ex.Message);
+        }
+        finally
+        {
+            Console.SetIn(originalIn);
+            Console.SetOut(originalOut);
+        }
+    }
+
+    /// <summary>
+    ///     Test that lint warnings are not written to the --affected output stream.
+    /// </summary>
+    [Fact]
+    public void Program_Run_WithAffectedFlag_ConfigWarning_NotWrittenToOutput()
+    {
+        // Arrange — definition with a whitespace-only needs-review entry (lint warning)
+        using var tempDir = new TestDirectory();
+        var definitionFile = PathHelpers.SafePathCombine(tempDir.DirectoryPath, "definition.yaml");
+        File.WriteAllText(definitionFile, AffectedDefinition.Replace(
+            "needs-review:\n", "needs-review:\n  - \" \"\n").Replace(
+            "needs-review:\r\n", "needs-review:\r\n  - \" \"\r\n"));
+
+        // Act
+        var (output, error, exitCode) = RunCaptured(
+            "src/Core/A.cs\n", "--definition", definitionFile, "--dir", tempDir.DirectoryPath, "--affected", "-");
+
+        // Assert
+        Assert.Equal(0, exitCode);
+        Assert.Equal("", error);
+        Assert.Equal($"affected\tCore Logic\tsrc/Core/A.cs{Environment.NewLine}", output);
+    }
+
+    /// <summary>
+    ///     Test that special characters in names are escaped in records.
+    /// </summary>
+    [Fact]
+    public void Program_Run_WithAffectedFlag_EscapesSpecialCharacters()
+    {
+        // Arrange
+        using var tempDir = new TestDirectory();
+        var definitionFile = PathHelpers.SafePathCombine(tempDir.DirectoryPath, "definition.yaml");
+        File.WriteAllText(definitionFile, """
+            needs-review:
+              - "src/**/*.cs"
+            evidence-source:
+              type: none
+            reviews:
+              - id: 'Back\Slash'
+                title: Core
+                paths:
+                  - "src/**/*.cs"
+            """);
+        var changed = PathHelpers.SafePathCombine(tempDir.DirectoryPath, "changed.bin");
+        File.WriteAllText(changed, "src/a\tb\nc\rd.cs\0");
+
+        // Act
+        var (output, _, exitCode) = RunCaptured(
+            null, "--definition", definitionFile, "--dir", tempDir.DirectoryPath, "--affected", changed);
+
+        // Assert
+        Assert.Equal(0, exitCode);
+        Assert.Equal($"affected\tBack\\\\Slash\tsrc/a\\tb\\nc\\rd.cs{Environment.NewLine}", output);
+    }
+
+    /// <summary>
+    ///     Test that a backslash in a changed file path is preserved and escaped on POSIX, and treated as a
+    ///     separator on Windows.
+    /// </summary>
+    [Fact]
+    public void Program_Run_WithAffectedFlag_BackslashInPath_EscapedOrConvertedByPlatform()
+    {
+        // Arrange
+        using var tempDir = new TestDirectory();
+        var definitionFile = PathHelpers.SafePathCombine(tempDir.DirectoryPath, "definition.yaml");
+        File.WriteAllText(definitionFile, AffectedDefinition);
+
+        // Act
+        var (output, _, exitCode) = RunCaptured(
+            "src/Core/e\\f.cs\n",
+            "--definition", definitionFile, "--dir", tempDir.DirectoryPath, "--affected", "-");
+
+        // Assert
+        Assert.Equal(0, exitCode);
+        if (Path.DirectorySeparatorChar == '\\')
+        {
+            Assert.Equal($"affected\tCore Logic\tsrc/Core/e/f.cs{Environment.NewLine}", output);
+        }
+        else
+        {
+            Assert.Equal($"affected\tCore Logic\tsrc/Core/e\\\\f.cs{Environment.NewLine}", output);
+        }
+    }
+
+    /// <summary>
+    ///     Test that duplicate paths (including ./ forms) are listed once.
+    /// </summary>
+    [Fact]
+    public void Program_Run_WithAffectedFlag_DuplicatePaths_ListedOnce()
+    {
+        // Arrange
+        using var tempDir = new TestDirectory();
+        var definitionFile = PathHelpers.SafePathCombine(tempDir.DirectoryPath, "definition.yaml");
+        File.WriteAllText(definitionFile, AffectedDefinition);
+
+        // Act
+        var (output, _, exitCode) = RunCaptured(
+            "src/Core/A.cs\n./src/Core/A.cs\nsrc/Core/A.cs\n",
+            "--definition", definitionFile, "--dir", tempDir.DirectoryPath, "--affected", "-");
+
+        // Assert
+        Assert.Equal(0, exitCode);
+        Assert.Equal($"affected\tCore Logic\tsrc/Core/A.cs{Environment.NewLine}", output);
+    }
+
+    /// <summary>
+    ///     Test that only unreviewed files produce the sentinel followed by unreviewed records.
+    /// </summary>
+    [Fact]
+    public void Program_Run_WithAffectedFlag_UnreviewedOnly_WritesSentinelAndUnreviewed()
+    {
+        // Arrange
+        using var tempDir = new TestDirectory();
+        var definitionFile = PathHelpers.SafePathCombine(tempDir.DirectoryPath, "definition.yaml");
+        File.WriteAllText(definitionFile, AffectedDefinition);
+
+        // Act
+        var (output, _, exitCode) = RunCaptured(
+            "src/Other/O.cs\n",
+            "--definition", definitionFile, "--dir", tempDir.DirectoryPath, "--affected", "-");
+
+        // Assert
+        Assert.Equal(0, exitCode);
+        Assert.Equal($"No affected review-sets{Environment.NewLine}unreviewed\tsrc/Other/O.cs{Environment.NewLine}", output);
+    }
+
+    /// <summary>
+    ///     Test that an absolute path outside --dir is neither affected nor unreviewed, even when
+    ///     needs-review is empty (everything is considered).
+    /// </summary>
+    [Fact]
+    public void Program_Run_WithAffectedFlag_AbsolutePathOutsideDir_Ignored()
+    {
+        // Arrange
+        using var tempDir = new TestDirectory();
+        var definitionFile = PathHelpers.SafePathCombine(tempDir.DirectoryPath, "definition.yaml");
+        File.WriteAllText(definitionFile, """
+            evidence-source:
+              type: none
+            reviews:
+              - id: Core Logic
+                title: Core
+                paths:
+                  - "src/Core/**/*.cs"
+            """);
+        var outside = Path.GetFullPath(Path.Combine(tempDir.DirectoryPath, "..", "elsewhere", "x.cs")).Replace('\\', '/');
+
+        // Act
+        var (output, _, exitCode) = RunCaptured(
+            outside + "\n",
+            "--definition", definitionFile, "--dir", tempDir.DirectoryPath, "--affected", "-");
+
+        // Assert
+        Assert.Equal(0, exitCode);
+        Assert.Equal($"No affected review-sets{Environment.NewLine}", output);
+    }
+
+    /// <summary>
+    ///     Test that --affected combined with --help still prints the banner, while a normal
+    ///     affected run does not.
+    /// </summary>
+    [Fact]
+    public void Program_Run_WithAffectedFlag_Help_PrintsBanner()
+    {
+        // Act
+        var (helpOutput, _, helpExit) = RunCaptured(null, "--affected", "changed.txt", "--help");
+
+        // Assert
+        Assert.Equal(0, helpExit);
+        Assert.Contains("ReviewMark version", helpOutput);
+    }
+
+    /// <summary>
+    ///     Test that --affected combined with --validate still prints the banner.
+    /// </summary>
+    [Fact]
+    public void Program_Run_WithAffectedFlag_Validate_PrintsBanner()
+    {
+        // Act
+        var (output, _, _) = RunCaptured(null, "--affected", "changed.txt", "--validate");
+
+        // Assert
+        Assert.Contains("ReviewMark version", output);
+    }
+
+    /// <summary>
+    ///     Test that --affected with an invalid definition reports errors and exits 1.
+    /// </summary>
+    [Fact]
+    public void Program_Run_WithAffectedFlag_InvalidDefinition_ExitsOne()
+    {
+        // Arrange
+        using var tempDir = new TestDirectory();
+        var definitionFile = PathHelpers.SafePathCombine(tempDir.DirectoryPath, "definition.yaml");
+        File.WriteAllText(definitionFile, "reviews: [");
+
+        // Act
+        var (output, _, exitCode) = RunCaptured(
+            "src/Core/A.cs\n", "--definition", definitionFile, "--dir", tempDir.DirectoryPath, "--affected", "-");
+
+        // Assert
+        Assert.Equal(1, exitCode);
+        Assert.DoesNotContain("affected\t", output);
+    }
+
+    /// <summary>
+    ///     A reader that always fails, simulating a broken standard input.
+    /// </summary>
+    private sealed class ThrowingReader : TextReader
+    {
+        /// <inheritdoc />
+        public override string ReadToEnd() => throw new IOException("simulated failure");
+    }
+
     /// <summary>
     ///     Test that Run with version flag displays version only.
     /// </summary>

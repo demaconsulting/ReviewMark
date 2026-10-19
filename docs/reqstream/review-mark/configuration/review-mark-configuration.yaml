@@ -151,6 +151,82 @@ sections:
                   - ReviewMarkConfiguration_ElaborateReviewSet_ValidId_ReturnsElaboration
                   - ReviewMarkConfiguration_ElaborateReviewSet_ContainsFullFingerprint
 
+              - id: ReviewMark-Config-AffectedReviewSets-Matching-Sets
+                title: >-
+                  The ReviewMarkConfiguration unit shall map changed file paths that match needs-review
+                  to the review sets whose paths match them, without accessing the file system.
+                justification: |
+                  Callers need to know which review sets a change affects without scanning the file
+                  system, so deleted files are included. Files outside needs-review, and paths outside
+                  the base directory, are ignored.
+                tests:
+                  - ReviewMarkConfiguration_GetAffectedReviewSets_MatchingFiles_ReturnsSetsInDefinitionOrder
+                  - ReviewMarkConfiguration_GetAffectedReviewSets_NotNeedingReviewOrEmpty_ReturnsEmpty
+                  - ReviewMarkConfiguration_GetAffectedReviewSets_OutsidePaths_NeitherAffectedNorUnreviewed
+                children:
+                  - ReviewMark-GlobMatcher-PathMatching
+
+              - id: ReviewMark-Config-AffectedReviewSets-Matching-Order
+                title: >-
+                  The ReviewMarkConfiguration unit shall report affected review sets in definition order.
+                justification: |
+                  Deterministic output requires a stable review-set order.
+                tests:
+                  - ReviewMarkConfiguration_GetAffectedReviewSets_MatchingFiles_ReturnsSetsInDefinitionOrder
+
+              - id: ReviewMark-Config-AffectedReviewSets-Matching-SortedFiles
+                title: >-
+                  The ReviewMarkConfiguration unit shall report the files of each affected review set
+                  in sorted order.
+                justification: |
+                  Deterministic output requires a stable file order.
+                tests:
+                  - ReviewMarkConfiguration_GetAffectedReviewSets_MatchingFiles_ReturnsSetsInDefinitionOrder
+
+              - id: ReviewMark-Config-AffectedReviewSets-Matching-ContextExcluded
+                title: >-
+                  The ReviewMarkConfiguration unit shall not treat a match against review-set context
+                  patterns as making that review set affected.
+                justification: |
+                  Only review-set paths (not context) define what a review set covers.
+                tests:
+                  - ReviewMarkConfiguration_GetAffectedReviewSets_ContextOnlyMatch_NotAffected
+
+              - id: ReviewMark-Config-AffectedReviewSets-Matching-NullRejected
+                title: >-
+                  The ReviewMarkConfiguration unit shall throw ArgumentNullException when the changed
+                  path list is null.
+                justification: |
+                  A null list is a programming error and must be reported explicitly.
+                tests:
+                  - ReviewMarkConfiguration_GetAffectedReviewSets_NullPaths_ThrowsArgumentNullException
+
+              - id: ReviewMark-Config-AffectedReviewSets-Unreviewed
+                title: >-
+                  The ReviewMarkConfiguration unit shall report as unreviewed the changed files that
+                  match needs-review (or all files when needs-review is empty) but match no review
+                  set's paths after ordered include/exclude evaluation.
+                justification: |
+                  Uncovered files reveal gaps in the review definition. Context patterns do not count
+                  as coverage, so a file matched only by context is unreviewed.
+                tests:
+                  - ReviewMarkConfiguration_GetAffectedReviewSets_NeedsReviewFileInNoSet_IsUnreviewed
+                  - ReviewMarkConfiguration_GetAffectedReviewSets_ContextOnlyMatch_NotAffected
+                  - ReviewMarkConfiguration_GetAffectedReviewSets_EmptyNeedsReview_AllUnmatchedAreUnreviewed
+                children:
+                  - ReviewMark-GlobMatcher-PathMatching
+
+              - id: ReviewMark-Config-ReportIssues-ErrorsAlwaysWritten
+                title: >-
+                  The ReviewMarkLoadResult shall, when requested, write lint errors to standard error
+                  even when silent mode is enabled, and set the error exit code.
+                justification: |
+                  In --affected mode an unusable definition must be visible on standard error even with
+                  --silent so a failure is never mistaken for an empty result.
+                tests:
+                  - ReviewMarkLoadResult_ReportIssues_AlwaysWriteErrors_Silent_WritesStderr
+                  - ReviewMarkLoadResult_ReportIssues_WarningsSuppressed_ReportsErrorsOnly
+
               - id: ReviewMark-Config-ElaborationNullRejection
                 title: >-
                   The ReviewMarkConfiguration unit shall throw ArgumentNullException for null

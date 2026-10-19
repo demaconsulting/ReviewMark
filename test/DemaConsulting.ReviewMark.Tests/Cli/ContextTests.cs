@@ -25,6 +25,7 @@ namespace DemaConsulting.ReviewMark.Tests.Cli;
 /// <summary>
 ///     Unit tests for the Context class.
 /// </summary>
+[Collection("ConsoleTests")]
 public class ContextTests
 {
     /// <summary>
@@ -737,6 +738,181 @@ public class ContextTests
     {
         // Act & Assert - --elaborate without an ID argument should throw
         Assert.Throws<ArgumentException>(() => Context.Create(["--elaborate"]));
+    }
+
+    /// <summary>
+    ///     Test that --affected sets AffectedFile to the supplied path.
+    /// </summary>
+    [Fact]
+    public void Context_Create_AffectedFlag_SetsAffectedFile()
+    {
+        // Arrange
+        string[] args = ["--affected", "changed.txt"];
+
+        // Act
+        using var context = Context.Create(args);
+
+        // Assert
+        Assert.Equal("changed.txt", context.AffectedFile);
+    }
+
+    /// <summary>
+    ///     Test that --affected rejects empty, whitespace-only and option-like values.
+    /// </summary>
+    [Theory]
+    [InlineData("")]
+    [InlineData("  ")]
+    [InlineData("--lint")]
+    [InlineData("--plan")]
+    [InlineData("--")]
+    public void Context_Create_AffectedFlag_InvalidValue_ThrowsArgumentException(string value)
+    {
+        // Arrange
+        string[] args = ["--affected", value];
+
+        // Act
+        var ex = Assert.Throws<ArgumentException>(() => Context.Create(args));
+
+        // Assert
+        Assert.Contains("--affected requires", ex.Message);
+    }
+
+    /// <summary>
+    ///     Test that --affected accepts single-dash values (file names, or '-' for stdin).
+    /// </summary>
+    [Theory]
+    [InlineData("-x")]
+    [InlineData("-")]
+    public void Context_Create_AffectedFlag_SingleDashPrefixedValue_Accepted(string value)
+    {
+        // Arrange
+        string[] args = ["--affected", value];
+
+        // Act
+        using var context = Context.Create(args);
+
+        // Assert
+        Assert.Equal(value, context.AffectedFile);
+    }
+
+    /// <summary>
+    ///     Test that WriteError with alwaysWriteToConsole writes to stderr in silent mode and sets the exit code.
+    /// </summary>
+    [Fact]
+    public void Context_WriteError_AlwaysWriteToConsole_Silent_WritesStderrAndSetsExitCode()
+    {
+        // Arrange
+        var originalError = Console.Error;
+        try
+        {
+            using var errWriter = new StringWriter();
+            Console.SetError(errWriter);
+            using var context = Context.Create(["--silent"]);
+
+            // Act
+            context.WriteError("Forced error message", alwaysWriteToConsole: true);
+
+            // Assert
+            Assert.Contains("Forced error message", errWriter.ToString());
+            Assert.Equal(1, context.ExitCode);
+        }
+        finally
+        {
+            Console.SetError(originalError);
+        }
+    }
+
+    /// <summary>
+    ///     Test that --affected accepts - (standard input).
+    /// </summary>
+    [Fact]
+    public void Context_Create_AffectedFlag_Dash_SetsAffectedFileToDash()
+    {
+        // Arrange
+        string[] args = ["--affected", "-"];
+
+        // Act
+        using var context = Context.Create(args);
+
+        // Assert
+        Assert.Equal("-", context.AffectedFile);
+    }
+
+    /// <summary>
+    ///     Test that AffectedFile is null when --affected is not specified.
+    /// </summary>
+    [Fact]
+    public void Context_Create_NoArguments_AffectedFileIsNull()
+    {
+        // Arrange
+        string[] args = [];
+
+        // Act
+        using var context = Context.Create(args);
+
+        // Assert
+        Assert.Null(context.AffectedFile);
+    }
+
+    /// <summary>
+    ///     Test that --affected without a value throws ArgumentException.
+    /// </summary>
+    [Fact]
+    public void Context_Create_AffectedFlag_WithoutValue_ThrowsArgumentException()
+    {
+        // Arrange
+        string[] args = ["--affected"];
+
+        // Act
+        var ex = Assert.Throws<ArgumentException>(() => Context.Create(args));
+
+        // Assert
+        Assert.Contains("--affected requires", ex.Message);
+    }
+
+    /// <summary>
+    ///     Test that --affected combined with an exclusive operation throws ArgumentException.
+    /// </summary>
+    [Theory]
+    [InlineData("--plan", "plan.md")]
+    [InlineData("--report", "report.md")]
+    [InlineData("--elaborate", "Some-Id")]
+    [InlineData("--index", "*.pdf")]
+    [InlineData("--lint", null)]
+    public void Context_Create_AffectedWithExclusiveOperation_ThrowsArgumentException(string option, string? value)
+    {
+        // Arrange
+        var args = value == null ? new[] { "--affected", "-", option } : ["--affected", "-", option, value];
+
+        // Act
+        var ex = Assert.Throws<ArgumentException>(() => Context.Create(args));
+
+        // Assert
+        Assert.Contains("--affected cannot be combined", ex.Message);
+    }
+
+    /// <summary>
+    ///     Test that --affected may be combined with --definition, --dir, --silent and --log.
+    /// </summary>
+    [Fact]
+    public void Context_Create_AffectedWithDefinitionDirSilent_Succeeds()
+    {
+        // Arrange
+        var logFile = Path.Combine(Path.GetTempPath(), Path.ChangeExtension(Path.GetRandomFileName(), ".log"));
+        try
+        {
+            // Act
+            using var context = Context.Create(
+                ["--affected", "-", "--definition", "d.yaml", "--dir", ".", "--silent", "--log", logFile]);
+
+            // Assert
+            Assert.Equal("-", context.AffectedFile);
+            Assert.Equal("d.yaml", context.DefinitionFile);
+        }
+        finally
+        {
+            File.Delete(logFile);
+        }
     }
 
     /// <summary>

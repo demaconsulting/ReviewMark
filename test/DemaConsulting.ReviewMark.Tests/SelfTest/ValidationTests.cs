@@ -26,6 +26,7 @@ namespace DemaConsulting.ReviewMark.Tests.SelfTest;
 /// <summary>
 ///     Unit tests for the <see cref="Validation" /> class.
 /// </summary>
+[Collection("ConsoleTests")]
 public class ValidationTests
 {
     /// <summary>

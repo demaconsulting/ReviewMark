@@ -123,7 +123,9 @@ internal static class Program
     ///     banner is printed between priority-1 (<c>--version</c>) and
     ///     priority-3 (<c>--help</c>) so it appears for every interactive
     ///     invocation but is suppressed for <c>--lint</c> to keep that output
-    ///     clean for CI pipelines.
+    ///     clean for CI pipelines.  The banner is likewise suppressed for
+    ///     <c>--affected</c> when affected mode actually runs (not with <c>--help</c> or <c>--validate</c>)
+    ///     so its output can be parsed or piped directly.
     /// </remarks>
     /// <param name="context">The context containing command line arguments and program state.</param>
     /// <exception cref="InvalidOperationException">
@@ -140,8 +142,10 @@ internal static class Program
             return;
         }
 
-        // Print application banner (suppressed for --lint to show only issues)
-        if (!context.Lint)
+        // Print application banner (suppressed for --lint, and for --affected only when affected mode
+        // actually runs, i.e. not combined with --help or --validate, to keep output parseable)
+        var affectedModeRuns = context.AffectedFile != null && !context.Help && !context.Validate;
+        if (!context.Lint && !affectedModeRuns)
         {
             PrintBanner(context);
         }
@@ -224,6 +228,7 @@ internal static class Program
         context.WriteLine("                             Note: explicit paths given to --definition/--plan/--report are used as-is");
         context.WriteLine("  --enforce                  Exit with non-zero code if there are review issues");
         context.WriteLine("  --elaborate <id>           Print a Markdown elaboration of the specified review set");
+        context.WriteLine("  --affected <file|->        List review sets affected by the changed files listed in <file> (or stdin if -)");
     }
 
     /// <summary>
@@ -279,7 +284,7 @@ internal static class Program
         // Handle definition-based actions (--plan, --report, or explicit --definition).
         // Use .reviewmark.yaml as the default when --definition is not specified,
         // resolved under the working directory.
-        if (context.PlanFile != null || context.ReportFile != null || context.DefinitionFile != null || context.ElaborateId != null)
+        if (context.PlanFile != null || context.ReportFile != null || context.DefinitionFile != null || context.ElaborateId != null || context.AffectedFile != null)
         {
             var definitionFile = context.DefinitionFile ?? PathHelpers.SafePathCombine(directory, ".reviewmark.yaml");
             RunDefinitionLogic(context, directory, definitionFile);
@@ -343,8 +348,12 @@ internal static class Program
         // Load the configuration with integrated linting
         var loadResult = ReviewMarkConfiguration.Load(definitionFile);
 
-        // Always report any lint issues found during loading
-        loadResult.ReportIssues(context);
+        // Report lint issues found during loading; in --affected mode warnings are suppressed
+        // so the record stream on stdout stays machine-readable (errors still go to stderr)
+        loadResult.ReportIssues(
+            context,
+            includeWarnings: context.AffectedFile == null,
+            alwaysWriteErrors: context.AffectedFile != null);
 
         // If the configuration could not be loaded, stop here
         if (loadResult.Configuration == null)
@@ -401,6 +410,68 @@ internal static class Program
             {
                 context.WriteError($"Error: {ex.Message}");
             }
+        }
+
+        // Handle --affected
+        if (context.AffectedFile != null)
+        {
+            RunAffectedLogic(context, config, directory);
+        }
+    }
+
+    /// <summary>
+    ///     Runs the <c>--affected</c> logic: maps changed paths onto the review sets they affect.
+    /// </summary>
+    /// <remarks>
+    ///     Output lines are tab-delimited because review-set IDs and paths may contain spaces:
+    ///     <c>affected&lt;TAB&gt;id&lt;TAB&gt;path</c> and <c>unreviewed&lt;TAB&gt;path</c>.  The id and path
+    ///     fields are escaped with <see cref="PathHelpers.EscapeRecordField"/> (backslash, TAB, LF and CR).
+    ///     When no review set is affected the single line <c>No affected review-sets</c> is written first
+    ///     (it is not a record).  Lint warnings are suppressed in this mode.  No file system access is
+    ///     performed for the changed paths.
+    /// </remarks>
+    /// <param name="context">The context for output.</param>
+    /// <param name="config">The loaded configuration.</param>
+    /// <param name="directory">The working directory used to relativize absolute paths.</param>
+    /// <exception cref="InvalidOperationException">
+    ///     Thrown when the changed-file list cannot be read (I/O failure, access denied, invalid path,
+    ///     or security failure).
+    /// </exception>
+    private static void RunAffectedLogic(Context context, ReviewMarkConfiguration config, string directory)
+    {
+        // Read the changed-file list from stdin or the named file
+        var isStdin = context.AffectedFile == "-";
+        var source = isStdin ? "standard input" : context.AffectedFile!;
+        string text;
+        try
+        {
+            text = isStdin ? Console.In.ReadToEnd() : File.ReadAllText(context.AffectedFile!);
+        }
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or NotSupportedException
+                                       or ObjectDisposedException or ArgumentException
+                                       or System.Security.SecurityException)
+        {
+            throw new InvalidOperationException($"Failed to read changed-files list '{source}': {ex.Message}", ex);
+        }
+
+        // Map the changed paths onto review sets and report
+        var result = config.GetAffectedReviewSets(PathHelpers.ParseChangedPaths(text, directory));
+        if (result.ReviewSets.Count == 0)
+        {
+            context.WriteLine("No affected review-sets");
+        }
+
+        foreach (var reviewSet in result.ReviewSets)
+        {
+            foreach (var file in reviewSet.Files)
+            {
+                context.WriteLine($"affected\t{PathHelpers.EscapeRecordField(reviewSet.Id)}\t{PathHelpers.EscapeRecordField(file)}");
+            }
+        }
+
+        foreach (var file in result.Unreviewed)
+        {
+            context.WriteLine($"unreviewed\t{PathHelpers.EscapeRecordField(file)}");
         }
     }
 

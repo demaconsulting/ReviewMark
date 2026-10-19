@@ -91,6 +91,33 @@ working directory. This scenario is tested by `ReviewMark_DirFlag_Invoked_Overri
 including the selected review-set identifier. This scenario is tested by
 `ReviewMark_ElaborateFlag_WithValidId_OutputsElaboration`.
 
+**ChangedFileAffectedReviewSets**: ReviewMark reads a changed-file list from a file or standard
+input (LF, CRLF or NUL separated), matches it against the review-set globs without file system
+access (so deleted files count), and prints escaped tab-delimited `affected` and `unreviewed`
+records while exiting 0. When nothing is affected it prints `No affected review-sets`. No banner
+is printed and standard error stays empty. Unreadable input, a missing or invalid definition,
+conflicting options or an option-like value write an error to standard error and exit 1; the
+error is still written to standard error when `--silent` is specified. This scenario is tested by
+`ReviewMark_AffectedFlag_Stdin_ListsAffectedReviewSets`,
+`ReviewMark_AffectedFlag_NamedFileCrlf_ListsAffectedReviewSets`,
+`ReviewMark_AffectedFlag_NulSeparatedInput_ListsAffectedReviewSets`,
+`ReviewMark_AffectedFlag_DeletedPath_ListsAffectedReviewSets`,
+`ReviewMark_AffectedFlag_WithChangedFile_ListsAffectedReviewSets`,
+`ReviewMark_AffectedFlag_UnreviewedPath_ReportsUnreviewedExitZero`,
+`ReviewMark_AffectedFlag_ExactOutputFormat_NoBannerNoStderr`,
+`ReviewMark_AffectedFlag_NoMatch_ReportsNoAffected`,
+`ReviewMark_AffectedFlag_EmptyInput_ReportsNoAffected`,
+`ReviewMark_AffectedFlag_EscapedNames_AreEscaped`,
+`ReviewMark_AffectedFlag_MissingInputFile_ExitsOne`,
+`ReviewMark_AffectedFlag_ProhibitedCombination_ExitsOne`,
+`ReviewMark_AffectedFlag_OptionLikeValue_ExitsOne`,
+`ReviewMark_AffectedFlag_EmptyOrWhitespaceValue_ExitsOne` (empty and whitespace-only values exit 1
+with a `--affected requires` message and empty standard output),
+`ReviewMark_AffectedFlag_Silent_InvalidDefinition_ReportsStderr`,
+`ReviewMark_AffectedFlag_InvalidDefinition_ReportsStderr` (without `--silent`, standard error contains
+a `<file>: error:` lint issue line and standard output is empty), and
+`ReviewMark_AffectedFlag_MissingDefinition_ExitsOne`.
+
 **HeadingDepthControl**: ReviewMark applies `--depth`, `--plan-depth`, and `--report-depth` to
 Markdown output so plan, report, and validation output can be embedded at the required outline
 level. This scenario is tested by `ReviewMark_DepthFlag_Invoked_SetsDefaultHeadingDepth`,
@@ -149,6 +176,40 @@ deterministically. This scenario is tested by `ReviewMark_LogFlag_WithInvalidPat
   `ReviewMark_DirFlag_Invoked_OverridesWorkingDirectory`.
 - **ReviewMark-System-Elaborate**: *ReviewSetElaboration* - verified by
   `ReviewMark_ElaborateFlag_WithValidId_OutputsElaboration`.
+- **ReviewMark-System-Affected-Input-Source**: *ChangedFileAffectedReviewSets* - verified by
+  `ReviewMark_AffectedFlag_Stdin_ListsAffectedReviewSets` and
+  `ReviewMark_AffectedFlag_WithChangedFile_ListsAffectedReviewSets`.
+- **ReviewMark-System-Affected-Input-Separators**: *ChangedFileAffectedReviewSets* - verified by
+  `ReviewMark_AffectedFlag_Stdin_ListsAffectedReviewSets`,
+  `ReviewMark_AffectedFlag_NamedFileCrlf_ListsAffectedReviewSets`, and
+  `ReviewMark_AffectedFlag_NulSeparatedInput_ListsAffectedReviewSets`.
+- **ReviewMark-System-Affected-Matching**: *ChangedFileAffectedReviewSets* - verified by
+  `ReviewMark_AffectedFlag_DeletedPath_ListsAffectedReviewSets` and
+  `ReviewMark_AffectedFlag_WithChangedFile_ListsAffectedReviewSets`.
+- **ReviewMark-System-Affected-Unreviewed**: *ChangedFileAffectedReviewSets* - verified by
+  `ReviewMark_AffectedFlag_UnreviewedPath_ReportsUnreviewedExitZero`.
+- **ReviewMark-System-Affected-Unreviewed-ExitZero**: *ChangedFileAffectedReviewSets* - verified by
+  `ReviewMark_AffectedFlag_UnreviewedPath_ReportsUnreviewedExitZero`.
+- **ReviewMark-System-Affected-Output-Records**: *ChangedFileAffectedReviewSets* - verified by
+  `ReviewMark_AffectedFlag_ExactOutputFormat_NoBannerNoStderr` and
+  `ReviewMark_AffectedFlag_EscapedNames_AreEscaped`.
+- **ReviewMark-System-Affected-Output-Sentinel**: *ChangedFileAffectedReviewSets* - verified by
+  `ReviewMark_AffectedFlag_NoMatch_ReportsNoAffected` and
+  `ReviewMark_AffectedFlag_EmptyInput_ReportsNoAffected`.
+- **ReviewMark-System-Affected-Output-NoBanner**: *ChangedFileAffectedReviewSets* - verified by
+  `ReviewMark_AffectedFlag_ExactOutputFormat_NoBannerNoStderr`.
+- **ReviewMark-System-Affected-Errors-Input**: *ChangedFileAffectedReviewSets* - verified by
+  `ReviewMark_AffectedFlag_MissingInputFile_ExitsOne`.
+- **ReviewMark-System-Affected-Errors-Definition**: *ChangedFileAffectedReviewSets* - verified by
+  `ReviewMark_AffectedFlag_MissingDefinition_ExitsOne` and
+  `ReviewMark_AffectedFlag_InvalidDefinition_ReportsStderr`.
+- **ReviewMark-System-Affected-Errors-Conflict**: *ChangedFileAffectedReviewSets* - verified by
+  `ReviewMark_AffectedFlag_ProhibitedCombination_ExitsOne`.
+- **ReviewMark-System-Affected-Errors-Value**: *ChangedFileAffectedReviewSets* - verified by
+  `ReviewMark_AffectedFlag_OptionLikeValue_ExitsOne` and
+  `ReviewMark_AffectedFlag_EmptyOrWhitespaceValue_ExitsOne`.
+- **ReviewMark-System-Affected-Errors-Silent**: *ChangedFileAffectedReviewSets* - verified by
+  `ReviewMark_AffectedFlag_Silent_InvalidDefinition_ReportsStderr`.
 - **ReviewMark-System-LintValidation**: *LintValidation* - verified by
   `ReviewMark_LintFlag_WithValidConfig_ProducesNoOutput` and
   `ReviewMark_LintFlag_WithInvalidConfig_ReportsOnlyIssueMessages`.

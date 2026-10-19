@@ -18,7 +18,7 @@ input-files:
   - docs/design/review-mark/self-test/validation.md
   - docs/design/ots.md
   - docs/design/ots/yamldotnet.md
-  - docs/design/ots/pdfsharp.md
+  - docs/design/ots/pdfpig.md
   - docs/design/ots/dema-consulting-test-results.md
   - docs/design/ots/microsoft-extensions-file-system-globbing.md
   - docs/design/ots/sysml2tools.md

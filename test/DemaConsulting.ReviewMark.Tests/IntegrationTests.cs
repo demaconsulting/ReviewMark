@@ -511,6 +511,401 @@ public class IntegrationTests
     }
 
     /// <summary>
+    ///     Test that --affected lists the review sets affected by the files in a changed-files list.
+    /// </summary>
+    [Fact]
+    public void ReviewMark_AffectedFlag_WithChangedFile_ListsAffectedReviewSets()
+    {
+        // Arrange
+        var defFile = Path.Combine(Path.GetTempPath(), Path.ChangeExtension(Path.GetRandomFileName(), ".yaml"));
+        var listFile = Path.Combine(Path.GetTempPath(), Path.ChangeExtension(Path.GetRandomFileName(), ".txt"));
+
+        try
+        {
+            File.WriteAllText(defFile, """
+                needs-review:
+                  - "src/**/*.cs"
+                evidence-source:
+                  type: none
+                reviews:
+                  - id: Test-Review
+                    title: Test review
+                    paths:
+                      - "src/Core/**/*.cs"
+                """);
+            File.WriteAllText(listFile, "src/Core/Deleted.cs\nsrc/Other.cs\n");
+
+            // Act
+            var exitCode = Runner.Run(
+                out var output,
+                "dotnet",
+                _dllPath,
+                "--definition",
+                defFile,
+                "--affected",
+                listFile);
+
+            // Assert — exits 0 (unreviewed files are not an error) and reports both kinds of line
+            Assert.Equal(0, exitCode);
+            Assert.Contains("affected\tTest-Review\tsrc/Core/Deleted.cs", output);
+            Assert.Contains("unreviewed\tsrc/Other.cs", output);
+        }
+        finally
+        {
+            File.Delete(defFile);
+            File.Delete(listFile);
+        }
+    }
+
+    /// <summary>
+    ///     Writes a definition file and runs --affected in a process with optional stdin.
+    /// </summary>
+    private int RunAffectedProcess(
+        string? stdin, string[] extraArgs, out string stdout, out string stderr, string? definition = null)
+    {
+        var defFile = Path.Combine(Path.GetTempPath(), Path.ChangeExtension(Path.GetRandomFileName(), ".yaml"));
+        try
+        {
+            File.WriteAllText(defFile, definition ?? """
+                needs-review:
+                  - "src/**/*.cs"
+                evidence-source:
+                  type: none
+                reviews:
+                  - id: Test-Review
+                    title: Test review
+                    paths:
+                      - "src/Core/**/*.cs"
+                """);
+            return Runner.Run(
+                out stdout, out stderr, stdin, "dotnet", [_dllPath, "--definition", defFile, .. extraArgs]);
+        }
+        finally
+        {
+            File.Delete(defFile);
+        }
+    }
+
+    /// <summary>
+    ///     Test that --affected - reads the list from standard input.
+    /// </summary>
+    [Fact]
+    public void ReviewMark_AffectedFlag_Stdin_ListsAffectedReviewSets()
+    {
+        // Arrange
+        const string stdin = "src/Core/A.cs\r\n";
+
+        // Act
+        var exitCode = RunAffectedProcess(stdin, ["--affected", "-"], out var stdout, out var stderr);
+
+        // Assert
+        Assert.Equal(0, exitCode);
+        Assert.Equal($"affected\tTest-Review\tsrc/Core/A.cs{Environment.NewLine}", stdout);
+        Assert.Equal("", stderr);
+    }
+
+    /// <summary>
+    ///     Test that --affected accepts a CRLF-separated named file without CR leaking into the output.
+    /// </summary>
+    [Fact]
+    public void ReviewMark_AffectedFlag_NamedFileCrlf_ListsAffectedReviewSets()
+    {
+        // Arrange
+        var listFile = Path.Combine(Path.GetTempPath(), Path.ChangeExtension(Path.GetRandomFileName(), ".txt"));
+        try
+        {
+            File.WriteAllText(listFile, "src/Core/A.cs\r\nsrc/Other/O.cs\r\n");
+
+            // Act
+            var exitCode = RunAffectedProcess(null, ["--affected", listFile], out var stdout, out var stderr);
+
+            // Assert
+            Assert.Equal(0, exitCode);
+            Assert.DoesNotContain("\r\t", stdout);
+            Assert.Equal(
+                $"affected\tTest-Review\tsrc/Core/A.cs{Environment.NewLine}unreviewed\tsrc/Other/O.cs{Environment.NewLine}",
+                stdout);
+            Assert.Equal("", stderr);
+        }
+        finally
+        {
+            File.Delete(listFile);
+        }
+    }
+
+    /// <summary>
+    ///     Test that --affected accepts NUL-separated input from standard input.
+    /// </summary>
+    [Fact]
+    public void ReviewMark_AffectedFlag_NulSeparatedInput_ListsAffectedReviewSets()
+    {
+        // Arrange
+        const string stdin = "src/Core/A b.cs\0src/Core/C.cs\0";
+
+        // Act
+        var exitCode = RunAffectedProcess(stdin, ["--affected", "-"], out var stdout, out _);
+
+        // Assert
+        Assert.Equal(0, exitCode);
+        Assert.Equal(
+            $"affected\tTest-Review\tsrc/Core/A b.cs{Environment.NewLine}affected\tTest-Review\tsrc/Core/C.cs{Environment.NewLine}",
+            stdout);
+    }
+
+    /// <summary>
+    ///     Test that a deleted (non-existent) path is still reported as affected.
+    /// </summary>
+    [Fact]
+    public void ReviewMark_AffectedFlag_DeletedPath_ListsAffectedReviewSets()
+    {
+        // Arrange
+        const string stdin = "src/Core/Deleted.cs\n";
+
+        // Act
+        var exitCode = RunAffectedProcess(stdin, ["--affected", "-"], out var stdout, out _);
+
+        // Assert
+        Assert.Equal(0, exitCode);
+        Assert.Contains("affected\tTest-Review\tsrc/Core/Deleted.cs", stdout);
+    }
+
+    /// <summary>
+    ///     Test that an unreviewed path is reported and the exit code is zero.
+    /// </summary>
+    [Fact]
+    public void ReviewMark_AffectedFlag_UnreviewedPath_ReportsUnreviewedExitZero()
+    {
+        // Arrange
+        const string stdin = "src/Other/O.cs\n";
+
+        // Act
+        var exitCode = RunAffectedProcess(stdin, ["--affected", "-"], out var stdout, out _);
+
+        // Assert
+        Assert.Equal(0, exitCode);
+        Assert.Contains("unreviewed\tsrc/Other/O.cs", stdout);
+    }
+
+    /// <summary>
+    ///     Test that empty input reports no affected review-sets.
+    /// </summary>
+    [Fact]
+    public void ReviewMark_AffectedFlag_EmptyInput_ReportsNoAffected()
+    {
+        // Arrange
+        const string stdin = "";
+
+        // Act
+        var exitCode = RunAffectedProcess(stdin, ["--affected", "-"], out var stdout, out _);
+
+        // Assert
+        Assert.Equal(0, exitCode);
+        Assert.Equal($"No affected review-sets{Environment.NewLine}", stdout);
+    }
+
+    /// <summary>
+    ///     Test that non-matching input reports no affected review-sets.
+    /// </summary>
+    [Fact]
+    public void ReviewMark_AffectedFlag_NoMatch_ReportsNoAffected()
+    {
+        // Arrange
+        const string stdin = "docs/a.md\n";
+
+        // Act
+        var exitCode = RunAffectedProcess(stdin, ["--affected", "-"], out var stdout, out _);
+
+        // Assert
+        Assert.Equal(0, exitCode);
+        Assert.Equal($"No affected review-sets{Environment.NewLine}", stdout);
+    }
+
+    /// <summary>
+    ///     Test the exact stdout format: no banner, empty stderr.
+    /// </summary>
+    [Fact]
+    public void ReviewMark_AffectedFlag_ExactOutputFormat_NoBannerNoStderr()
+    {
+        // Arrange
+        const string stdin = "src/Core/A.cs\nsrc/Other/O.cs\n";
+
+        // Act
+        var exitCode = RunAffectedProcess(stdin, ["--affected", "-"], out var stdout, out var stderr);
+
+        // Assert
+        Assert.Equal(0, exitCode);
+        Assert.Equal(
+            $"affected\tTest-Review\tsrc/Core/A.cs{Environment.NewLine}unreviewed\tsrc/Other/O.cs{Environment.NewLine}",
+            stdout);
+        Assert.Equal("", stderr);
+    }
+
+    /// <summary>
+    ///     Test that backslash, TAB, LF and CR in names are escaped.
+    /// </summary>
+    [Fact]
+    public void ReviewMark_AffectedFlag_EscapedNames_AreEscaped()
+    {
+        // Arrange — review-set ID with a backslash; path with TAB, LF and CR
+        const string definition = """
+            needs-review:
+              - "src/**/*.cs"
+            evidence-source:
+              type: none
+            reviews:
+              - id: 'Back\Slash'
+                title: Test review
+                paths:
+                  - "src/Core/**/*.cs"
+            """;
+        const string stdin = "src/Core/a\tb\nc\rd.cs\0";
+
+        // Act
+        var exitCode = RunAffectedProcess(stdin, ["--affected", "-"], out var stdout, out _, definition);
+
+        // Assert
+        Assert.Equal(0, exitCode);
+        Assert.Equal($"affected\tBack\\\\Slash\tsrc/Core/a\\tb\\nc\\rd.cs{Environment.NewLine}", stdout);
+    }
+
+    /// <summary>
+    ///     Test that a missing input file exits 1 with an error on stderr.
+    /// </summary>
+    [Fact]
+    public void ReviewMark_AffectedFlag_MissingInputFile_ExitsOne()
+    {
+        // Arrange
+        var missing = Path.Combine(Path.GetTempPath(), Path.GetRandomFileName() + ".txt");
+
+        // Act
+        var exitCode = RunAffectedProcess(null, ["--affected", missing], out var stdout, out var stderr);
+
+        // Assert
+        Assert.Equal(1, exitCode);
+        Assert.StartsWith("Error:", stderr);
+        Assert.Equal("", stdout);
+    }
+
+    /// <summary>
+    ///     Test that --affected combined with each exclusive operation exits 1 with an error on stderr.
+    /// </summary>
+    [Theory]
+    [InlineData("--plan", "x.md")]
+    [InlineData("--report", "x.md")]
+    [InlineData("--elaborate", "X")]
+    [InlineData("--index", "*.pdf")]
+    [InlineData("--lint", null)]
+    public void ReviewMark_AffectedFlag_ProhibitedCombination_ExitsOne(string option, string? value)
+    {
+        // Arrange
+        string[] extra = value == null ? ["--affected", "-", option] : ["--affected", "-", option, value];
+
+        // Act
+        var exitCode = RunAffectedProcess("", extra, out var stdout, out var stderr);
+
+        // Assert
+        Assert.Equal(1, exitCode);
+        Assert.Contains("--affected cannot be combined", stderr);
+        Assert.Equal("", stdout);
+    }
+
+    /// <summary>
+    ///     Test that an option-like --affected value exits 1 with a usage error on stderr.
+    /// </summary>
+    [Fact]
+    public void ReviewMark_AffectedFlag_OptionLikeValue_ExitsOne()
+    {
+        // Arrange
+        string[] extra = ["--affected", "--lint"];
+
+        // Act
+        var exitCode = RunAffectedProcess("", extra, out var stdout, out var stderr);
+
+        // Assert
+        Assert.Equal(1, exitCode);
+        Assert.Contains("--affected requires", stderr);
+        Assert.Equal("", stdout);
+    }
+
+    /// <summary>
+    ///     Test that an empty or whitespace-only --affected value exits 1 with a usage error on stderr.
+    /// </summary>
+    [Theory]
+    [InlineData("")]
+    [InlineData("   ")]
+    public void ReviewMark_AffectedFlag_EmptyOrWhitespaceValue_ExitsOne(string value)
+    {
+        // Arrange
+        string[] extra = ["--affected", value];
+
+        // Act
+        var exitCode = RunAffectedProcess("", extra, out var stdout, out var stderr);
+
+        // Assert
+        Assert.Equal(1, exitCode);
+        Assert.Contains("--affected requires", stderr);
+        Assert.Equal("", stdout);
+    }
+
+    /// <summary>
+    ///     Test that an invalid definition without --silent reports an error on stderr and exits 1.
+    /// </summary>
+    [Fact]
+    public void ReviewMark_AffectedFlag_InvalidDefinition_ReportsStderr()
+    {
+        // Arrange
+        const string definition = "reviews: [";
+
+        // Act
+        var exitCode = RunAffectedProcess(
+            "src/A.cs\n", ["--affected", "-"], out var stdout, out var stderr, definition);
+
+        // Assert
+        Assert.Equal(1, exitCode);
+        Assert.NotEqual("", stderr.Trim());
+        Assert.Contains(": error:", stderr);
+        Assert.Equal("", stdout);
+    }
+
+    /// <summary>
+    ///     Test that a missing definition file exits 1.
+    /// </summary>
+    [Fact]
+    public void ReviewMark_AffectedFlag_MissingDefinition_ExitsOne()
+    {
+        // Arrange
+        var missing = Path.Combine(Path.GetTempPath(), Path.GetRandomFileName() + ".yaml");
+
+        // Act
+        var exitCode = Runner.Run(
+            out var stdout, out var stderr, "src/A.cs\n", "dotnet", _dllPath, "--definition", missing, "--affected", "-");
+
+        // Assert
+        Assert.Equal(1, exitCode);
+        Assert.Equal("", stdout);
+        Assert.NotEqual("", stderr);
+    }
+
+    /// <summary>
+    ///     Test that --silent does not hide an invalid-definition error in --affected mode.
+    /// </summary>
+    [Fact]
+    public void ReviewMark_AffectedFlag_Silent_InvalidDefinition_ReportsStderr()
+    {
+        // Arrange
+        const string definition = "reviews: [";
+
+        // Act
+        var exitCode = RunAffectedProcess(
+            "src/A.cs\n", ["--silent", "--affected", "-"], out var stdout, out var stderr, definition);
+
+        // Assert
+        Assert.Equal(1, exitCode);
+        Assert.NotEqual("", stderr.Trim());
+        Assert.Equal("", stdout);
+    }
+
+    /// <summary>
     ///     Test that --depth flag sets the default heading depth across all generated documents.
     /// </summary>
     [Fact]

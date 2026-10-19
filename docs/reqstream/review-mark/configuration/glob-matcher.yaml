@@ -65,3 +65,26 @@ sections:
                   platforms (Windows, Linux, macOS).
                 tests:
                   - GlobMatcher_GetMatchingFiles_FileInSubdirectory_UsesForwardSlashSeparator
+
+              - id: ReviewMark-GlobMatcher-PathMatching
+                title: >-
+                  The GlobMatcher shall match a relative path against ordered include and exclude glob
+                  patterns without accessing the file system, never matching paths outside the base
+                  directory (rooted, drive-letter paths or paths containing a .. segment).
+                justification: |
+                  Determining which review sets a change affects must work for deleted files and
+                  without scanning the tree. Path-string matching must apply the same ordered
+                  include/exclude semantics as file-system resolution so both agree, and paths outside
+                  the base directory can never belong to a review set.
+                tests:
+                  - GlobMatcher_IsMatch_IncludePattern_MatchesPath
+                  - GlobMatcher_IsMatch_OutsidePath_ReturnsFalse
+                  - GlobMatcher_IsMatch_DotDotPrefixedName_StillMatches
+                  - GlobMatcher_IsMatch_BackslashDotDot_PlatformSpecific
+                  - GlobMatcher_IsMatch_ExcludeAndReInclude_AppliesOrder
+                  - GlobMatcher_IsMatch_EmptyPatterns_ReturnsFalse
+                  - GlobMatcher_IsMatch_NullArguments_ThrowsArgumentNullException
+                  - GlobMatcher_IsMatch_AgreesWithGetMatchingFiles
+                children:
+                  - ReviewMark-OTS-FileSystemGlobbing-WildcardMatching
+                  - ReviewMark-OTS-FileSystemGlobbing-ExclusionPrefix

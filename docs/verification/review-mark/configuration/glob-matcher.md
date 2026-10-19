@@ -40,6 +40,22 @@ N/A - standard test environment. Tests run under xUnit on .NET 8, 9, and 10 and 
 
 **GlobMatcher_GetMatchingFiles_MultipleIncludePatterns_ReturnsAllMatching**: `GetMatchingFiles` is called with two include patterns (e.g., `**/*.cs` and `**/*.yaml`). Expected outcome: Files matching either pattern are returned; files matching neither are absent. Requirement coverage: `ReviewMark-GlobMatcher-IncludeExclude`. This scenario is tested by `GlobMatcher_GetMatchingFiles_MultipleIncludePatterns_ReturnsAllMatching`.
 
+**GlobMatcher_IsMatch_IncludePattern_MatchesPath**: `IsMatch` is called with a path under `src/` that does not exist on disk and an include pattern `src/**/*.cs`, and with a non-matching path. Expected outcome: The first is a match (no file system access), the second is not. Requirement coverage: `ReviewMark-GlobMatcher-PathMatching`. This scenario is tested by `GlobMatcher_IsMatch_IncludePattern_MatchesPath`.
+
+**GlobMatcher_IsMatch_ExcludeAndReInclude_AppliesOrder**: `IsMatch` is called with an include, a `!` exclude, and a later re-include. Expected outcome: Excluded paths do not match, and the re-included path matches. Requirement coverage: `ReviewMark-GlobMatcher-PathMatching`. This scenario is tested by `GlobMatcher_IsMatch_ExcludeAndReInclude_AppliesOrder`.
+
+**GlobMatcher_IsMatch_EmptyPatterns_ReturnsFalse**: `IsMatch` is called with an empty pattern list. Expected outcome: Returns false. Requirement coverage: `ReviewMark-GlobMatcher-PathMatching`. This scenario is tested by `GlobMatcher_IsMatch_EmptyPatterns_ReturnsFalse`.
+
+**GlobMatcher_IsMatch_OutsidePath_ReturnsFalse**: `IsMatch` is called with rooted POSIX, drive-letter (forward and back slashes), leading-backslash, `../`, `../../`, `..`, middle (`src/../../outside.cs`, `src/../a.cs`), and trailing (`src/..`) traversal paths and patterns `**` and `**/*.cs`. Expected outcome: Returns false for every path (any `..` segment is rejected). Boundary or error path: Paths outside the base directory. Requirement coverage: `ReviewMark-GlobMatcher-PathMatching`. This scenario is tested by `GlobMatcher_IsMatch_OutsidePath_ReturnsFalse`.
+
+**GlobMatcher_IsMatch_DotDotPrefixedName_StillMatches**: `IsMatch` is called with `..foo/a.cs`, `a..b/x.cs`, `src/a..b.cs` and `src/foo../x.cs` and `**/*.cs`. Expected outcome: Returns true (negative control; only whole `..` segments are rejected). Requirement coverage: `ReviewMark-GlobMatcher-PathMatching`. This scenario is tested by `GlobMatcher_IsMatch_DotDotPrefixedName_StillMatches`.
+
+**GlobMatcher_IsMatch_BackslashDotDot_PlatformSpecific**: `IsMatch` is called with `a\..\b.cs` and `..\b.cs` and `**/*.cs`. Expected outcome: Returns false on Windows (backslash is a separator) and true on POSIX (backslash is a literal filename character). Requirement coverage: `ReviewMark-GlobMatcher-PathMatching`. This scenario is tested by `GlobMatcher_IsMatch_BackslashDotDot_PlatformSpecific`.
+
+**GlobMatcher_IsMatch_NullArguments_ThrowsArgumentNullException**: `IsMatch` is called with a null path and with a null pattern list. Expected outcome: `ArgumentNullException` is thrown. Boundary or error path: Null input rejection. Requirement coverage: `ReviewMark-GlobMatcher-PathMatching`. This scenario is tested by `GlobMatcher_IsMatch_NullArguments_ThrowsArgumentNullException`.
+
+**GlobMatcher_IsMatch_AgreesWithGetMatchingFiles**: A temporary tree is created and the same ordered patterns (`**/*.cs`, `!src/Gen/**`, `src/Gen/Keep.cs`) are evaluated by both `GetMatchingFiles` and `IsMatch` over the tree's file paths. Expected outcome: Both produce the same set of files. Requirement coverage: `ReviewMark-GlobMatcher-PathMatching`. This scenario is tested by `GlobMatcher_IsMatch_AgreesWithGetMatchingFiles`.
+
 #### Requirements Coverage
 
 - **ReviewMark-GlobMatcher-IncludeExclude**:
@@ -56,3 +72,8 @@ N/A - standard test environment. Tests run under xUnit on .NET 8, 9, and 10 and 
   GlobMatcher_GetMatchingFiles_WhitespaceBaseDirectory_ThrowsArgumentException
 - **ReviewMark-GlobMatcher-NullPatternsRejection**: GlobMatcher_GetMatchingFiles_NullPatterns_ThrowsArgumentNullException
 - **ReviewMark-GlobMatcher-PathNormalization**: GlobMatcher_GetMatchingFiles_FileInSubdirectory_UsesForwardSlashSeparator
+- **ReviewMark-GlobMatcher-PathMatching**: GlobMatcher_IsMatch_IncludePattern_MatchesPath,
+  GlobMatcher_IsMatch_ExcludeAndReInclude_AppliesOrder, GlobMatcher_IsMatch_EmptyPatterns_ReturnsFalse,
+  GlobMatcher_IsMatch_NullArguments_ThrowsArgumentNullException, GlobMatcher_IsMatch_AgreesWithGetMatchingFiles,
+  GlobMatcher_IsMatch_OutsidePath_ReturnsFalse, GlobMatcher_IsMatch_DotDotPrefixedName_StillMatches,
+  GlobMatcher_IsMatch_BackslashDotDot_PlatformSpecific

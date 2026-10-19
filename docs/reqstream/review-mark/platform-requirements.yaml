@@ -21,6 +21,7 @@ sections:
               - "windows@ReviewMark_WorkingDirectoryOverride"
               - "windows@ReviewMark_Elaborate"
               - "windows@ReviewMark_Lint"
+              - "windows@ReviewMark_DepthFlag"
 
           - id: ReviewMark-Platform-Linux
             title: The tool shall build and run on Linux platforms.
@@ -38,6 +39,7 @@ sections:
               - "ubuntu@ReviewMark_WorkingDirectoryOverride"
               - "ubuntu@ReviewMark_Elaborate"
               - "ubuntu@ReviewMark_Lint"
+              - "ubuntu@ReviewMark_DepthFlag"
 
           - id: ReviewMark-Platform-MacOS
             title: The tool shall build and run on macOS platforms.
@@ -55,6 +57,7 @@ sections:
               - "macos@ReviewMark_WorkingDirectoryOverride"
               - "macos@ReviewMark_Elaborate"
               - "macos@ReviewMark_Lint"
+              - "macos@ReviewMark_DepthFlag"
 
           - id: ReviewMark-Platform-Net8
             title: The tool shall support .NET 8 runtime.
@@ -72,6 +75,7 @@ sections:
               - "dotnet8.x@ReviewMark_WorkingDirectoryOverride"
               - "dotnet8.x@ReviewMark_Elaborate"
               - "dotnet8.x@ReviewMark_Lint"
+              - "dotnet8.x@ReviewMark_DepthFlag"
 
           - id: ReviewMark-Platform-Net9
             title: The tool shall support .NET 9 runtime.
@@ -89,6 +93,7 @@ sections:
               - "dotnet9.x@ReviewMark_WorkingDirectoryOverride"
               - "dotnet9.x@ReviewMark_Elaborate"
               - "dotnet9.x@ReviewMark_Lint"
+              - "dotnet9.x@ReviewMark_DepthFlag"
 
           - id: ReviewMark-Platform-Net10
             title: The tool shall support .NET 10 runtime.
@@ -106,3 +111,4 @@ sections:
               - "dotnet10.x@ReviewMark_WorkingDirectoryOverride"
               - "dotnet10.x@ReviewMark_Elaborate"
               - "dotnet10.x@ReviewMark_Lint"
+              - "dotnet10.x@ReviewMark_DepthFlag"

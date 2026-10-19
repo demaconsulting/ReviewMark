@@ -113,4 +113,87 @@ internal static class GlobMatcher
 
         return result;
     }
+
+    /// <summary>
+    ///     Determines whether a relative path matches the ordered include/exclude
+    ///     <paramref name="patterns" /> using path-string matching only (no file system access).
+    /// </summary>
+    /// <param name="relativePath">The relative path, using forward slashes.</param>
+    /// <param name="patterns">Ordered glob patterns; a <c>!</c> prefix marks an exclude.</param>
+    /// <returns>
+    ///     <c>true</c> if the path is included after applying every pattern in order; otherwise <c>false</c>.
+    /// </returns>
+    /// <remarks>
+    ///     Applies the same ordered semantics as <see cref="GetMatchingFiles" />: an include sets the
+    ///     result to <c>true</c>, an exclude sets it to <c>false</c>, so a later include re-adds a path.
+    ///     Because the file system is not consulted, deleted files can be matched.
+    ///     Paths outside the base directory (rooted, leading <c>/</c> or <c>\</c>, a drive-letter prefix on any
+    ///     operating system, or containing any <c>..</c> segment) are never matched. <c>\</c> is a segment
+    ///     separator only on Windows.
+    /// </remarks>
+    /// <exception cref="ArgumentNullException">
+    ///     Thrown when <paramref name="relativePath" /> or <paramref name="patterns" /> is <c>null</c>.
+    /// </exception>
+    internal static bool IsMatch(string relativePath, IReadOnlyList<string> patterns)
+    {
+        ArgumentNullException.ThrowIfNull(relativePath);
+        ArgumentNullException.ThrowIfNull(patterns);
+
+        // Paths outside the base directory never match
+        if (IsOutsidePath(relativePath))
+        {
+            return false;
+        }
+
+        var matched = false;
+        foreach (var pattern in patterns)
+        {
+            var isExclude = pattern.StartsWith('!');
+            var matcher = new Matcher();
+            matcher.AddInclude(isExclude ? pattern[1..] : pattern);
+            if (matcher.Match(relativePath).HasMatches)
+            {
+                matched = !isExclude;
+            }
+        }
+
+        return matched;
+    }
+
+    /// <summary>
+    ///     Determines whether a path lies outside the base directory (rooted, drive-letter or parent-relative).
+    /// </summary>
+    /// <param name="path">The path to test.</param>
+    /// <returns><c>true</c> if the path is outside the base directory; otherwise <c>false</c>.</returns>
+    private static bool IsOutsidePath(string path)
+    {
+        if (Path.IsPathRooted(path) || path.StartsWith('/') || path.StartsWith('\\'))
+        {
+            return true;
+        }
+
+        // Drive-letter prefix is recognized on every operating system
+        if (path.Length >= 2 && char.IsAsciiLetter(path[0]) && path[1] == ':')
+        {
+            return true;
+        }
+
+        // Any ".." segment is rejected (even one that would stay inside)
+        return HasParentSegment(path);
+    }
+
+    /// <summary>
+    ///     Determines whether a path contains a <c>..</c> segment.
+    /// </summary>
+    /// <param name="path">The path to test.</param>
+    /// <returns><c>true</c> if any segment is exactly <c>..</c>; otherwise <c>false</c>.</returns>
+    /// <remarks>
+    ///     <c>/</c> always separates segments; <c>\</c> only on Windows (on POSIX it is a literal filename
+    ///     character).
+    /// </remarks>
+    internal static bool HasParentSegment(string path)
+    {
+        char[] separators = Path.DirectorySeparatorChar == '\\' ? ['/', '\\'] : ['/'];
+        return path.Split(separators).Contains("..", StringComparer.Ordinal);
+    }
 }

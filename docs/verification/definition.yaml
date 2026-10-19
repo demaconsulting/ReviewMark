@@ -30,7 +30,7 @@ input-files:
   - docs/verification/ots/fileassert.md
   - docs/verification/ots/microsoft-extensions-file-system-globbing.md
   - docs/verification/ots/pandoc.md
-  - docs/verification/ots/pdfsharp.md
+  - docs/verification/ots/pdfpig.md
   - docs/verification/ots/reqstream.md
   - docs/verification/ots/reviewmark.md
   - docs/verification/ots/sarifmark.md

@@ -8,7 +8,7 @@ approach and requirements coverage for each individual OTS software item.
 
 ReviewMark uses three complementary approaches to verify OTS software items.
 
-- Runtime libraries used directly by the product code, including YamlDotNet, PDFsharp,
+- Runtime libraries used directly by the product code, including YamlDotNet, PdfPig,
   DemaConsulting.TestResults, and Microsoft.Extensions.FileSystemGlobbing, are verified through
   repository unit and integration tests that exercise the exact parsing, metadata,
   serialization, and globbing behaviors ReviewMark depends on.

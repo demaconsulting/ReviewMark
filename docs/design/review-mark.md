@@ -68,6 +68,22 @@ up the named review-set and writes a Markdown elaboration to stdout containing t
 review-set ID, title, current fingerprint, and the full sorted list of matched files. This
 mode does not query the evidence store.
 
+**Affected Mode (`--affected <file|->`)**: ReviewMark reads a list of changed file paths
+(newline or NUL separated) from a file or standard input (`-`), matches them against the
+review-set globs by path string only (deleted files match), and writes tab-delimited
+`affected<TAB>id<TAB>path` and `unreviewed<TAB>path` records to the normal output. The id and path
+fields escape `\`, TAB, LF and CR as `\\`, `\t`, `\n` and `\r`. When no review set is affected the
+sentinel line `No affected review-sets` (not a record) is written first. The banner is suppressed
+when affected mode runs (it is still printed with `--help` or `--validate`) and lint warnings are not written (errors still are, on stderr, with exit code 1); the exit code is
+0 even when unreviewed files exist. A changed path is "unreviewed" when it matches `needs-review`
+(or `needs-review` is empty) but matches no review set's `paths` (context patterns do not count).
+Paths outside `--dir` (absolute, drive-letter or containing a `..` segment) are never matched, so they are neither
+affected nor unreviewed.
+Unreadable input (including standard input), a missing or invalid definition, or combining
+`--affected` with `--plan`, `--report`, `--elaborate`, `--index` or `--lint` is an error (stderr,
+exit code 1). `--version`, `--help` and `--validate` keep their higher dispatch priority.
+ReviewMark never runs git itself.
+
 **Lint Mode (`--lint`)**: When `--lint` is supplied, ReviewMark loads and validates the
 definition file in a single pass, collecting all detectable structural and semantic issues.
 The application banner is suppressed. Silence means the definition file is valid.
@@ -108,6 +124,7 @@ API, or graphical interface.
 | `--report <file>` | Generate a Markdown review-report document summarizing review-set completion |
 | `--report-depth <#>` | Override the Markdown heading depth for the report document |
 | `--elaborate <id>` | Print a Markdown elaboration for the named review set |
+| `--affected <file\|->` | List review sets affected by the changed files in the file (or stdin for `-`) |
 | `--enforce` | Exit with code 1 if the plan has uncovered files or any review-set is non-current |
 | `--index <pattern>` | Scan PDF evidence files matching the glob pattern and write `index.json`; repeatable |
 
@@ -121,8 +138,8 @@ ReviewMark depends on the following OTS software items:
 
 - **YamlDotNet**: YAML deserialization used by the Configuration subsystem to parse
   `.reviewmark.yaml` — see *YamlDotNet Integration Design*
-- **PDFsharp**: PDF document reading used by the Indexing subsystem to extract metadata
-  from evidence PDF files — see *PDFsharp Integration Design*
+- **PdfPig**: PDF document reading used by the Indexing subsystem to extract metadata
+  from evidence PDF files — see *PdfPig Integration Design*
 - **DemaConsulting.TestResults**: TRX and JUnit XML test-results serialization used by the
   SelfTest subsystem — see *DemaConsulting.TestResults Integration Design*
 - **Microsoft.Extensions.FileSystemGlobbing**: glob-pattern file matching used by the
@@ -166,6 +183,10 @@ For the `--index` workflow, the flow is: glob patterns → `GlobMatcher` → sor
 
 For `--elaborate`, the flow is: review-set ID → configuration lookup → Markdown
 elaboration (ID, title, fingerprint, file list) written to stdout.
+
+For `--affected`, the flow is: changed-file list → `PathHelpers.ParseChangedPaths()` →
+`ReviewMarkConfiguration.GetAffectedReviewSets()` (path-string glob matching) → `affected` /
+`unreviewed` lines written via `Context`.
 
 When `--enforce` is set, a non-zero exit code is returned if the Review Plan shows any
 uncovered files, or if the Review Report shows any review-set has a status other than

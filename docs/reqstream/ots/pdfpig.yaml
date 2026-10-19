@@ -1,0 +1,22 @@
+---
+# PdfPig OTS requirements
+sections:
+  - title: OTS Software Requirements
+    sections:
+      - title: PdfPig Requirements
+        requirements:
+          - id: ReviewMark-OTS-PdfPig-ReadMetadata
+            title: >-
+              ReviewMark shall read the review metadata from the Keywords field of evidence PDF
+              files using PdfPig.
+            justification: |
+              ReviewMark reads the review identifier and content fingerprint from the Keywords field
+              of each evidence PDF. PdfPig opens the PDF read-only and exposes the Keywords field,
+              which lets ReviewMark index evidence files without modifying them.
+            tags: [ots]
+            tests:
+              - ReviewIndex_Scan_PdfWithValidMetadata_PopulatesIndex
+              - ReviewIndex_Scan_PdfWithNoKeywords_SkipsWithWarning
+              - ReviewIndex_Scan_PdfWithMissingId_SkipsWithWarning
+              - ReviewIndex_Scan_PdfWithMissingFingerprint_SkipsWithWarning
+              - ReviewIndex_Scan_MultiplePdfs_PopulatesAllEntries

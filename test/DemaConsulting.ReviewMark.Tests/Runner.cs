@@ -69,4 +69,62 @@ internal static class Runner
         output = stdout + stderr;
         return process.ExitCode;
     }
+
+    /// <summary>
+    ///     Runs the specified program with optional standard input and captures stdout and stderr separately.
+    /// </summary>
+    /// <param name="stdout">Program standard output.</param>
+    /// <param name="stderr">Program standard error.</param>
+    /// <param name="stdin">Text written to standard input, or null to leave it unredirected.</param>
+    /// <param name="program">Program name or path.</param>
+    /// <param name="arguments">Program arguments.</param>
+    /// <returns>Program exit code.</returns>
+    /// <exception cref="InvalidOperationException">Thrown when process fails to start.</exception>
+    public static int Run(out string stdout, out string stderr, string? stdin, string program, params string[] arguments)
+    {
+        // Construct the start information
+        var startInfo = new ProcessStartInfo(program)
+        {
+            RedirectStandardOutput = true,
+            RedirectStandardError = true,
+            RedirectStandardInput = stdin != null,
+            UseShellExecute = false,
+            CreateNoWindow = true
+        };
+
+        // Add the arguments
+        foreach (var argument in arguments)
+        {
+            startInfo.ArgumentList.Add(argument);
+        }
+
+        // Start the process
+        using var process = Process.Start(startInfo) ??
+                            throw new InvalidOperationException("Failed to start process");
+
+        // Read output asynchronously to avoid buffer overflow
+        var outputTask = process.StandardOutput.ReadToEndAsync();
+        var errorTask = process.StandardError.ReadToEndAsync();
+
+        // Feed standard input and close it
+        if (stdin != null)
+        {
+            try
+            {
+                process.StandardInput.Write(stdin);
+                process.StandardInput.Close();
+            }
+            catch (IOException)
+            {
+                // The child may exit before reading stdin (e.g. on early error); the exit code and output still apply
+            }
+        }
+
+        // Wait for the process to exit
+        process.WaitForExit();
+
+        stdout = outputTask.GetAwaiter().GetResult();
+        stderr = errorTask.GetAwaiter().GetResult();
+        return process.ExitCode;
+    }
 }

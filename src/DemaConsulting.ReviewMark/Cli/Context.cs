@@ -155,6 +155,12 @@ internal sealed class Context : IDisposable
     public string? ElaborateId { get; private init; }
 
     /// <summary>
+    ///     Gets the changed-file list source for --affected: a file path, or <c>-</c> for standard input;
+    ///     null if --affected was not specified.
+    /// </summary>
+    public string? AffectedFile { get; private init; }
+
+    /// <summary>
     ///     Gets the proposed exit code for the application (0 for success, 1 for errors).
     /// </summary>
     public int ExitCode => _hasErrors ? 1 : 0;
@@ -198,7 +204,8 @@ internal sealed class Context : IDisposable
             IndexPaths = parser.IndexPaths.AsReadOnly(),
             WorkingDirectory = parser.WorkingDirectory,
             Enforce = parser.Enforce,
-            ElaborateId = parser.ElaborateId
+            ElaborateId = parser.ElaborateId,
+            AffectedFile = parser.AffectedFile
         };
 
         // Open log file if specified
@@ -323,6 +330,11 @@ internal sealed class Context : IDisposable
         public string? ElaborateId { get; private set; }
 
         /// <summary>
+        ///     Gets the changed-file list source for --affected.
+        /// </summary>
+        public string? AffectedFile { get; private set; }
+
+        /// <summary>
         ///     Parses command-line arguments
         /// </summary>
         /// <param name="args">Command-line arguments.</param>
@@ -336,6 +348,14 @@ internal sealed class Context : IDisposable
             {
                 var arg = args[i++];
                 i = ParseArgument(arg, args, i);
+            }
+
+            // --affected is an exclusive operation
+            if (AffectedFile != null
+                && (PlanFile != null || ReportFile != null || ElaborateId != null || IndexPaths.Count > 0 || Lint))
+            {
+                throw new ArgumentException(
+                    "--affected cannot be combined with --plan, --report, --elaborate, --index, or --lint");
             }
         }
 
@@ -437,6 +457,10 @@ internal sealed class Context : IDisposable
                     ElaborateId = GetRequiredStringArgument(arg, args, index, "a review-set ID argument");
                     return index + 1;
 
+                case "--affected":
+                    AffectedFile = GetRequiredAffectedArgument(arg, args, index);
+                    return index + 1;
+
                 default:
                     throw new ArgumentException($"Unknown argument '{arg}'");
             }
@@ -458,6 +482,26 @@ internal sealed class Context : IDisposable
             }
 
             return args[index];
+        }
+
+        /// <summary>
+        ///     Gets the required <c>--affected</c> value: a changed-files filename or <c>-</c>.
+        ///     Empty, whitespace-only, and <c>--</c>-prefixed (option-like) values are rejected.
+        /// </summary>
+        /// <param name="arg">Argument name</param>
+        /// <param name="args">All arguments</param>
+        /// <param name="index">Current index</param>
+        /// <returns>Argument value</returns>
+        private static string GetRequiredAffectedArgument(string arg, string[] args, int index)
+        {
+            const string description = "a changed-files filename or '-' argument";
+            var value = GetRequiredStringArgument(arg, args, index, description);
+            if (string.IsNullOrWhiteSpace(value) || value.StartsWith("--", StringComparison.Ordinal))
+            {
+                throw new ArgumentException($"{arg} requires {description}", nameof(args));
+            }
+
+            return value;
         }
 
         /// <summary>
@@ -499,17 +543,21 @@ internal sealed class Context : IDisposable
     ///     Writes an error message to the error console and log file (if logging is enabled).
     /// </summary>
     /// <param name="message">The error message to write.</param>
+    /// <param name="alwaysWriteToConsole">
+    ///     When <see langword="true" />, the message is written to the error console even when
+    ///     silent mode is enabled.
+    /// </param>
     /// <remarks>
     /// Calling this method permanently sets an internal error flag, causing
     /// <see cref="ExitCode"/> to return 1 for the remainder of the process lifetime.
     /// </remarks>
-    public void WriteError(string message)
+    public void WriteError(string message, bool alwaysWriteToConsole = false)
     {
         // Mark that we have encountered errors
         _hasErrors = true;
 
-        // Write to error console unless silent mode is enabled
-        if (!Silent)
+        // Write to error console unless silent mode is enabled (unless forced)
+        if (alwaysWriteToConsole || !Silent)
         {
             var previousColor = Console.ForegroundColor;
             try

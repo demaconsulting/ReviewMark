@@ -32,6 +32,20 @@ N/A - standard test environment. Tests run under xUnit on .NET 8, 9, and 10, cre
 
 **ReviewMarkConfiguration_ElaborateReviewSet_ValidId_ReturnsElaboration**: `ElaborateReviewSet` is called with a valid review set ID. Expected outcome: Returns markdown containing the ID, fingerprint, and file list. Requirement coverage: `ReviewMark-Config-Elaboration`. This scenario is tested by `ReviewMarkConfiguration_ElaborateReviewSet_ValidId_ReturnsElaboration`.
 
+**ReviewMarkConfiguration_GetAffectedReviewSets_MatchingFiles_ReturnsSetsInDefinitionOrder**: `GetAffectedReviewSets` is called with non-existent (deleted) files matching two review sets, one with an ID containing a space. Expected outcome: Both review sets are returned in definition order with their files sorted; no unreviewed files. Requirement coverage: `ReviewMark-Config-AffectedReviewSets-Matching-Sets`, `ReviewMark-Config-AffectedReviewSets-Matching-Order`, `ReviewMark-Config-AffectedReviewSets-Matching-SortedFiles`. This scenario is tested by `ReviewMarkConfiguration_GetAffectedReviewSets_MatchingFiles_ReturnsSetsInDefinitionOrder`.
+
+**ReviewMarkConfiguration_GetAffectedReviewSets_NeedsReviewFileInNoSet_IsUnreviewed**: `GetAffectedReviewSets` is called with a file excluded from a review set by `!` and a needs-review file in no review set. Expected outcome: No affected review sets; both files are unreviewed. Requirement coverage: `ReviewMark-Config-AffectedReviewSets-Unreviewed`. This scenario is tested by `ReviewMarkConfiguration_GetAffectedReviewSets_NeedsReviewFileInNoSet_IsUnreviewed`.
+
+**ReviewMarkConfiguration_GetAffectedReviewSets_EmptyNeedsReview_AllUnmatchedAreUnreviewed**: `GetAffectedReviewSets` is called on a definition with no `needs-review` entries, with one path in a review set and one in none. Expected outcome: The covered path makes the review set affected; the other path is unreviewed (an empty `needs-review` list means every path needs review). Requirement coverage: `ReviewMark-Config-AffectedReviewSets-Unreviewed`. This scenario is tested by `ReviewMarkConfiguration_GetAffectedReviewSets_EmptyNeedsReview_AllUnmatchedAreUnreviewed`.
+
+**ReviewMarkConfiguration_GetAffectedReviewSets_OutsidePaths_NeitherAffectedNorUnreviewed**: `GetAffectedReviewSets` is called with rooted, drive-letter, `../`, middle (`src/../../outside.cs`) and trailing (`src/..`) traversal paths. Expected outcome: No affected review sets and no unreviewed files. Boundary or error path: Paths outside the base directory. Requirement coverage: `ReviewMark-Config-AffectedReviewSets-Matching-Sets`. This scenario is tested by `ReviewMarkConfiguration_GetAffectedReviewSets_OutsidePaths_NeitherAffectedNorUnreviewed`.
+
+**ReviewMarkConfiguration_GetAffectedReviewSets_NotNeedingReviewOrEmpty_ReturnsEmpty**: `GetAffectedReviewSets` is called with files outside needs-review, and with an empty list. Expected outcome: Empty results. Boundary or error path: Empty input and ignored files. Requirement coverage: `ReviewMark-Config-AffectedReviewSets-Matching-Sets`. This scenario is tested by `ReviewMarkConfiguration_GetAffectedReviewSets_NotNeedingReviewOrEmpty_ReturnsEmpty`.
+
+**ReviewMarkConfiguration_GetAffectedReviewSets_ContextOnlyMatch_NotAffected**: `GetAffectedReviewSets` is called with a file that matches only a review set's `context` patterns. Expected outcome: The review set is not affected and the file is unreviewed. Requirement coverage: `ReviewMark-Config-AffectedReviewSets-Matching-ContextExcluded`, `ReviewMark-Config-AffectedReviewSets-Unreviewed`. This scenario is tested by `ReviewMarkConfiguration_GetAffectedReviewSets_ContextOnlyMatch_NotAffected`.
+
+**ReviewMarkConfiguration_GetAffectedReviewSets_NullPaths_ThrowsArgumentNullException**: `GetAffectedReviewSets` is called with null. Expected outcome: `ArgumentNullException` is thrown. Boundary or error path: Null input rejection. Requirement coverage: `ReviewMark-Config-AffectedReviewSets-Matching-NullRejected`. This scenario is tested by `ReviewMarkConfiguration_GetAffectedReviewSets_NullPaths_ThrowsArgumentNullException`.
+
 **ReviewMarkConfiguration_ElaborateReviewSet_UnknownId_ThrowsArgumentException**: `ElaborateReviewSet` is called with an ID not in the configuration. Expected outcome: `ArgumentException` is thrown. Boundary or error path: Unknown review set ID. Requirement coverage: `ReviewMark-Config-ElaborationUnknownIdRejection`. This scenario is tested by `ReviewMarkConfiguration_ElaborateReviewSet_UnknownId_ThrowsArgumentException`.
 
 **ReviewMarkConfiguration_Parse_NeedsReviewPatterns_ParsedCorrectly**: `ReviewMarkConfiguration.Parse` is called with YAML containing three `needs-review` patterns. Expected outcome: `NeedsReviewPatterns` contains all three patterns in order. Requirement coverage: `ReviewMark-Config-Reading`. This scenario is tested by `ReviewMarkConfiguration_Parse_NeedsReviewPatterns_ParsedCorrectly`.
@@ -59,6 +73,10 @@ N/A - standard test environment. Tests run under xUnit on .NET 8, 9, and 10, cre
 **ReviewMarkConfiguration_Load_NoneEvidenceSource_NoIssues**: `ReviewMarkConfiguration.Load` is called with a config having `evidence-source: type: none`. Expected outcome: No issues; configuration is non-null. Requirement coverage: `ReviewMark-Config-Loading`. This scenario is tested by `ReviewMarkConfiguration_Load_NoneEvidenceSource_NoIssues`.
 
 **ReviewMarkLoadResult_ReportIssues_RoutesIssuesToContext**: A `ReviewMarkLoadResult` with one warning and one error calls `ReportIssues` on a context. Expected outcome: Exit code is 1; both messages appear in the log. Requirement coverage: `ReviewMark-Config-Loading`. This scenario is tested by `ReviewMarkLoadResult_ReportIssues_RoutesIssuesToContext`.
+
+**ReviewMarkLoadResult_ReportIssues_WarningsSuppressed_ReportsErrorsOnly**: A `ReviewMarkLoadResult` with one warning and one error calls `ReportIssues(context, includeWarnings: false)`. Expected outcome: Exit code is 1; only the error message appears in the log. Requirement coverage: `ReviewMark-Program-Affected-Warnings`. This scenario is tested by `ReviewMarkLoadResult_ReportIssues_WarningsSuppressed_ReportsErrorsOnly`.
+
+**ReviewMarkLoadResult_ReportIssues_AlwaysWriteErrors_Silent_WritesStderr**: A `ReviewMarkLoadResult` with one error calls `ReportIssues(silentContext, alwaysWriteErrors: true)`. Expected outcome: The error is written to standard error despite `--silent`; exit code is 1. Requirement coverage: `ReviewMark-Config-ReportIssues-ErrorsAlwaysWritten`. This scenario is tested by `ReviewMarkLoadResult_ReportIssues_AlwaysWriteErrors_Silent_WritesStderr`.
 
 **ReviewMarkConfiguration_Load_WhitespaceOnlyPaths_ReturnsLintError**: `ReviewMarkConfiguration.Load` is called with a config whose review set paths list contains only whitespace. Expected outcome: Null configuration with a lint error referencing `"paths"`. Requirement coverage: `ReviewMark-Config-Loading`. This scenario is tested by `ReviewMarkConfiguration_Load_WhitespaceOnlyPaths_ReturnsLintError`.
 
@@ -277,6 +295,25 @@ tested by `ReviewMarkConfiguration_PublishReviewReport_FingerprintConsistentWith
 - **ReviewMark-Config-ReportMarkdownDepth**: ReviewMarkConfiguration_PublishReviewReport_MarkdownDepth_UsedForHeadings
 - **ReviewMark-Config-ReportMarkdownDepthValidation**: ReviewMarkConfiguration_PublishReviewReport_MarkdownDepthAbove5_Throws
 - **ReviewMark-Config-Elaboration**: ReviewMarkConfiguration_ElaborateReviewSet_ValidId_ReturnsElaboration, ReviewMarkConfiguration_ElaborateReviewSet_ContainsFullFingerprint
+- **ReviewMark-Config-AffectedReviewSets-Matching-Sets**:
+  ReviewMarkConfiguration_GetAffectedReviewSets_MatchingFiles_ReturnsSetsInDefinitionOrder,
+  ReviewMarkConfiguration_GetAffectedReviewSets_NotNeedingReviewOrEmpty_ReturnsEmpty,
+  ReviewMarkConfiguration_GetAffectedReviewSets_OutsidePaths_NeitherAffectedNorUnreviewed
+- **ReviewMark-Config-AffectedReviewSets-Matching-Order**:
+  ReviewMarkConfiguration_GetAffectedReviewSets_MatchingFiles_ReturnsSetsInDefinitionOrder
+- **ReviewMark-Config-AffectedReviewSets-Matching-SortedFiles**:
+  ReviewMarkConfiguration_GetAffectedReviewSets_MatchingFiles_ReturnsSetsInDefinitionOrder
+- **ReviewMark-Config-AffectedReviewSets-Matching-ContextExcluded**:
+  ReviewMarkConfiguration_GetAffectedReviewSets_ContextOnlyMatch_NotAffected
+- **ReviewMark-Config-AffectedReviewSets-Matching-NullRejected**:
+  ReviewMarkConfiguration_GetAffectedReviewSets_NullPaths_ThrowsArgumentNullException
+- **ReviewMark-Config-AffectedReviewSets-Unreviewed**:
+  ReviewMarkConfiguration_GetAffectedReviewSets_NeedsReviewFileInNoSet_IsUnreviewed,
+  ReviewMarkConfiguration_GetAffectedReviewSets_ContextOnlyMatch_NotAffected,
+  ReviewMarkConfiguration_GetAffectedReviewSets_EmptyNeedsReview_AllUnmatchedAreUnreviewed
+- **ReviewMark-Config-ReportIssues-ErrorsAlwaysWritten**:
+  ReviewMarkLoadResult_ReportIssues_AlwaysWriteErrors_Silent_WritesStderr,
+  ReviewMarkLoadResult_ReportIssues_WarningsSuppressed_ReportsErrorsOnly
 - **ReviewMark-Config-ElaborationNullRejection**:
   ReviewMarkConfiguration_ElaborateReviewSet_NullId_ThrowsArgumentNullException,
   ReviewMarkConfiguration_ElaborateReviewSet_WhitespaceId_ThrowsArgumentException
