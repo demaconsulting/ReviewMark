@@ -10,6 +10,9 @@ information dictionary without any further processing of page content. ReviewMar
 Keywords metadata field from each evidence PDF; PdfPig's `PdfDocument.Open` provides exactly this
 access path with minimal overhead and no risk of accidental document modification.
 
+PdfPig is licensed under Apache-2.0, a permissive license with no copyleft or runtime-license
+obligations (unlike PDFsharp 6.5+); this was the reason for its selection.
+
 ### Features Used
 
 - **`PdfDocument.Open(string path)`**: opens a PDF file at the given path; PdfPig documents are
@@ -31,8 +34,7 @@ directory contains non-review PDFs or partially-tagged PDFs.
 
 ### Behavioral Notes
 
-- PdfPig opens documents read-only; there is no import mode concept and no way to modify the
-  document.
+- PdfPig opens documents read-only, so evidence files are never modified.
 - Corrupt or non-PDF files cause PdfPig to throw `PdfDocumentFormatException` (and occasionally
   other exception types). `ReviewIndex.Scan()` catches `Exception` around PDF processing, so the
   file is skipped with a warning that includes the library-provided message. The exception types

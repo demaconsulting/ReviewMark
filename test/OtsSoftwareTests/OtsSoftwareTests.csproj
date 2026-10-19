@@ -50,7 +50,6 @@
   <ItemGroup>
     <PackageReference Include="DemaConsulting.TestResults" Version="1.10.0" />
     <PackageReference Include="Microsoft.Extensions.FileSystemGlobbing" Version="10.0.12" />
-    <PackageReference Include="PdfPig" Version="0.1.16" />
     <PackageReference Include="YamlDotNet" Version="18.1.0" />
   </ItemGroup>
 

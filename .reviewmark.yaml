@@ -299,7 +299,6 @@ reviews:
       - "docs/reqstream/ots/pdfpig.yaml"
       - "docs/design/ots/pdfpig.md"
       - "docs/verification/ots/pdfpig.md"
-      - "test/OtsSoftwareTests/PdfPigTests.cs"
 
   - id: OTS-ReqStream
     title: Review that ReqStream Provides Required Functionality

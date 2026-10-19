@@ -7,16 +7,14 @@ sections:
         requirements:
           - id: ReviewMark-OTS-PdfPig-ReadMetadata
             title: >-
-              PdfPig shall provide access to the Keywords metadata field of a PDF document opened read-only.
+              ReviewMark shall read the review metadata from the Keywords field of evidence PDF
+              files using PdfPig.
             justification: |
               ReviewMark reads the review identifier and content fingerprint from the Keywords field
-              of each evidence PDF. PdfPig's PdfDocument.Open provides read-only access to the
-              document information dictionary without modifying the document, allowing ReviewMark
-              to scan large PDF collections safely and efficiently.
+              of each evidence PDF. PdfPig opens the PDF read-only and exposes the Keywords field,
+              which lets ReviewMark index evidence files without modifying them.
             tags: [ots]
             tests:
-              - PdfDocument_Open_ExposesKeywordsField
-              - PdfDocument_Open_NoKeywords_ReturnsNullOrEmpty
               - ReviewIndex_Scan_PdfWithValidMetadata_PopulatesIndex
               - ReviewIndex_Scan_PdfWithNoKeywords_SkipsWithWarning
               - ReviewIndex_Scan_PdfWithMissingId_SkipsWithWarning

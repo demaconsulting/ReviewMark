@@ -8,8 +8,9 @@ libraries used by ReviewMark. Each OTS item's specific integration design is doc
 
 OTS items are selected based on the following criteria:
 
-- **License compatibility**: only MIT-licensed packages are acceptable, consistent with
-  ReviewMark's own MIT license
+- **License compatibility**: only permissive licenses (for example MIT or Apache-2.0) are
+  acceptable, consistent with ReviewMark's own MIT license; copyleft and runtime-license
+  obligations are not acceptable
 - **Maturity and maintenance**: packages must be actively maintained with a track record of
   stable releases and published changelogs
 - **NuGet availability**: packages must be published on NuGet.org with reproducible builds
