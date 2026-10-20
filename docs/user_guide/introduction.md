@@ -642,6 +642,8 @@ evidence-source:
 - Expansion is a single pass; values that themselves contain `${...}` are not expanded again.
 - A variable that is unset or empty, or a malformed `${` reference (unclosed or invalid name), is an
   error. The error names the variable, never its value.
+- Expansion applies only to `fileshare` and `url` sources; the `location` of a `none` source is ignored
+  and never expanded.
 - Expansion happens before relative `fileshare` paths are resolved against the configuration file.
 - `%20`, a lone `$`, `$VAR`, and `%VAR%` are left unchanged.
 - `reviewmark --lint` reports an unset variable as an error, so lint fails on machines where the

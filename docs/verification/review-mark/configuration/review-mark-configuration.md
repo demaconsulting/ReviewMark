@@ -274,6 +274,12 @@ with requirement coverage `ReviewMark-Config-EvidenceLocationExpansion`.
   is reported as an Error issue.
 - `ReviewMarkConfiguration_Parse_EvidenceLocation_ErrorMessage_DoesNotContainValue`: the value never
   appears in the message.
+- `ReviewMarkConfiguration_Load_EvidenceLocation_ErrorIssue_DoesNotContainValue`: the value never appears
+  in any Load issue.
+- `ReviewMarkConfiguration_Parse_EvidenceLocation_NoneSource_NotExpanded`: the ignored location of a
+  `none` source is not expanded, so an unset variable does not throw.
+- `ReviewMarkConfiguration_Load_EvidenceLocation_NoneSource_NoIssue`: Load reports no expansion issue for
+  a `none` source.
 - `ReviewMarkConfiguration_Parse_EvidenceLocation_ReviewSetPathsUnchanged`: review-set paths are not expanded.
 
 #### Requirements Coverage
@@ -291,6 +297,9 @@ with requirement coverage `ReviewMark-Config-EvidenceLocationExpansion`.
   ReviewMarkConfiguration_Parse_EvidenceLocation_MalformedUnclosed_Throws,
   ReviewMarkConfiguration_Load_EvidenceLocation_MalformedInvalidName_ReturnsErrorIssue,
   ReviewMarkConfiguration_Parse_EvidenceLocation_ErrorMessage_DoesNotContainValue,
+  ReviewMarkConfiguration_Load_EvidenceLocation_ErrorIssue_DoesNotContainValue,
+  ReviewMarkConfiguration_Parse_EvidenceLocation_NoneSource_NotExpanded,
+  ReviewMarkConfiguration_Load_EvidenceLocation_NoneSource_NoIssue,
   ReviewMarkConfiguration_Parse_EvidenceLocation_ReviewSetPathsUnchanged
 - **ReviewMark-Config-Reading**:
   ReviewMarkConfiguration_Parse_NullYaml_ThrowsArgumentNullException,

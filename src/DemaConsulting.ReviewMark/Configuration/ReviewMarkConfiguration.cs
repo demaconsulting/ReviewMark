@@ -258,9 +258,9 @@ file static class ReviewMarkConfigurationHelpers
             throw new ArgumentException("Configuration 'evidence-source' is missing a required 'location' field.");
         }
 
-        // Expand ${VAR} references in the location (non-empty only)
+        // Expand ${VAR} references in the location (non-empty only; ignored for 'none' sources)
         var location = es.Location ?? string.Empty;
-        if (location.Length > 0)
+        if (location.Length > 0 && !string.Equals(es.Type, "none", StringComparison.OrdinalIgnoreCase))
         {
             location = ExpandEnvironmentVariables(location);
         }
@@ -358,6 +358,7 @@ file static class ReviewMarkConfigurationHelpers
                 "'evidence-source' is missing a required 'location' field."));
         }
         else if (!string.IsNullOrEmpty(evidenceSource.Location) &&
+                 !string.Equals(evidenceSource.Type, "none", StringComparison.OrdinalIgnoreCase) &&
                  !TryExpand(evidenceSource.Location, out _, out var expansionError))
         {
             // Report expansion failures (variable name only, never the value)

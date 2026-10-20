@@ -54,6 +54,9 @@ sections:
                   - ReviewMarkConfiguration_Parse_EvidenceLocation_MalformedUnclosed_Throws
                   - ReviewMarkConfiguration_Load_EvidenceLocation_MalformedInvalidName_ReturnsErrorIssue
                   - ReviewMarkConfiguration_Parse_EvidenceLocation_ErrorMessage_DoesNotContainValue
+                  - ReviewMarkConfiguration_Load_EvidenceLocation_ErrorIssue_DoesNotContainValue
+                  - ReviewMarkConfiguration_Parse_EvidenceLocation_NoneSource_NotExpanded
+                  - ReviewMarkConfiguration_Load_EvidenceLocation_NoneSource_NoIssue
                   - ReviewMarkConfiguration_Parse_EvidenceLocation_ReviewSetPathsUnchanged
 
               - id: ReviewMark-Config-Loading
