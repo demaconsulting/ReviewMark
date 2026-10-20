@@ -48,6 +48,7 @@ sections:
               - Configuration_PlanGeneration_ValidConfig_Succeeds
             children:
               - ReviewMark-Config-Reading
+              - ReviewMark-Config-EvidenceLocationExpansion
               - ReviewMark-Config-Loading
               - ReviewMark-Config-PlanGeneration
               - ReviewMark-Config-PlanMarkdownDepth

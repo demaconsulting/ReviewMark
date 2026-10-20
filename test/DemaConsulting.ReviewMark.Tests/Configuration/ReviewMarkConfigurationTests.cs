@@ -558,6 +558,209 @@ public sealed class ReviewMarkConfigurationTests : IDisposable
     }
 
     /// <summary>
+    ///     Builds a YAML document with the supplied evidence-source location (single-quoted).
+    /// </summary>
+    private static string LocationYaml(string location, string type = "url", string reviewPath = "src/**/*.cs") =>
+        "needs-review:\n  - \"**/*.cs\"\n" +
+        $"evidence-source:\n  type: {type}\n  location: '{location}'\n" +
+        $"reviews:\n  - id: Core\n    title: Core\n    paths:\n      - '{reviewPath}'\n";
+
+    /// <summary>
+    ///     Runs an action with an environment variable set (or unset when null), restoring it afterwards.
+    /// </summary>
+    private static void WithEnv(string name, string? value, Action action)
+    {
+        var original = Environment.GetEnvironmentVariable(name);
+        try
+        {
+            Environment.SetEnvironmentVariable(name, value);
+            action();
+        }
+        finally
+        {
+            Environment.SetEnvironmentVariable(name, original);
+        }
+    }
+
+    /// <summary>
+    ///     Writes the YAML to a config file and loads it.
+    /// </summary>
+    private ReviewMarkLoadResult LoadYaml(string yaml)
+    {
+        var configPath = PathHelpers.SafePathCombine(_testDirectory, $"{Guid.NewGuid()}.reviewmark.yaml");
+        File.WriteAllText(configPath, yaml);
+        return ReviewMarkConfiguration.Load(configPath);
+    }
+
+    /// <summary>
+    ///     Test that a set variable is expanded in the location.
+    /// </summary>
+    [Fact]
+    public void ReviewMarkConfiguration_Parse_EvidenceLocation_PlainVariable_Expands()
+    {
+        WithEnv("RM_TEST_PLAIN_A1", "https://host.example.com", () =>
+        {
+            var config = ReviewMarkConfiguration.Parse(LocationYaml("${RM_TEST_PLAIN_A1}/reviews/"));
+            Assert.Equal("https://host.example.com/reviews/", config.EvidenceSource.Location);
+        });
+    }
+
+    /// <summary>
+    ///     Test that an unset variable causes Parse to throw naming the variable.
+    /// </summary>
+    [Fact]
+    public void ReviewMarkConfiguration_Parse_EvidenceLocation_UnsetVariable_Throws()
+    {
+        WithEnv("RM_TEST_UNSET_A1", null, () =>
+        {
+            var ex = Assert.Throws<ArgumentException>(() =>
+                ReviewMarkConfiguration.Parse(LocationYaml("https://x/${RM_TEST_UNSET_A1}")));
+            Assert.Contains("RM_TEST_UNSET_A1", ex.Message);
+        });
+    }
+
+    /// <summary>
+    ///     Test that an unset variable produces a lint error from Load.
+    /// </summary>
+    [Fact]
+    public void ReviewMarkConfiguration_Load_EvidenceLocation_UnsetVariable_ReturnsErrorIssue()
+    {
+        WithEnv("RM_TEST_UNSET_A2", null, () =>
+        {
+            var result = LoadYaml(LocationYaml("https://x/${RM_TEST_UNSET_A2}"));
+            Assert.Null(result.Configuration);
+            Assert.Contains(result.Issues, i => i.Severity == LintSeverity.Error && i.Description.Contains("RM_TEST_UNSET_A2"));
+        });
+    }
+
+    /// <summary>
+    ///     Test that an empty variable is an error.
+    /// </summary>
+    [Fact]
+    public void ReviewMarkConfiguration_Parse_EvidenceLocation_EmptyVariable_Throws()
+    {
+        WithEnv("RM_TEST_EMPTY_A1", "", () =>
+        {
+            var ex = Assert.Throws<ArgumentException>(() =>
+                ReviewMarkConfiguration.Parse(LocationYaml("https://x/${RM_TEST_EMPTY_A1}")));
+            Assert.Contains("RM_TEST_EMPTY_A1", ex.Message);
+        });
+    }
+
+    /// <summary>
+    ///     Test that <c>$${</c> yields a literal <c>${</c>.
+    /// </summary>
+    [Fact]
+    public void ReviewMarkConfiguration_Parse_EvidenceLocation_EscapedDollar_YieldsLiteral()
+    {
+        var config = ReviewMarkConfiguration.Parse(LocationYaml("https://x/$${NOT_A_VAR}"));
+        Assert.Equal("https://x/${NOT_A_VAR}", config.EvidenceSource.Location);
+    }
+
+    /// <summary>
+    ///     Test that percent-encoding, lone dollars, and other syntaxes pass through.
+    /// </summary>
+    [Fact]
+    public void ReviewMarkConfiguration_Parse_EvidenceLocation_PercentAndLoneDollar_PassThrough()
+    {
+        const string location = "https://x/a%20b/$/$VAR/%VAR%/$$";
+        var config = ReviewMarkConfiguration.Parse(LocationYaml(location));
+        Assert.Equal(location, config.EvidenceSource.Location);
+    }
+
+    /// <summary>
+    ///     Test that a value containing a token is not re-expanded.
+    /// </summary>
+    [Fact]
+    public void ReviewMarkConfiguration_Parse_EvidenceLocation_ValueContainingToken_NotReExpanded()
+    {
+        WithEnv("RM_TEST_OUTER_A1", "${RM_TEST_INNER_A1}", () =>
+        {
+            WithEnv("RM_TEST_INNER_A1", "inner", () =>
+            {
+                var config = ReviewMarkConfiguration.Parse(LocationYaml("https://x/${RM_TEST_OUTER_A1}"));
+                Assert.Equal("https://x/${RM_TEST_INNER_A1}", config.EvidenceSource.Location);
+            });
+        });
+    }
+
+    /// <summary>
+    ///     Test that a Windows path value is preserved.
+    /// </summary>
+    [Fact]
+    public void ReviewMarkConfiguration_Parse_EvidenceLocation_WindowsPath_Preserved()
+    {
+        WithEnv("RM_TEST_WIN_A1", @"C:\Shares\Evidence", () =>
+        {
+            var config = ReviewMarkConfiguration.Parse(LocationYaml(@"${RM_TEST_WIN_A1}\index.json", "fileshare"));
+            Assert.Equal(@"C:\Shares\Evidence\index.json", config.EvidenceSource.Location);
+        });
+    }
+
+    /// <summary>
+    ///     Test that expansion happens before relative-path resolution in Load.
+    /// </summary>
+    [Fact]
+    public void ReviewMarkConfiguration_Load_EvidenceLocation_ExpansionBeforeRelativeResolution_ResolvesExpanded()
+    {
+        WithEnv("RM_TEST_REL_A1", "sub", () =>
+        {
+            var result = LoadYaml(LocationYaml("${RM_TEST_REL_A1}/index.json", "fileshare"));
+            Assert.NotNull(result.Configuration);
+            Assert.Equal(
+                Path.GetFullPath(Path.Combine("sub", "index.json"), _testDirectory),
+                Path.GetFullPath(result.Configuration.EvidenceSource.Location));
+            Assert.DoesNotContain("${", result.Configuration.EvidenceSource.Location);
+        });
+    }
+
+    /// <summary>
+    ///     Test that an unclosed reference is malformed.
+    /// </summary>
+    [Fact]
+    public void ReviewMarkConfiguration_Parse_EvidenceLocation_MalformedUnclosed_Throws()
+    {
+        var ex = Assert.Throws<ArgumentException>(() =>
+            ReviewMarkConfiguration.Parse(LocationYaml("https://x/${UNCLOSED")));
+        Assert.Contains("malformed", ex.Message);
+    }
+
+    /// <summary>
+    ///     Test that an invalid variable name is malformed (Load reports a lint error).
+    /// </summary>
+    [Fact]
+    public void ReviewMarkConfiguration_Load_EvidenceLocation_MalformedInvalidName_ReturnsErrorIssue()
+    {
+        var result = LoadYaml(LocationYaml("https://x/${1BAD}"));
+        Assert.Null(result.Configuration);
+        Assert.Contains(result.Issues, i => i.Severity == LintSeverity.Error && i.Description.Contains("malformed"));
+    }
+
+    /// <summary>
+    ///     Test that error messages never contain the variable value.
+    /// </summary>
+    [Fact]
+    public void ReviewMarkConfiguration_Parse_EvidenceLocation_ErrorMessage_DoesNotContainValue()
+    {
+        WithEnv("RM_TEST_SECRET_A1", "s3cr3t-value", () =>
+        {
+            var ex = Assert.Throws<ArgumentException>(() =>
+                ReviewMarkConfiguration.Parse(LocationYaml("https://x/${RM_TEST_SECRET_A1}/${RM_TEST_MISSING_A1}")));
+            Assert.DoesNotContain("s3cr3t-value", ex.Message);
+        });
+    }
+
+    /// <summary>
+    ///     Test that review-set paths containing tokens are not expanded.
+    /// </summary>
+    [Fact]
+    public void ReviewMarkConfiguration_Parse_EvidenceLocation_ReviewSetPathsUnchanged()
+    {
+        var config = ReviewMarkConfiguration.Parse(LocationYaml("https://x/", reviewPath: "src/${NOT_EXPANDED}/*.cs"));
+        Assert.Equal("src/${NOT_EXPANDED}/*.cs", config.Reviews[0].Paths[0]);
+    }
+
+    /// <summary>
     ///     Test that an evidence-source with type <c>none</c> is parsed correctly
     ///     and produces an empty <see cref="EvidenceSource.Location" />.
     /// </summary>

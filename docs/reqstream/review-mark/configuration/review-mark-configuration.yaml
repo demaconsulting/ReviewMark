@@ -34,6 +34,28 @@ sections:
                   - ReviewMark-OTS-YamlDotNet-ErrorHandling
                   - ReviewMark-OTS-YamlDotNet-UnknownKeys
 
+              - id: ReviewMark-Config-EvidenceLocationExpansion
+                title: >-
+                  The ReviewMarkConfiguration unit shall expand ${VAR} environment variable references in
+                  the evidence-source location, treating unset, empty, or malformed references as errors.
+                justification: |
+                  Allows the evidence location to vary per environment without editing the definition
+                  file. Errors name the variable but never reveal its value, and `$${` provides an escape.
+                tests:
+                  - ReviewMarkConfiguration_Parse_EvidenceLocation_PlainVariable_Expands
+                  - ReviewMarkConfiguration_Parse_EvidenceLocation_UnsetVariable_Throws
+                  - ReviewMarkConfiguration_Load_EvidenceLocation_UnsetVariable_ReturnsErrorIssue
+                  - ReviewMarkConfiguration_Parse_EvidenceLocation_EmptyVariable_Throws
+                  - ReviewMarkConfiguration_Parse_EvidenceLocation_EscapedDollar_YieldsLiteral
+                  - ReviewMarkConfiguration_Parse_EvidenceLocation_PercentAndLoneDollar_PassThrough
+                  - ReviewMarkConfiguration_Parse_EvidenceLocation_ValueContainingToken_NotReExpanded
+                  - ReviewMarkConfiguration_Parse_EvidenceLocation_WindowsPath_Preserved
+                  - ReviewMarkConfiguration_Load_EvidenceLocation_ExpansionBeforeRelativeResolution_ResolvesExpanded
+                  - ReviewMarkConfiguration_Parse_EvidenceLocation_MalformedUnclosed_Throws
+                  - ReviewMarkConfiguration_Load_EvidenceLocation_MalformedInvalidName_ReturnsErrorIssue
+                  - ReviewMarkConfiguration_Parse_EvidenceLocation_ErrorMessage_DoesNotContainValue
+                  - ReviewMarkConfiguration_Parse_EvidenceLocation_ReviewSetPathsUnchanged
+
               - id: ReviewMark-Config-Loading
                 title: >-
                   The ReviewMarkConfiguration unit shall perform linting during configuration

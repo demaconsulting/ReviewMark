@@ -37,6 +37,18 @@ compliance documents.
 | `fileshare` | Evidence index read from the file path in `location` |
 | `url` | Evidence index downloaded from the HTTP/HTTPS URL in `location` |
 
+**Location environment-variable expansion:**
+
+`ReviewMarkConfigurationHelpers.TryExpand` expands `${VAR}` references in `evidence-source.location`
+only, using the regex `\$\$\{|\$\{([A-Za-z_][A-Za-z0-9_]*)\}` in a single left-to-right pass: `$${`
+yields a literal `${`, and substituted values are never scanned again. An unset or empty variable, or any
+remaining `${` that is not a valid reference, is an error naming the variable (never its value).
+`BuildConfiguration` applies the expansion (throwing `ArgumentException` through `Parse`), and
+`ValidateEvidenceSource` reports the same failure as an Error `LintIssue` so `Load` returns a null
+configuration. Because expansion occurs in `BuildConfiguration`, it precedes the relative-path
+resolution performed by `Load`. Credential fields (`username-env`, `password-env`) are env var names
+and are not expanded.
+
 **Result and internal API types:**
 
 | Type | Description |

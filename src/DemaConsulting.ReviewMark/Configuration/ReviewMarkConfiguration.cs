@@ -20,6 +20,7 @@
 
 using System.Security.Cryptography;
 using System.Text;
+using System.Text.RegularExpressions;
 using DemaConsulting.ReviewMark.Cli;
 using DemaConsulting.ReviewMark.Indexing;
 using YamlDotNet.Core;
@@ -257,9 +258,16 @@ file static class ReviewMarkConfigurationHelpers
             throw new ArgumentException("Configuration 'evidence-source' is missing a required 'location' field.");
         }
 
+        // Expand ${VAR} references in the location (non-empty only)
+        var location = es.Location ?? string.Empty;
+        if (location.Length > 0)
+        {
+            location = ExpandEnvironmentVariables(location);
+        }
+
         var evidenceSource = new EvidenceSource(
             Type: es.Type,
-            Location: es.Location ?? string.Empty,
+            Location: location,
             UsernameEnv: es.Credentials?.UsernameEnv,
             PasswordEnv: es.Credentials?.PasswordEnv);
 
@@ -349,6 +357,96 @@ file static class ReviewMarkConfigurationHelpers
                 LintSeverity.Error,
                 "'evidence-source' is missing a required 'location' field."));
         }
+        else if (!string.IsNullOrEmpty(evidenceSource.Location) &&
+                 !TryExpand(evidenceSource.Location, out _, out var expansionError))
+        {
+            // Report expansion failures (variable name only, never the value)
+            issues.Add(new LintIssue(
+                filePath,
+                LintSeverity.Error,
+                $"'evidence-source' location: {expansionError}"));
+        }
+    }
+
+    /// <summary>
+    ///     Pattern matching either the <c>$${</c> escape or a <c>${NAME}</c> reference.
+    /// </summary>
+    private static readonly Regex ExpansionRegex =
+        new(@"\$\$\{|\$\{([A-Za-z_][A-Za-z0-9_]*)\}", RegexOptions.Compiled | RegexOptions.CultureInvariant, TimeSpan.FromSeconds(1));
+
+    /// <summary>
+    ///     Expands <c>${VAR}</c> references in a location string in a single pass.
+    /// </summary>
+    /// <param name="location">The raw location.</param>
+    /// <param name="expanded">The expanded location when successful.</param>
+    /// <param name="error">An error message naming the variable (never its value) on failure.</param>
+    /// <returns><c>true</c> when expansion succeeded.</returns>
+    internal static bool TryExpand(string location, out string expanded, out string? error)
+    {
+        var sb = new StringBuilder();
+        var pos = 0;
+        foreach (Match m in ExpansionRegex.Matches(location))
+        {
+            // Any '${' in the skipped text is malformed
+            var gap = location.Substring(pos, m.Index - pos);
+            if (gap.Contains("${", StringComparison.Ordinal))
+            {
+                expanded = string.Empty;
+                error = "contains a malformed '${' environment variable reference.";
+                return false;
+            }
+
+            sb.Append(gap);
+            if (m.Groups[1].Success)
+            {
+                var name = m.Groups[1].Value;
+                var value = Environment.GetEnvironmentVariable(name);
+                if (string.IsNullOrEmpty(value))
+                {
+                    expanded = string.Empty;
+                    error = $"environment variable '{name}' is not set or is empty.";
+                    return false;
+                }
+
+                sb.Append(value);
+            }
+            else
+            {
+                // '$${' escape yields literal '${'
+                sb.Append("${");
+            }
+
+            pos = m.Index + m.Length;
+        }
+
+        var tail = location.Substring(pos);
+        if (tail.Contains("${", StringComparison.Ordinal))
+        {
+            expanded = string.Empty;
+            error = "contains a malformed '${' environment variable reference.";
+            return false;
+        }
+
+        sb.Append(tail);
+        expanded = sb.ToString();
+        error = null;
+        return true;
+    }
+
+    /// <summary>
+    ///     Expands <c>${VAR}</c> references in a location string.
+    /// </summary>
+    /// <param name="location">The raw location.</param>
+    /// <returns>The expanded location.</returns>
+    /// <exception cref="ArgumentException">Thrown when a variable is unset/empty or a reference is malformed.</exception>
+    internal static string ExpandEnvironmentVariables(string location)
+    {
+        if (!TryExpand(location, out var expanded, out var error))
+        {
+            throw new ArgumentException($"Configuration 'evidence-source' location {error}");
+        }
+
+        return expanded;
     }
 
     /// <summary>
