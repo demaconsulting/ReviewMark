@@ -1174,6 +1174,54 @@ public class IntegrationTests
     }
 
     /// <summary>
+    ///     Test that --lint accepts a definition whose evidence-source location references a set
+    ///     environment variable, and reports an error naming the variable when it is unset.
+    /// </summary>
+    [Fact]
+    public void ReviewMark_LintFlag_EvidenceLocationEnvironmentVariable_ExpandsOrReportsError()
+    {
+        // Arrange — a definition file whose url location references an environment variable
+        const string variable = "RM_INTEG_LOCATION_A1";
+        var defFile = Path.Combine(Path.GetTempPath(), Path.ChangeExtension(Path.GetRandomFileName(), ".yaml"));
+
+        try
+        {
+            File.WriteAllText(defFile, """
+                needs-review:
+                  - "src/**/*.cs"
+                evidence-source:
+                  type: url
+                  location: ${RM_INTEG_LOCATION_A1}/index.json
+                reviews:
+                  - id: Test-Review
+                    title: Test review
+                    paths:
+                      - "src/**/*.cs"
+                """);
+
+            // Act — lint with the variable set, then unset
+            Environment.SetEnvironmentVariable(variable, "https://evidence.example.com");
+            var setExitCode = Runner.Run(out var setOutput, "dotnet", _dllPath, "--definition", defFile, "--lint");
+            Environment.SetEnvironmentVariable(variable, null);
+            var unsetExitCode = Runner.Run(out var unsetOutput, "dotnet", _dllPath, "--definition", defFile, "--lint");
+
+            // Assert — success is silent; the unset variable fails lint and is named in the output
+            Assert.Equal(0, setExitCode);
+            Assert.Equal(string.Empty, setOutput);
+            Assert.Equal(1, unsetExitCode);
+            Assert.Contains(variable, unsetOutput);
+        }
+        finally
+        {
+            Environment.SetEnvironmentVariable(variable, null);
+            if (File.Exists(defFile))
+            {
+                File.Delete(defFile);
+            }
+        }
+    }
+
+    /// <summary>
     ///     Test that --lint with an invalid config file reports issue messages and no version banner.
     /// </summary>
     [Fact]

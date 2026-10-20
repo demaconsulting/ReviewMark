@@ -351,4 +351,45 @@ public sealed class ConfigurationTests : IDisposable
         Assert.Null(result.Configuration);
         Assert.NotEmpty(result.Issues);
     }
+
+    /// <summary>
+    ///     Test that a definition file with a <c>${VAR}</c> evidence-source location loads with the
+    ///     variable expanded, and that an unset variable is reported as an error.
+    /// </summary>
+    [Fact]
+    public void Configuration_EvidenceLocationExpansion_EnvironmentVariable_ExpandsOrReportsError()
+    {
+        // Arrange — a definition file whose location references an environment variable
+        var definitionFile = PathHelpers.SafePathCombine(_testDirectory, ".reviewmark.yaml");
+        File.WriteAllText(definitionFile, """
+            evidence-source:
+              type: url
+              location: ${RM_CFGSUB_EXPAND_A1}/index.json
+            reviews:
+              - id: Core
+                title: Core
+                paths:
+                  - "src/**/*.cs"
+            """);
+        const string variable = "RM_CFGSUB_EXPAND_A1";
+
+        try
+        {
+            // Act — load with the variable set, then unset
+            Environment.SetEnvironmentVariable(variable, "https://evidence.example.com");
+            var expanded = ReviewMarkConfiguration.Load(definitionFile);
+            Environment.SetEnvironmentVariable(variable, null);
+            var unset = ReviewMarkConfiguration.Load(definitionFile);
+
+            // Assert — the set variable is expanded; the unset variable yields an error naming it
+            Assert.NotNull(expanded.Configuration);
+            Assert.Equal("https://evidence.example.com/index.json", expanded.Configuration.EvidenceSource.Location);
+            Assert.Null(unset.Configuration);
+            Assert.Contains(unset.Issues, i => i.Severity == LintSeverity.Error && i.Description.Contains(variable));
+        }
+        finally
+        {
+            Environment.SetEnvironmentVariable(variable, null);
+        }
+    }
 }

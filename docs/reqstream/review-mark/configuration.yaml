@@ -48,11 +48,24 @@ sections:
               - Configuration_PlanGeneration_ValidConfig_Succeeds
             children:
               - ReviewMark-Config-Reading
-              - ReviewMark-Config-EvidenceLocationExpansion
               - ReviewMark-Config-Loading
               - ReviewMark-Config-PlanGeneration
               - ReviewMark-Config-PlanMarkdownDepth
               - ReviewMark-Config-PlanMarkdownDepthValidation
+
+          - id: ReviewMark-Configuration-EvidenceLocationExpansion
+            title: >-
+              The tool shall expand ${VAR} environment variable references in the evidence-source
+              location when loading a definition file.
+            justification: |
+              The evidence location often differs between local, CI, and release environments.
+              Expanding environment variables lets one definition file serve all of them without
+              editing, while unset or malformed references fail loudly instead of producing a
+              wrong location.
+            tests:
+              - Configuration_EvidenceLocationExpansion_EnvironmentVariable_ExpandsOrReportsError
+            children:
+              - ReviewMark-Config-EvidenceLocationExpansion
 
           - id: ReviewMark-Configuration-ReportGeneration
             title: The tool shall generate a Review Report Markdown document showing review-set status.

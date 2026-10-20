@@ -30,6 +30,8 @@ Tests run under xUnit on .NET 8, 9, and 10 across Windows, Linux, and macOS. Eac
 
 **Configuration_LoadConfig_MalformedYaml_ReturnsIssues**: A configuration file with invalid/malformed YAML is loaded. Expected outcome: The configuration is null and the issues list is non-empty. Boundary or error path: Malformed YAML input. Requirement coverage: `ReviewMark-Configuration-MalformedYaml`. This scenario is tested by `Configuration_LoadConfig_MalformedYaml_ReturnsIssues`.
 
+**Configuration_EvidenceLocationExpansion_EnvironmentVariable_ExpandsOrReportsError**: A definition file with `location: ${VAR}/index.json` is loaded once with the variable set and once unset. Expected outcome: The set variable is expanded into the location; the unset variable yields a null configuration and an Error issue naming the variable. Boundary or error path: Unset variable. Requirement coverage: `ReviewMark-Configuration-EvidenceLocationExpansion`. This scenario is tested by `Configuration_EvidenceLocationExpansion_EnvironmentVariable_ExpandsOrReportsError`.
+
 **Configuration_Fingerprinting_FileRenamed_FingerprintUnchanged**: A review-set fingerprint is computed before and after renaming one of its source files. Expected outcome: The fingerprint is identical before and after renaming (content-based, not path-based). Requirement coverage: `ReviewMark-Configuration-Fingerprinting`. This scenario is tested by `Configuration_Fingerprinting_FileRenamed_FingerprintUnchanged`.
 
 ### Requirements Coverage
@@ -41,3 +43,4 @@ Tests run under xUnit on .NET 8, 9, and 10 across Windows, Linux, and macOS. Eac
 - **ReviewMark-Configuration-Elaboration**: Configuration_Elaboration_ValidId_Succeeds
 - **ReviewMark-Configuration-ElaborateUnknownId**: Configuration_ElaborateReviewSet_UnknownId_ThrowsArgumentException
 - **ReviewMark-Configuration-MalformedYaml**: Configuration_LoadConfig_MalformedYaml_ReturnsIssues
+- **ReviewMark-Configuration-EvidenceLocationExpansion**: Configuration_EvidenceLocationExpansion_EnvironmentVariable_ExpandsOrReportsError
