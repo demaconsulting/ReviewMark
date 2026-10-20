@@ -372,6 +372,7 @@ public sealed class ConfigurationTests : IDisposable
                   - "src/**/*.cs"
             """);
         const string variable = "RM_TEST_CONFIG_EXPAND_A1";
+        var original = Environment.GetEnvironmentVariable(variable);
 
         try
         {
@@ -389,7 +390,7 @@ public sealed class ConfigurationTests : IDisposable
         }
         finally
         {
-            Environment.SetEnvironmentVariable(variable, null);
+            Environment.SetEnvironmentVariable(variable, original);
         }
     }
 }

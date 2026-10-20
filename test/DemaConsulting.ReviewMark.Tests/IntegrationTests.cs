@@ -1182,6 +1182,7 @@ public class IntegrationTests
     {
         // Arrange — a definition file whose url location references an environment variable
         const string variable = "RM_TEST_LINT_LOCATION_A1";
+        var original = Environment.GetEnvironmentVariable(variable);
         var defFile = Path.Combine(Path.GetTempPath(), Path.ChangeExtension(Path.GetRandomFileName(), ".yaml"));
 
         try
@@ -1213,7 +1214,7 @@ public class IntegrationTests
         }
         finally
         {
-            Environment.SetEnvironmentVariable(variable, null);
+            Environment.SetEnvironmentVariable(variable, original);
             if (File.Exists(defFile))
             {
                 File.Delete(defFile);
