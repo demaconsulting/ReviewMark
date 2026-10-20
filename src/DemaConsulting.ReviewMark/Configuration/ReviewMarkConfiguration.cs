@@ -220,11 +220,15 @@ file static class ReviewMarkConfigurationHelpers
     ///     <see cref="ReviewMarkConfiguration" /> from it.
     /// </summary>
     /// <param name="raw">The deserialized raw model to validate.</param>
+    /// <param name="expandedLocation">
+    ///     A previously expanded evidence-source location to use as is, or <c>null</c> to expand
+    ///     the raw location here.
+    /// </param>
     /// <returns>A validated <see cref="ReviewMarkConfiguration" />.</returns>
     /// <exception cref="ArgumentException">
     ///     Thrown when required fields are absent or malformed.
     /// </exception>
-    public static ReviewMarkConfiguration BuildConfiguration(ReviewMarkYaml raw)
+    public static ReviewMarkConfiguration BuildConfiguration(ReviewMarkYaml raw, string? expandedLocation = null)
     {
         // Map needs-review patterns (default to empty list if absent), filtering null/whitespace
         var needsReviewPatterns = (IReadOnlyList<string>)(raw.NeedsReview ?? [])
@@ -262,7 +266,7 @@ file static class ReviewMarkConfigurationHelpers
         var location = es.Location ?? string.Empty;
         if (location.Length > 0 && !string.Equals(es.Type, "none", StringComparison.OrdinalIgnoreCase))
         {
-            location = ExpandEnvironmentVariables(location);
+            location = expandedLocation ?? ExpandEnvironmentVariables(location);
         }
 
         var evidenceSource = new EvidenceSource(
@@ -317,11 +321,18 @@ file static class ReviewMarkConfigurationHelpers
     /// <param name="filePath">Path to the configuration file, used in issue locations.</param>
     /// <param name="evidenceSource">The raw evidence-source YAML node to validate, or <c>null</c> if absent.</param>
     /// <param name="issues">The list to append any detected issues to.</param>
+    /// <param name="expandedLocation">
+    ///     The successfully expanded location (so callers can reuse one environment snapshot), or
+    ///     <c>null</c> when no expansion was performed or it failed.
+    /// </param>
     internal static void ValidateEvidenceSource(
         string filePath,
         EvidenceSourceYaml? evidenceSource,
-        ICollection<LintIssue> issues)
+        ICollection<LintIssue> issues,
+        out string? expandedLocation)
     {
+        expandedLocation = null;
+
         // Report missing block as a single error and return early
         if (evidenceSource == null)
         {
@@ -358,14 +369,20 @@ file static class ReviewMarkConfigurationHelpers
                 "'evidence-source' is missing a required 'location' field."));
         }
         else if (!string.IsNullOrEmpty(evidenceSource.Location) &&
-                 !string.Equals(evidenceSource.Type, "none", StringComparison.OrdinalIgnoreCase) &&
-                 !TryExpand(evidenceSource.Location, out _, out var expansionError))
+                 !string.Equals(evidenceSource.Type, "none", StringComparison.OrdinalIgnoreCase))
         {
-            // Report expansion failures (variable name only, never the value)
-            issues.Add(new LintIssue(
-                filePath,
-                LintSeverity.Error,
-                $"'evidence-source' location: {expansionError}"));
+            if (TryExpand(evidenceSource.Location, out var expanded, out var expansionError))
+            {
+                expandedLocation = expanded;
+            }
+            else
+            {
+                // Report expansion failures (variable name only, never the value)
+                issues.Add(new LintIssue(
+                    filePath,
+                    LintSeverity.Error,
+                    $"'evidence-source' location: {expansionError}"));
+            }
         }
     }
 
@@ -430,6 +447,13 @@ file static class ReviewMarkConfigurationHelpers
 
         sb.Append(tail);
         expanded = sb.ToString();
+        if (string.IsNullOrWhiteSpace(expanded))
+        {
+            expanded = string.Empty;
+            error = "expands to an empty or whitespace-only value.";
+            return false;
+        }
+
         error = null;
         return true;
     }
@@ -946,7 +970,8 @@ internal sealed class ReviewMarkConfiguration
         // Validate the top-level needs-review and context lists, and the evidence-source block and
         // each review set, collecting all field-level errors and warnings.
         ReviewMarkConfigurationHelpers.ValidateTopLevel(filePath, raw, issues);
-        ReviewMarkConfigurationHelpers.ValidateEvidenceSource(filePath, raw.EvidenceSource, issues);
+        ReviewMarkConfigurationHelpers.ValidateEvidenceSource(
+            filePath, raw.EvidenceSource, issues, out var expandedLocation);
         ReviewMarkConfigurationHelpers.ValidateReviews(filePath, raw.Reviews ?? [], issues);
 
         // If any error-level issues were found, return null configuration
@@ -955,8 +980,8 @@ internal sealed class ReviewMarkConfiguration
             return new ReviewMarkLoadResult(null, issues);
         }
 
-        // Build configuration from the validated raw model
-        var config = ReviewMarkConfigurationHelpers.BuildConfiguration(raw);
+        // Build configuration from the validated raw model, reusing the single expansion snapshot
+        var config = ReviewMarkConfigurationHelpers.BuildConfiguration(raw, expandedLocation);
 
         // Determine the base directory for resolving relative fileshare locations.
         var baseDirectory = Path.GetDirectoryName(Path.GetFullPath(filePath));

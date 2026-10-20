@@ -275,6 +275,8 @@ with requirement coverage `ReviewMark-Config-EvidenceLocationExpansion` (substit
 - `ReviewMarkConfiguration_Parse_EvidenceLocation_MalformedUnclosed_Throws`: an unclosed `${` is malformed.
 - `ReviewMarkConfiguration_Load_EvidenceLocation_MalformedInvalidName_ReturnsErrorIssue`: an invalid name
   is reported as an Error issue.
+- `ReviewMarkConfiguration_EvidenceLocation_WhitespaceOnlyVariable_IsError`: a variable holding only
+  whitespace is rejected by both Parse and Load.
 - `ReviewMarkConfiguration_Parse_EvidenceLocation_ErrorMessage_DoesNotContainValue`: the value never
   appears in the message.
 - `ReviewMarkConfiguration_Load_EvidenceLocation_ErrorIssue_DoesNotContainValue`: the value never appears
@@ -300,7 +302,8 @@ with requirement coverage `ReviewMark-Config-EvidenceLocationExpansion` (substit
   ReviewMarkConfiguration_Load_EvidenceLocation_UnsetVariable_ReturnsErrorIssue,
   ReviewMarkConfiguration_Parse_EvidenceLocation_EmptyVariable_Throws,
   ReviewMarkConfiguration_Parse_EvidenceLocation_MalformedUnclosed_Throws,
-  ReviewMarkConfiguration_Load_EvidenceLocation_MalformedInvalidName_ReturnsErrorIssue
+  ReviewMarkConfiguration_Load_EvidenceLocation_MalformedInvalidName_ReturnsErrorIssue,
+  ReviewMarkConfiguration_EvidenceLocation_WhitespaceOnlyVariable_IsError
 - **ReviewMark-Config-EvidenceLocationExpansionNoValueDisclosure**:
   ReviewMarkConfiguration_Parse_EvidenceLocation_ErrorMessage_DoesNotContainValue,
   ReviewMarkConfiguration_Load_EvidenceLocation_ErrorIssue_DoesNotContainValue

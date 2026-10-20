@@ -795,6 +795,7 @@ public sealed class ReviewMarkConfigurationTests : IDisposable
     {
         // Arrange — one variable holds a secret and a later one is missing
         WithEnv("RM_TEST_SECRET_A1", "s3cr3t-value", () =>
+        WithEnv("RM_TEST_MISSING_A1", null, () =>
         {
             // Act
             var ex = Assert.Throws<ArgumentException>(() =>
@@ -802,7 +803,7 @@ public sealed class ReviewMarkConfigurationTests : IDisposable
 
             // Assert — the secret value is not in the message
             Assert.DoesNotContain("s3cr3t-value", ex.Message);
-        });
+        }));
     }
 
     /// <summary>
@@ -813,6 +814,7 @@ public sealed class ReviewMarkConfigurationTests : IDisposable
     {
         // Arrange — one variable holds a secret and a later one is missing
         WithEnv("RM_TEST_SECRET_A2", "s3cr3t-value", () =>
+        WithEnv("RM_TEST_MISSING_A2", null, () =>
         {
             // Act
             var result = LoadYaml(LocationYaml("https://x/${RM_TEST_SECRET_A2}/${RM_TEST_MISSING_A2}"));
@@ -820,6 +822,27 @@ public sealed class ReviewMarkConfigurationTests : IDisposable
             // Assert — an error is reported but the secret value is in no issue
             Assert.Contains(result.Issues, i => i.Severity == LintSeverity.Error);
             Assert.DoesNotContain(result.Issues, i => i.Description.Contains("s3cr3t-value"));
+        }));
+    }
+
+    /// <summary>
+    ///     Test that a variable holding only whitespace is rejected like a blank literal location.
+    /// </summary>
+    [Fact]
+    public void ReviewMarkConfiguration_EvidenceLocation_WhitespaceOnlyVariable_IsError()
+    {
+        // Arrange — the variable is set to whitespace
+        WithEnv("RM_TEST_BLANK_A1", "   ", () =>
+        {
+            // Act
+            var ex = Assert.Throws<ArgumentException>(() =>
+                ReviewMarkConfiguration.Parse(LocationYaml("${RM_TEST_BLANK_A1}")));
+            var result = LoadYaml(LocationYaml("${RM_TEST_BLANK_A1}"));
+
+            // Assert — Parse throws and Load reports an Error issue
+            Assert.Contains("whitespace", ex.Message);
+            Assert.Null(result.Configuration);
+            Assert.Contains(result.Issues, i => i.Severity == LintSeverity.Error && i.Description.Contains("whitespace"));
         });
     }
 
