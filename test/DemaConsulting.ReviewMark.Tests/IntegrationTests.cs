@@ -1181,7 +1181,7 @@ public class IntegrationTests
     public void ReviewMark_LintFlag_EvidenceLocationEnvironmentVariable_ExpandsOrReportsError()
     {
         // Arrange — a definition file whose url location references an environment variable
-        const string variable = "RM_INTEG_LOCATION_A1";
+        const string variable = "RM_TEST_LINT_LOCATION_A1";
         var defFile = Path.Combine(Path.GetTempPath(), Path.ChangeExtension(Path.GetRandomFileName(), ".yaml"));
 
         try
@@ -1191,7 +1191,7 @@ public class IntegrationTests
                   - "src/**/*.cs"
                 evidence-source:
                   type: url
-                  location: ${RM_INTEG_LOCATION_A1}/index.json
+                  location: ${RM_TEST_LINT_LOCATION_A1}/index.json
                 reviews:
                   - id: Test-Review
                     title: Test review

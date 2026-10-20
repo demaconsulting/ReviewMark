@@ -37,27 +37,55 @@ sections:
               - id: ReviewMark-Config-EvidenceLocationExpansion
                 title: >-
                   The ReviewMarkConfiguration unit shall expand ${VAR} environment variable references in
-                  the evidence-source location, treating unset, empty, or malformed references as errors.
+                  the evidence-source location in a single pass, leaving all other text unchanged.
                 justification: |
                   Allows the evidence location to vary per environment without editing the definition
-                  file. Errors name the variable but never reveal its value, and `$${` provides an escape.
+                  file. `$${` provides an escape, substituted values are never re-scanned, and text such
+                  as `%20`, `$VAR`, `%VAR%`, and Windows paths must not trigger false expansion.
                 tests:
                   - ReviewMarkConfiguration_Parse_EvidenceLocation_PlainVariable_Expands
-                  - ReviewMarkConfiguration_Parse_EvidenceLocation_UnsetVariable_Throws
-                  - ReviewMarkConfiguration_Load_EvidenceLocation_UnsetVariable_ReturnsErrorIssue
-                  - ReviewMarkConfiguration_Parse_EvidenceLocation_EmptyVariable_Throws
                   - ReviewMarkConfiguration_Parse_EvidenceLocation_EscapedDollar_YieldsLiteral
                   - ReviewMarkConfiguration_Parse_EvidenceLocation_PercentAndLoneDollar_PassThrough
                   - ReviewMarkConfiguration_Parse_EvidenceLocation_ValueContainingToken_NotReExpanded
                   - ReviewMarkConfiguration_Parse_EvidenceLocation_WindowsPath_Preserved
                   - ReviewMarkConfiguration_Load_EvidenceLocation_ExpansionBeforeRelativeResolution_ResolvesExpanded
+                  - ReviewMarkConfiguration_Parse_EvidenceLocation_ReviewSetPathsUnchanged
+
+              - id: ReviewMark-Config-EvidenceLocationExpansionErrors
+                title: >-
+                  The ReviewMarkConfiguration unit shall report unset, empty, or malformed environment
+                  variable references in the evidence-source location as errors naming the variable or
+                  quoting the malformed reference.
+                justification: |
+                  A silently wrong evidence location would produce misleading review status. Parse
+                  throws and Load reports an Error issue so the problem is visible in every mode.
+                tests:
+                  - ReviewMarkConfiguration_Parse_EvidenceLocation_UnsetVariable_Throws
+                  - ReviewMarkConfiguration_Load_EvidenceLocation_UnsetVariable_ReturnsErrorIssue
+                  - ReviewMarkConfiguration_Parse_EvidenceLocation_EmptyVariable_Throws
                   - ReviewMarkConfiguration_Parse_EvidenceLocation_MalformedUnclosed_Throws
                   - ReviewMarkConfiguration_Load_EvidenceLocation_MalformedInvalidName_ReturnsErrorIssue
+
+              - id: ReviewMark-Config-EvidenceLocationExpansionNoValueDisclosure
+                title: >-
+                  The ReviewMarkConfiguration unit shall not include an expanded environment variable
+                  value in any expansion error message or issue.
+                justification: |
+                  Environment variables commonly hold secrets; diagnostics must name the variable only.
+                tests:
                   - ReviewMarkConfiguration_Parse_EvidenceLocation_ErrorMessage_DoesNotContainValue
                   - ReviewMarkConfiguration_Load_EvidenceLocation_ErrorIssue_DoesNotContainValue
+
+              - id: ReviewMark-Config-EvidenceLocationExpansionNoneIgnored
+                title: >-
+                  The ReviewMarkConfiguration unit shall not expand or validate the location of an
+                  evidence-source of type none.
+                justification: |
+                  The location of a `none` source is documented as optional and ignored, so an unset or
+                  malformed reference there must not change existing behavior.
+                tests:
                   - ReviewMarkConfiguration_Parse_EvidenceLocation_NoneSource_NotExpanded
                   - ReviewMarkConfiguration_Load_EvidenceLocation_NoneSource_NoIssue
-                  - ReviewMarkConfiguration_Parse_EvidenceLocation_ReviewSetPathsUnchanged
 
               - id: ReviewMark-Config-Loading
                 title: >-

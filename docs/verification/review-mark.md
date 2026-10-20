@@ -168,8 +168,9 @@ deterministically. This scenario is tested by `ReviewMark_LogFlag_WithInvalidPat
 - **ReviewMark-System-Credentials**: *AuthenticatedUrlEvidenceSourceConfiguration* - verified by
   `ReviewMarkConfiguration_Parse_EvidenceSourceWithCredentials_ParsedCorrectly`.
 - **ReviewMark-System-EvidenceLocationExpansion**: *EvidenceLocationExpansion* - verified by
-  `ReviewMark_LintFlag_EvidenceLocationEnvironmentVariable_ExpandsOrReportsError`.: *IndexGeneration* - verified by
-- **ReviewMark-System-IndexScan**: *IndexGeneration* - verified by: *IndexGeneration* - verified by  `ReviewMark_IndexFlag_OnEmptyDirectory_CreatesIndexJson`.
+  `ReviewMark_LintFlag_EvidenceLocationEnvironmentVariable_ExpandsOrReportsError`.
+- **ReviewMark-System-IndexScan**: *IndexGeneration* - verified by
+  `ReviewMark_IndexFlag_OnEmptyDirectory_CreatesIndexJson`.
 - **ReviewMark-System-IndexScan-Repeat**: *IndexGeneration* - verified by
   `ReviewMark_IndexFlag_WithRepeat_ScansAllPaths`.
 - **ReviewMark-System-Validate**: *SelfValidationExecution* - verified by

@@ -66,6 +66,9 @@ sections:
               - Configuration_EvidenceLocationExpansion_EnvironmentVariable_ExpandsOrReportsError
             children:
               - ReviewMark-Config-EvidenceLocationExpansion
+              - ReviewMark-Config-EvidenceLocationExpansionErrors
+              - ReviewMark-Config-EvidenceLocationExpansionNoValueDisclosure
+              - ReviewMark-Config-EvidenceLocationExpansionNoneIgnored
 
           - id: ReviewMark-Configuration-ReportGeneration
             title: The tool shall generate a Review Report Markdown document showing review-set status.

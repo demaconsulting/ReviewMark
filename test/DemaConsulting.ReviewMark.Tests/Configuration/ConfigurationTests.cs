@@ -364,14 +364,14 @@ public sealed class ConfigurationTests : IDisposable
         File.WriteAllText(definitionFile, """
             evidence-source:
               type: url
-              location: ${RM_CFGSUB_EXPAND_A1}/index.json
+              location: ${RM_TEST_CONFIG_EXPAND_A1}/index.json
             reviews:
               - id: Core
                 title: Core
                 paths:
                   - "src/**/*.cs"
             """);
-        const string variable = "RM_CFGSUB_EXPAND_A1";
+        const string variable = "RM_TEST_CONFIG_EXPAND_A1";
 
         try
         {
