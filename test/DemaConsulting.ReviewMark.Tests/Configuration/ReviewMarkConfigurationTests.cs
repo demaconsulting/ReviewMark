@@ -840,9 +840,10 @@ public sealed class ReviewMarkConfigurationTests : IDisposable
             var result = LoadYaml(LocationYaml("${RM_TEST_BLANK_A1}"));
 
             // Assert — Parse throws and Load reports an Error issue
+            Assert.Contains("RM_TEST_BLANK_A1", ex.Message);
             Assert.Contains("whitespace", ex.Message);
             Assert.Null(result.Configuration);
-            Assert.Contains(result.Issues, i => i.Severity == LintSeverity.Error && i.Description.Contains("whitespace"));
+            Assert.Contains(result.Issues, i => i.Severity == LintSeverity.Error && i.Description.Contains("RM_TEST_BLANK_A1"));
         });
     }
 

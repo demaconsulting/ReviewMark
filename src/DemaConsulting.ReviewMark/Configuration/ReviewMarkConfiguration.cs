@@ -419,10 +419,10 @@ file static class ReviewMarkConfigurationHelpers
             {
                 var name = m.Groups[1].Value;
                 var value = Environment.GetEnvironmentVariable(name);
-                if (string.IsNullOrEmpty(value))
+                if (string.IsNullOrWhiteSpace(value))
                 {
                     expanded = string.Empty;
-                    error = $"environment variable '{name}' is not set or is empty.";
+                    error = $"environment variable '{name}' is not set, empty, or whitespace-only.";
                     return false;
                 }
 
