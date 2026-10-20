@@ -392,7 +392,7 @@ file static class ReviewMarkConfigurationHelpers
             if (gap.Contains("${", StringComparison.Ordinal))
             {
                 expanded = string.Empty;
-                error = "contains a malformed '${' environment variable reference.";
+                error = DescribeMalformed(gap);
                 return false;
             }
 
@@ -423,7 +423,7 @@ file static class ReviewMarkConfigurationHelpers
         if (tail.Contains("${", StringComparison.Ordinal))
         {
             expanded = string.Empty;
-            error = "contains a malformed '${' environment variable reference.";
+            error = DescribeMalformed(tail);
             return false;
         }
 
@@ -431,6 +431,24 @@ file static class ReviewMarkConfigurationHelpers
         expanded = sb.ToString();
         error = null;
         return true;
+    }
+
+    /// <summary>
+    ///     Builds an error message quoting the malformed reference text from the literal configuration.
+    /// </summary>
+    /// <param name="segment">Literal (unexpanded) text known to contain <c>${</c>.</param>
+    /// <returns>The error message; the quoted text is never a substituted value.</returns>
+    private static string DescribeMalformed(string segment)
+    {
+        var start = segment.IndexOf("${", StringComparison.Ordinal);
+        var close = segment.IndexOf('}', start);
+        var token = close < 0 ? segment[start..] : segment[start..(close + 1)];
+        if (token.Length > 40)
+        {
+            token = token[..40] + "...";
+        }
+
+        return $"contains a malformed environment variable reference '{token}'.";
     }
 
     /// <summary>

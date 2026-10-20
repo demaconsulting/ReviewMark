@@ -723,6 +723,7 @@ public sealed class ReviewMarkConfigurationTests : IDisposable
         var ex = Assert.Throws<ArgumentException>(() =>
             ReviewMarkConfiguration.Parse(LocationYaml("https://x/${UNCLOSED")));
         Assert.Contains("malformed", ex.Message);
+        Assert.Contains("${UNCLOSED", ex.Message);
     }
 
     /// <summary>
@@ -733,7 +734,7 @@ public sealed class ReviewMarkConfigurationTests : IDisposable
     {
         var result = LoadYaml(LocationYaml("https://x/${1BAD}"));
         Assert.Null(result.Configuration);
-        Assert.Contains(result.Issues, i => i.Severity == LintSeverity.Error && i.Description.Contains("malformed"));
+        Assert.Contains(result.Issues, i => i.Severity == LintSeverity.Error && i.Description.Contains("malformed") && i.Description.Contains("${1BAD}"));
     }
 
     /// <summary>
