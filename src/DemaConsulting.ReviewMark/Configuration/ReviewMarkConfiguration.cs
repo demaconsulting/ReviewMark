@@ -20,6 +20,7 @@
 
 using System.Security.Cryptography;
 using System.Text;
+using System.Text.RegularExpressions;
 using DemaConsulting.ReviewMark.Cli;
 using DemaConsulting.ReviewMark.Indexing;
 using YamlDotNet.Core;
@@ -219,11 +220,15 @@ file static class ReviewMarkConfigurationHelpers
     ///     <see cref="ReviewMarkConfiguration" /> from it.
     /// </summary>
     /// <param name="raw">The deserialized raw model to validate.</param>
+    /// <param name="expandedLocation">
+    ///     A previously expanded evidence-source location to use as is, or <c>null</c> to expand
+    ///     the raw location here.
+    /// </param>
     /// <returns>A validated <see cref="ReviewMarkConfiguration" />.</returns>
     /// <exception cref="ArgumentException">
     ///     Thrown when required fields are absent or malformed.
     /// </exception>
-    public static ReviewMarkConfiguration BuildConfiguration(ReviewMarkYaml raw)
+    public static ReviewMarkConfiguration BuildConfiguration(ReviewMarkYaml raw, string? expandedLocation = null)
     {
         // Map needs-review patterns (default to empty list if absent), filtering null/whitespace
         var needsReviewPatterns = (IReadOnlyList<string>)(raw.NeedsReview ?? [])
@@ -257,9 +262,16 @@ file static class ReviewMarkConfigurationHelpers
             throw new ArgumentException("Configuration 'evidence-source' is missing a required 'location' field.");
         }
 
+        // Expand ${VAR} references in the location (non-empty only; ignored for 'none' sources)
+        var location = es.Location ?? string.Empty;
+        if (location.Length > 0 && !string.Equals(es.Type, "none", StringComparison.OrdinalIgnoreCase))
+        {
+            location = expandedLocation ?? ExpandEnvironmentVariables(location);
+        }
+
         var evidenceSource = new EvidenceSource(
             Type: es.Type,
-            Location: es.Location ?? string.Empty,
+            Location: location,
             UsernameEnv: es.Credentials?.UsernameEnv,
             PasswordEnv: es.Credentials?.PasswordEnv);
 
@@ -309,11 +321,18 @@ file static class ReviewMarkConfigurationHelpers
     /// <param name="filePath">Path to the configuration file, used in issue locations.</param>
     /// <param name="evidenceSource">The raw evidence-source YAML node to validate, or <c>null</c> if absent.</param>
     /// <param name="issues">The list to append any detected issues to.</param>
+    /// <param name="expandedLocation">
+    ///     The successfully expanded location (so callers can reuse one environment snapshot), or
+    ///     <c>null</c> when no expansion was performed or it failed.
+    /// </param>
     internal static void ValidateEvidenceSource(
         string filePath,
         EvidenceSourceYaml? evidenceSource,
-        ICollection<LintIssue> issues)
+        ICollection<LintIssue> issues,
+        out string? expandedLocation)
     {
+        expandedLocation = null;
+
         // Report missing block as a single error and return early
         if (evidenceSource == null)
         {
@@ -349,6 +368,128 @@ file static class ReviewMarkConfigurationHelpers
                 LintSeverity.Error,
                 "'evidence-source' is missing a required 'location' field."));
         }
+        else if (!string.IsNullOrEmpty(evidenceSource.Location) &&
+                 !string.Equals(evidenceSource.Type, "none", StringComparison.OrdinalIgnoreCase))
+        {
+            if (TryExpand(evidenceSource.Location, out var expanded, out var expansionError))
+            {
+                expandedLocation = expanded;
+            }
+            else
+            {
+                // Report expansion failures (variable name only, never the value)
+                issues.Add(new LintIssue(
+                    filePath,
+                    LintSeverity.Error,
+                    $"'evidence-source' location: {expansionError}"));
+            }
+        }
+    }
+
+    /// <summary>
+    ///     Pattern matching either the <c>$${</c> escape or a <c>${NAME}</c> reference.
+    /// </summary>
+    private static readonly Regex ExpansionRegex =
+        new(@"\$\$\{|\$\{([A-Za-z_][A-Za-z0-9_]*)\}", RegexOptions.Compiled | RegexOptions.CultureInvariant, TimeSpan.FromSeconds(1));
+
+    /// <summary>
+    ///     Expands <c>${VAR}</c> references in a location string in a single pass.
+    /// </summary>
+    /// <param name="location">The raw location.</param>
+    /// <param name="expanded">The expanded location when successful.</param>
+    /// <param name="error">An error message naming the variable (never its value) on failure.</param>
+    /// <returns><c>true</c> when expansion succeeded.</returns>
+    internal static bool TryExpand(string location, out string expanded, out string? error)
+    {
+        var sb = new StringBuilder();
+        var pos = 0;
+        foreach (Match m in ExpansionRegex.Matches(location))
+        {
+            // Any '${' in the skipped text is malformed
+            var gap = location.Substring(pos, m.Index - pos);
+            if (gap.Contains("${", StringComparison.Ordinal))
+            {
+                expanded = string.Empty;
+                error = DescribeMalformed(gap);
+                return false;
+            }
+
+            sb.Append(gap);
+            if (m.Groups[1].Success)
+            {
+                var name = m.Groups[1].Value;
+                var value = Environment.GetEnvironmentVariable(name);
+                if (string.IsNullOrWhiteSpace(value))
+                {
+                    expanded = string.Empty;
+                    error = $"environment variable '{name}' is not set, empty, or whitespace-only.";
+                    return false;
+                }
+
+                sb.Append(value);
+            }
+            else
+            {
+                // '$${' escape yields literal '${'
+                sb.Append("${");
+            }
+
+            pos = m.Index + m.Length;
+        }
+
+        var tail = location.Substring(pos);
+        if (tail.Contains("${", StringComparison.Ordinal))
+        {
+            expanded = string.Empty;
+            error = DescribeMalformed(tail);
+            return false;
+        }
+
+        sb.Append(tail);
+        expanded = sb.ToString();
+        if (string.IsNullOrWhiteSpace(expanded))
+        {
+            expanded = string.Empty;
+            error = "expands to an empty or whitespace-only value.";
+            return false;
+        }
+
+        error = null;
+        return true;
+    }
+
+    /// <summary>
+    ///     Builds an error message quoting the malformed reference text from the literal configuration.
+    /// </summary>
+    /// <param name="segment">Literal (unexpanded) text known to contain <c>${</c>.</param>
+    /// <returns>The error message; the quoted text is never a substituted value.</returns>
+    private static string DescribeMalformed(string segment)
+    {
+        var start = segment.IndexOf("${", StringComparison.Ordinal);
+        var close = segment.IndexOf('}', start);
+        var token = close < 0 ? segment[start..] : segment[start..(close + 1)];
+        if (token.Length > 40)
+        {
+            token = token[..40] + "...";
+        }
+
+        return $"contains a malformed environment variable reference '{token}'.";
+    }
+
+    /// <summary>
+    ///     Expands <c>${VAR}</c> references in a location string.
+    /// </summary>
+    /// <param name="location">The raw location.</param>
+    /// <returns>The expanded location.</returns>
+    /// <exception cref="ArgumentException">Thrown when a variable is unset/empty or a reference is malformed.</exception>
+    internal static string ExpandEnvironmentVariables(string location)
+    {
+        if (!TryExpand(location, out var expanded, out var error))
+        {
+            throw new ArgumentException($"Configuration 'evidence-source' location {error}");
+        }
+
+        return expanded;
     }
 
     /// <summary>
@@ -829,7 +970,8 @@ internal sealed class ReviewMarkConfiguration
         // Validate the top-level needs-review and context lists, and the evidence-source block and
         // each review set, collecting all field-level errors and warnings.
         ReviewMarkConfigurationHelpers.ValidateTopLevel(filePath, raw, issues);
-        ReviewMarkConfigurationHelpers.ValidateEvidenceSource(filePath, raw.EvidenceSource, issues);
+        ReviewMarkConfigurationHelpers.ValidateEvidenceSource(
+            filePath, raw.EvidenceSource, issues, out var expandedLocation);
         ReviewMarkConfigurationHelpers.ValidateReviews(filePath, raw.Reviews ?? [], issues);
 
         // If any error-level issues were found, return null configuration
@@ -838,8 +980,8 @@ internal sealed class ReviewMarkConfiguration
             return new ReviewMarkLoadResult(null, issues);
         }
 
-        // Build configuration from the validated raw model
-        var config = ReviewMarkConfigurationHelpers.BuildConfiguration(raw);
+        // Build configuration from the validated raw model, reusing the single expansion snapshot
+        var config = ReviewMarkConfigurationHelpers.BuildConfiguration(raw, expandedLocation);
 
         // Determine the base directory for resolving relative fileshare locations.
         var baseDirectory = Path.GetDirectoryName(Path.GetFullPath(filePath));

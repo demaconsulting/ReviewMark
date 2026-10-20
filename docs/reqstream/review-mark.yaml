@@ -68,6 +68,21 @@ sections:
         children:
           - ReviewMark-Index-EvidenceSource
 
+      - id: ReviewMark-System-EvidenceLocationExpansion
+        title: >-
+          The tool shall expand ${VAR} environment variable references in the evidence-source
+          location of the definition file.
+        justification: |
+          Teams run ReviewMark locally, in CI, and in release pipelines where the evidence index
+          lives at different locations. Environment-variable expansion lets a single definition
+          file serve every environment, and treating unset or malformed references as errors
+          prevents silently using a wrong location.
+        tags: [system]
+        tests:
+          - ReviewMark_LintFlag_EvidenceLocationEnvironmentVariable_ExpandsOrReportsError
+        children:
+          - ReviewMark-Configuration-EvidenceLocationExpansion
+
       - id: ReviewMark-System-IndexScan
         title: The tool shall scan PDF evidence files and write an index.json when the --index flag is provided.
         justification: |

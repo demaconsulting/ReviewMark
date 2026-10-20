@@ -253,8 +253,63 @@ Current, proving that the fingerprint used in the report is consistent with the 
 plan. Requirement coverage: `ReviewMark-Config-PathsConstrainedToNeedsReview`. This scenario is
 tested by `ReviewMarkConfiguration_PublishReviewReport_FingerprintConsistentWithPlan`.
 
+**Evidence location expansion scenarios**: each scenario is verified by the test of the same name,
+with requirement coverage `ReviewMark-Config-EvidenceLocationExpansion` (substitution and pass-through),
+`ReviewMark-Config-EvidenceLocationExpansionErrors` (unset, empty, malformed),
+`ReviewMark-Config-EvidenceLocationExpansionNoValueDisclosure` (no value in diagnostics), and
+`ReviewMark-Config-EvidenceLocationExpansionNoneIgnored` (`none` sources), as listed under Requirements Coverage.
+
+- `ReviewMarkConfiguration_Parse_EvidenceLocation_PlainVariable_Expands`: a set variable is substituted.
+- `ReviewMarkConfiguration_Parse_EvidenceLocation_UnsetVariable_Throws`: Parse throws naming the variable.
+- `ReviewMarkConfiguration_Load_EvidenceLocation_UnsetVariable_ReturnsErrorIssue`: Load returns a null
+  configuration and an Error issue naming the variable.
+- `ReviewMarkConfiguration_Parse_EvidenceLocation_EmptyVariable_Throws`: an empty variable is an error.
+- `ReviewMarkConfiguration_Parse_EvidenceLocation_EscapedDollar_YieldsLiteral`: `$${` yields `${`.
+- `ReviewMarkConfiguration_Parse_EvidenceLocation_PercentAndLoneDollar_PassThrough`: `%20`, `$`, `$VAR`,
+  and `%VAR%` are unchanged.
+- `ReviewMarkConfiguration_Parse_EvidenceLocation_ValueContainingToken_NotReExpanded`: substituted values
+  are not scanned again.
+- `ReviewMarkConfiguration_Parse_EvidenceLocation_WindowsPath_Preserved`: Windows path values are kept intact.
+- `ReviewMarkConfiguration_Load_EvidenceLocation_ExpansionBeforeRelativeResolution_ResolvesExpanded`:
+  the expanded value is what is resolved relative to the config file.
+- `ReviewMarkConfiguration_Parse_EvidenceLocation_MalformedUnclosed_Throws`: an unclosed `${` is malformed.
+- `ReviewMarkConfiguration_Load_EvidenceLocation_MalformedInvalidName_ReturnsErrorIssue`: an invalid name
+  is reported as an Error issue.
+- `ReviewMarkConfiguration_EvidenceLocation_WhitespaceOnlyVariable_IsError`: a variable holding only
+  whitespace is rejected by both Parse and Load.
+- `ReviewMarkConfiguration_Parse_EvidenceLocation_ErrorMessage_DoesNotContainValue`: the value never
+  appears in the message.
+- `ReviewMarkConfiguration_Load_EvidenceLocation_ErrorIssue_DoesNotContainValue`: the value never appears
+  in any Load issue.
+- `ReviewMarkConfiguration_Parse_EvidenceLocation_NoneSource_NotExpanded`: the ignored location of a
+  `none` source is not expanded, so an unset variable does not throw.
+- `ReviewMarkConfiguration_Load_EvidenceLocation_NoneSource_NoIssue`: Load reports no expansion issue for
+  a `none` source.
+- `ReviewMarkConfiguration_Parse_EvidenceLocation_ReviewSetPathsUnchanged`: review-set paths are not expanded.
+
 #### Requirements Coverage
 
+- **ReviewMark-Config-EvidenceLocationExpansion**:
+  ReviewMarkConfiguration_Parse_EvidenceLocation_PlainVariable_Expands,
+  ReviewMarkConfiguration_Parse_EvidenceLocation_EscapedDollar_YieldsLiteral,
+  ReviewMarkConfiguration_Parse_EvidenceLocation_PercentAndLoneDollar_PassThrough,
+  ReviewMarkConfiguration_Parse_EvidenceLocation_ValueContainingToken_NotReExpanded,
+  ReviewMarkConfiguration_Parse_EvidenceLocation_WindowsPath_Preserved,
+  ReviewMarkConfiguration_Load_EvidenceLocation_ExpansionBeforeRelativeResolution_ResolvesExpanded,
+  ReviewMarkConfiguration_Parse_EvidenceLocation_ReviewSetPathsUnchanged
+- **ReviewMark-Config-EvidenceLocationExpansionErrors**:
+  ReviewMarkConfiguration_Parse_EvidenceLocation_UnsetVariable_Throws,
+  ReviewMarkConfiguration_Load_EvidenceLocation_UnsetVariable_ReturnsErrorIssue,
+  ReviewMarkConfiguration_Parse_EvidenceLocation_EmptyVariable_Throws,
+  ReviewMarkConfiguration_Parse_EvidenceLocation_MalformedUnclosed_Throws,
+  ReviewMarkConfiguration_Load_EvidenceLocation_MalformedInvalidName_ReturnsErrorIssue,
+  ReviewMarkConfiguration_EvidenceLocation_WhitespaceOnlyVariable_IsError
+- **ReviewMark-Config-EvidenceLocationExpansionNoValueDisclosure**:
+  ReviewMarkConfiguration_Parse_EvidenceLocation_ErrorMessage_DoesNotContainValue,
+  ReviewMarkConfiguration_Load_EvidenceLocation_ErrorIssue_DoesNotContainValue
+- **ReviewMark-Config-EvidenceLocationExpansionNoneIgnored**:
+  ReviewMarkConfiguration_Parse_EvidenceLocation_NoneSource_NotExpanded,
+  ReviewMarkConfiguration_Load_EvidenceLocation_NoneSource_NoIssue
 - **ReviewMark-Config-Reading**:
   ReviewMarkConfiguration_Parse_NullYaml_ThrowsArgumentNullException,
   ReviewMarkConfiguration_Parse_ValidYaml_ReturnsConfiguration,

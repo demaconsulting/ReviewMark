@@ -135,6 +135,11 @@ cases. This scenario is tested by `ReviewMark_LintFlag_WithValidConfig_ProducesN
 sources can be configured without storing secrets in YAML. This scenario is tested by
 `ReviewMarkConfiguration_Parse_EvidenceSourceWithCredentials_ParsedCorrectly`.
 
+**EvidenceLocationExpansion**: ReviewMark expands `${VAR}` environment variable references in the
+`evidence-source.location` of the definition file, so lint succeeds silently when the variable is set
+and fails with an error naming the variable when it is unset. This scenario is tested by
+`ReviewMark_LintFlag_EvidenceLocationEnvironmentVariable_ExpandsOrReportsError`.
+
 **ExecutionContextManagement**: ReviewMark parses arguments into a stable execution context and
 maintains consistent exit-code and output behavior from startup through error handling. This
 scenario is tested by `ReviewMark_VersionFlag_Invoked_OutputsVersion` and
@@ -162,6 +167,8 @@ deterministically. This scenario is tested by `ReviewMark_LogFlag_WithInvalidPat
   `ReviewMark_EnforceFlag_WithNoEvidence_ReturnsNonZero`.
 - **ReviewMark-System-Credentials**: *AuthenticatedUrlEvidenceSourceConfiguration* - verified by
   `ReviewMarkConfiguration_Parse_EvidenceSourceWithCredentials_ParsedCorrectly`.
+- **ReviewMark-System-EvidenceLocationExpansion**: *EvidenceLocationExpansion* - verified by
+  `ReviewMark_LintFlag_EvidenceLocationEnvironmentVariable_ExpandsOrReportsError`.
 - **ReviewMark-System-IndexScan**: *IndexGeneration* - verified by
   `ReviewMark_IndexFlag_OnEmptyDirectory_CreatesIndexJson`.
 - **ReviewMark-System-IndexScan-Repeat**: *IndexGeneration* - verified by

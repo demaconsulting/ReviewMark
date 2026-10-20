@@ -626,6 +626,29 @@ evidence-source:
   location: https://reviews.example.com/evidence/index.json
 ```
 
+#### Environment Variable Expansion
+
+The `evidence-source.location` value (and only that field) supports `${VAR}` references, which are
+replaced with the value of the named environment variable:
+
+```yaml
+evidence-source:
+  type: url
+  location: ${REVIEW_HOST}/evidence/index.json
+```
+
+- Variable names match `[A-Za-z_][A-Za-z0-9_]*`.
+- Use `$${` to write a literal `${`.
+- Expansion is a single pass; values that themselves contain `${...}` are not expanded again.
+- A variable that is unset or empty, or a malformed `${` reference (unclosed or invalid name), is an
+  error. The error names the variable, never its value.
+- Expansion applies only to `fileshare` and `url` sources; the `location` of a `none` source is ignored
+  and never expanded.
+- Expansion happens before relative `fileshare` paths are resolved against the configuration file.
+- `%20`, a lone `$`, `$VAR`, and `%VAR%` are left unchanged.
+- `reviewmark --lint` reports an unset variable as an error, so lint fails on machines where the
+  variable is not defined.
+
 ### Credentials
 
 For authenticated URL sources, supply credentials through environment variables so that secrets are
