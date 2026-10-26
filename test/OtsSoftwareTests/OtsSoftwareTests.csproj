@@ -49,7 +49,7 @@
   <!-- OTS Package Dependencies -->
   <ItemGroup>
     <PackageReference Include="DemaConsulting.TestResults" Version="1.10.0" />
-    <PackageReference Include="Microsoft.Extensions.FileSystemGlobbing" Version="10.0.13" />
+    <PackageReference Include="Microsoft.Extensions.FileSystemGlobbing" Version="10.0.14" />
     <PackageReference Include="YamlDotNet" Version="18.1.0" />
   </ItemGroup>
 
@@ -65,7 +65,7 @@
            in any project that references this test project.
          - IncludeAssets lists all asset types (including 'analyzers' and 'buildtransitive') to ensure
            Roslyn analyzers and MSBuild targets are fully activated during the build. -->
-    <PackageReference Include="Microsoft.CodeAnalysis.NetAnalyzers" Version="10.0.402">
+    <PackageReference Include="Microsoft.CodeAnalysis.NetAnalyzers" Version="10.0.403">
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
