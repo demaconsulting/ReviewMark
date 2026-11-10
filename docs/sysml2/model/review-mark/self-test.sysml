@@ -1,11 +1,16 @@
 package ReviewMark {
+    private import SoftwareItemMetadata::*;
+
     part def SelfTestSubsystem {
         doc /* Built-in self-validation test suite. */
 
-        comment testRef /* Test: test/DemaConsulting.ReviewMark.Tests/SelfTest/SelfTestTests.cs */
-        comment designRef /* Design: docs/design/review-mark/self-test.md */
-        comment verificationRef /* Verification: docs/verification/review-mark/self-test.md */
-        comment reqRef /* Requirements: docs/reqstream/review-mark/self-test.yaml */
+        metadata info : SoftwareInfo {
+            description = "Built-in self-validation test suite.";
+            testFiles = ("test/DemaConsulting.ReviewMark.Tests/SelfTest/SelfTestTests.cs");
+            designFiles = ("docs/design/review-mark/self-test.md");
+            verificationFiles = ("docs/verification/review-mark/self-test.md");
+            requirementFiles = ("docs/reqstream/review-mark/self-test.yaml");
+        }
 
         part validation : Validation;
     }

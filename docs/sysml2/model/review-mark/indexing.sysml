@@ -1,11 +1,16 @@
 package ReviewMark {
+    private import SoftwareItemMetadata::*;
+
     part def IndexingSubsystem {
         doc /* Review evidence loading, PDF scanning, and safe path utilities. */
 
-        comment testRef /* Test: test/DemaConsulting.ReviewMark.Tests/Indexing/IndexingTests.cs */
-        comment designRef /* Design: docs/design/review-mark/indexing.md */
-        comment verificationRef /* Verification: docs/verification/review-mark/indexing.md */
-        comment reqRef /* Requirements: docs/reqstream/review-mark/indexing.yaml */
+        metadata info : SoftwareInfo {
+            description = "Review evidence loading, PDF scanning, and safe path utilities.";
+            testFiles = ("test/DemaConsulting.ReviewMark.Tests/Indexing/IndexingTests.cs");
+            designFiles = ("docs/design/review-mark/indexing.md");
+            verificationFiles = ("docs/verification/review-mark/indexing.md");
+            requirementFiles = ("docs/reqstream/review-mark/indexing.yaml");
+        }
 
         part reviewIndex : ReviewIndex;
         part pathHelpers : PathHelpers;

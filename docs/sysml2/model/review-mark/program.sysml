@@ -1,11 +1,16 @@
 package ReviewMark {
+    private import SoftwareItemMetadata::*;
+
     part def Program {
         doc /* Process entry point; constructs the execution context and dispatches to subsystems. */
 
-        comment sourceRef /* Source: src/DemaConsulting.ReviewMark/Program.cs */
-        comment testRef /* Test: test/DemaConsulting.ReviewMark.Tests/ProgramTests.cs */
-        comment designRef /* Design: docs/design/review-mark/program.md */
-        comment verificationRef /* Verification: docs/verification/review-mark/program.md */
-        comment reqRef /* Requirements: docs/reqstream/review-mark/program.yaml */
+        metadata info : SoftwareInfo {
+            description = "Process entry point; constructs the execution context and dispatches to subsystems.";
+            sourceFiles = ("src/DemaConsulting.ReviewMark/Program.cs");
+            testFiles = ("test/DemaConsulting.ReviewMark.Tests/ProgramTests.cs");
+            designFiles = ("docs/design/review-mark/program.md");
+            verificationFiles = ("docs/verification/review-mark/program.md");
+            requirementFiles = ("docs/reqstream/review-mark/program.yaml");
+        }
     }
 }

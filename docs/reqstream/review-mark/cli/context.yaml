@@ -135,7 +135,7 @@ sections:
                 title: The Context unit shall throw InvalidOperationException when the log file cannot be opened.
                 justification: |
                   If the log file path is invalid or the parent directory does not exist, the
-                  Context cannot fulfil its logging contract. Throwing InvalidOperationException
+                  Context cannot fulfill its logging contract. Throwing InvalidOperationException
                   wrapping the underlying file-system exception gives callers a typed signal that
                   the tool cannot start, enabling Program.Main to convert it into a clean error
                   exit with an actionable message rather than an unhandled exception crash.
@@ -147,7 +147,7 @@ sections:
                   The Context unit shall provide unified output and error logging, respecting
                   the --silent flag and optional --log file.
                 justification: |
-                  All output goes through the Context so that the --silent flag is honoured and
+                  All output goes through the Context so that the --silent flag is honored and
                   optionally duplicated to a log file opened by the --log flag. Error output must
                   additionally set the error exit code so that the process exits with a non-zero
                   status when any error is reported.
