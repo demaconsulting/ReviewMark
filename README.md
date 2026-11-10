@@ -16,13 +16,17 @@
 
 DEMA Consulting command-line tool for automated file-review evidence management in regulated
 environments. ReviewMark generates cryptographic fingerprints of source files and matches them
-against a catalogue of review evidence, producing a compliant review plan and review report on
+against a catalog of review evidence, producing a compliant review plan and review report on
 every CI/CD run.
+
+![ReviewMark architecture: command line, definition file, repository files, and evidence store flowing through Program
+and its Configuration, Indexing, Cli, and SelfTest subsystems to the plan, report, console, and test
+results][link-architecture-image]
 
 ## Features
 
 - 🔐 **Cryptographic Fingerprinting** - SHA256 fingerprints detect content changes automatically
-- 📂 **Evidence Querying** - Queries URL or file-share evidence stores via an `index.json` catalogue
+- 📂 **Evidence Querying** - Queries URL or file-share evidence stores via an `index.json` catalog
 - 📋 **Coverage Reporting** - Review plan shows which files are covered and flags uncovered files
 - 📊 **Status Reporting** - Review report shows whether each review-set is Current, Stale, Missing, or Failed
 - 🔍 **Review Elaboration** - `--elaborate` prints the ID, title, fingerprint, optional context files, and file list for a review set
@@ -299,3 +303,4 @@ By contributing to this project, you agree that your contributions will be licen
 [link-guide]: https://github.com/demaconsulting/ReviewMark/blob/main/docs/user_guide/introduction.md
 [link-system-design]: https://github.com/demaconsulting/ReviewMark/blob/main/docs/design/review-mark.md
 [link-continuous-compliance]: https://github.com/demaconsulting/ContinuousCompliance
+[link-architecture-image]: https://raw.githubusercontent.com/demaconsulting/ReviewMark/main/docs/images/architecture.png

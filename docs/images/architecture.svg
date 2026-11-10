@@ -1,0 +1,104 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1100" height="520" viewBox="0 0 1100 520" font-family="Segoe UI, Arial, sans-serif">
+  <defs>
+    <marker id="a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#475569"/>
+    </marker>
+  </defs>
+  <!-- White rounded card keeps the diagram readable in light and dark themes -->
+  <rect x="14" y="16" width="1070" height="490" rx="28" fill="#d5dce6"/>
+  <rect x="10" y="10" width="1070" height="490" rx="28" fill="#ffffff" stroke="#cbd5e1" stroke-width="2"/>
+
+  <g transform="translate(30,30)">
+    <!-- Inputs -->
+    <rect x="0" y="45" width="200" height="72" rx="10" fill="#fef3c7" stroke="#d97706" stroke-width="2"/>
+    <text x="100" y="72" font-size="15" font-weight="600" fill="#92400e" text-anchor="middle">Command line</text>
+    <text x="100" y="94" font-size="12" fill="#92400e" text-anchor="middle">arguments and flags</text>
+
+    <rect x="0" y="135" width="200" height="90" rx="10" fill="#fef3c7" stroke="#d97706" stroke-width="2" stroke-dasharray="6 4"/>
+    <text x="100" y="161" font-size="14" font-family="Consolas, monospace" font-weight="600" fill="#92400e" text-anchor="middle">.reviewmark.yaml</text>
+    <text x="100" y="184" font-size="12" fill="#92400e" text-anchor="middle">needs-review globs,</text>
+    <text x="100" y="200" font-size="12" fill="#92400e" text-anchor="middle">review sets, evidence source</text>
+
+    <rect x="0" y="240" width="200" height="80" rx="10" fill="#f1f5f9" stroke="#64748b" stroke-width="2"/>
+    <text x="100" y="266" font-size="15" font-weight="600" fill="#334155" text-anchor="middle">Repository files</text>
+    <text x="100" y="288" font-size="12" fill="#475569" text-anchor="middle">matched by globs and</text>
+    <text x="100" y="304" font-size="12" fill="#475569" text-anchor="middle">fingerprinted with SHA-256</text>
+
+    <rect x="0" y="335" width="200" height="85" rx="10" fill="#f1f5f9" stroke="#64748b" stroke-width="2"/>
+    <text x="100" y="361" font-size="15" font-weight="600" fill="#334155" text-anchor="middle">Evidence store</text>
+    <text x="100" y="383" font-size="12" fill="#475569" text-anchor="middle">index.json and review PDFs</text>
+    <text x="100" y="399" font-size="12" fill="#475569" text-anchor="middle">url · fileshare · none</text>
+
+    <!-- Tool boundary -->
+    <rect x="250" y="0" width="530" height="445" rx="14" fill="#f8fafc" stroke="#2563eb" stroke-width="2" stroke-dasharray="8 5"/>
+    <text x="266" y="26" font-size="14" font-weight="600" fill="#2563eb">DemaConsulting.ReviewMark</text>
+
+    <!-- Entry point -->
+    <rect x="270" y="45" width="490" height="72" rx="12" fill="#dcfce7" stroke="#16a34a" stroke-width="2"/>
+    <text x="515" y="70" font-size="16" font-family="Consolas, monospace" font-weight="600" fill="#166534" text-anchor="middle">Program</text>
+    <text x="515" y="91" font-size="12" fill="#166534" text-anchor="middle">Process entry point: creates the Context, then dispatches by mode</text>
+    <text x="515" y="107" font-size="12" fill="#15803d" text-anchor="middle">--plan --report --index --elaborate --affected --lint --validate</text>
+
+    <!-- Subsystems -->
+    <rect x="270" y="145" width="220" height="120" rx="12" fill="#dbeafe" stroke="#2563eb" stroke-width="2"/>
+    <text x="380" y="169" font-size="14" font-weight="600" fill="#1e3a8a" text-anchor="middle">Configuration</text>
+    <text x="380" y="193" font-size="13" font-family="Consolas, monospace" fill="#1e3a8a" text-anchor="middle">ReviewMarkConfiguration</text>
+    <text x="380" y="211" font-size="13" font-family="Consolas, monospace" fill="#1e3a8a" text-anchor="middle">GlobMatcher</text>
+    <text x="380" y="235" font-size="12" fill="#1e40af" text-anchor="middle">Loads and validates the YAML,</text>
+    <text x="380" y="251" font-size="12" fill="#1e40af" text-anchor="middle">evaluates review sets and globs</text>
+
+    <rect x="540" y="145" width="220" height="120" rx="12" fill="#dbeafe" stroke="#2563eb" stroke-width="2"/>
+    <text x="650" y="169" font-size="14" font-weight="600" fill="#1e3a8a" text-anchor="middle">Cli</text>
+    <text x="650" y="193" font-size="13" font-family="Consolas, monospace" fill="#1e3a8a" text-anchor="middle">Context</text>
+    <text x="650" y="223" font-size="12" fill="#1e40af" text-anchor="middle">Parses arguments and owns</text>
+    <text x="650" y="239" font-size="12" fill="#1e40af" text-anchor="middle">console and log output</text>
+
+    <rect x="270" y="295" width="220" height="120" rx="12" fill="#dbeafe" stroke="#2563eb" stroke-width="2"/>
+    <text x="380" y="319" font-size="14" font-weight="600" fill="#1e3a8a" text-anchor="middle">Indexing</text>
+    <text x="380" y="343" font-size="13" font-family="Consolas, monospace" fill="#1e3a8a" text-anchor="middle">ReviewIndex</text>
+    <text x="380" y="361" font-size="13" font-family="Consolas, monospace" fill="#1e3a8a" text-anchor="middle">PathHelpers</text>
+    <text x="380" y="385" font-size="12" fill="#1e40af" text-anchor="middle">Loads the evidence index, scans</text>
+    <text x="380" y="401" font-size="12" fill="#1e40af" text-anchor="middle">PDFs, and guards file paths</text>
+
+    <rect x="540" y="295" width="220" height="120" rx="12" fill="#dbeafe" stroke="#2563eb" stroke-width="2"/>
+    <text x="650" y="319" font-size="14" font-weight="600" fill="#1e3a8a" text-anchor="middle">SelfTest</text>
+    <text x="650" y="343" font-size="13" font-family="Consolas, monospace" fill="#1e3a8a" text-anchor="middle">Validation</text>
+    <text x="650" y="373" font-size="12" fill="#1e40af" text-anchor="middle">Built-in self-validation tests</text>
+    <text x="650" y="389" font-size="12" fill="#1e40af" text-anchor="middle">with TRX and JUnit results</text>
+
+    <!-- Program dispatches to each subsystem -->
+    <line x1="515" y1="117" x2="515" y2="355" stroke="#475569" stroke-width="2"/>
+    <line x1="515" y1="205" x2="494" y2="205" stroke="#475569" stroke-width="2" marker-end="url(#a)"/>
+    <line x1="515" y1="205" x2="536" y2="205" stroke="#475569" stroke-width="2" marker-end="url(#a)"/>
+    <line x1="515" y1="355" x2="494" y2="355" stroke="#475569" stroke-width="2" marker-end="url(#a)"/>
+    <line x1="515" y1="355" x2="536" y2="355" stroke="#475569" stroke-width="2" marker-end="url(#a)"/>
+
+    <!-- Inputs into the tool -->
+    <line x1="204" y1="81" x2="266" y2="81" stroke="#475569" stroke-width="2" marker-end="url(#a)"/>
+    <text x="226" y="73" font-size="12" fill="#334155" text-anchor="middle">args</text>
+    <line x1="204" y1="180" x2="266" y2="180" stroke="#475569" stroke-width="2" marker-end="url(#a)"/>
+    <text x="226" y="172" font-size="12" fill="#334155" text-anchor="middle">read</text>
+    <line x1="204" y1="252" x2="266" y2="252" stroke="#475569" stroke-width="2" marker-end="url(#a)"/>
+    <text x="226" y="244" font-size="12" fill="#334155" text-anchor="middle">match</text>
+    <line x1="204" y1="360" x2="266" y2="360" stroke="#475569" stroke-width="2" marker-start="url(#a)" marker-end="url(#a)"/>
+    <text x="226" y="352" font-size="12" fill="#334155" text-anchor="middle">index</text>
+
+    <!-- Outputs -->
+    <rect x="830" y="45" width="200" height="72" rx="10" fill="#f1f5f9" stroke="#64748b" stroke-width="2"/>
+    <text x="930" y="72" font-size="14" font-weight="600" fill="#334155" text-anchor="middle">Review plan and report</text>
+    <text x="930" y="94" font-size="12" fill="#475569" text-anchor="middle">Markdown documents</text>
+    <line x1="764" y1="81" x2="826" y2="81" stroke="#475569" stroke-width="2" marker-end="url(#a)"/>
+
+    <rect x="830" y="165" width="200" height="80" rx="10" fill="#f1f5f9" stroke="#64748b" stroke-width="2"/>
+    <text x="930" y="191" font-size="14" font-weight="600" fill="#334155" text-anchor="middle">Console and log</text>
+    <text x="930" y="213" font-size="12" fill="#475569" text-anchor="middle">lint findings, elaboration,</text>
+    <text x="930" y="229" font-size="12" fill="#475569" text-anchor="middle">affected review sets</text>
+    <line x1="764" y1="205" x2="826" y2="205" stroke="#475569" stroke-width="2" marker-end="url(#a)"/>
+
+    <rect x="830" y="315" width="200" height="80" rx="10" fill="#f1f5f9" stroke="#64748b" stroke-width="2"/>
+    <text x="930" y="341" font-size="14" font-weight="600" fill="#334155" text-anchor="middle">Test results</text>
+    <text x="930" y="363" font-size="12" fill="#475569" text-anchor="middle">TRX or JUnit file from</text>
+    <text x="930" y="379" font-size="12" fill="#475569" text-anchor="middle">--validate --results</text>
+    <line x1="764" y1="355" x2="826" y2="355" stroke="#475569" stroke-width="2" marker-end="url(#a)"/>
+  </g>
+</svg>

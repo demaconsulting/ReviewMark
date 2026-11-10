@@ -1229,7 +1229,7 @@ public sealed class ReviewMarkConfigurationTests : IDisposable
     }
 
     /// <summary>
-    ///     Test that PublishReviewReport honours the markdownDepth parameter when
+    ///     Test that PublishReviewReport honors the markdownDepth parameter when
     ///     building heading levels.
     /// </summary>
     [Fact]
@@ -1367,7 +1367,7 @@ public sealed class ReviewMarkConfigurationTests : IDisposable
     }
 
     /// <summary>
-    ///     Test that ElaborateReviewSet honours the markdownDepth parameter for
+    ///     Test that ElaborateReviewSet honors the markdownDepth parameter for
     ///     both the main heading and the Files subheading.
     /// </summary>
     [Fact]

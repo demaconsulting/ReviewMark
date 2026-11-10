@@ -9,6 +9,14 @@ regulated environments. It computes cryptographic fingerprints of defined file-s
 review evidence store for corresponding code-review PDFs, and produces compliance documents on every
 CI/CD run.
 
+The figure below shows how the pieces fit together: the command line and the `.reviewmark.yaml` definition drive
+`Program`, which uses the Configuration, Indexing, Cli, and SelfTest subsystems to match repository files against the
+evidence store and write the review plan, review report, console output, and test results.
+
+![ReviewMark architecture: command line, definition file, repository files, and evidence store flowing through Program
+and its Configuration, Indexing, Cli, and SelfTest subsystems to the plan, report, console, and test
+results](architecture.svg)
+
 ## Scope
 
 This guide covers:
@@ -37,7 +45,7 @@ generated automatically on every CI run.
 
 - **Requirements Traceability**: Every requirement is linked to passing tests, and a trace matrix
   is auto-generated on each release
-- **Linting Enforcement**: markdownlint, cspell, and yamllint are enforced before any build proceeds
+- **Linting Enforcement**: markdownlint, TextLint, and yamllint are enforced before any build proceeds
 - **Automated Audit Documentation**: Each release ships with generated requirements, justifications,
   trace matrix, and quality reports
 - **CodeQL and SonarCloud**: Security and quality analysis runs on every build
@@ -585,7 +593,7 @@ reviews:
 ## Evidence Source
 
 The `evidence-source` block configures how ReviewMark obtains review evidence. For `url` and
-`fileshare` sources it points to `index.json` — the catalogue of completed review PDFs. The `none`
+`fileshare` sources it points to `index.json` — the catalog of completed review PDFs. The `none`
 source skips loading any index and always returns empty evidence (useful during initial project
 setup before an evidence store is provisioned).
 

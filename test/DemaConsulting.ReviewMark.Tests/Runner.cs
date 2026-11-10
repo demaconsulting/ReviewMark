@@ -75,7 +75,7 @@ internal static class Runner
     /// </summary>
     /// <param name="stdout">Program standard output.</param>
     /// <param name="stderr">Program standard error.</param>
-    /// <param name="stdin">Text written to standard input, or null to leave it unredirected.</param>
+    /// <param name="stdin">Text written to standard input, or null to leave it not redirected.</param>
     /// <param name="program">Program name or path.</param>
     /// <param name="arguments">Program arguments.</param>
     /// <returns>Program exit code.</returns>

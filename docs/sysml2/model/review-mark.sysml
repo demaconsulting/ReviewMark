@@ -1,4 +1,5 @@
 package ReviewMark {
+    private import SoftwareItemMetadata::*;
     import OtsDependencies::*;
 
     doc
@@ -10,10 +11,13 @@ package ReviewMark {
     part def ReviewMarkSystem {
         doc /* The ReviewMark system as a whole. */
 
-        comment testRef /* Test: test/DemaConsulting.ReviewMark.Tests/IntegrationTests.cs */
-        comment designRef /* Design: docs/design/review-mark.md */
-        comment verificationRef /* Verification: docs/verification/review-mark.md */
-        comment reqRef /* Requirements: docs/reqstream/review-mark.yaml */
+        metadata info : SoftwareInfo {
+            description = "The ReviewMark system as a whole.";
+            testFiles = ("test/DemaConsulting.ReviewMark.Tests/IntegrationTests.cs");
+            designFiles = ("docs/design/review-mark.md");
+            verificationFiles = ("docs/verification/review-mark.md");
+            requirementFiles = ("docs/reqstream/review-mark.yaml");
+        }
 
         part program : Program;
         part cli : CliSubsystem;
