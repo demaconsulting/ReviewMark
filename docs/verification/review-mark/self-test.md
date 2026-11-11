@@ -6,7 +6,7 @@ SelfTest subsystem verification uses `SelfTestTests.cs` to exercise `Validation.
 
 ### Test Environment
 
-Tests run under xUnit on .NET 8, 9, and 10 across Windows, Linux, and macOS. They capture console output in-process, create temporary results paths on demand, and require the built ReviewMark assembly to be present so self-validation can execute its internal suite.
+Tests run under xUnit on .NET 10 and 11 across Windows, Linux, and macOS. They capture console output in-process, create temporary results paths on demand, and require the built ReviewMark assembly to be present so self-validation can execute its internal suite.
 
 ### Acceptance Criteria
 

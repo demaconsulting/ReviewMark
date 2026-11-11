@@ -6,7 +6,7 @@ ReviewMarkConfiguration unit verification uses `ReviewMarkConfigurationTests.cs`
 
 #### Test Environment
 
-N/A - standard test environment. Tests run under xUnit on .NET 8, 9, and 10, create temporary YAML and source files in-process, and require no external services or network access.
+N/A - standard test environment. Tests run under xUnit on .NET 10 and 11, create temporary YAML and source files in-process, and require no external services or network access.
 
 #### Acceptance Criteria
 

@@ -6,7 +6,7 @@ Indexing subsystem verification uses `IndexingTests.cs` to exercise `ReviewIndex
 
 ### Test Environment
 
-Tests run under xUnit on .NET 8, 9, and 10 across Windows, Linux, and macOS. Each test creates an isolated temporary directory, URL-source scenarios inject a fake `HttpMessageHandler`, and PDF-scan scenarios use real minimal PDF fixtures.
+Tests run under xUnit on .NET 10 and 11 across Windows, Linux, and macOS. Each test creates an isolated temporary directory, URL-source scenarios inject a fake `HttpMessageHandler`, and PDF-scan scenarios use real minimal PDF fixtures.
 
 ### Acceptance Criteria
 

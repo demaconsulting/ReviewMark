@@ -14,7 +14,7 @@ confirmed without reverse-engineering the test code.
 
 The standard test command is `dotnet test --configuration Release --report-trx` from the repository
 root. The Microsoft.Testing.Platform runner is selected through `global.json`, and tests run on the
-net8.0, net9.0 and net10.0 target frameworks.
+net10.0 and net11.0 target frameworks.
 
 ## Scope
 

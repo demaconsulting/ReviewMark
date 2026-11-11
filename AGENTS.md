@@ -5,7 +5,7 @@
 - **project-tagline**: Automated file-review evidence management
 - **description**: DEMA Consulting command-line tool for automated file-review evidence management in regulated environments
 - **languages**: C#, Markdown, YAML, PowerShell
-- **technologies**: .NET 8/9/10, xUnit, ReqStream, ReviewMark, Pandoc
+- **technologies**: .NET 10/11, xUnit, ReqStream, ReviewMark, Pandoc
 
 # Project Structure
 

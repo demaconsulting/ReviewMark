@@ -6,7 +6,7 @@ Validation unit verification uses `ValidationTests.cs` to call `Validation.Run` 
 
 #### Test Environment
 
-N/A - standard test environment. Tests run under xUnit on .NET 8, 9, and 10, capture console output with `StringWriter`, create temporary results paths in-process, and require the built ReviewMark assembly so the internal validation suite can execute.
+N/A - standard test environment. Tests run under xUnit on .NET 10 and 11, capture console output with `StringWriter`, create temporary results paths in-process, and require the built ReviewMark assembly so the internal validation suite can execute.
 
 #### Acceptance Criteria
 

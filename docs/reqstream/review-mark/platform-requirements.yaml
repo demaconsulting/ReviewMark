@@ -9,6 +9,7 @@ sections:
             title: The tool shall build and run on Windows platforms.
             justification: |
               DEMA Consulting tools must support Windows as a major development platform.
+            tags: [system]
             tests:
               # Test source pattern "windows@" ensures these tests ran on Windows.
               # This filtering is necessary to prove Windows OS functionality.
@@ -27,6 +28,7 @@ sections:
             title: The tool shall build and run on Linux platforms.
             justification: |
               DEMA Consulting tools must support Linux for CI/CD and containerized environments.
+            tags: [system]
             tests:
               # Test source pattern "ubuntu@" ensures these tests ran on Linux.
               # This filtering is necessary to prove Linux OS functionality.
@@ -45,6 +47,7 @@ sections:
             title: The tool shall build and run on macOS platforms.
             justification: |
               DEMA Consulting tools must support macOS for developers using Apple platforms.
+            tags: [system]
             tests:
               # Test source pattern "macos@" ensures these tests ran on macOS.
               # This filtering is necessary to prove macOS OS functionality.
@@ -59,46 +62,12 @@ sections:
               - "macos@ReviewMark_Lint"
               - "macos@ReviewMark_DepthFlag"
 
-          - id: ReviewMark-Platform-Net8
-            title: The tool shall support .NET 8 runtime.
-            justification: |
-              .NET 8 is an LTS release providing long-term stability for enterprise users.
-            tests:
-              # Test source pattern "dotnet8.x@" ensures these tests ran on .NET 8.
-              # This filtering is necessary to prove .NET 8 runtime support.
-              - "dotnet8.x@ReviewMark_VersionDisplay"
-              - "dotnet8.x@ReviewMark_HelpDisplay"
-              - "dotnet8.x@ReviewMark_ReviewPlanGeneration"
-              - "dotnet8.x@ReviewMark_ReviewReportGeneration"
-              - "dotnet8.x@ReviewMark_IndexScan"
-              - "dotnet8.x@ReviewMark_Enforce"
-              - "dotnet8.x@ReviewMark_WorkingDirectoryOverride"
-              - "dotnet8.x@ReviewMark_Elaborate"
-              - "dotnet8.x@ReviewMark_Lint"
-              - "dotnet8.x@ReviewMark_DepthFlag"
-
-          - id: ReviewMark-Platform-Net9
-            title: The tool shall support .NET 9 runtime.
-            justification: |
-              .NET 9 support enables users to leverage the latest .NET features.
-            tests:
-              # Test source pattern "dotnet9.x@" ensures these tests ran on .NET 9.
-              # This filtering is necessary to prove .NET 9 runtime support.
-              - "dotnet9.x@ReviewMark_VersionDisplay"
-              - "dotnet9.x@ReviewMark_HelpDisplay"
-              - "dotnet9.x@ReviewMark_ReviewPlanGeneration"
-              - "dotnet9.x@ReviewMark_ReviewReportGeneration"
-              - "dotnet9.x@ReviewMark_IndexScan"
-              - "dotnet9.x@ReviewMark_Enforce"
-              - "dotnet9.x@ReviewMark_WorkingDirectoryOverride"
-              - "dotnet9.x@ReviewMark_Elaborate"
-              - "dotnet9.x@ReviewMark_Lint"
-              - "dotnet9.x@ReviewMark_DepthFlag"
-
           - id: ReviewMark-Platform-Net10
             title: The tool shall support .NET 10 runtime.
             justification: |
-              .NET 10 support ensures the tool remains compatible with the latest .NET ecosystem.
+              .NET 10 is an LTS release and the oldest supported .NET runtime, providing
+              long-term stability for enterprise users.
+            tags: [system]
             tests:
               # Test source pattern "dotnet10.x@" ensures these tests ran on .NET 10.
               # This filtering is necessary to prove .NET 10 runtime support.
@@ -112,3 +81,22 @@ sections:
               - "dotnet10.x@ReviewMark_Elaborate"
               - "dotnet10.x@ReviewMark_Lint"
               - "dotnet10.x@ReviewMark_DepthFlag"
+
+          - id: ReviewMark-Platform-Net11
+            title: The tool shall support .NET 11 runtime.
+            justification: |
+              .NET 11 support ensures the tool remains compatible with the latest .NET ecosystem.
+            tags: [system]
+            tests:
+              # Test source pattern "dotnet11.x@" ensures these tests ran on .NET 11.
+              # This filtering is necessary to prove .NET 11 runtime support.
+              - "dotnet11.x@ReviewMark_VersionDisplay"
+              - "dotnet11.x@ReviewMark_HelpDisplay"
+              - "dotnet11.x@ReviewMark_ReviewPlanGeneration"
+              - "dotnet11.x@ReviewMark_ReviewReportGeneration"
+              - "dotnet11.x@ReviewMark_IndexScan"
+              - "dotnet11.x@ReviewMark_Enforce"
+              - "dotnet11.x@ReviewMark_WorkingDirectoryOverride"
+              - "dotnet11.x@ReviewMark_Elaborate"
+              - "dotnet11.x@ReviewMark_Lint"
+              - "dotnet11.x@ReviewMark_DepthFlag"

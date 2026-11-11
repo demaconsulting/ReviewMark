@@ -9,13 +9,14 @@ regulated environments. It computes cryptographic fingerprints of defined file-s
 review evidence store for corresponding code-review PDFs, and produces compliance documents on every
 CI/CD run.
 
-The figure below shows how the pieces fit together: the command line and the `.reviewmark.yaml` definition drive
-`Program`, which uses the Configuration, Indexing, Cli, and SelfTest subsystems to match repository files against the
-evidence store and write the review plan, review report, console output, and test results.
+The workflow below shows how ReviewMark is used: define review sets and the evidence source in
+`.reviewmark.yaml`, record each review as a PDF whose keywords carry the review-set ID and
+fingerprint, run `reviewmark` locally or in a CI pipeline, and use the resulting review plan,
+review report, and pass/fail result as compliance evidence, release documents, and a CI gate.
 
-![ReviewMark architecture: command line, definition file, repository files, and evidence store flowing through Program
-and its Configuration, Indexing, Cli, and SelfTest subsystems to the plan, report, console, and test
-results](architecture.svg)
+![ReviewMark workflow: define review sets in .reviewmark.yaml, record reviews as PDF evidence and
+index them, run reviewmark from the command line or a CI pipeline, get the review plan, review report,
+and pass/fail result, then use them as compliance evidence, PDF documents, and a CI gate](workflow.svg)
 
 ## Scope
 
@@ -28,7 +29,7 @@ This guide covers:
 - End-to-end typical workflow for a regulated repository
 - Practical examples for various scenarios
 
-Prerequisites: a supported .NET runtime (8, 9, or 10) and access to a review evidence store (URL or
+Prerequisites: a .NET 10 or 11 runtime and access to a review evidence store (URL or
 file share), or `type: none` for initial setup.
 
 ## References

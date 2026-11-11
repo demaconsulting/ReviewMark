@@ -6,7 +6,7 @@ Configuration subsystem verification uses `ConfigurationTests.cs` to exercise `R
 
 ### Test Environment
 
-Tests run under xUnit on .NET 8, 9, and 10 across Windows, Linux, and macOS. Each test creates a fresh temporary directory, writes controlled `.reviewmark.yaml` and source files, and removes the directory during cleanup. No external services or network access are required.
+Tests run under xUnit on .NET 10 and 11 across Windows, Linux, and macOS. Each test creates a fresh temporary directory, writes controlled `.reviewmark.yaml` and source files, and removes the directory during cleanup. No external services or network access are required.
 
 ### Acceptance Criteria
 
