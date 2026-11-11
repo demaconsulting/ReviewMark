@@ -5,7 +5,8 @@
 // 'render' - is what scopes the rendered diagram content.
 package ReviewMark {
     view SoftwareStructureView {
-        expose ReviewMark;
+        expose ReviewMark::**;
+        render asInterconnectionDiagram;
     }
 
     view ReviewMarkView {
