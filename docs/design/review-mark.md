@@ -194,7 +194,7 @@ Current (i.e., is Stale, Missing, or Failed).
 
 ## Design Constraints
 
-- **Platform**: targets .NET 8, .NET 9, and .NET 10; runs on Windows, macOS, and Linux
+- **Platform**: targets .NET 10 and .NET 11; runs on Windows, macOS, and Linux
 - **Distribution**: distributed as a .NET global tool via NuGet; no external runtime
   dependencies beyond the .NET SDK
 - **Output format**: all generated documents are Markdown; no binary output is produced

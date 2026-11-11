@@ -6,7 +6,7 @@ Program unit verification uses `ProgramTests.cs` to call `Program.Run` with real
 
 ### Test Environment
 
-Tests run under xUnit on .NET 8, 9, and 10 across Windows, Linux, and macOS. Console streams are redirected with `StringWriter`, temporary YAML and Markdown files are created as needed, and no external services or network access are required.
+Tests run under xUnit on .NET 10 and 11 across Windows, Linux, and macOS. Console streams are redirected with `StringWriter`, temporary YAML and Markdown files are created as needed, and no external services or network access are required.
 
 ### Acceptance Criteria
 

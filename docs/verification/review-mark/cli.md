@@ -6,7 +6,7 @@ Cli subsystem verification uses `CliTests.cs` to exercise `Context.Create`, `Pro
 
 ### Test Environment
 
-Tests run under xUnit on .NET 8, 9, and 10 across Windows, Linux, and macOS. `StringWriter` instances capture stdout and stderr in-process, temporary YAML files and output files are created for definition-based workflows, and no external services or network access are required.
+Tests run under xUnit on .NET 10 and 11 across Windows, Linux, and macOS. `StringWriter` instances capture stdout and stderr in-process, temporary YAML files and output files are created for definition-based workflows, and no external services or network access are required.
 
 ### Acceptance Criteria
 

@@ -487,11 +487,11 @@ sections:
           - ReviewMark-Configuration-MalformedYaml
 
       - id: ReviewMark-System-CrossPlatform
-        title: The tool shall run on Windows, Linux, and macOS with .NET 8, 9, and 10.
+        title: The tool shall run on Windows, Linux, and macOS with .NET 10 and 11.
         justification: |
           DEMA Consulting tools must run on all major operating systems and current .NET
           runtimes so that teams can use ReviewMark regardless of their development or CI/CD
-          platform. Supporting .NET 8 (LTS), 9, and 10 ensures long-term compatibility and
+          platform. Supporting .NET 10 (LTS) and 11 ensures long-term compatibility and
           access to the latest runtime features.
         tags: [system]
         tests:
@@ -500,9 +500,8 @@ sections:
           - ReviewMark-Platform-Windows
           - ReviewMark-Platform-Linux
           - ReviewMark-Platform-MacOS
-          - ReviewMark-Platform-Net8
-          - ReviewMark-Platform-Net9
           - ReviewMark-Platform-Net10
+          - ReviewMark-Platform-Net11
 
       - id: ReviewMark-System-ExecutionContext
         title: The tool shall parse command-line arguments into a structured execution context and maintain execution state

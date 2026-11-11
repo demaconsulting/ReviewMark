@@ -6,7 +6,7 @@ ReviewIndex unit verification uses `IndexTests.cs` to exercise all evidence-sour
 
 #### Test Environment
 
-N/A - standard test environment. Tests run under xUnit on .NET 8, 9, and 10, create temporary JSON and PDF fixtures in-process, and inject a fake HTTP client so no real network access is required.
+N/A - standard test environment. Tests run under xUnit on .NET 10 and 11, create temporary JSON and PDF fixtures in-process, and inject a fake HTTP client so no real network access is required.
 
 #### Acceptance Criteria
 

@@ -6,7 +6,7 @@ PathHelpers unit verification uses `PathHelpersTests.cs` to call the pure `SafeP
 
 #### Test Environment
 
-N/A - standard test environment. Tests run under xUnit on .NET 8, 9, and 10 and require no external services, file fixtures, or environment setup beyond the test runner.
+N/A - standard test environment. Tests run under xUnit on .NET 10 and 11 and require no external services, file fixtures, or environment setup beyond the test runner.
 
 #### Acceptance Criteria
 

@@ -19,9 +19,13 @@ environments. ReviewMark generates cryptographic fingerprints of source files an
 against a catalog of review evidence, producing a compliant review plan and review report on
 every CI/CD run.
 
-![ReviewMark architecture: command line, definition file, repository files, and evidence store flowing through Program
-and its Configuration, Indexing, Cli, and SelfTest subsystems to the plan, report, console, and test
-results][link-architecture-image]
+The workflow below shows how to use it: define review sets in `.reviewmark.yaml`, record reviews
+as PDF evidence, run ReviewMark from the command line or a CI pipeline, and use the resulting review
+plan and report as compliance evidence.
+
+![ReviewMark workflow: define review sets in .reviewmark.yaml, record reviews as PDF evidence and
+index them, run reviewmark from the command line or a CI pipeline, get the review plan, review report,
+and pass/fail result, then use them as compliance evidence, PDF documents, and a CI gate][link-workflow-image]
 
 ## Features
 
@@ -36,7 +40,7 @@ results][link-architecture-image]
 - 🔄 **Re-indexing** - `--index` scans PDF evidence files and writes an up-to-date `index.json`
 - ✅ **Self-Validation** - Built-in validation tests with TRX and JUnit output
 - 🌐 **Multi-Platform** - Builds and runs on Windows, Linux, and macOS
-- 🎯 **Multi-Runtime** - Targets .NET 8, 9, and 10
+- 🎯 **Multi-Runtime** - Targets .NET 10 and 11
 - 🚀 **CI/CD Integration** - Automate review evidence generation in your pipelines
 - 📜 **Continuous Compliance** - Proves file coverage and currency ([Continuous Compliance][link-continuous-compliance])
 
@@ -100,6 +104,8 @@ See the [System Design][link-system-design] for the theory of operations includi
 evidence indexing, and compliance report formats.
 
 ## Installation
+
+ReviewMark requires a .NET 10 or 11 SDK.
 
 ```bash
 dotnet tool install -g DemaConsulting.ReviewMark
@@ -303,4 +309,4 @@ By contributing to this project, you agree that your contributions will be licen
 [link-guide]: https://github.com/demaconsulting/ReviewMark/blob/main/docs/user_guide/introduction.md
 [link-system-design]: https://github.com/demaconsulting/ReviewMark/blob/main/docs/design/review-mark.md
 [link-continuous-compliance]: https://github.com/demaconsulting/ContinuousCompliance
-[link-architecture-image]: https://raw.githubusercontent.com/demaconsulting/ReviewMark/main/docs/images/architecture.png
+[link-workflow-image]: https://raw.githubusercontent.com/demaconsulting/ReviewMark/main/docs/images/workflow.png

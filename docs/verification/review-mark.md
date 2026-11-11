@@ -12,7 +12,7 @@ source configuration.
 System-boundary test doubles are limited to temporary YAML definition files, temporary directories,
 and transient output files. No external services or persistent evidence stores are required. The
 same verification suite is also executed in the GitHub Actions build matrix across Windows, Linux,
-and macOS and across .NET 8, .NET 9, and .NET 10.
+and macOS and across .NET 10 and .NET 11.
 
 ## Test Environment
 
@@ -36,7 +36,7 @@ test run.
 - Generated plan, report, results, log, and index artifacts are created with the expected content
   when their corresponding options are used.
 - Cross-platform verification completes successfully in CI across Windows, Linux, and macOS and
-  across .NET 8, .NET 9, and .NET 10.
+  across .NET 10 and .NET 11.
 
 ## System-Level Test Scenarios
 
@@ -146,7 +146,7 @@ scenario is tested by `ReviewMark_VersionFlag_Invoked_OutputsVersion` and
 `ReviewMark_UnknownArgument_Provided_ReturnsNonZeroAndError`.
 
 **CrossPlatformRuntimeMatrix**: ReviewMark verification is repeated in the GitHub Actions
-`integration-test` job across Windows, Linux, and macOS and across .NET 8, .NET 9, and .NET 10,
+`integration-test` job across Windows, Linux, and macOS and across .NET 10 and .NET 11,
 proving the packaged tool remains operational across supported platforms and runtimes. This
 scenario is tested by `ReviewMark_VersionFlag_Invoked_OutputsVersion` and
 `ReviewMark_ValidateFlag_Invoked_RunsValidation` in the CI matrix defined in

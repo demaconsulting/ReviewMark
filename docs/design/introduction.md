@@ -54,6 +54,15 @@ diagram or the prose below.
 
 ![Software Structure](SoftwareStructureView.svg)
 
+The diagram below complements the structure view by showing how data flows at run time: the
+command line and the `.reviewmark.yaml` definition drive `Program`, which uses the Configuration,
+Indexing, Cli, and SelfTest subsystems to match repository files against the evidence store and
+write the review plan, review report, console output, and test results.
+
+![ReviewMark architecture: command line, definition file, repository files, and evidence store flowing through Program
+and its Configuration, Indexing, Cli, and SelfTest subsystems to the plan, report, console, and test
+results](architecture.svg)
+
 ## Folder Layout
 
 - **src/** - source files and projects

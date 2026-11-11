@@ -6,7 +6,7 @@ Context unit verification uses `ContextTests.cs` to construct real contexts from
 
 #### Test Environment
 
-N/A - standard test environment. Tests run under xUnit on .NET 8, 9, and 10, capture console streams with `StringWriter`, and create temporary log files only for the logging scenarios.
+N/A - standard test environment. Tests run under xUnit on .NET 10 and 11, capture console streams with `StringWriter`, and create temporary log files only for the logging scenarios.
 
 #### Acceptance Criteria
 
