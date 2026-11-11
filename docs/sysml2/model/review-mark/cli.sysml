@@ -5,7 +5,6 @@ package ReviewMark {
         doc /* Command-line argument parsing and output channel ownership. */
 
         metadata info : SoftwareInfo {
-            description = "Command-line argument parsing and output channel ownership.";
             testFiles = ("test/DemaConsulting.ReviewMark.Tests/Cli/CliTests.cs");
             designFiles = ("docs/design/review-mark/cli.md");
             verificationFiles = ("docs/verification/review-mark/cli.md");

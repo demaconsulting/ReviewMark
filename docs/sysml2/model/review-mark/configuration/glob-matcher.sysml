@@ -5,7 +5,6 @@ package ReviewMark {
         doc /* File pattern matching using glob syntax. */
 
         metadata info : SoftwareInfo {
-            description = "File pattern matching using glob syntax.";
             sourceFiles = ("src/DemaConsulting.ReviewMark/Configuration/GlobMatcher.cs");
             testFiles = ("test/DemaConsulting.ReviewMark.Tests/Configuration/GlobMatcherTests.cs");
             designFiles = ("docs/design/review-mark/configuration/glob-matcher.md");

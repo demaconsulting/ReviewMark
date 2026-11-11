@@ -5,7 +5,6 @@ package ReviewMark {
         doc /* Process entry point; constructs the execution context and dispatches to subsystems. */
 
         metadata info : SoftwareInfo {
-            description = "Process entry point; constructs the execution context and dispatches to subsystems.";
             sourceFiles = ("src/DemaConsulting.ReviewMark/Program.cs");
             testFiles = ("test/DemaConsulting.ReviewMark.Tests/ProgramTests.cs");
             designFiles = ("docs/design/review-mark/program.md");
