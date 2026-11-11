@@ -5,7 +5,6 @@ package ReviewMark {
         doc /* Built-in self-validation test suite. */
 
         metadata info : SoftwareInfo {
-            description = "Built-in self-validation test suite.";
             testFiles = ("test/DemaConsulting.ReviewMark.Tests/SelfTest/SelfTestTests.cs");
             designFiles = ("docs/design/review-mark/self-test.md");
             verificationFiles = ("docs/verification/review-mark/self-test.md");

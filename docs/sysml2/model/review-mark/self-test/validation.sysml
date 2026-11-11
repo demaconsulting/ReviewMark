@@ -5,7 +5,6 @@ package ReviewMark {
         doc /* Self-validation test runner. */
 
         metadata info : SoftwareInfo {
-            description = "Self-validation test runner.";
             sourceFiles = ("src/DemaConsulting.ReviewMark/SelfTest/Validation.cs");
             testFiles = ("test/DemaConsulting.ReviewMark.Tests/SelfTest/ValidationTests.cs");
             designFiles = ("docs/design/review-mark/self-test/validation.md");

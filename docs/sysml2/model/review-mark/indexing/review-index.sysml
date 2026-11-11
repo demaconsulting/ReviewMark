@@ -5,7 +5,6 @@ package ReviewMark {
         doc /* Review evidence loader and query engine. */
 
         metadata info : SoftwareInfo {
-            description = "Review evidence loader and query engine.";
             sourceFiles = ("src/DemaConsulting.ReviewMark/Indexing/ReviewIndex.cs");
             testFiles = ("test/DemaConsulting.ReviewMark.Tests/Indexing/IndexTests.cs");
             designFiles = ("docs/design/review-mark/indexing/review-index.md");

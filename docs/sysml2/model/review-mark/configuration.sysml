@@ -5,7 +5,6 @@ package ReviewMark {
         doc /* YAML configuration loading, validation, and review-set processing. */
 
         metadata info : SoftwareInfo {
-            description = "YAML configuration loading, validation, and review-set processing.";
             testFiles = ("test/DemaConsulting.ReviewMark.Tests/Configuration/ConfigurationTests.cs");
             designFiles = ("docs/design/review-mark/configuration.md");
             verificationFiles = ("docs/verification/review-mark/configuration.md");

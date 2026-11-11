@@ -5,7 +5,6 @@ package ReviewMark {
         doc /* File path utilities. */
 
         metadata info : SoftwareInfo {
-            description = "File path utilities.";
             sourceFiles = ("src/DemaConsulting.ReviewMark/Indexing/PathHelpers.cs");
             testFiles = ("test/DemaConsulting.ReviewMark.Tests/Indexing/PathHelpersTests.cs");
             designFiles = ("docs/design/review-mark/indexing/path-helpers.md");

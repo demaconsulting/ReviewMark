@@ -5,7 +5,6 @@ package ReviewMark {
         doc /* YAML configuration parser and review-set processor. */
 
         metadata info : SoftwareInfo {
-            description = "YAML configuration parser and review-set processor.";
             sourceFiles = ("src/DemaConsulting.ReviewMark/Configuration/ReviewMarkConfiguration.cs");
             testFiles = ("test/DemaConsulting.ReviewMark.Tests/Configuration/ReviewMarkConfigurationTests.cs");
             designFiles = ("docs/design/review-mark/configuration/review-mark-configuration.md");

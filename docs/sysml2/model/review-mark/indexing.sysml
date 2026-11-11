@@ -5,7 +5,6 @@ package ReviewMark {
         doc /* Review evidence loading, PDF scanning, and safe path utilities. */
 
         metadata info : SoftwareInfo {
-            description = "Review evidence loading, PDF scanning, and safe path utilities.";
             testFiles = ("test/DemaConsulting.ReviewMark.Tests/Indexing/IndexingTests.cs");
             designFiles = ("docs/design/review-mark/indexing.md");
             verificationFiles = ("docs/verification/review-mark/indexing.md");

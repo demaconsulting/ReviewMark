@@ -12,7 +12,6 @@ package ReviewMark {
         doc /* The ReviewMark system as a whole. */
 
         metadata info : SoftwareInfo {
-            description = "The ReviewMark system as a whole.";
             testFiles = ("test/DemaConsulting.ReviewMark.Tests/IntegrationTests.cs");
             designFiles = ("docs/design/review-mark.md");
             verificationFiles = ("docs/verification/review-mark.md");
