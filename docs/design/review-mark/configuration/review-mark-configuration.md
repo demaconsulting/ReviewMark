@@ -57,7 +57,7 @@ env var names and are not expanded.
 | Type | Description |
 | --- | --- |
 | `EvidenceSource` | Immutable record: `Type`, `Location`, `UsernameEnv`, `PasswordEnv` |
-| `ReviewSet` | Class: `Id`, `Title`, `Paths`, `Context`, `GetFingerprint()`, `GetFiles()` (see Key Methods) |
+| `ReviewSet` | Class: `Id`, `Title`, `Paths`, `Context`; methods `GetFingerprint` and `GetFiles` (see Key Methods) |
 | `LintSeverity` | Enum: `Warning`, `Error` |
 | `LintIssue` | Record: `Location`, `Severity`, `Description`; `ToString()`: `{location}: {severity}: {description}` |
 | `ReviewMarkLoadResult` | Record: `Configuration` (null if error-level issues found), `Issues` |
