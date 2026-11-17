@@ -33,10 +33,13 @@ and pass/fail result, then use them as compliance evidence, PDF documents, and a
 - 📂 **Evidence Querying** - Queries URL or file-share evidence stores via an `index.json` catalog
 - 📋 **Coverage Reporting** - Review plan shows which files are covered and flags uncovered files
 - 📊 **Status Reporting** - Review report shows whether each review-set is Current, Stale, Missing, or Failed
-- 🔍 **Review Elaboration** - `--elaborate` prints the ID, title, fingerprint, optional context files, and file list for a review set
-- 🧭 **Affected Review Sets** - `--affected` maps a list of changed files (for example from `git diff --name-only`) to the review sets that need re-review
+- 🔍 **Review Elaboration** - `--elaborate` prints the ID, title, fingerprint, optional context files, and file list for
+  a review set
+- 🧭 **Affected Review Sets** - `--affected` maps a list of changed files (for example from `git diff --name-only`) to
+  the review sets that need re-review
 - 🔎 **Configuration Linting** - `--lint` validates the definition file and reports all structural and semantic issues
-- 🚦 **Enforcement** - `--enforce` exits non-zero if any review-set is stale, missing, or failed, or any file is uncovered
+- 🚦 **Enforcement** - `--enforce` exits non-zero if any review-set is stale, missing, or failed, or any file is
+  uncovered
 - 🔄 **Re-indexing** - `--index` scans PDF evidence files and writes an up-to-date `index.json`
 - ✅ **Self-Validation** - Built-in validation tests with TRX and JUnit output
 - 🌐 **Multi-Platform** - Builds and runs on Windows, Linux, and macOS
@@ -50,7 +53,7 @@ In the [Continuous Compliance][link-continuous-compliance] methodology, every co
 is generated automatically on each CI/CD run. ReviewMark fills the **file-review evidence** role:
 
 | Artifact | Description |
-| :------- | :---------- |
+| :--- | :--- |
 | Review Plan | Proves every file requiring review is covered by at least one named review-set |
 | Review Report | Proves each review-set is current — the review evidence matches the current file-set fingerprint |
 
@@ -158,26 +161,26 @@ reviewmark --dir \\reviews.example.com\evidence\ --index "2025/**/*.pdf" --index
 
 ## Command-Line Options
 
-| Option                    | Description                                                                    |
-| ------------------------- | ------------------------------------------------------------------------------ |
-| `-v`, `--version`         | Display version information                                                    |
-| `-?`, `-h`, `--help`      | Display help message                                                           |
-| `--silent`                | Suppress console output                                                        |
-| `--validate`              | Run self-validation                                                            |
-| `--lint`                  | Validate the definition file and report issues                                 |
-| `--results <file>`        | Write validation results to file (TRX or JUnit format)                         |
-| `--log <file>`            | Write output to log file                                                       |
-| `--definition <file>`     | Specify the definition YAML file (default: .reviewmark.yaml)                   |
-| `--depth <#>`             | Default heading depth for all generated documents (default: 1)                 |
-| `--plan <file>`           | Write review plan to the specified Markdown file                               |
-| `--plan-depth <#>`        | Heading depth for the review plan (overrides --depth; default: --depth or 1)   |
-| `--report <file>`         | Write review report to the specified Markdown file                             |
-| `--report-depth <#>`      | Heading depth for the review report (overrides --depth; default: --depth or 1) |
-| `--index <glob-path>`     | Index PDF evidence files matching the glob path                                |
-| `--dir <directory>`       | Set the working directory for default paths and glob paths                     |
-| `--enforce`               | Exit with non-zero code if there are review issues                             |
-| `--elaborate <id>`        | Print a Markdown elaboration of the specified review set                       |
-| `--affected <file\|->`    | List review sets affected by the changed files in the file (or stdin for `-`)  |
+| Option | Description |
+| --- | --- |
+| `-v`, `--version` | Display version information |
+| `-?`, `-h`, `--help` | Display help message |
+| `--silent` | Suppress console output |
+| `--validate` | Run self-validation |
+| `--lint` | Validate the definition file and report issues |
+| `--results <file>` | Write validation results to file (TRX or JUnit format) |
+| `--log <file>` | Write output to log file |
+| `--definition <file>` | Specify the definition YAML file (default: .reviewmark.yaml) |
+| `--depth <#>` | Default heading depth for all generated documents (default: 1) |
+| `--plan <file>` | Write review plan to the specified Markdown file |
+| `--plan-depth <#>` | Heading depth for the review plan (overrides --depth; default: --depth or 1) |
+| `--report <file>` | Write review report to the specified Markdown file |
+| `--report-depth <#>` | Heading depth for the review report (overrides --depth; default: --depth or 1) |
+| `--index <glob-path>` | Index PDF evidence files matching the glob path |
+| `--dir <directory>` | Set the working directory for default paths and glob paths |
+| `--enforce` | Exit with non-zero code if there are review issues |
+| `--elaborate <id>` | Print a Markdown elaboration of the specified review set |
+| `--affected <file\|->` | List review sets affected by the changed files in the file (or stdin for `-`) |
 
 ## Find Affected Review Sets
 
@@ -191,12 +194,12 @@ git diff --name-only HEAD | reviewmark --affected -
 ```
 
 Output lines are tab-separated: `affected<TAB><id><TAB><path>` and `unreviewed<TAB><path>`, or
-`No affected review-sets`. Backslash, TAB, LF and CR inside an ID or path are escaped as `\\`,
-`\t`, `\n` and `\r`; `<TAB>` stands for a single TAB character. Lint warnings are not printed in this mode (run `--lint` to see them). The exit
-code is 0 even when unreviewed files exist; unreadable input, an invalid or missing definition, an
-`--affected` value that is empty or starts with `--` (use `./--name`), or
-combining `--affected` with `--plan`, `--report`, `--elaborate`, `--index` or `--lint` exits with
-code 1, and these errors go to stderr even with `--silent`. See the [User Guide][link-guide] for more git examples and the agent workflow.
+`No affected review-sets`. Backslash, TAB, LF and CR inside an ID or path are escaped as `\\`, `\t`, `\n` and `\r`;
+`<TAB>` stands for a single TAB character. Lint warnings are not printed in this mode (run `--lint` to see them). The
+exit code is 0 even when unreviewed files exist; unreadable input, an invalid or missing definition, an `--affected`
+value that is empty or starts with `--` (use `./--name`), or combining `--affected` with `--plan`, `--report`,
+`--elaborate`, `--index` or `--lint` exits with code 1, and these errors go to stderr even with `--silent`. See the
+[User Guide][link-guide] for more git examples and the agent workflow.
 
 ## Error Handling
 

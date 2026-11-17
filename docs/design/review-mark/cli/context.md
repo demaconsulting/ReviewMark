@@ -13,7 +13,7 @@ as both a configuration carrier and an output mechanism.
 #### Data Model
 
 | Property | Type | Description |
-| -------- | ---- | ----------- |
+| --- | --- | --- |
 | `Version` | `bool` | Requests version display |
 | `Help` | `bool` | Requests help display |
 | `Silent` | `bool` | Suppresses console output |
@@ -30,7 +30,7 @@ as both a configuration carrier and an output mechanism.
 | `WorkingDirectory` | `string?` | Base directory for resolving relative paths |
 | `Enforce` | `bool` | Fail if any review-set is not Current |
 | `ElaborateId` | `string?` | Review-set ID to elaborate, or null if `--elaborate` was not specified |
-| `AffectedFile` | `string?` | Changed-file list source for `--affected` (a path, or `-` for stdin), or null if not specified |
+| `AffectedFile` | `string?` | Changed-file list path for `--affected` (`-` for stdin), or null if not specified |
 | `ExitCode` | `int` | Computed; 0 = success, 1 = one or more calls to `WriteError()` occurred |
 
 The `--log <file>` argument is consumed during `Context.Create()` to open the log file
@@ -83,9 +83,11 @@ the `using` block in `Program.Main()`.
 #### Error Handling
 
 | Exception | Condition | Handling |
-| --------- | --------- | -------- |
-| `ArgumentException` | Unrecognized or malformed argument during `Context.Create()` | Propagated to `Program.Main()`, which writes the message to `Console.Error` and returns 1 |
-| `InvalidOperationException` | Log file cannot be opened during `Context.Create()` | Propagated to `Program.Main()`, which writes the message to `Console.Error` and returns 1 |
+| --- | --- | --- |
+| `ArgumentException` | Unrecognized or malformed argument during `Context.Create()` | Propagated to `Program.Main()` |
+| `InvalidOperationException` | Log file cannot be opened during `Context.Create()` | Propagated to `Program.Main()` |
+
+For both exceptions, `Program.Main()` writes the message to `Console.Error` and returns 1.
 
 `WriteError()` does not throw; it sets the internal error flag and writes to output
 streams. Errors during the tool run are communicated through `ExitCode`, not exceptions.

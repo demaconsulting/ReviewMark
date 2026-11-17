@@ -99,9 +99,9 @@ ReviewMark integrates the third-party library or tool; their artifacts sit paral
 folders:
 
 - Requirements: `docs/reqstream/ots/{ots-name}.yaml`
-- Design: `docs/design/ots/{ots-name}.md` _(present for runtime library and tooling integrations
+- Design: `docs/design/ots/{ots-name}.md` *(present for runtime library and tooling integrations
   with local integration surface to describe; some pipeline-only tools have no design page since
-  there is no local integration code)_
+  there is no local integration code)*
 - Verification: `docs/verification/ots/{ots-name}.md`
 
 Review-sets: defined in `.reviewmark.yaml`

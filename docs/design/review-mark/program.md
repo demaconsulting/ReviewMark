@@ -33,7 +33,7 @@ Creates a `Context` instance via `Context.Create(args)` inside a `using` block, 
 handler:
 
 | Exception | Action |
-| --------- | ------ |
+| --- | --- |
 | `ArgumentException` | Write `"Error: {message}"` to `Console.Error`; return 1 |
 | `InvalidOperationException` | Write `"Error: {message}"` to `Console.Error`; return 1 |
 | Any other exception | Write `"Unexpected error: {message}"` to `Console.Error`; rethrow |
@@ -96,32 +96,39 @@ always written to stderr, even with `--silent`), and stops if `Configuration` is
 
 **`Program.RunAffectedLogic(Context context, ReviewMarkConfiguration config, string directory)`**
 
-Reads the changed-file list from standard input (`--affected -`) or from the named file.
-Read failures (`IOException`, `UnauthorizedAccessException`, `NotSupportedException`,
-`ObjectDisposedException`, `ArgumentException`, `SecurityException`) for either source are wrapped in `InvalidOperationException`
-("Failed to read changed-files list '<source>': ..."; the source text for stdin is
-`standard input`). The text is parsed with `PathHelpers.ParseChangedPaths(text, directory)` and
-passed to `config.GetAffectedReviewSets()`. The list is read once and no git command or
-file-system lookup of the changed paths is performed. Output is written via `context.WriteLine()`
-(so `--silent` and `--log` apply), and the application banner is suppressed for
-`--affected` so the output can be piped or parsed. Output lines are tab-delimited because
-review-set IDs may contain spaces and paths may too; the id and path fields are escaped with
-`PathHelpers.EscapeRecordField()` (`\` → `\\`, TAB → `\t`, LF → `\n`, CR → `\r`):
+Reads the changed-file list from standard input (`--affected -`) or from the named file. Read failures (`IOException`,
+`UnauthorizedAccessException`, `NotSupportedException`, `ObjectDisposedException`, `ArgumentException`,
+`SecurityException`) for either source are wrapped in `InvalidOperationException` ("Failed to read changed-files list
+'<source>': ..."; the source text for stdin is `standard input`). The text is parsed with
+`PathHelpers.ParseChangedPaths(text, directory)` and passed to `config.GetAffectedReviewSets()`. The list is read once
+and no git command or file-system lookup of the changed paths is performed. Output is written via `context.WriteLine()`
+(so `--silent` and `--log` apply), and the application banner is suppressed for `--affected` so the output can be piped
+or parsed. Output lines are tab-delimited because review-set IDs may contain spaces and paths may too; the id and path
+fields are escaped with `PathHelpers.EscapeRecordField()` (`\` → `\\`, TAB → `\t`, LF → `\n`, CR → `\r`):
 
 | Line | Meaning |
-| ---- | ------- |
-| `No affected review-sets` | Sentinel (not a record) written first when no review set is affected (including empty input) |
-| `affected<TAB><id><TAB><path>` | One line per affected review set and matching changed file, in definition order then path order |
-| `unreviewed<TAB><path>` | A changed file that matches `needs-review` (or any file when it is empty) but matches no review set's `paths`; context patterns do not count |
+| --- | --- |
+| `No affected review-sets` | Sentinel (not a record) written first when no review set is affected |
+| `affected<TAB><id><TAB><path>` | One line per affected review set and matching changed file |
+| `unreviewed<TAB><path>` | A changed file that needs review but matches no review set's `paths` |
+
+Line details:
+
+- The sentinel is also written for empty input.
+- `affected` lines are written in definition order, then path order.
+- An `unreviewed` file matches `needs-review` (or any file when `needs-review` is empty) but matches no review set's
+  `paths`; context patterns do not count.
 
 The exit code is 0 even when unreviewed files are reported. Lint warnings are not written in this
 mode (use `--lint`). The failure modes are:
 
 | Failure | Result |
-| ------- | ------ |
+| --- | --- |
 | Unreadable list file or stdin | `InvalidOperationException`; `Main()` writes `Error: ...` to stderr, exit 1 |
 | Missing or invalid definition | Lint errors via `WriteError` to stderr, even with `--silent`; exit 1 |
-| `--affected` with `--plan`, `--report`, `--elaborate`, `--index` or `--lint` | `ArgumentException` from `Context.Create()`; `Main()` writes `Error: ...` to stderr, exit 1 |
+| Conflicting option | `ArgumentException` from `Context.Create()`; `Main()` writes `Error: ...` to stderr, exit 1 |
+
+A conflicting option is `--plan`, `--report`, `--elaborate`, `--index` or `--lint` combined with `--affected`.
 
 Undecodable input bytes are replacement-decoded and matched as text.
 
@@ -134,11 +141,21 @@ If `hasIssues` is false, does nothing. If `context.Enforce` is true, calls
 ### Error Handling
 
 | Exception | Source | Handling |
-| --------- | ------ | -------- |
-| `ArgumentException` | `Context.Create()` — unrecognized or malformed argument | Caught in `Main()`; message to `Console.Error`; return 1 |
-| `InvalidOperationException` | `Context.Create()` (log file) or `RunDefinitionLogic()` (file I/O, unreadable `--affected` list or stdin) | Caught in `Main()`; message to `Console.Error`; return 1 |
-| `ArgumentException` | `ElaborateReviewSet()` — unknown review-set ID | Caught in `RunDefinitionLogic()`; routed through `context.WriteError()` |
-| Any other exception | Unexpected failure | Message to `Console.Error` as `"Unexpected error: {message}"`; rethrown. Unhandled exceptions are outside the 0/1 exit-code contract |
+| --- | --- | --- |
+| `ArgumentException` | `Context.Create()` | Caught in `Main()`; return 1 |
+| `InvalidOperationException` | `Context.Create()`, `RunDefinitionLogic()` | Caught in `Main()`; return 1 |
+| `ArgumentException` | `ElaborateReviewSet()` | Caught in `RunDefinitionLogic()`; sent to `context.WriteError()` |
+| Any other exception | Unexpected failure | Message to `Console.Error`; rethrown |
+
+Exception details:
+
+- `Context.Create()` throws `ArgumentException` for an unrecognized or malformed argument and
+  `InvalidOperationException` for a log file failure; `RunDefinitionLogic()` throws `InvalidOperationException` for
+  file I/O failures and an unreadable `--affected` list or stdin. `Main()` writes the message to `Console.Error` and
+  returns 1.
+- `ElaborateReviewSet()` throws `ArgumentException` for an unknown review-set ID.
+- Any other exception is written to `Console.Error` as `"Unexpected error: {message}"` and rethrown. Unhandled
+  exceptions are outside the 0/1 exit-code contract.
 
 ### Dependencies
 

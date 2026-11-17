@@ -14,17 +14,17 @@ compliance documents.
 **Top-level properties on a loaded `ReviewMarkConfiguration` instance:**
 
 | Property | Type | Description |
-| -------- | ---- | ----------- |
-| `NeedsReviewPatterns` | `IReadOnlyList<string>` | Ordered list of glob patterns identifying files that need review (empty when omitted from YAML) |
-| `EvidenceSource` | `EvidenceSource` | Parsed evidence-source block (`Type`, `Location`, optional credential env-var names) |
+| --- | --- | --- |
+| `NeedsReviewPatterns` | `IReadOnlyList<string>` | Ordered globs for files that need review (empty when omitted) |
+| `EvidenceSource` | `EvidenceSource` | Evidence-source block (`Type`, `Location`, optional credential env-var names) |
 | `Reviews` | `IReadOnlyList<ReviewSet>` | Ordered list of review-set definitions |
-| `GlobalContext` | `IReadOnlyList<string>` | Ordered list of glob patterns identifying global context files (empty when omitted from YAML) |
+| `GlobalContext` | `IReadOnlyList<string>` | Ordered globs for global context files (empty when omitted) |
 
 **YAML deserialization types (internal, not part of public API):**
 
 | Class | Description |
-| ----- | ----------- |
-| `ReviewMarkYaml` | Root configuration object; contains `NeedsReview` patterns, `EvidenceSource`, `Reviews` list, and optional `Context` list |
+| --- | --- |
+| `ReviewMarkYaml` | Root object: `NeedsReview` patterns, `EvidenceSource`, `Reviews` list, optional `Context` list |
 | `EvidenceSourceYaml` | Describes how to locate the evidence index (`type`, `location`, optional `credentials`) |
 | `ReviewSetYaml` | Describes a single review-set (`id`, `title`, `paths`, and optional `context` list) |
 | `EvidenceCredentialsYaml` | Optional credentials block with `username-env` and `password-env` fields |
@@ -32,7 +32,7 @@ compliance documents.
 **Evidence source types:**
 
 | Type | Description |
-| ---- | ----------- |
+| --- | --- |
 | `none` | No evidence index; `location` is optional and ignored; all review-sets are Missing |
 | `fileshare` | Evidence index read from the file path in `location` |
 | `url` | Evidence index downloaded from the HTTP/HTTPS URL in `location` |
@@ -55,11 +55,11 @@ env var names and are not expanded.
 **Result and internal API types:**
 
 | Type | Description |
-| ---- | ----------- |
+| --- | --- |
 | `EvidenceSource` | Immutable record: `Type`, `Location`, `UsernameEnv`, `PasswordEnv` |
-| `ReviewSet` | Class with `Id`, `Title`, `Paths`, `Context`, `GetFingerprint(dir, constraint?)`, `GetFiles(dir, constraint?)` |
+| `ReviewSet` | Class: `Id`, `Title`, `Paths`, `Context`; methods `GetFingerprint` and `GetFiles` (see Key Methods) |
 | `LintSeverity` | Enum: `Warning`, `Error` |
-| `LintIssue` | Record: `Location`, `Severity`, `Description`; `ToString()` formats as `{location}: {severity}: {description}` |
+| `LintIssue` | Record: `Location`, `Severity`, `Description`; `ToString()`: `{location}: {severity}: {description}` |
 | `ReviewMarkLoadResult` | Record: `Configuration` (null if error-level issues found), `Issues` |
 | `ReviewPlanResult` | Record: `Markdown`, `HasIssues` |
 | `ReviewReportResult` | Record: `Markdown`, `HasIssues` |
@@ -217,11 +217,18 @@ types.
 #### Error Handling
 
 | Exception | Source | Handling |
-| --------- | ------ | -------- |
-| None | File open failure or unexpected I/O in `Load()` | Caught inside `Load()` and returned as an error-level `LintIssue` with a null `Configuration`; nothing is propagated. Reported by `ReportIssues()` |
-| `ArgumentException` | Unknown review-set ID in `ElaborateReviewSet()` | Propagated to `Program.RunDefinitionLogic()`, which catches it and calls `context.WriteError()` |
+| --- | --- | --- |
+| None | File open failure or unexpected I/O in `Load()` | Returned as an error-level `LintIssue` |
+| `ArgumentException` | Unknown review-set ID in `ElaborateReviewSet()` | Propagated to `Program.RunDefinitionLogic()` |
 | `ArgumentOutOfRangeException` | `markdownDepth > 5` in `ElaborateReviewSet()` | Propagated to the caller |
-| `IOException` / `UnauthorizedAccessException` | File-system failure during glob pattern expansion | Propagated to the caller |
+| `IOException` / `UnauthorizedAccessException` | File-system failure during glob expansion | Propagated to the caller |
+
+Handling details:
+
+- File open failures and unexpected I/O are caught inside `Load()` and returned as an error-level `LintIssue` with a
+  null `Configuration`; nothing is propagated. The issue is reported by `ReportIssues()`.
+- `Program.RunDefinitionLogic()` catches the `ArgumentException` for an unknown review-set ID and calls
+  `context.WriteError()`.
 
 Lint errors (duplicate IDs, missing fields, invalid evidence-source type) are surfaced as
 `LintIssue` entries in `ReviewMarkLoadResult.Issues` and do not cause exceptions.
