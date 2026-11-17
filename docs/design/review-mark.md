@@ -13,7 +13,7 @@ ReviewMark is organized as a single system composed of four subsystems and one s
 unit:
 
 | Item | Category | Responsibility |
-| ---- | -------- | -------------- |
+| --- | --- | --- |
 | Program | Unit | Process entry point; constructs the execution context and dispatches to subsystems |
 | Cli | Subsystem | Command-line argument parsing and output channel ownership |
 | Configuration | Subsystem | YAML configuration loading, validation, and review-set processing |
@@ -68,21 +68,18 @@ up the named review-set and writes a Markdown elaboration to stdout containing t
 review-set ID, title, current fingerprint, and the full sorted list of matched files. This
 mode does not query the evidence store.
 
-**Affected Mode (`--affected <file|->`)**: ReviewMark reads a list of changed file paths
-(newline or NUL separated) from a file or standard input (`-`), matches them against the
-review-set globs by path string only (deleted files match), and writes tab-delimited
-`affected<TAB>id<TAB>path` and `unreviewed<TAB>path` records to the normal output. The id and path
-fields escape `\`, TAB, LF and CR as `\\`, `\t`, `\n` and `\r`. When no review set is affected the
-sentinel line `No affected review-sets` (not a record) is written first. The banner is suppressed
-when affected mode runs (it is still printed with `--help` or `--validate`) and lint warnings are not written (errors still are, on stderr, with exit code 1); the exit code is
-0 even when unreviewed files exist. A changed path is "unreviewed" when it matches `needs-review`
-(or `needs-review` is empty) but matches no review set's `paths` (context patterns do not count).
-Paths outside `--dir` (absolute, drive-letter or containing a `..` segment) are never matched, so they are neither
-affected nor unreviewed.
-Unreadable input (including standard input), a missing or invalid definition, or combining
-`--affected` with `--plan`, `--report`, `--elaborate`, `--index` or `--lint` is an error (stderr,
-exit code 1). `--version`, `--help` and `--validate` keep their higher dispatch priority.
-ReviewMark never runs git itself.
+**Affected Mode (`--affected <file|->`)**: ReviewMark reads a list of changed file paths (newline or NUL separated) from
+a file or standard input (`-`), matches them against the review-set globs by path string only (deleted files match), and
+writes tab-delimited `affected<TAB>id<TAB>path` and `unreviewed<TAB>path` records to the normal output. The id and path
+fields escape `\`, TAB, LF and CR as `\\`, `\t`, `\n` and `\r`. When no review set is affected the sentinel line
+`No affected review-sets` (not a record) is written first. The banner is suppressed when affected mode runs (it is still
+printed with `--help` or `--validate`) and lint warnings are not written (errors still are, on stderr, with exit code
+1); the exit code is 0 even when unreviewed files exist. A changed path is "unreviewed" when it matches `needs-review`
+(or `needs-review` is empty) but matches no review set's `paths` (context patterns do not count). Paths outside `--dir`
+(absolute, drive-letter or containing a `..` segment) are never matched, so they are neither affected nor unreviewed.
+Unreadable input (including standard input), a missing or invalid definition, or combining `--affected` with `--plan`,
+`--report`, `--elaborate`, `--index` or `--lint` is an error (stderr, exit code 1). `--version`, `--help` and
+`--validate` keep their higher dispatch priority. ReviewMark never runs git itself.
 
 **Lint Mode (`--lint`)**: When `--lint` is supplied, ReviewMark loads and validates the
 definition file in a single pass, collecting all detectable structural and semantic issues.
@@ -108,7 +105,7 @@ API, or graphical interface.
 - *Contract*: The following flags are recognized:
 
 | Flag | Description |
-| ---- | ----------- |
+| --- | --- |
 | `--version` / `-v` | Display version string and exit |
 | `--help` / `-?` / `-h` | Display usage information and exit |
 | `--silent` | Suppress all console output; exit code still signals success or failure |

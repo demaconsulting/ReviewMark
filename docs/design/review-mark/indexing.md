@@ -17,7 +17,7 @@ review-set definitions but accepts glob patterns from `GlobMatcher` for PDF scan
 It contains two units:
 
 | Unit | Source File | Purpose |
-| ---- | ----------- | ------- |
+| --- | --- | --- |
 | ReviewIndex | `Indexing/ReviewIndex.cs` | Review evidence loader and query engine |
 | PathHelpers | `Indexing/PathHelpers.cs` | Safe path-combination utility |
 

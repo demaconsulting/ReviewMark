@@ -60,13 +60,13 @@ result is de-duplicated after normalization (so `a` and `./a` collapse) and sort
 
 **`PathHelpers.NormalizeChangedPath(string rawPath, string directory)`** → `string`
 
-Does not trim (whitespace is significant); replaces `\` with `/` only where `\` is the directory separator (Windows; elsewhere it is an
-ordinary file-name character and is preserved); makes an absolute path
-relative to `directory` when it lies under it (absolute paths outside `directory` are retained
-unchanged apart from platform separator conversion, and `GlobMatcher.IsMatch` never matches them); and strips leading `./`
-segments. `..` segments are not collapsed, and an absolute path containing a `..` segment (checked before
-relativizing, using `GlobMatcher.HasParentSegment`, the same platform-specific separator rule as relative paths) is
-left rooted and therefore never matched, even if the traversal would stay inside `directory`.
+Does not trim (whitespace is significant); replaces `\` with `/` only where `\` is the directory separator (Windows;
+elsewhere it is an ordinary file-name character and is preserved); makes an absolute path relative to `directory` when
+it lies under it (absolute paths outside `directory` are retained unchanged apart from platform separator conversion,
+and `GlobMatcher.IsMatch` never matches them); and strips leading `./` segments. `..` segments are not collapsed, and an
+absolute path containing a `..` segment (checked before relativizing, using `GlobMatcher.HasParentSegment`, the same
+platform-specific separator rule as relative paths) is left rooted and therefore never matched, even if the traversal
+would stay inside `directory`.
 
 **`PathHelpers.EscapeRecordField(string value)`** → `string`
 
@@ -79,10 +79,10 @@ collide with a record. Null is rejected with `ArgumentNullException`.
 #### Error Handling
 
 | Exception | Condition |
-| --------- | --------- |
+| --- | --- |
 | `ArgumentNullException` | `basePath` or `relativePath` is null |
 | `ArgumentException` | Resolved path escapes `basePath` |
-| `NotSupportedException` | Path contains an unsupported format (e.g. colon in a non-root position on Windows); propagated without wrapping |
+| `NotSupportedException` | Unsupported path format (e.g. a non-root colon on Windows); propagated without wrapping |
 | `PathTooLongException` | Combined path exceeds the platform path-length limit; propagated without wrapping |
 
 #### Dependencies

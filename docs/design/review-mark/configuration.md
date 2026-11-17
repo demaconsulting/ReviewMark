@@ -17,7 +17,7 @@ responsibility) but accepts a `ReviewIndex` as a parameter for report generation
 It contains two units:
 
 | Unit | Source File | Purpose |
-| ---- | ----------- | ------- |
+| --- | --- | --- |
 | ReviewMarkConfiguration | `Configuration/ReviewMarkConfiguration.cs` | YAML parser and review-set processor |
 | GlobMatcher | `Configuration/GlobMatcher.cs` | File pattern matching using glob syntax |
 

@@ -255,10 +255,10 @@ ReviewMark never runs git itself; it only reads the list of paths you give it.
 - A single leading byte-order mark is removed. Empty entries are ignored. All other whitespace is
   preserved, including leading, trailing and whitespace-only names, because it can be part of a
   real file name.
-- On Windows, backslashes are converted to `/`; on other platforms a backslash is an ordinary
-  file-name character and is kept. Leading `./` is removed, and absolute paths under `--dir` (or
-  the current directory) are made relative to it. Paths outside that directory (absolute,
-  drive-letter or containing a `..` segment, in absolute paths as well as relative ones, even if it would stay inside) are ignored: they are neither affected nor `unreviewed`.
+- On Windows, backslashes are converted to `/`; on other platforms a backslash is an ordinary file-name character and is
+  kept. Leading `./` is removed, and absolute paths under `--dir` (or the current directory) are made relative to it.
+  Paths outside that directory (absolute, drive-letter or containing a `..` segment, in absolute paths as well as
+  relative ones, even if it would stay inside) are ignored: they are neither affected nor `unreviewed`.
 - Duplicates (including `a` versus `./a`) are listed once.
 - Bytes that cannot be decoded are replaced and then matched as text; there is no malformed-input
   failure other than being unable to read the source.
@@ -269,16 +269,15 @@ ReviewMark never runs git itself; it only reads the list of paths you give it.
 
 ### Output
 
-Output is written through the normal log (so `--silent` and `--log` apply), without the banner (the banner is still printed when `--affected` is combined with `--help`
-or `--validate`, because affected mode does not run).
-Fields are separated by a single tab character because review-set IDs and paths may contain
-spaces:
+Output is written through the normal log (so `--silent` and `--log` apply), without the banner (the banner is still
+printed when `--affected` is combined with `--help` or `--validate`, because affected mode does not run). Fields are
+separated by a single tab character because review-set IDs and paths may contain spaces:
 
-| Line                              | Meaning                                                              |
-| --------------------------------- | -------------------------------------------------------------------- |
-| `affected<TAB><id><TAB><path>`    | The changed file `<path>` belongs to review set `<id>`               |
-| `unreviewed<TAB><path>`           | A changed file that needs review but is in no review set             |
-| `No affected review-sets`         | Written first when no review set is affected (for example no input)  |
+| Line | Meaning |
+| --- | --- |
+| `affected<TAB><id><TAB><path>` | The changed file `<path>` belongs to review set `<id>` |
+| `unreviewed<TAB><path>` | A changed file that needs review but is in no review set |
+| `No affected review-sets` | Written first when no review set is affected (for example no input) |
 
 "Unreviewed" means the changed path matches `needs-review` (or `needs-review` is empty) but
 matches no review set's `paths` after the ordered include/exclude evaluation; `context` patterns
@@ -413,26 +412,26 @@ An agent preparing a review of its changes can chain the commands:
 
 The following command-line options are supported:
 
-| Option                    | Description                                                                    |
-| ------------------------- | ------------------------------------------------------------------------------ |
-| `-v`, `--version`         | Display version information                                                    |
-| `-?`, `-h`, `--help`      | Display help message                                                           |
-| `--silent`                | Suppress console output                                                        |
-| `--validate`              | Run self-validation                                                            |
-| `--lint`                  | Validate the definition file and report issues                                 |
-| `--results <file>`        | Write validation results to file (TRX or JUnit format)                         |
-| `--log <file>`            | Write output to log file                                                       |
-| `--definition <file>`     | Specify the definition YAML file (default: .reviewmark.yaml)                   |
-| `--depth <#>`             | Default heading depth for all generated documents (default: 1)                 |
-| `--plan <file>`           | Write review plan to the specified Markdown file                               |
-| `--plan-depth <#>`        | Heading depth for the review plan (overrides --depth; default: --depth or 1)   |
-| `--report <file>`         | Write review report to the specified Markdown file                             |
-| `--report-depth <#>`      | Heading depth for the review report (overrides --depth; default: --depth or 1) |
-| `--index <glob-path>`     | Index PDF evidence files matching the glob path                                |
-| `--dir <directory>`       | Set the working directory for default paths and glob paths                     |
-| `--enforce`               | Exit with non-zero code if there are review issues                             |
-| `--elaborate <id>`        | Print a Markdown elaboration of the specified review set                       |
-| `--affected <file\|->`    | List review sets affected by the changed files in the file (or stdin for `-`)  |
+| Option | Description |
+| --- | --- |
+| `-v`, `--version` | Display version information |
+| `-?`, `-h`, `--help` | Display help message |
+| `--silent` | Suppress console output |
+| `--validate` | Run self-validation |
+| `--lint` | Validate the definition file and report issues |
+| `--results <file>` | Write validation results to file (TRX or JUnit format) |
+| `--log <file>` | Write output to log file |
+| `--definition <file>` | Specify the definition YAML file (default: .reviewmark.yaml) |
+| `--depth <#>` | Default heading depth for all generated documents (default: 1) |
+| `--plan <file>` | Write review plan to the specified Markdown file |
+| `--plan-depth <#>` | Heading depth for the review plan (overrides --depth; default: --depth or 1) |
+| `--report <file>` | Write review report to the specified Markdown file |
+| `--report-depth <#>` | Heading depth for the review report (overrides --depth; default: --depth or 1) |
+| `--index <glob-path>` | Index PDF evidence files matching the glob path |
+| `--dir <directory>` | Set the working directory for default paths and glob paths |
+| `--enforce` | Exit with non-zero code if there are review issues |
+| `--elaborate <id>` | Print a Markdown elaboration of the specified review set |
+| `--affected <file\|->` | List review sets affected by the changed files in the file (or stdin for `-`) |
 
 ## Unknown and Invalid Arguments
 
@@ -467,12 +466,12 @@ specifying one argument's path cannot silently change another argument's path.
 ReviewMark is configured through a `.reviewmark.yaml` file, normally placed at the repository root.
 The file has four top-level keys:
 
-| Key               | Required | Description                                              |
-| :---------------- | :------- | :------------------------------------------------------- |
-| `needs-review`    | No       | Glob patterns identifying all files that require review  |
-| `evidence-source` | Yes      | Location of the review evidence index                    |
-| `reviews`         | Yes      | List of review sets, each grouping related files         |
-| `context`         | No       | Global context files read by all reviewers               |
+| Key | Required | Description |
+| :--- | :--- | :--- |
+| `needs-review` | No | Glob patterns identifying all files that require review |
+| `evidence-source` | Yes | Location of the review evidence index |
+| `reviews` | Yes | List of review sets, each grouping related files |
+| `context` | No | Global context files read by all reviewers |
 
 A complete annotated example:
 
@@ -515,12 +514,12 @@ reviews:
 A **review set** is a named group of files that are reviewed together as a single unit. Each set
 has four fields:
 
-| Field     | Required | Description                                              |
-| :-------- | :------- | :------------------------------------------------------- |
-| `id`      | Yes      | Stable identifier used in evidence PDFs                  |
-| `title`   | Yes      | Human-readable description shown in the plan and report  |
-| `paths`   | Yes      | Ordered list of glob include/exclude patterns            |
-| `context` | No       | Review-set context files the reviewer must read          |
+| Field | Required | Description |
+| :--- | :--- | :--- |
+| `id` | Yes | Stable identifier used in evidence PDFs |
+| `title` | Yes | Human-readable description shown in the plan and report |
+| `paths` | Yes | Ordered list of glob include/exclude patterns |
+| `context` | No | Review-set context files the reviewer must read |
 
 ### Glob Patterns
 
@@ -600,11 +599,11 @@ setup before an evidence store is provisioned).
 
 ### Source Types
 
-| Type        | Description                                                                         |
-| :---------- | :---------------------------------------------------------------------------------- |
-| `none`      | No evidence source; always returns an empty index (for initial project setup)       |
-| `fileshare` | Full UNC or local file-system path to `index.json`                                  |
-| `url`       | Full HTTP or HTTPS URL to `index.json`                                              |
+| Type | Description |
+| :--- | :--- |
+| `none` | No evidence source; always returns an empty index (for initial project setup) |
+| `fileshare` | Full UNC or local file-system path to `index.json` |
+| `url` | Full HTTP or HTTPS URL to `index.json` |
 
 #### None
 

@@ -14,16 +14,16 @@ built from PDF scans, or is simply absent.
 **`ReviewIndex` instance state:**
 
 | Field | Type | Description |
-| ----- | ---- | ----------- |
-| Internal store | `Dictionary<string, Dictionary<string, ReviewEvidence>>` | Evidence records indexed by `(Id, Fingerprint)` for O(1) lookup |
+| --- | --- | --- |
+| Internal store | `Dictionary<string, Dictionary<string, ReviewEvidence>>` | Evidence records by `(Id, Fingerprint)` |
 
-The dictionary is populated during construction (via `Load()` or `Scan()`) and is
-read-only thereafter.
+The two-level dictionary indexes evidence records by `(Id, Fingerprint)` for O(1) lookup. It is
+populated during construction (via `Load()` or `Scan()`) and is read-only thereafter.
 
 **`ReviewEvidence` record:**
 
 | Property | Type | Description |
-| -------- | ---- | ----------- |
+| --- | --- | --- |
 | `Id` | `string` | The review-set identifier |
 | `Fingerprint` | `string` | SHA-256 fingerprint of the reviewed files |
 | `Date` | `string` | Date of the review (e.g. `2026-02-14`) |
@@ -95,10 +95,13 @@ Returns all `ReviewEvidence` records with the given `id`. Returns an empty list 
 #### Error Handling
 
 | Exception | Source | Handling |
-| --------- | ------ | -------- |
-| `InvalidOperationException` | `Load()` — unrecognized source type, file-read failure, HTTP error, or malformed JSON | Propagated to `Program.RunDefinitionLogic()` or `Program.RunIndexLogic()` |
+| --- | --- | --- |
+| `InvalidOperationException` | `Load()` — evidence source failure (see below) | Propagated to the caller |
 | `ArgumentException` | `Save(string)` — null or empty `filePath` | Propagated to the caller |
 | `InvalidOperationException` | `Save(string)` — file write failure | Propagated to the caller |
+
+`Load()` throws `InvalidOperationException` for an unrecognized source type, a file-read failure, an HTTP error, or
+malformed JSON; the exception propagates to `Program.RunDefinitionLogic()` or `Program.RunIndexLogic()`.
 
 During `Scan()`, PDFs that cannot be opened or are missing required metadata trigger
 `onWarning` with a descriptive message; no exception is propagated.
