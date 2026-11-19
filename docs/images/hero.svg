@@ -1,0 +1,288 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="640" viewBox="0 0 1600 640">
+  <!-- The README hero banner. Review sets from .reviewmark.yaml, the source files they fingerprint, PDF review
+       evidence, and its index.json flow into the reviewmark tool, which writes a review plan and a review report,
+       gates CI in enforce mode, and prints review-set elaborations.
+       The definitions and the left panel follow the shared DEMA Consulting hero (CanvasNet and BuildMark).
+       This file is docs/images/hero.svg, beside its rendered docs/images/hero.png (matching base names, per the
+       diagram documentation standard); the files it embeds are in docs/images/hero/. -->
+  <defs>
+    <style>
+      .word { font: bold 92px sans-serif; fill: #ffffff; }
+      .eyebrow { font: bold 25px sans-serif; fill: #a5b4fc; }
+      .tag { font: bold 40px sans-serif; fill: #f8fafc; }
+      .body { font: 25px sans-serif; fill: #cbd5e1; }
+      .cmd { font: 25px monospace; fill: #e2e8f0; }
+      .prompt { fill: #5eead4; }
+      .file { fill: #f9a8d4; }
+      .brandText { fill: url(#brand); }
+      .note { font: italic 25px sans-serif; fill: #94a3b8; }
+      .label { font: bold 25px sans-serif; fill: #f1f5f9; text-anchor: middle; }
+      .engine { font: bold 32px monospace; fill: #ffffff; }
+      .api { font: bold 25px sans-serif; fill: #c4b5fd; }
+      .card { fill: url(#glass); stroke: url(#rim); stroke-width: 1.5; filter: url(#shadow); }
+      .panel { fill: #0a1022; stroke: #ffffff; stroke-opacity: 0.06; }
+      .flow { fill: none; stroke-width: 3; stroke-linecap: round; }
+      .page { fill: #ffffff; filter: url(#paper); }
+    </style>
+
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#070b1f"/>
+      <stop offset="0.55" stop-color="#130f3b"/>
+      <stop offset="1" stop-color="#071a2e"/>
+    </linearGradient>
+    <radialGradient id="glowViolet" cx="0.5" cy="0.5" r="0.5">
+      <stop offset="0" stop-color="#7c3aed" stop-opacity="0.55"/>
+      <stop offset="1" stop-color="#7c3aed" stop-opacity="0"/>
+    </radialGradient>
+    <radialGradient id="glowCyan" cx="0.5" cy="0.5" r="0.5">
+      <stop offset="0" stop-color="#06b6d4" stop-opacity="0.45"/>
+      <stop offset="1" stop-color="#06b6d4" stop-opacity="0"/>
+    </radialGradient>
+    <radialGradient id="glowPink" cx="0.5" cy="0.5" r="0.5">
+      <stop offset="0" stop-color="#db2777" stop-opacity="0.4"/>
+      <stop offset="1" stop-color="#db2777" stop-opacity="0"/>
+    </radialGradient>
+    <pattern id="dots" width="24" height="24" patternUnits="userSpaceOnUse">
+      <circle cx="12" cy="12" r="1.2" fill="#a5b4fc" fill-opacity="0.16"/>
+    </pattern>
+    <linearGradient id="brand" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#22d3ee"/>
+      <stop offset="0.5" stop-color="#a78bfa"/>
+      <stop offset="1" stop-color="#f472b6"/>
+    </linearGradient>
+    <linearGradient id="glass" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#ffffff" stop-opacity="0.12"/>
+      <stop offset="1" stop-color="#ffffff" stop-opacity="0.04"/>
+    </linearGradient>
+    <linearGradient id="rim" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#ffffff" stop-opacity="0.38"/>
+      <stop offset="1" stop-color="#ffffff" stop-opacity="0.08"/>
+    </linearGradient>
+    <linearGradient id="engineFill" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#1e1b4b"/>
+      <stop offset="1" stop-color="#0b1022"/>
+    </linearGradient>
+    <filter id="shadow" x="-20%" y="-20%" width="140%" height="150%">
+      <feDropShadow dx="0" dy="10" stdDeviation="12" flood-color="#000000" flood-opacity="0.45"/>
+    </filter>
+    <filter id="paper" x="-20%" y="-20%" width="140%" height="150%">
+      <feDropShadow dx="0" dy="4" stdDeviation="4" flood-color="#000000" flood-opacity="0.5"/>
+    </filter>
+    <filter id="blur" x="-30%" y="-150%" width="160%" height="400%">
+      <feGaussianBlur stdDeviation="14"/>
+    </filter>
+    <filter id="heat" x="-80%" y="-80%" width="260%" height="260%">
+      <feGaussianBlur stdDeviation="6"/>
+    </filter>
+
+    <marker id="headPink" viewBox="0 0 10 10" refX="2.5" refY="5" markerWidth="4" markerHeight="4" orient="auto">
+      <path d="M0,0 L10,5 L0,10 L2.5,5 z" fill="#f472b6"/>
+    </marker>
+    <marker id="headAmber" viewBox="0 0 10 10" refX="2.5" refY="5" markerWidth="4" markerHeight="4" orient="auto">
+      <path d="M0,0 L10,5 L0,10 L2.5,5 z" fill="#fbbf24"/>
+    </marker>
+    <marker id="headCyan" viewBox="0 0 10 10" refX="2.5" refY="5" markerWidth="4" markerHeight="4" orient="auto">
+      <path d="M0,0 L10,5 L0,10 L2.5,5 z" fill="#22d3ee"/>
+    </marker>
+    <marker id="headViolet" viewBox="0 0 10 10" refX="2.5" refY="5" markerWidth="4" markerHeight="4" orient="auto">
+      <path d="M0,0 L10,5 L0,10 L2.5,5 z" fill="#a78bfa"/>
+    </marker>
+    <marker id="headBlue" viewBox="0 0 10 10" refX="2.5" refY="5" markerWidth="4" markerHeight="4" orient="auto">
+      <path d="M0,0 L10,5 L0,10 L2.5,5 z" fill="#60a5fa"/>
+    </marker>
+    <marker id="headMint" viewBox="0 0 10 10" refX="2.5" refY="5" markerWidth="4" markerHeight="4" orient="auto">
+      <path d="M0,0 L10,5 L0,10 L2.5,5 z" fill="#5eead4"/>
+    </marker>
+
+         class in another color); keep the shared block above unchanged. -->
+    <style>
+      .mini { font: bold 22px sans-serif; }
+      .miniMono { font: bold 22px monospace; }
+      .bar { fill: #cbd5e1; }
+      .ink { fill: #1e293b; }
+    </style>
+  </defs>
+
+  <!-- Background: deep gradient, soft glows, and a dot grid -->
+  <rect width="1600" height="640" fill="url(#bg)"/>
+  <ellipse cx="250" cy="170" rx="420" ry="300" fill="url(#glowViolet)"/>
+  <ellipse cx="1070" cy="294" rx="420" ry="220" fill="url(#glowCyan)"/>
+  <ellipse cx="1480" cy="620" rx="380" ry="260" fill="url(#glowPink)"/>
+  <rect width="1600" height="640" fill="url(#dots)"/>
+
+  <!-- Wordmark and tagline -->
+  <image href="hero/dc-logo-dark.svg" x="46" y="54" width="50" height="50"/>
+  <text class="eyebrow" x="100" y="90">DEMA Consulting</text>
+  <text class="word" x="52" y="176" style="font-size:84px">Review</text>
+  <text class="word brandText" x="341.5" y="176" style="font-size:84px">Mark</text>
+  <rect x="58" y="200" width="132" height="6" rx="3" fill="url(#brand)"/>
+  <text class="tag" x="56" y="266">Every file reviewed.</text>
+  <text class="tag brandText" x="56" y="316">Every change caught.</text>
+  <text class="body" x="58" y="368">Fingerprints the files in review sets,</text>
+  <text class="body" x="58" y="402">matches them to PDF review evidence,</text>
+  <text class="body" x="58" y="436">and fails CI on stale or missing ones.</text>
+  <rect x="56" y="468" width="480" height="90" rx="12" fill="#0a1022" fill-opacity="0.8" stroke="#a78bfa" stroke-opacity="0.45" stroke-width="1.5"/>
+  <text class="cmd prompt" x="78" y="503">$</text>
+  <text class="cmd" x="108" y="503">reviewmark --enforce --plan</text>
+  <text class="cmd file" x="138" y="539">plan.md</text>
+  <text class="cmd" x="258" y="539">--report</text>
+  <text class="cmd file" x="393" y="539">report.md</text>
+  <text class="note" x="58" y="604">SHA256 fingerprints. PDF evidence.</text>
+
+  <!-- Input cards -->
+  <g>
+    <!-- Review sets: the reviews section of .reviewmark.yaml -->
+    <rect class="card" x="580" y="40" width="236" height="160" rx="16"/>
+    <rect x="642" y="40" width="112" height="3" rx="1.5" fill="#fbbf24"/>
+    <rect class="panel" x="588" y="48" width="220" height="112" rx="10"/>
+    <g transform="translate(588 48)">
+      <text class="miniMono" x="16" y="32" fill="#fde68a">reviews:</text>
+      <text class="miniMono" x="16" y="66" fill="#fbbf24">- id:</text>
+      <text class="miniMono" x="98" y="66" fill="#f8fafc">Cli</text>
+      <text class="miniMono" x="42" y="100" fill="#fbbf24">paths:</text>
+      <rect x="130" y="91" width="70" height="8" rx="4" fill="#cbd5e1" fill-opacity="0.45"/>
+    </g>
+    <text class="label" x="698" y="190">Review sets</text>
+
+    <!-- Source files: files fingerprinted with SHA256 -->
+    <rect class="card" x="828" y="40" width="236" height="160" rx="16"/>
+    <rect x="890" y="40" width="112" height="3" rx="1.5" fill="#22d3ee"/>
+    <rect class="panel" x="836" y="48" width="220" height="112" rx="10"/>
+    <g transform="translate(836 48)">
+      <path d="M30 6 L66 6 L80 20 L80 88 L30 88 Z" fill="#94a3b8"/>
+      <path class="page" d="M20 16 L58 16 L72 30 L72 100 L20 100 Z"/>
+      <path d="M58 16 L58 30 L72 30 Z" fill="#cbd5e1"/>
+      <text class="miniMono" x="27" y="54" fill="#0891b2">.cs</text>
+      <rect class="bar" x="28" y="66" width="36" height="5" rx="2.5"/>
+      <rect class="bar" x="28" y="78" width="28" height="5" rx="2.5"/>
+      <rect class="bar" x="28" y="90" width="34" height="5" rx="2.5"/>
+      <path d="M86 58 L106 58" stroke="#22d3ee" stroke-width="3" stroke-linecap="round" marker-end="url(#headCyan)"/>
+      <rect x="118" y="38" width="88" height="40" rx="8" fill="#22d3ee" fill-opacity="0.16" stroke="#22d3ee" stroke-width="1.5"/>
+      <text class="miniMono" x="162" y="65" fill="#a5f3fc" text-anchor="middle">9e1c</text>
+      <text class="mini" x="162" y="102" fill="#67e8f9" text-anchor="middle">SHA256</text>
+    </g>
+    <text class="label" x="946" y="190">Source files</text>
+
+    <!-- Review PDFs: a signed review record as PDF evidence -->
+    <rect class="card" x="1076" y="40" width="236" height="160" rx="16"/>
+    <rect x="1138" y="40" width="112" height="3" rx="1.5" fill="#f472b6"/>
+    <rect class="panel" x="1084" y="48" width="220" height="112" rx="10"/>
+    <g transform="translate(1084 48)">
+      <path class="page" d="M60 10 L130 10 L148 28 L148 104 L60 104 Z"/>
+      <path d="M130 10 L130 28 L148 28 Z" fill="#cbd5e1"/>
+      <rect x="44" y="24" width="56" height="28" rx="6" fill="#db2777"/>
+      <text class="mini" x="72" y="46" fill="#ffffff" text-anchor="middle">PDF</text>
+      <rect class="bar" x="72" y="62" width="60" height="5" rx="2.5"/>
+      <rect class="bar" x="72" y="74" width="48" height="5" rx="2.5"/>
+      <path d="M74 94 C82 84 88 100 96 90 C102 84 106 96 112 92" fill="none" stroke="#7c3aed" stroke-width="2.5" stroke-linecap="round"/>
+      <circle cx="176" cy="74" r="20" fill="#4ade80" fill-opacity="0.18" stroke="#4ade80" stroke-width="2.5"/>
+      <path d="M166 74 L173 82 L187 66" fill="none" stroke="#4ade80" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"/>
+    </g>
+    <text class="label" x="1194" y="190">Review PDFs</text>
+
+    <!-- Evidence index: an index.json entry -->
+    <rect class="card" x="1324" y="40" width="236" height="160" rx="16"/>
+    <rect x="1386" y="40" width="112" height="3" rx="1.5" fill="#60a5fa"/>
+    <rect class="panel" x="1332" y="48" width="220" height="112" rx="10"/>
+    <g transform="translate(1332 48)">
+      <text class="miniMono" x="16" y="32" fill="#93c5fd">"id":</text>
+      <text class="miniMono" x="98" y="32" fill="#f8fafc">"Cli"</text>
+      <text class="miniMono" x="16" y="66" fill="#93c5fd">"fingerprint":</text>
+      <text class="miniMono" x="42" y="100" fill="#f8fafc">"9e1c"</text>
+      <text class="miniMono" x="134" y="100" fill="#93c5fd">...</text>
+    </g>
+    <text class="label" x="1442" y="190">Evidence index</text>
+  </g>
+
+  <!-- Flows into the engine -->
+  <g class="flow">
+    <path d="M698,206 C698,236 950,226 950,253" stroke="#fbbf24" marker-end="url(#headAmber)"/>
+    <path d="M946,206 C946,236 1030,226 1030,253" stroke="#22d3ee" marker-end="url(#headCyan)"/>
+    <path d="M1194,206 C1194,236 1110,226 1110,253" stroke="#f472b6" marker-end="url(#headPink)"/>
+    <path d="M1442,206 C1442,236 1190,226 1190,253" stroke="#60a5fa" marker-end="url(#headBlue)"/>
+  </g>
+  <g stroke="#0a1022" stroke-width="2">
+    <circle cx="698" cy="206" r="5" fill="#fbbf24"/>
+    <circle cx="946" cy="206" r="5" fill="#22d3ee"/>
+    <circle cx="1194" cy="206" r="5" fill="#f472b6"/>
+    <circle cx="1442" cy="206" r="5" fill="#60a5fa"/>
+  </g>
+  <!-- The engine -->
+  <rect x="852" y="262" width="436" height="64" rx="32" fill="url(#brand)" opacity="0.55" filter="url(#blur)"/>
+  <rect x="852" y="262" width="436" height="64" rx="32" fill="url(#engineFill)" stroke="url(#brand)" stroke-width="2.5"/>
+  <rect x="876" y="276" width="36" height="36" rx="9" fill="url(#brand)"/>
+  <path d="M885 282 L898 282 L904 288 L904 306 L885 306 Z" fill="#ffffff"/>
+  <g fill="#7c3aed">
+    <rect x="889" y="290" width="11" height="2.5" rx="1.2"/>
+    <rect x="889" y="295" width="11" height="2.5" rx="1.2"/>
+    <rect x="889" y="300" width="7" height="2.5" rx="1.2"/>
+  </g>
+  <text class="engine" x="928" y="305">reviewmark</text>
+  <line x1="1132" y1="278" x2="1132" y2="310" stroke="#ffffff" stroke-opacity="0.25" stroke-width="1.5"/>
+  <text class="api" x="1152" y="303">.NET tool</text>
+
+  <!-- Flows out of the engine -->
+  <g class="flow" stroke="#5eead4">
+    <path d="M980,330 C980,356 728,356 728,381" marker-end="url(#headMint)"/>
+    <path d="M1040,330 C1040,356 999,356 999,381" marker-end="url(#headMint)"/>
+    <path d="M1100,330 C1100,356 1232,356 1232,381" marker-end="url(#headMint)"/>
+    <path d="M1160,330 C1160,356 1457,356 1457,381" marker-end="url(#headMint)"/>
+  </g>
+  <g fill="#5eead4" stroke="#0a1022" stroke-width="2">
+    <circle cx="980" cy="330" r="5"/>
+    <circle cx="1040" cy="330" r="5"/>
+    <circle cx="1100" cy="330" r="5"/>
+    <circle cx="1160" cy="330" r="5"/>
+  </g>
+
+  <!-- Output tiles -->
+  <g>
+    <!-- Review plan: each review set and whether it covers its files -->
+    <rect class="card" x="580" y="390" width="296" height="210" rx="16"/>
+    <rect class="panel" x="588" y="398" width="280" height="152" rx="10"/>
+    <path class="page" d="M604 406 L834 406 L852 424 L852 542 L604 542 Z"/>
+    <path d="M834 406 L834 424 L852 424 Z" fill="#cbd5e1"/>
+    <text class="mini" x="618" y="436" fill="#7c3aed">#</text>
+    <text class="mini ink" x="640" y="436">Review Plan</text>
+    <text class="miniMono ink" x="618" y="478">Cli</text>
+    <rect class="bar" x="680" y="469" width="96" height="6" rx="3"/>
+    <path d="M796 470 L803 478 L817 462" fill="none" stroke="#16a34a" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"/>
+    <text class="miniMono ink" x="618" y="520">Core</text>
+    <rect class="bar" x="680" y="511" width="76" height="6" rx="3"/>
+    <path d="M796 512 L803 520 L817 504" fill="none" stroke="#16a34a" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"/>
+    <text class="label" x="728" y="585">Review plan</text>
+
+    <!-- Review report: the status of each review set -->
+    <rect class="card" x="889" y="390" width="220" height="210" rx="16"/>
+    <rect class="panel" x="897" y="398" width="204" height="152" rx="10"/>
+    <rect x="913" y="408" width="172" height="36" rx="18" fill="#4ade80" fill-opacity="0.18" stroke="#4ade80" stroke-width="1.5"/>
+    <text class="mini" x="999" y="433" fill="#bbf7d0" text-anchor="middle">Current</text>
+    <rect x="913" y="456" width="172" height="36" rx="18" fill="#fbbf24" fill-opacity="0.18" stroke="#fbbf24" stroke-width="1.5"/>
+    <text class="mini" x="999" y="481" fill="#fde68a" text-anchor="middle">Stale</text>
+    <rect x="913" y="504" width="172" height="36" rx="18" fill="#f87171" fill-opacity="0.18" stroke="#f87171" stroke-width="1.5"/>
+    <text class="mini" x="999" y="529" fill="#fecaca" text-anchor="middle">Missing</text>
+    <text class="label" x="999" y="585">Review report</text>
+
+    <!-- Enforcement gate: exit code 0 when every review set is current, non-zero otherwise -->
+    <rect class="card" x="1122" y="390" width="220" height="210" rx="16"/>
+    <rect class="panel" x="1130" y="398" width="204" height="152" rx="10"/>
+    <circle cx="1192" cy="448" r="26" fill="#4ade80" fill-opacity="0.18" stroke="#4ade80" stroke-width="2.5"/>
+    <path d="M1179 448 L1188 458 L1206 437" fill="none" stroke="#4ade80" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+    <circle cx="1272" cy="448" r="26" fill="#f87171" fill-opacity="0.18" stroke="#f87171" stroke-width="2.5"/>
+    <path d="M1262 438 L1282 458 M1282 438 L1262 458" fill="none" stroke="#f87171" stroke-width="4" stroke-linecap="round"/>
+    <rect x="1150" y="494" width="164" height="38" rx="8" fill="#ffffff" fill-opacity="0.08" stroke="#5eead4" stroke-opacity="0.6" stroke-width="1.5"/>
+    <text class="miniMono" x="1232" y="520" fill="#e2e8f0" text-anchor="middle">--enforce</text>
+    <text class="label" x="1232" y="585">CI gate</text>
+
+    <!-- Elaboration: the details of one review set printed by the elaborate option -->
+    <rect class="card" x="1355" y="390" width="205" height="210" rx="16"/>
+    <rect class="panel" x="1363" y="398" width="189" height="152" rx="10"/>
+    <text class="miniMono" x="1377" y="440" fill="#a5b4fc">id:</text>
+    <text class="miniMono" x="1430" y="440" fill="#f8fafc">Cli</text>
+    <text class="miniMono" x="1377" y="482" fill="#a5b4fc">fp:</text>
+    <text class="miniMono" x="1430" y="482" fill="#f8fafc">9e1c</text>
+    <text class="miniMono" x="1377" y="524" fill="#a5b4fc">files:</text>
+    <text class="miniMono" x="1470" y="524" fill="#f8fafc">4</text>
+    <text class="label" x="1457" y="585">Elaboration</text>
+  </g>
+</svg>
