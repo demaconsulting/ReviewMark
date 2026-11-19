@@ -504,8 +504,7 @@ sections:
           - ReviewMark-Platform-Net11
 
       - id: ReviewMark-System-ExecutionContext
-        title: The tool shall parse command-line arguments into a structured execution context and maintain execution state
-          for the duration of the operation.
+        title: The tool shall parse command-line arguments into a structured execution context and maintain execution state for the duration of the operation.
         justification: |
           All downstream processing must read from a single, validated source of truth
           derived from the command-line arguments, and all output channels and exit-code
