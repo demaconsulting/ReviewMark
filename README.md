@@ -1,7 +1,4 @@
-# ReviewMark
-
-<!-- IMPORTANT: All links in this file must be absolute URLs.
-     This file is distributed in packages and relative links will not resolve. -->
+# ![ReviewMark: File-review evidence tracked by SHA256 hash. Reads review sets and PDF evidence; writes a review plan and a report with the status of each review set. Shown with the command 'reviewmark --enforce --plan plan.md --report report.md' and the note '.NET 10 and 11, Windows, Linux, macOS'. Review sets from .reviewmark.yaml, source files with their SHA256 fingerprints, PDF review evidence, and the evidence index.json flow into the reviewmark .NET tool, and arrows lead out to a review plan, a review report with Current, Stale, and Missing statuses, a pass/fail CI gate, and a review-set elaboration][hero]
 
 [![GitHub forks][badge-forks]][link-forks]
 [![GitHub stars][badge-stars]][link-stars]
@@ -12,11 +9,8 @@
 [![Security][badge-security]][link-security]
 [![NuGet][badge-nuget]][link-nuget]
 
-![ReviewMark banner: the ReviewMark name with the tagline 'Every file reviewed. Every change caught.'
-and the command 'reviewmark --enforce --plan plan.md --report report.md'. Review sets from .reviewmark.yaml,
-source files with their SHA256 fingerprints, signed PDF review evidence, and the evidence index.json flow on
-curved arrows into the reviewmark .NET tool, and arrows lead out to a review plan, a review report with Current,
-Stale, and Missing statuses, a pass/fail CI gate, and a review-set elaboration][link-hero-image]
+<!-- IMPORTANT: All links in this file must be absolute URLs.
+     This file is distributed in packages and relative links will not resolve. -->
 
 ## Overview
 
@@ -318,5 +312,5 @@ By contributing to this project, you agree that your contributions will be licen
 [link-guide]: https://github.com/demaconsulting/ReviewMark/blob/main/docs/user_guide/introduction.md
 [link-system-design]: https://github.com/demaconsulting/ReviewMark/blob/main/docs/design/review-mark.md
 [link-continuous-compliance]: https://github.com/demaconsulting/ContinuousCompliance
-[link-hero-image]: https://raw.githubusercontent.com/demaconsulting/ReviewMark/main/docs/images/hero.png
+[hero]: https://raw.githubusercontent.com/demaconsulting/ReviewMark/main/docs/images/hero.png
 [link-workflow-image]: https://raw.githubusercontent.com/demaconsulting/ReviewMark/main/docs/images/workflow.png
