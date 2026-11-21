@@ -172,6 +172,17 @@ multi-library repository, or headless tests without GUI automation). Two rules k
   environment-dependent test tiers may be opt-in switches of `build.ps1`.
 - Never remove or weaken a check to make lint or tests pass.
 
+# Repository-Specific Standards Exceptions
+
+## SysML2 package structure (legacy layout, migration pending)
+
+The model under `docs/sysml2/` still uses the earlier layout: `package ReviewMark` is reopened in 12 model files under
+`docs/sysml2/model/` and in `views/design-views.sysml` (no `{System}_{Unit}` packages and no `ReviewMarkDesignViews`);
+OTS parts use `OtsDependencies` and there is no `SharedPackages` file. The Package Structure rules in
+`sysml2-modeling.md` and the matching qualified-name examples in the `sysml2tools-query` skill apply once the model is
+migrated in a dedicated PR; until then query and extend the model with the existing package names and do not
+partially restructure it.
+
 # Continuous Compliance Overview
 
 This repository follows the [Continuous Compliance](https://github.com/demaconsulting/ContinuousCompliance)
