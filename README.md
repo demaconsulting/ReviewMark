@@ -1,4 +1,4 @@
-# ![ReviewMark: File-review evidence tracked by SHA256 hash. Reads review sets and PDF evidence; writes a review plan and a report with the status of each review set. Shown with the command 'reviewmark --enforce --plan plan.md --report report.md' and the note '.NET 10 and 11, Windows, Linux, macOS'. Review sets from .reviewmark.yaml, source files with their SHA256 fingerprints, PDF review evidence, and the evidence index.json flow into the reviewmark .NET tool, and arrows lead out to a review plan, a review report with Current, Stale, and Missing statuses, a pass/fail CI gate, and a review-set elaboration][hero]
+# ![ReviewMark: File-review evidence tracked by SHA256 hash][hero]
 
 [![GitHub forks][badge-forks]][link-forks]
 [![GitHub stars][badge-stars]][link-stars]
