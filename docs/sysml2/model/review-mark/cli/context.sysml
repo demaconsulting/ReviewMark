@@ -1,4 +1,4 @@
-package ReviewMark {
+package ReviewMark_Context {
     private import SoftwareItemMetadata::*;
 
     part def Context {

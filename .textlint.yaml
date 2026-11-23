@@ -50,6 +50,7 @@ words:
   - Dema
   - DEMA
   - demaconsulting
+  - distinguishability
   - FEFF
   - fileshare
   - Fileshare
@@ -65,11 +66,13 @@ words:
   - sarif
   - Sarif
   - SARIF
+  - Sensmetry
   - selftest
   - shopt
   - slnx
   - snupkg
   - sonarscanner
+  - Syside
   - thirdparty
   - unidirectionality
   - venv

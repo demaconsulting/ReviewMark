@@ -1,5 +1,6 @@
-package ReviewMark {
+package ReviewMark_SelfTestSubsystem {
     private import SoftwareItemMetadata::*;
+    public import ReviewMark_Validation::*;
 
     part def SelfTestSubsystem {
         doc /* Built-in self-validation test suite. */

@@ -1,4 +1,4 @@
-package ReviewMark {
+package ReviewMark_Validation {
     private import SoftwareItemMetadata::*;
 
     part def Validation {

@@ -1,4 +1,4 @@
-package ReviewMark {
+package ReviewMark_GlobMatcher {
     private import SoftwareItemMetadata::*;
 
     part def GlobMatcher {
