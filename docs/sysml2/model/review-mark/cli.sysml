@@ -1,5 +1,6 @@
-package ReviewMark {
+package ReviewMark_CliSubsystem {
     private import SoftwareItemMetadata::*;
+    public import ReviewMark_Context::*;
 
     part def CliSubsystem {
         doc /* Command-line argument parsing and output channel ownership. */

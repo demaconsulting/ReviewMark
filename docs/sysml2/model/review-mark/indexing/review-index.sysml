@@ -1,4 +1,4 @@
-package ReviewMark {
+package ReviewMark_ReviewIndex {
     private import SoftwareItemMetadata::*;
 
     part def ReviewIndex {

@@ -1,5 +1,7 @@
-package ReviewMark {
+package ReviewMark_ConfigurationSubsystem {
     private import SoftwareItemMetadata::*;
+    public import ReviewMark_ReviewMarkConfiguration::*;
+    public import ReviewMark_GlobMatcher::*;
 
     part def ConfigurationSubsystem {
         doc /* YAML configuration loading, validation, and review-set processing. */

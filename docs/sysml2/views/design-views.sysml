@@ -1,13 +1,13 @@
 // Views rendered into docs/design/generated/ for the Design document.
-// Reopens the ReviewMark package so each 'expose' statement can reference
-// its target part def directly. Per SysML2Tools syntax, 'expose' is only valid
-// inside a named 'view' usage (not a 'view def' definition), and it - not
-// 'render' - is what scopes the rendered diagram content.
-package ReviewMark {
+// Per SysML2Tools syntax, 'expose' is only valid inside a named 'view' usage
+// (not a 'view def' definition), and it - not 'render' - is what scopes the
+// rendered diagram content. The ReviewMark facade re-exports every item.
+package ReviewMarkDesignViews {
     private import StandardViewDefinitions::*;
+    private import ReviewMark::*;
 
     view SoftwareStructureView : InterconnectionView {
-        expose ReviewMark::**;
+        expose ReviewMark::ReviewMarkSystem;
     }
 
     view ReviewMarkView {

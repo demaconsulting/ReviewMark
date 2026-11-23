@@ -1,4 +1,4 @@
-package ReviewMark {
+package ReviewMark_ReviewMarkConfiguration {
     private import SoftwareItemMetadata::*;
 
     part def ReviewMarkConfiguration {

@@ -1,6 +1,11 @@
 package ReviewMark {
     private import SoftwareItemMetadata::*;
-    import OtsDependencies::*;
+    private import OtsDependencies::*;
+    public import ReviewMark_Program::*;
+    public import ReviewMark_CliSubsystem::*;
+    public import ReviewMark_ConfigurationSubsystem::*;
+    public import ReviewMark_IndexingSubsystem::*;
+    public import ReviewMark_SelfTestSubsystem::*;
 
     doc
     /*

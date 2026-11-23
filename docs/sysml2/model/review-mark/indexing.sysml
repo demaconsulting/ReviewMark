@@ -1,5 +1,7 @@
-package ReviewMark {
+package ReviewMark_IndexingSubsystem {
     private import SoftwareItemMetadata::*;
+    public import ReviewMark_ReviewIndex::*;
+    public import ReviewMark_PathHelpers::*;
 
     part def IndexingSubsystem {
         doc /* Review evidence loading, PDF scanning, and safe path utilities. */

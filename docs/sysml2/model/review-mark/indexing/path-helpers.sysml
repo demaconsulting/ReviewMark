@@ -1,4 +1,4 @@
-package ReviewMark {
+package ReviewMark_PathHelpers {
     private import SoftwareItemMetadata::*;
 
     part def PathHelpers {
