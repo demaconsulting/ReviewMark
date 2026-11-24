@@ -14,12 +14,16 @@
 #   With no arguments the usage text is printed and the script exits 1 (a scope must be chosen).
 #
 #   A changed project selects every project that references it, directly or transitively, from the
-#   ProjectReference graph, and files linked into another project (Compile/None/EmbeddedResource items
-#   that point outside the project folder) select that project too. Changes that affect the whole
+#   ProjectReference graph, and files linked into another project (any item or file property that
+#   points outside the project folder) select that project too. Changes that affect the whole
 #   build (solution, project, props/targets, global.json, .editorconfig, nuget.config, tool manifest,
 #   this script, scripts/ProjectScripts.psm1) fall back to the full build; repository files tests read
 #   at run time select their test projects through $RuntimeReads; other changes the build does not
 #   read select nothing. ReviewMark has one source project, so no -Project switch is offered.
+#
+#   The test platform is detected from global.json: "test": { "runner": "Microsoft.Testing.Platform" } runs
+#   'dotnet test --project <path> --report-trx', anything else runs VSTest 'dotnet test <path> --logger trx';
+#   results go to artifacts/tests either way. Do not customize the arguments per repository.
 #
 # EXTENSION POINTS:
 #   Search for "[PROJECT-SPECIFIC]" comments to find the designated locations
@@ -58,6 +62,28 @@ Import-Module (Join-Path $PSScriptRoot 'scripts/ProjectScripts.psm1') -Force
 # project item), mapped to the test project that reads them. Keep in step with the tests. ReviewMark's tests
 # read no repository files at run time (they use temporary directories and the built binaries).
 $RuntimeReads = [ordered]@{}
+
+# Test platform: global.json selects Microsoft.Testing.Platform with "test": { "runner": "Microsoft.Testing.Platform" };
+# otherwise VSTest is used. The platform decides the 'dotnet test' arguments (see Invoke-DotnetTest).
+$UseTestingPlatform = $false
+if (Test-Path global.json) {
+    try { $UseTestingPlatform = (Get-Content -Raw global.json | ConvertFrom-Json).test.runner -eq 'Microsoft.Testing.Platform' }
+    catch { Write-Host "Warning: global.json could not be read; assuming VSTest." }
+}
+
+function Invoke-DotnetTest {
+    # Runs the tests of one project, or of the whole solution when no path is given, against the existing build
+    param([string]$Path)
+
+    # @(...) keeps a one-element list an array, so the splat passes the path whole and not character by character
+    if ($UseTestingPlatform) {
+        $target = @(if ($Path) { '--project'; $Path })
+        dotnet test @target --no-build --configuration Release --report-trx --results-directory artifacts/tests
+    } else {
+        $target = @(if ($Path) { $Path })
+        dotnet test @target --no-build --configuration Release --logger trx --results-directory artifacts/tests
+    }
+}
 
 # ==============================================================================
 # USAGE AND SCOPE VALIDATION
@@ -148,7 +174,7 @@ if (-not $All) {
         if (-not $buildError) {
             foreach ($entry in $tests) {
                 Write-Host "Running tests: $($entry.Name)..."
-                dotnet test --project $entry.Path --no-build --configuration Release --report-trx
+                Invoke-DotnetTest $entry.Path
                 if ($LASTEXITCODE -ne 0) { $buildError = $true }
             }
         } else {
@@ -165,20 +191,23 @@ if ($DryRun -and -not $scoped) { Write-Host "Dry run: would run the full build a
 
 if (-not $scoped) {
     # Each step runs only if the steps before it succeeded, so tests never run against stale binaries
+    $failedStep = $null   # the step that failed first, so the skip message names the real cause
     Write-Host "Restoring dependencies..."
     dotnet restore
-    if ($LASTEXITCODE -ne 0) { $buildError = $true }
+    if ($LASTEXITCODE -ne 0) { $buildError = $true; $failedStep = 'restore' }
 
     if (-not $buildError) {
         Write-Host "Building..."
         dotnet build --no-restore --configuration Release
-        if ($LASTEXITCODE -ne 0) { $buildError = $true }
+        if ($LASTEXITCODE -ne 0) { $buildError = $true; $failedStep = 'build' }
     }
 
     if (-not $buildError) {
         Write-Host "Running tests..."
-        dotnet test --no-build --configuration Release --report-trx
+        Invoke-DotnetTest
         if ($LASTEXITCODE -ne 0) { $buildError = $true }
+    } elseif ($failedStep -eq 'restore') {
+        Write-Host "Skipping build and tests: restore failed."
     } else {
         Write-Host "Skipping tests: the build failed."
     }
