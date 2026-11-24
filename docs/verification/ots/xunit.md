@@ -5,7 +5,7 @@
 ReviewMark uses `xunit.v3` 3.2.2 and `xunit.runner.visualstudio` 3.1.5 in both test projects,
 `test/DemaConsulting.ReviewMark.Tests` and `test/OtsSoftwareTests`, to discover, execute, and
 report automated tests. Fitness for intended use is verified by the normal project test flow:
-`build.ps1` runs `dotnet test`, and the `build` matrix job of `build.yaml` runs `dotnet test`
+`build.ps1 -All` runs `dotnet test`, and the `build` matrix job of `build.yaml` runs `dotnet test`
 across Windows, Linux, and macOS with TRX logging enabled through
 `--logger "trx;LogFilePrefix=${{ matrix.os }}" --results-directory artifacts`. Because xUnit is
 the framework responsible for finding and running these tests, successful execution of the suite

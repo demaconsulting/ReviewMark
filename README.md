@@ -255,7 +255,7 @@ On validation failure the tool will exit with a non-zero exit code.
 ## Building
 
 ```pwsh
-pwsh ./build.ps1
+pwsh ./build.ps1 -All
 ```
 
 ## Documentation
