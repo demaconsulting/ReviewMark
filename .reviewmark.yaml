@@ -9,6 +9,7 @@ needs-review:
   - "README.md"                   # Root README file
   - "docs/user_guide/**/*.md"     # User guide documentation
   - "**/*.cs"                     # All C# source and test files
+  - "src/**/Help/**"              # Built-in help cards
   - "requirements.yaml"           # Root requirements file
   - "docs/reqstream/**/*.yaml"    # Requirements files
   - "docs/design/**/*.md"         # Design documentation files
@@ -146,6 +147,22 @@ reviews:
       - "docs/verification/review-mark/cli/context.md"      # verification design
       - "src/**/Cli/Context.cs"                             # implementation
       - "test/**/Cli/ContextTests.cs"                       # tests
+
+  # ReviewMark-Cli-HelpCommand Review (one per unit under a subsystem)
+  - id: ReviewMark-Cli-HelpCommand
+    title: Review that ReviewMark Cli HelpCommand Implementation is Correct
+    context:
+      - "docs/design/review-mark.md"
+      - "docs/reqstream/review-mark.yaml"
+      - "docs/design/review-mark/cli.md"
+      - "docs/reqstream/review-mark/cli.yaml"
+    paths:
+      - "docs/reqstream/review-mark/cli/help-command.yaml"    # requirements
+      - "docs/design/review-mark/cli/help-command.md"         # design
+      - "docs/verification/review-mark/cli/help-command.md"   # verification design
+      - "src/**/Cli/HelpCommand.cs"                           # implementation
+      - "src/**/Help/**"                                      # help cards
+      - "test/**/Cli/HelpCommandTests.cs"                     # tests
 
   # ReviewMark-Configuration Review (one per subsystem)
   - id: ReviewMark-Configuration
@@ -287,6 +304,13 @@ reviews:
       - "docs/design/ots/microsoft-extensions-file-system-globbing.md"
       - "docs/verification/ots/microsoft-extensions-file-system-globbing.md"
       - "test/OtsSoftwareTests/MicrosoftExtensionsFileSystemGlobbingTests.cs"
+
+  - id: OTS-HelpCards
+    title: Review that HelpCards Provides Required Functionality
+    paths:
+      - "docs/reqstream/ots/help-cards.yaml"
+      - "docs/design/ots/help-cards.md"
+      - "docs/verification/ots/help-cards.md"
 
   - id: OTS-Pandoc
     title: Review that Pandoc Provides Required Functionality
