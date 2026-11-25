@@ -24,6 +24,7 @@ This guide covers:
 
 - Installation of the ReviewMark .NET global tool
 - Usage examples for common tasks
+- The built-in `reviewmark help` command
 - Command-line options reference
 - Configuration of the `.reviewmark.yaml` definition file
 - End-to-end typical workflow for a regulated repository
@@ -76,6 +77,23 @@ Display usage information:
 ```bash
 reviewmark --help
 ```
+
+The usage information ends with a pointer to the built-in help.
+
+## Built-in Help
+
+The `help` command prints help topics that explain each task with worked examples, for people and
+for AI agents that have only the installed tool. List the topics, then print one with its examples:
+
+```bash
+reviewmark help
+reviewmark help getting-started
+```
+
+Add `--search <words>` to find a topic, `--example <name>` to print one example of a topic, and
+`--json` to get any help answer as JSON. `help` is a command, not an option: it must be the first
+argument, and `--silent` and `--log` do not apply to it. It exits with code 0 on success, and with
+code 2 after printing a hint for an unknown topic or a wrong help argument.
 
 ## Self-Validation
 
@@ -444,6 +462,9 @@ reviewmark --unknown-flag
 # Error: Unknown argument '--unknown-flag'
 # (exit code 1)
 ```
+
+Argument errors are found before `--silent` and `--log` take effect, so they are always printed and
+never logged.
 
 ## Working Directory (`--dir`)
 

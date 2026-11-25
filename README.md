@@ -42,6 +42,8 @@ and pass/fail result, then use them as compliance evidence, PDF documents, and a
   uncovered
 - 🔄 **Re-indexing** - `--index` scans PDF evidence files and writes an up-to-date `index.json`
 - ✅ **Self-Validation** - Built-in validation tests with TRX and JUnit output
+- 📖 **Built-in Help** - `reviewmark help` serves help topics ([DemaConsulting.HelpCards][link-helpcards]) with
+  runnable examples, search, and JSON output for AI agents
 - 🌐 **Multi-Platform** - Builds and runs on Windows, Linux, and macOS
 - 🎯 **Multi-Runtime** - Targets .NET 10 and 11
 - 🚀 **CI/CD Integration** - Automate review evidence generation in your pipelines
@@ -129,6 +131,10 @@ reviewmark --version
 
 # Display help
 reviewmark --help
+
+# List the built-in help topics, then read one
+reviewmark help
+reviewmark help getting-started
 
 # Run self-validation
 reviewmark --validate
@@ -314,3 +320,4 @@ By contributing to this project, you agree that your contributions will be licen
 [link-continuous-compliance]: https://github.com/demaconsulting/ContinuousCompliance
 [hero]: https://raw.githubusercontent.com/demaconsulting/ReviewMark/main/docs/images/hero.png
 [link-workflow-image]: https://raw.githubusercontent.com/demaconsulting/ReviewMark/main/docs/images/workflow.png
+[link-helpcards]: https://www.nuget.org/packages/DemaConsulting.HelpCards
