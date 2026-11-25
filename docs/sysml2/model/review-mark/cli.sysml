@@ -1,9 +1,10 @@
 package ReviewMark_CliSubsystem {
     private import SoftwareItemMetadata::*;
     public import ReviewMark_Context::*;
+    public import ReviewMark_HelpCommand::*;
 
     part def CliSubsystem {
-        doc /* Command-line argument parsing and output channel ownership. */
+        doc /* Command-line argument parsing, output channel ownership, and the built-in help command. */
 
         metadata info : SoftwareInfo {
             testFiles = ("test/DemaConsulting.ReviewMark.Tests/Cli/CliTests.cs");
@@ -13,5 +14,6 @@ package ReviewMark_CliSubsystem {
         }
 
         part context : Context;
+        part helpCommand : HelpCommand;
     }
 }

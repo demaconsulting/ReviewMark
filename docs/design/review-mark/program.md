@@ -5,8 +5,9 @@
 ### Purpose
 
 `Program` is the process entry point and execution dispatcher for ReviewMark. It owns
-`Main()`, constructs the `Context` instance, dispatches to the appropriate processing
-logic based on parsed CLI flags, and returns a meaningful exit code. There is no
+`Main()`, hands the `help` command to `HelpCommand`, otherwise constructs the `Context`
+instance, dispatches to the appropriate processing logic based on parsed CLI flags, and
+returns a meaningful exit code. There is no
 review-processing logic in `Program` itself; all domain work is delegated to the
 Configuration, Indexing, and SelfTest subsystems through the `Context` carrier.
 
@@ -24,11 +25,15 @@ attribute is present. Stateless and thread-safe.
 **`Program.Main(string[] args)`**
 
 - *Parameters*: `string[] args` — raw command-line arguments from the OS
-- *Returns*: `int` — exit code; 0 for success, 1 for failure
+- *Returns*: `int` — exit code; 0 for success, 1 for failure, or the exit code of the help command
 - *Preconditions*: Called by the OS process launcher as the entry point
 - *Postconditions*: All resources are released; exit code reflects success or failure
 
-Creates a `Context` instance via `Context.Create(args)` inside a `using` block, calls
+`Main` is `internal` so that tests can call it. It first calls
+`HelpCommand.Default.TryRun(args, out exitCode)`: the `help` command is not an option, so
+`Context.Create` would reject it, and when the help command answers, `Main` returns its exit code
+(see *Help Command* in the *ReviewMark Design*). Otherwise it
+creates a `Context` instance via `Context.Create(args)` inside a `using` block, calls
 `Program.Run(context)`, and returns `context.ExitCode`. Uses a three-tier exception
 handler:
 
@@ -54,6 +59,12 @@ Evaluates parsed flags in a fixed priority order and executes the first matching
 4. If `context.Validate` — call `Validation.Run(context)` and return
 5. If `context.Lint` — call `RunLintLogic(context)` and return
 6. Otherwise — call `RunToolLogic(context)`
+
+**`Program.PrintHelp(Context context)`**
+
+Writes the usage synopsis (`reviewmark [options]` and `reviewmark help [topic]`) and every option
+to the context output, and ends with a blank line and `HelpCommand.Default.Footer`, the pointer to
+the help command.
 
 **`Program.RunLintLogic(Context context)`**
 
@@ -159,6 +170,8 @@ Exception details:
 
 ### Dependencies
 
+- **`HelpCommand`** (Cli subsystem) — `HelpCommand.Default.TryRun()` answers the `help` command
+  before the options are parsed, and `HelpCommand.Default.Footer` ends the usage text
 - **`Context`** (Cli subsystem) — `Context.Create(string[] args)` constructs the execution
   context; `context.WriteLine()`, `context.WriteError()`, and `context.ExitCode` are used
   throughout

@@ -18,6 +18,8 @@ required.
 - Each `ReviewMark-Program-*` requirement is traced to at least one scenario and test method.
 - Dispatch, lint behavior, elaboration, and issue handling yield the documented output and exit-code behavior for both
   success and failure paths.
+- `Program.Main` answers the `help` command before the options are parsed, and the usage information ends with
+  the pointer to the help command.
 
 ### Test Scenarios
 
@@ -31,8 +33,14 @@ non-null, non-empty, non-whitespace string. Requirement coverage: `ReviewMark-Pr
 tested by `Program_Version_ReturnsNonEmptyString`.
 
 **Program_Run_WithHelpFlag_DisplaysUsageInformation**: `Program.Run` is called with `["--help"]`. Expected outcome:
-Output contains "Usage:", "Options:", "--version", and "--help"; exit code is 0. Requirement coverage:
-`ReviewMark-Program-Dispatch`. This scenario is tested by `Program_Run_WithHelpFlag_DisplaysUsageInformation`.
+Output contains "Usage:", "Options:", "--version", "--help", and the `reviewmark help [topic]` usage line, and ends
+with the pointer to the help command; exit code is 0. Requirement coverage: `ReviewMark-Program-Dispatch`,
+`ReviewMark-Program-HelpFooter`. This scenario is tested by `Program_Run_WithHelpFlag_DisplaysUsageInformation`.
+
+**Program_Main_WithHelpVerb_PrintsHelpIndex**: `Program.Main` is called with `["help"]`, which is not an option.
+Expected outcome: Output contains the help topic index and no banner; exit code is 0, confirming the help command is
+answered before the options are parsed. Requirement coverage: `ReviewMark-Program-HelpCommand`. This scenario is tested
+by `Program_Main_WithHelpVerb_PrintsHelpIndex`.
 
 **Program_Run_WithValidateFlag_RunsValidation**: `Program.Run` is called with `["--validate"]`. Expected outcome: Output
 contains "Total Tests:"; exit code is 0. Requirement coverage: `ReviewMark-Program-Dispatch`. This scenario is tested by
@@ -285,3 +293,5 @@ outcome: An `index.json` file is written to the current directory; exit code is 
 - **ReviewMark-Program-Affected-Errors-StdinFailure**:
   Program_Run_WithAffectedFlag_StdinReadFailure_ThrowsInvalidOperationException
 - **ReviewMark-Program-Affected-Errors-MissingDefinition**: Program_Run_WithAffectedFlag_MissingDefinition_ReportsError
+- **ReviewMark-Program-HelpCommand**: Program_Main_WithHelpVerb_PrintsHelpIndex
+- **ReviewMark-Program-HelpFooter**: Program_Run_WithHelpFlag_DisplaysUsageInformation

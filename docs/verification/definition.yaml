@@ -16,6 +16,7 @@ input-files:
   - docs/verification/review-mark/program.md
   - docs/verification/review-mark/cli.md
   - docs/verification/review-mark/cli/context.md
+  - docs/verification/review-mark/cli/help-command.md
   - docs/verification/review-mark/configuration.md
   - docs/verification/review-mark/configuration/review-mark-configuration.md
   - docs/verification/review-mark/configuration/glob-matcher.md
@@ -28,6 +29,7 @@ input-files:
   - docs/verification/ots/buildmark.md
   - docs/verification/ots/dema-consulting-test-results.md
   - docs/verification/ots/fileassert.md
+  - docs/verification/ots/help-cards.md
   - docs/verification/ots/microsoft-extensions-file-system-globbing.md
   - docs/verification/ots/pandoc.md
   - docs/verification/ots/pdfpig.md

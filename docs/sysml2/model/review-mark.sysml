@@ -33,5 +33,6 @@ package ReviewMark {
         part pdfPig : PdfPig;
         part testResults : DemaConsultingTestResults;
         part fileSystemGlobbing : FileSystemGlobbing;
+        part helpCards : HelpCards;
     }
 }

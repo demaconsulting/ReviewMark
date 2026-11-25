@@ -5,7 +5,8 @@
 Cli subsystem verification uses `CliTests.cs` to exercise `Context.Create`, `Program.Run`, and, for invalid-argument and
 `--affected` error-path and modifier behavior, reflection-based calls to the internal `Program.Main` entry point. The
 tests use real configuration loading, review plan and report generation, index creation, captured console streams, and
-temporary files and directories so the subsystem boundary is verified end to end rather than through mocks.
+temporary files and directories so the subsystem boundary is verified end to end rather than through mocks. The help
+command is verified through `HelpCommand.Create`, which writes to in-memory writers.
 
 ### Test Environment
 
@@ -18,6 +19,7 @@ services or network access are required.
 - All Cli subsystem integration tests pass with zero failures.
 - Each `ReviewMark-Cmd-*` requirement is traced to at least one scenario and test method.
 - Normal, boundary, and error-path invocations produce the expected output, generated artifacts, and exit codes.
+- The `help` command prints a requested topic from the built-in help cards.
 
 ### Test Scenarios
 
@@ -218,6 +220,10 @@ is tested by `Cli_Context_NoArgs_Parsed`.
 directly. Expected: context.ExitCode is non-zero. Expected outcome: Exit code is 1. Requirement coverage:
 `ReviewMark-Cmd-ExitCode`. This scenario is tested by `Cli_ExitCode_ErrorReported_ReturnsNonZeroExitCode`.
 
+**Cli_HelpCommand_TopicRequested_PrintsTopic**: `["help", "command-line"]` is offered to `HelpCommand.TryRun`.
+Expected outcome: the command answers with the command-line topic; exit code is 0. Requirement coverage:
+`ReviewMark-Cmd-HelpTopics`. This scenario is tested by `Cli_HelpCommand_TopicRequested_PrintsTopic`.
+
 ### Requirements Coverage
 
 - **`ReviewMark-Cmd-Context`**: `Cli_Context_NoArgs_Parsed`
@@ -270,3 +276,4 @@ directly. Expected: context.ExitCode is non-zero. Expected outcome: Exit code is
   `Cli_AffectedFlag_MissingDefinition_ExitsOneWithStderr`
 - **`ReviewMark-Cmd-Lint`**: `Cli_LintFlag_InvalidConfig_ReportsIssueMessages`
 - **`ReviewMark-Cmd-LintSilence`**: `Cli_LintFlag_ValidConfig_ReportsSuccess`
+- **`ReviewMark-Cmd-HelpTopics`**: `Cli_HelpCommand_TopicRequested_PrintsTopic`

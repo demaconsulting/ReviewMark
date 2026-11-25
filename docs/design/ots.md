@@ -33,7 +33,9 @@ OTS items are selected based on the following criteria:
   and auditable
 - Error handling at OTS boundaries follows standard .NET patterns: library exceptions are
   caught at the subsystem boundary, reported via `Context.WriteError`, and converted to a
-  non-zero application exit code
+  non-zero application exit code. DemaConsulting.HelpCards is the exception: it is consumed only
+  by `HelpCommand`, which answers the `help` command before a `Context` exists and writes its
+  answers and errors to the console directly
 
 ## Qualification Strategy
 

@@ -23,6 +23,7 @@ Local items:
 OTS items:
 
 - **BuildMark**: integration and usage design.
+- **DemaConsulting.HelpCards**: integration and usage design.
 - **DemaConsulting.TestResults**: integration and usage design.
 - **FileAssert**: integration and usage design.
 - **Microsoft.Extensions.FileSystemGlobbing**: integration and usage design.
@@ -67,10 +68,11 @@ results](architecture.svg)
 
 - **src/** - source files and projects
   - **DemaConsulting.ReviewMark/** - ReviewMark system source
-    - **Cli/** - Cli subsystem
+    - **Cli/** - Cli subsystem, including the built-in `help` command (`HelpCommand.cs`)
     - **Configuration/** - Configuration subsystem
     - **Indexing/** - Indexing subsystem
     - **SelfTest/** - SelfTest subsystem
+    - **Help/** - built-in help cards (Markdown with front matter), embedded in the assembly
 
 ## Document Conventions
 

@@ -9,6 +9,7 @@ input-files:
   - docs/design/review-mark/program.md
   - docs/design/review-mark/cli.md
   - docs/design/review-mark/cli/context.md
+  - docs/design/review-mark/cli/help-command.md
   - docs/design/review-mark/configuration.md
   - docs/design/review-mark/configuration/review-mark-configuration.md
   - docs/design/review-mark/configuration/glob-matcher.md
@@ -22,6 +23,7 @@ input-files:
   - docs/design/ots/pdfpig.md
   - docs/design/ots/dema-consulting-test-results.md
   - docs/design/ots/microsoft-extensions-file-system-globbing.md
+  - docs/design/ots/help-cards.md
   - docs/design/ots/sysml2tools.md
 template: template.html
 
