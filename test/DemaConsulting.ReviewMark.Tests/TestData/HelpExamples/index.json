@@ -1,0 +1,11 @@
+{
+  "reviews": [
+    {
+      "id": "Core-Logic",
+      "fingerprint": "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef",
+      "date": "2026-01-15",
+      "result": "pass",
+      "file": "reviews/Core-Logic-2026-01-15.pdf"
+    }
+  ]
+}

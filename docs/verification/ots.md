@@ -11,7 +11,8 @@ ReviewMark uses three complementary approaches to verify OTS software items.
 - Runtime libraries used directly by the product code, including YamlDotNet, PdfPig,
   DemaConsulting.TestResults, and Microsoft.Extensions.FileSystemGlobbing, are verified through
   repository unit and integration tests that exercise the exact parsing, metadata,
-  serialization, and globbing behaviors ReviewMark depends on.
+  serialization, and globbing behaviors ReviewMark depends on. DemaConsulting.HelpCards is
+  verified through the HelpCommand unit tests and the help integration tests.
 - xUnit is qualified through successful execution of the ReviewMark test suites and their TRX
   outputs because the repository depends on xUnit for test discovery, execution, and reporting.
 - Tooling OTS items such as BuildMark, ReqStream, ReviewMark, SarifMark, SonarMark,

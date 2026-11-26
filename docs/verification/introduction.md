@@ -24,7 +24,7 @@ Local items:
 
 - **ReviewMark** - system-level verification
 - **Program** - unit verification
-- **Cli** subsystem and **Context** unit
+- **Cli** subsystem with **Context** and **HelpCommand** units
 - **Configuration** subsystem with **ReviewMarkConfiguration** and **GlobMatcher** units
 - **Indexing** subsystem with **ReviewIndex** and **PathHelpers** units
 - **SelfTest** subsystem with **Validation** unit
@@ -32,6 +32,7 @@ Local items:
 OTS items:
 
 - **BuildMark**
+- **DemaConsulting.HelpCards**
 - **DemaConsulting.TestResults**
 - **FileAssert**
 - **Microsoft.Extensions.FileSystemGlobbing**
@@ -67,7 +68,8 @@ subsystem, and unit levels:
 ReviewMark (System)
 ├── Program (Unit)
 ├── Cli (Subsystem)
-│   └── Context (Unit)
+│   ├── Context (Unit)
+│   └── HelpCommand (Unit)
 ├── Configuration (Subsystem)
 │   ├── ReviewMarkConfiguration (Unit)
 │   └── GlobMatcher (Unit)
@@ -80,6 +82,7 @@ ReviewMark (System)
 OTS Software Items (integration and qualification evidence in docs/design/ots/ and
 docs/verification/ots/):
 ├── BuildMark
+├── DemaConsulting.HelpCards
 ├── DemaConsulting.TestResults
 ├── FileAssert
 ├── Microsoft.Extensions.FileSystemGlobbing
@@ -117,6 +120,12 @@ Local items have parallel artifacts in the following repository locations:
   Verification: `docs/verification/review-mark/cli/context.md`, Source:
   `src/DemaConsulting.ReviewMark/Cli/Context.cs`, Tests:
   `test/DemaConsulting.ReviewMark.Tests/ContextTests.cs`
+- **HelpCommand** - Req: `docs/reqstream/review-mark/cli/help-command.yaml`,
+  Design: `docs/design/review-mark/cli/help-command.md`,
+  Verification: `docs/verification/review-mark/cli/help-command.md`, Source:
+  `src/DemaConsulting.ReviewMark/Cli/HelpCommand.cs` and the help cards in
+  `src/DemaConsulting.ReviewMark/Help/`, Tests:
+  `test/DemaConsulting.ReviewMark.Tests/Cli/HelpCommandTests.cs`
 - **Configuration subsystem** - Req: `docs/reqstream/review-mark/configuration.yaml`,
   Design: `docs/design/review-mark/configuration.md`,
   Verification: `docs/verification/review-mark/configuration.md`, Source:

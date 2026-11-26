@@ -18,6 +18,9 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
+using DemaConsulting.HelpCards.Catalog;
+using DemaConsulting.HelpCards.Testing;
+using DemaConsulting.ReviewMark.Cli;
 using DemaConsulting.ReviewMark.Indexing;
 
 namespace DemaConsulting.ReviewMark.Tests;
@@ -27,15 +30,23 @@ namespace DemaConsulting.ReviewMark.Tests;
 /// </summary>
 public class IntegrationTests
 {
+    /// <summary>
+    ///     The fingerprint recorded in the help-example review record and in <c>TestData/HelpExamples/index.json</c>;
+    ///     it matches no file content, so the help examples show a stale review.
+    /// </summary>
+    private const string HelpExampleFingerprint = "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef";
+
     private readonly string _dllPath;
+    private readonly string _testDataPath;
 
     /// <summary>
-    ///     Initializes a new instance of <see cref="IntegrationTests" />.
+    ///     Initializes a new instance of <see cref="IntegrationTests" /> by locating the ReviewMark DLL and the test data.
     /// </summary>
     public IntegrationTests()
     {
         var baseDir = AppContext.BaseDirectory;
         _dllPath = PathHelpers.SafePathCombine(baseDir, "DemaConsulting.ReviewMark.dll");
+        _testDataPath = PathHelpers.SafePathCombine(baseDir, "TestData");
         Assert.True(File.Exists(_dllPath), $"Could not find ReviewMark DLL at {_dllPath}");
     }
 
@@ -1313,5 +1324,117 @@ public class IntegrationTests
         // Assert — exits successfully and produces a single merged index.json
         Assert.Equal(0, exitCode);
         Assert.True(File.Exists(indexFile), "index.json was not created");
+    }
+
+    /// <summary>
+    ///     Test that the help verb lists the help topics.
+    /// </summary>
+    [Fact]
+    public void ReviewMark_HelpTopics_HelpVerb_ListsTopics()
+    {
+        // Arrange: (none — constructor initializes _dllPath)
+
+        // Act: run the tool with the help verb
+        var exitCode = Runner.Run(
+            out var output,
+            "dotnet",
+            _dllPath,
+            "help");
+
+        // Assert: every topic is listed with its command, without the banner
+        Assert.Equal(0, exitCode);
+        foreach (var topic in HelpCommand.RootCardIds)
+        {
+            Assert.Contains($"{HelpCommand.ToolName} help {topic}", output);
+        }
+
+        Assert.DoesNotContain("Copyright", output);
+    }
+
+    /// <summary>
+    ///     Test that an unknown help topic returns the usage-error exit code.
+    /// </summary>
+    [Fact]
+    public void ReviewMark_HelpTopics_UnknownTopic_ReturnsUsageError()
+    {
+        // Arrange: (none — constructor initializes _dllPath)
+
+        // Act: ask for a topic that does not exist
+        var exitCode = Runner.Run(
+            out var output,
+            "dotnet",
+            _dllPath,
+            "help",
+            "no-such-topic");
+
+        // Assert: exit code 2 and a message that names the topic
+        Assert.Equal(2, exitCode);
+        Assert.Contains("no-such-topic", output);
+    }
+
+    /// <summary>
+    ///     Test that every command example in the help cards gives the result that its card states.
+    /// </summary>
+    [Fact]
+    public void ReviewMark_HelpExamples_AllCommandExamples_GiveStatedResults()
+    {
+        // Arrange: the catalog the tool ships, and the files that the examples read: the definition, evidence
+        // index, and changed-file list from the test data, plus a small source tree and a review record PDF
+        // written here, because source files in the test project would be compiled and need review
+        var catalog = HelpCatalog.Create(HelpCommand.CreateOptions().GetCatalogConfiguration());
+        using var inputs = new TestDirectory();
+        foreach (var file in Directory.GetFiles(PathHelpers.SafePathCombine(_testDataPath, "HelpExamples")))
+        {
+            File.Copy(file, PathHelpers.SafePathCombine(inputs.DirectoryPath, Path.GetFileName(file)));
+        }
+
+        WriteHelpExampleFile(inputs.DirectoryPath, "src/Core/Calculator.cs", "public static class Calculator { }");
+        WriteHelpExampleFile(inputs.DirectoryPath, "docs/guide/usage.md", "Run the calculator.");
+        WriteHelpExampleFile(inputs.DirectoryPath, "docs/design.md", "The calculator design.");
+        var reviewsPath = PathHelpers.SafePathCombine(inputs.DirectoryPath, "reviews");
+        Directory.CreateDirectory(reviewsPath);
+        PdfTestHelper.CreateMinimalPdf(
+            PathHelpers.SafePathCombine(reviewsPath, "Core-Logic-2026-01-15.pdf"),
+            $"id=Core-Logic fingerprint={HelpExampleFingerprint} date=2026-01-15 result=pass");
+        var exampleFiles = Directory.GetFiles(inputs.DirectoryPath, "*", SearchOption.AllDirectories);
+
+        // Act: run every command example against the built tool in the runner's scratch folder; the runner
+        // compares the exit codes and the 'expect' fragments. The input files are copied in, with their
+        // folders, before every command, so that a command that overwrites a file cannot affect the next one.
+        var report = HelpExampleRunner.Run(catalog, invocation =>
+        {
+            foreach (var file in exampleFiles)
+            {
+                var destination = PathHelpers.SafePathCombine(
+                    invocation.WorkingDirectory,
+                    Path.GetRelativePath(inputs.DirectoryPath, file));
+                Directory.CreateDirectory(Path.GetDirectoryName(destination)!);
+                File.Copy(file, destination, overwrite: true);
+            }
+
+            var exitCode = Runner.RunInDirectory(
+                out var output,
+                invocation.WorkingDirectory,
+                "dotnet",
+                [_dllPath, .. invocation.Arguments]);
+            return new HelpExampleOutcome(exitCode, output);
+        });
+
+        // Assert: the cards hold command examples, and every one gave the result its card states
+        Assert.True(report.CommandsRun > 0, "The help cards contain no command examples.");
+        report.AssertSucceeded();
+    }
+
+    /// <summary>
+    ///     Writes one line of text to a file below a folder, creating its parent folders.
+    /// </summary>
+    /// <param name="root">The folder.</param>
+    /// <param name="relativePath">The path of the file below the folder, with forward slashes.</param>
+    /// <param name="text">The text to write.</param>
+    private static void WriteHelpExampleFile(string root, string relativePath, string text)
+    {
+        var path = PathHelpers.SafePathCombine(root, relativePath);
+        Directory.CreateDirectory(Path.GetDirectoryName(path)!);
+        File.WriteAllText(path, text + "\n");
     }
 }

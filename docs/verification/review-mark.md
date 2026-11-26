@@ -14,6 +14,16 @@ and transient output files. No external services or persistent evidence stores a
 same verification suite is also executed in the GitHub Actions build matrix across Windows, Linux,
 and macOS and across .NET 10 and .NET 11.
 
+The built-in `help` command is verified by running the compiled tool with `help` arguments.
+The command examples of the help cards are verified with the example runner of
+`DemaConsulting.HelpCards`: it gives each card a fresh scratch folder and calls a test delegate
+for each command example. The delegate copies the files that the examples read into that folder,
+keeping their sub-folders: the definition, evidence index, and changed-file list from
+`test/DemaConsulting.ReviewMark.Tests/TestData/HelpExamples/`, and a small source tree and a review
+record PDF that the test writes. It then runs the compiled tool there with `Runner.RunInDirectory`,
+and the runner compares the exit code and the output with the `exit` and `expect` values of the
+example.
+
 ## Test Environment
 
 ReviewMark system verification runs under xUnit with Release builds of
@@ -35,6 +45,8 @@ test run.
   non-zero exit code.
 - Generated plan, report, results, log, and index artifacts are created with the expected content
   when their corresponding options are used.
+- The `help` command lists the topics with exit code 0, and exits with code 2 for an unknown topic.
+- Every command example in the help cards gives the exit code and output that its card states.
 - Cross-platform verification completes successfully in CI across Windows, Linux, and macOS and
   across .NET 10 and .NET 11.
 
@@ -47,6 +59,17 @@ scenario is tested by `ReviewMark_VersionFlag_Invoked_OutputsVersion`.
 **HelpDisplay**: ReviewMark writes usage and option information when invoked with `--help`,
 proving the CLI exposes operator guidance without requiring a definition file. This scenario is
 tested by `ReviewMark_HelpFlag_Invoked_OutputsUsageInformation`.
+
+**HelpTopics**: ReviewMark is invoked with `help` as the sole argument; it exits with code 0,
+the output lists every topic with its command, and no banner is printed. Invoked with
+`help no-such-topic`, it exits with code 2 and the output names the topic. This scenario is
+tested by `ReviewMark_HelpTopics_HelpVerb_ListsTopics` and
+`ReviewMark_HelpTopics_UnknownTopic_ReturnsUsageError`.
+
+**HelpExamples**: The catalog that the tool ships is built, and every command example of every
+card is run against the compiled tool in a scratch folder that holds the example input files; at
+least one command example exists and each gives the exit code and output fragments that its card
+states. This scenario is tested by `ReviewMark_HelpExamples_AllCommandExamples_GiveStatedResults`.
 
 **SelfValidationExecution**: ReviewMark runs its built-in self-test suite when invoked with
 `--validate`, emits a validation summary, and exits successfully when all checks pass. This
@@ -179,6 +202,12 @@ deterministically. This scenario is tested by `ReviewMark_LogFlag_WithInvalidPat
   `ReviewMark_VersionFlag_Invoked_OutputsVersion`.
 - **ReviewMark-System-Help**: *HelpDisplay* - verified by
   `ReviewMark_HelpFlag_Invoked_OutputsUsageInformation`.
+- **ReviewMark-System-HelpTopics**: *HelpTopics* - verified by
+  `ReviewMark_HelpTopics_HelpVerb_ListsTopics`.
+- **ReviewMark-System-HelpUnknownTopic**: *HelpTopics* - verified by
+  `ReviewMark_HelpTopics_UnknownTopic_ReturnsUsageError`.
+- **ReviewMark-System-HelpExamples**: *HelpExamples* - verified by
+  `ReviewMark_HelpExamples_AllCommandExamples_GiveStatedResults`.
 - **ReviewMark-System-WorkingDirectory**: *WorkingDirectoryOverride* - verified by
   `ReviewMark_DirFlag_Invoked_OverridesWorkingDirectory`.
 - **ReviewMark-System-Elaborate**: *ReviewSetElaboration* - verified by

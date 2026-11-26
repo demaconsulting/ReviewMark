@@ -1,0 +1,24 @@
+---
+needs-review:
+  - "src/**/*.cs"
+  - "docs/guide/**/*.md"
+  - "!**/obj/**"
+  - "!**/bin/**"
+
+evidence-source:
+  type: fileshare
+  location: index.json
+
+context:
+  - "docs/design.md"
+
+reviews:
+  - id: Core-Logic
+    title: Review that the core logic is correct
+    paths:
+      - "src/Core/**/*.cs"
+
+  - id: User-Guide
+    title: Review that the user guide is complete
+    paths:
+      - "docs/guide/**/*.md"

@@ -3,8 +3,9 @@
 ![Cli Structure](CliView.svg)
 
 The Cli subsystem is responsible for parsing and owning the command-line interface of
-ReviewMark. It exposes a single unit — `Context` — that processes the raw `string[] args`
-array into a structured set of typed properties consumed by the rest of the tool.
+ReviewMark. It exposes two units: `Context`, which processes the raw `string[] args` array into a
+structured set of typed properties consumed by the rest of the tool, and `HelpCommand`, which
+answers the built-in `help` command from embedded help cards.
 
 ### Overview
 
@@ -15,8 +16,9 @@ I/O is optionally opening the `--log` file), and it calls no other ReviewMark su
 `--affected` workflow itself is executed by `Program`, which uses the `AffectedFile` value parsed
 by `Context`.
 
-The subsystem contains a single unit: **Context** (`Cli/Context.cs`) — the command-line
-argument parser and I/O owner. See the *Context Design* for full details.
+The subsystem contains two units: **Context** (`Cli/Context.cs`) — the command-line
+argument parser and I/O owner — and **HelpCommand** (`Cli/HelpCommand.cs`) — the built-in
+`help` command. See the *Context Design* and the *HelpCommand Design* for full details.
 
 #### Affected workflow
 
@@ -50,6 +52,22 @@ argument parser and I/O owner. See the *Context Design* for full details.
   invalid `--affected` value or `--affected` combined with an exclusive operation); throws
   `InvalidOperationException` when the log file specified by `--log` cannot be opened
 
+**`HelpCommand.TryRun(string[] args, out int exitCode)`** → `bool`
+
+- *Type*: In-process .NET instance method (on the shared `HelpCommand.Default` instance)
+- *Role*: Provider — `Program.Main()` offers the arguments to it before `Context.Create()`
+- *Contract*: Returns `false`, writing nothing, when the first argument is not `help`. Otherwise
+  writes the answer to the console, returns `true`, and sets the exit code (see *Help Command* in
+  the *ReviewMark Design*)
+- *Constraints*: Does not throw for user input; does not use `Context`
+
+**`HelpCommand.Footer`** → `string`
+
+- *Type*: In-process .NET instance property
+- *Role*: Provider — `Program.PrintHelp()` ends the usage text with it
+- *Contract*: Returns the one-line pointer to the help command that HelpCards supplies
+- *Constraints*: Reading it never builds the help catalog
+
 ### Design
 
 The `Context` unit owns all argument-parsing logic through its private `ArgumentParser`
@@ -65,3 +83,8 @@ always closed before the process exits.
 `PlanDepth` defaults to `Depth` when `--plan-depth` is not specified; `ReportDepth`
 defaults to `Depth` when `--report-depth` is not specified. Multiple `--index` arguments
 are accumulated into a `List<string>` and exposed as `IReadOnlyList<string>`.
+
+`Context` and `HelpCommand` do not call each other: when the help command answers, the invocation
+ends with its exit code and no `Context` is created. `HelpCommand` writes its answers to the
+console itself; it is the one exception to `Context` owning all output, because the `help`
+command is answered before a `Context` exists.

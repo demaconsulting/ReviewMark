@@ -321,3 +321,11 @@ sections:
             tests:
               - Cli_LintFlag_ValidConfig_ReportsSuccess
             children: [ReviewMark-Program-LintVerbosity]
+          - id: ReviewMark-Cmd-HelpTopics
+            title: The tool shall answer the help command from built-in help cards.
+            justification: |
+              Users and AI agents need help topics with worked examples from the installed
+              tool, without requiring external resources.
+            tests:
+              - Cli_HelpCommand_TopicRequested_PrintsTopic
+            children: [ReviewMark-HelpCommand-HelpVerb, ReviewMark-HelpCommand-ValidCards, ReviewMark-HelpCommand-LineWidth]

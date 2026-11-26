@@ -15,13 +15,14 @@ unit:
 | Item | Category | Responsibility |
 | --- | --- | --- |
 | Program | Unit | Process entry point; constructs the execution context and dispatches to subsystems |
-| Cli | Subsystem | Command-line argument parsing and output channel ownership |
+| Cli | Subsystem | Command-line argument parsing, output channel ownership, and the built-in help command |
 | Configuration | Subsystem | YAML configuration loading, validation, and review-set processing |
 | Indexing | Subsystem | Review evidence loading, PDF scanning, and safe path utilities |
 | SelfTest | Subsystem | Built-in self-validation test suite |
 
 There is no system-level source code beyond `Program.cs`; all processing logic resides
-within the subsystems. `Program.Main()` creates a `Context` instance and delegates all
+within the subsystems. `Program.Main()` first offers the arguments to `HelpCommand`, which
+answers the `help` command; otherwise it creates a `Context` instance and delegates all
 work through `Program.Run()`, which dispatches to the appropriate subsystem based on the
 parsed command-line flags.
 
@@ -31,6 +32,7 @@ flowchart TD
         Program
         subgraph Cli
             Context
+            HelpCommand
         end
         subgraph Configuration
             ReviewMarkConfiguration
@@ -45,6 +47,7 @@ flowchart TD
         end
     end
     Program --> Context
+    Program --> HelpCommand
     Program --> ReviewMarkConfiguration
     Program --> ReviewIndex
     Program --> Validation
@@ -91,7 +94,12 @@ summary, optionally writing results to a TRX or JUnit XML file via `--results`.
 
 **Version Mode (`--version`)**: Writes only the version string to stdout and exits.
 
-**Help Mode (`--help`)**: Writes the usage message listing all supported flags to stdout.
+**Help Mode (`--help`)**: Writes the usage message listing all supported flags to stdout,
+ending with a pointer to the built-in `help` command.
+
+**Help Command (`help`)**: Given as the first argument, the `help` command is answered by
+`HelpCommand` (Cli subsystem) from the built-in help cards before the flags are parsed (see
+*Help Command* under External Interfaces).
 
 ## External Interfaces
 
@@ -126,8 +134,22 @@ API, or graphical interface.
 | `--index <pattern>` | Scan PDF evidence files matching the glob pattern and write `index.json`; repeatable |
 
 - *Constraints*: Exit code 0 always means success; exit code 1 always means failure or
-  enforcement violation. Unrecognized arguments cause the process to exit with code 1 and
-  write a descriptive error to stderr.
+  enforcement violation (the `help` command also uses 2 and 70; see *Help Command*).
+  Unrecognized arguments cause the process to exit with code 1 and write a descriptive error
+  to stderr. Argument errors are found before `--silent` and `--log` take effect, so they are
+  always printed and never logged. The `help` command is accepted as the first argument
+  (see *Help Command*).
+
+**Help Command**: Built-in help, answered from help cards embedded in the tool assembly.
+
+- *Type*: CLI
+- *Role*: Provider (the tool answers the `help` command from the shell)
+- *Contract*: `reviewmark help` prints the topic index and `reviewmark help <topic>` prints a
+  topic card with its examples; HelpCards adds `--example`, `--search`, and `--json`. Returns exit
+  code 0 for success, 2 for a wrong help argument or an unknown topic, and 70 for a defective card
+  catalog.
+- *Constraints*: `help` must be the first argument. It is answered before the options are parsed,
+  so `--silent` and `--log` do not apply and no banner is printed.
 
 ## Dependencies
 
@@ -142,6 +164,8 @@ ReviewMark depends on the following OTS software items:
 - **Microsoft.Extensions.FileSystemGlobbing**: glob-pattern file matching used by the
   `GlobMatcher` unit in the Configuration subsystem — see
   *Microsoft.Extensions.FileSystemGlobbing Integration Design*
+- **DemaConsulting.HelpCards**: loading, validation, and serving of the built-in help cards
+  used by the `HelpCommand` unit in the Cli subsystem — see *HelpCards Integration Design*
 
 No shared packages are used.
 
@@ -154,6 +178,10 @@ normal operation; the only files written by the tool are the output documents an
 `--index` is used, `index.json`.
 
 ## Data Flow
+
+When the first argument is `help`, `HelpCommand.TryRun()` builds the card catalog, writes the
+topic index or a topic card to the console, and returns its exit code; no `Context` is created.
+Otherwise it returns at once, without building the catalog, and the flow below applies.
 
 The high-level data flow through the ReviewMark system:
 
@@ -203,4 +231,5 @@ Current (i.e., is Stale, Missing, or Failed).
   system; fingerprints are stable across renames or moves that keep the same set of file
   contents, and change only when file content changes
 - **Exit code semantics**: exit code 0 always means success; exit code 1 always means
-  failure or enforcement violation; no other exit codes are used
+  failure or enforcement violation; no other exit codes are used, except by the `help`
+  command (see *Help Command*)

@@ -66,6 +66,12 @@ internal static class Program
     ///     Main entry point for ReviewMark.
     /// </summary>
     /// <remarks>
+    ///     <para>
+    ///     The <c>help</c> command is answered first, by <see cref="HelpCommand"/>, before the
+    ///     command-line options are parsed: <c>help</c> is a command and not an option, so
+    ///     <see cref="Context.Create"/> would reject it. Its exit code is returned as is.
+    ///     </para>
+    ///     <para>
     ///     Implements a three-tier exception-handling design: (1) expected
     ///     application-level exceptions (<see cref="ArgumentException"/> and
     ///     <see cref="InvalidOperationException"/>) are caught and reported as
@@ -75,14 +81,21 @@ internal static class Program
     ///     Unexpected exceptions are rethrown rather than swallowed so that
     ///     the process exits with a non-zero code and the full stack trace is
     ///     preserved for diagnostics.
+    ///     </para>
     /// </remarks>
     /// <param name="args">Command-line arguments.</param>
     /// <returns>Exit code: 0 for success, non-zero for failure.</returns>
     /// <exception cref="Exception">Thrown when an unexpected error occurs in any subsystem; the exception message is written to Console.Error before rethrowing.</exception>
-    private static int Main(string[] args)
+    internal static int Main(string[] args)
     {
         try
         {
+            // Answer the help command before the options are parsed
+            if (HelpCommand.Default.TryRun(args, out var helpExitCode))
+            {
+                return helpExitCode;
+            }
+
             // Create context from command-line arguments
             using var context = Context.Create(args);
 
@@ -195,7 +208,7 @@ internal static class Program
     }
 
     /// <summary>
-    ///     Prints usage information to the context output.
+    ///     Prints usage information to the context output, ending with a pointer to the built-in help topics.
     /// </summary>
     /// <remarks>
     ///     Called only when <c>--help</c> is set.  All available flags and
@@ -207,7 +220,8 @@ internal static class Program
     /// <param name="context">The context for output.</param>
     private static void PrintHelp(Context context)
     {
-        context.WriteLine("Usage: reviewmark [options]");
+        context.WriteLine($"Usage: {HelpCommand.ToolName} [options]");
+        context.WriteLine($"       {HelpCommand.ToolName} help [topic]");
         context.WriteLine("");
         context.WriteLine("Options:");
         context.WriteLine("  -v, --version              Display version information");
@@ -229,6 +243,8 @@ internal static class Program
         context.WriteLine("  --enforce                  Exit with non-zero code if there are review issues");
         context.WriteLine("  --elaborate <id>           Print a Markdown elaboration of the specified review set");
         context.WriteLine("  --affected <file|->        List review sets affected by the changed files listed in <file> (or stdin if -)");
+        context.WriteLine("");
+        context.WriteLine(HelpCommand.Default.Footer);
     }
 
     /// <summary>
