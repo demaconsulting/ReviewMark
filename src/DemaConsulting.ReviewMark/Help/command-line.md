@@ -79,9 +79,13 @@ These errors are found before `--silent` and `--log` take effect, so they
 are always printed and never logged.
 
 **Exit codes.** 0 is success, also for a run with warnings only. 1 is an
-error: a wrong argument, a definition error, an unknown review-set id, a
-file that cannot be read or written, `--enforce` with issues, or a failed
-self-test; see [[troubleshooting]].
+error: a wrong argument, a definition error, an unknown review-set id,
+`--enforce` with issues, a failed self-test, a definition, evidence
+index, or changed-file list that cannot be read, or a plan, report,
+index, results, or log file that cannot be written. Any other failure,
+such as an unreadable file under review, prints `Unexpected error: ...`
+and ends the run abnormally with a code other than 0 or 1; see
+[[troubleshooting]].
 
 **Help.** `help` is a command, not an option, and must be the first
 argument. `--silent` and `--log` do not apply to it, and an unknown topic

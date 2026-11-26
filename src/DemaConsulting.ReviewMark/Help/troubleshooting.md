@@ -58,7 +58,9 @@ examples:
     expect: 'Failed to read review index file'
 ---
 Errors are printed to standard error and set exit code 1. A line
-`Unexpected error: ...` means a defect in the tool; please report it.
+`Unexpected error: ...` ends the run abnormally. Check that every file
+under review can be read; if they can, it is a defect, so please report
+it.
 
 **Wrong arguments.**
 

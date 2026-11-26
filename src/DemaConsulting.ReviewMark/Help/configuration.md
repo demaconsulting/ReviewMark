@@ -95,8 +95,9 @@ valid; see [[#lint]]. Each issue is one line:
 ```
 
 A YAML syntax error also gives the line and column. A missing
-`evidence-source` or `location`, an unknown source type, a set without
-`id`, `title`, or `paths`, and a duplicate id are errors. A blank list
-entry is a warning. The run exits 1 only when there are errors, as
-[[#lint-missing]] shows. The plan, report, and other operations check
-the file the same way first, and stop on errors.
+`evidence-source`, `type`, or (except for type `none`) `location`, an
+unknown source type, a set without `id`, `title`, or `paths`, and a
+duplicate id are errors. A blank list entry is a warning. The run exits
+1 only when there are errors, as [[#lint-missing]] shows. The plan,
+report, and other operations check the file the same way first, and stop
+on errors.
